@@ -1,0 +1,31 @@
+name: Build Application
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+
+    - name: Install dependencies
+      run: |
+        pip install -r requirements.txt
+        pip install pyinstaller
+
+    - name: Run build script
+      run: python build.py
+
+    - name: Upload build artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: accessible-youtube-downloader-pro
+        path: dist/
