@@ -84,7 +84,7 @@ def direct_download(option, url, dlg, download_type="video", path=config_get("pa
 	trd.start()
 
 def check_for_updates(quiet=False):
-	url = "https://raw.githubusercontent.com/sulaiman-alqusaimi/accessible_youtube_downloader_pro/master/update_info.json"
+	url = "https://raw.githubusercontent.com/makhlwf/accessible_youtube_downloader_pro/refs/heads/master/update_info.json"
 	try:
 		r = requests.get(url)
 		if r.status_code != 200:
