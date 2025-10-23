@@ -42,16 +42,20 @@ jobs:
       run: |
         $version = "${{ github.event.inputs.version }}"
         $exeName = "${{ env.EXE_NAME }}"
+        $exePath = "dist\\$exeName"
+        $outputName = "accessible_youtube_downloader_pro_${version}_setup"
 
-        # Read the ISS file and replace version and exe name dynamically
+        # Update inno.iss dynamically with version, exe name, and correct paths
         (Get-Content "inno.iss") |
           ForEach-Object {
             $_ -replace '#define MyAppVersion ".*"', "#define MyAppVersion `"$version`"" `
-               -replace '#define MyAppExeName ".*"', "#define MyAppExeName `"$exeName`""
+               -replace '#define MyAppExeName ".*"', "#define MyAppExeName `"$exeName`"" `
+               -replace 'Source: ".*\\\{#MyAppExeName\}"', "Source: `"$exePath`"" `
+               -replace 'OutputBaseFilename=.*', "OutputBaseFilename=$outputName"
           } | Set-Content "inno_updated.iss"
 
-        echo "Updated inno.iss for version $version"
         echo "INNO_FILE=inno_updated.iss" >> $env:GITHUB_ENV
+        echo "OUTPUT_NAME=$outputName" >> $env:GITHUB_ENV
 
     - name: Install Inno Setup
       run: choco install innosetup -y
