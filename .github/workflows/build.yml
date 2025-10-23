@@ -1,10 +1,10 @@
-name: Build and Release Application
+name: Build, Package and Release
 
 on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Version number (e.g. 1.5.8)"
+        description: "Version number (e.g. 1.6.0)"
         required: true
         type: string
 
@@ -29,12 +29,44 @@ jobs:
     - name: Run build script
       run: python build.py
 
-    - name: Rename output file
+    - name: Rename built EXE
+      shell: pwsh
       run: |
         $version = "${{ github.event.inputs.version }}"
         $exeName = "accessible_youtube_downloader_pro_${version}.exe"
         Rename-Item "dist/accessible_youtube_downloader_pro.exe" $exeName
-        echo "exeName=$exeName" >> $env:GITHUB_ENV
+        echo "EXE_NAME=$exeName" >> $env:GITHUB_ENV
+
+    - name: Update Inno Setup script
+      shell: pwsh
+      run: |
+        $version = "${{ github.event.inputs.version }}"
+        $exeName = "${{ env.EXE_NAME }}"
+
+        # Read the ISS file and replace version and exe name dynamically
+        (Get-Content "inno.iss") |
+          ForEach-Object {
+            $_ -replace '#define MyAppVersion ".*"', "#define MyAppVersion `"$version`"" `
+               -replace '#define MyAppExeName ".*"', "#define MyAppExeName `"$exeName`""
+          } | Set-Content "inno_updated.iss"
+
+        echo "Updated inno.iss for version $version"
+        echo "INNO_FILE=inno_updated.iss" >> $env:GITHUB_ENV
+
+    - name: Install Inno Setup
+      run: choco install innosetup -y
+
+    - name: Build installer with Inno Setup
+      run: |
+        iscc "${{ env.INNO_FILE }}"
+
+    - name: Find installer output
+      id: find_output
+      shell: pwsh
+      run: |
+        $setupFile = Get-ChildItem -Path "accessible youtube downloader pro" -Filter "*.exe" | Select-Object -First 1
+        echo "SETUP_PATH=$($setupFile.FullName)" >> $env:GITHUB_ENV
+        echo "SETUP_NAME=$($setupFile.Name)" >> $env:GITHUB_ENV
 
     - name: Create Git tag
       run: |
@@ -43,11 +75,11 @@ jobs:
         git tag -a "v${{ github.event.inputs.version }}" -m "Release v${{ github.event.inputs.version }}"
         git push origin "v${{ github.event.inputs.version }}"
 
-    - name: Create GitHub Release
+    - name: Create GitHub Release and upload installer
       uses: softprops/action-gh-release@v2
       with:
         tag_name: v${{ github.event.inputs.version }}
         name: v${{ github.event.inputs.version }}
-        files: dist/${{ env.exeName }}
+        files: ${{ env.SETUP_PATH }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
