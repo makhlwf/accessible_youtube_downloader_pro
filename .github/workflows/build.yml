@@ -1,7 +1,12 @@
-name: Build Application
+name: Build and Release Application
 
 on:
   workflow_dispatch:
+    inputs:
+      version:
+        description: "Version number (e.g. 1.5.8)"
+        required: true
+        type: string
 
 jobs:
   build:
@@ -9,7 +14,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Set up Python
       uses: actions/setup-python@v6
@@ -24,8 +29,25 @@ jobs:
     - name: Run build script
       run: python build.py
 
-    - name: Upload build artifact
-      uses: actions/upload-artifact@v4
+    - name: Rename output file
+      run: |
+        $version = "${{ github.event.inputs.version }}"
+        $exeName = "accessible_youtube_downloader_pro_${version}.exe"
+        Rename-Item "dist/accessible_youtube_downloader_pro.exe" $exeName
+        echo "exeName=$exeName" >> $env:GITHUB_ENV
+
+    - name: Create Git tag
+      run: |
+        git config user.name "${{ github.actor }}"
+        git config user.email "${{ github.actor }}@users.noreply.github.com"
+        git tag -a "v${{ github.event.inputs.version }}" -m "Release v${{ github.event.inputs.version }}"
+        git push origin "v${{ github.event.inputs.version }}"
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v2
       with:
-        name: accessible-youtube-downloader-pro
-        path: dist/
+        tag_name: v${{ github.event.inputs.version }}
+        name: v${{ github.event.inputs.version }}
+        files: dist/${{ env.exeName }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
