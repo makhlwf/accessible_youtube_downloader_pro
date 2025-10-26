@@ -1,3 +1,11 @@
+# ⚠️ Disclaimer
+
+This project is a fork of the original repository created by Sulaiman Al Qusaimi. I am not the original developer of this application.
+
+The purpose of this fork is solely to update the required libraries to newer versions, ensuring the application continues to function properly. The original project has not received updates for a significant period, which caused compatibility issues with modern environments.
+
+I have made no functional or feature changes beyond maintaining the existing functionality. All credit and ownership belong entirely to the original developer, Sulaiman Al Qusaimi.
+
 # accessible_youtube_downloader_pro
 an accessible youtube browser and downloader desktop application designed for nvda screan reader users
 # contributers
