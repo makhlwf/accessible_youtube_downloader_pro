@@ -1,5 +1,5 @@
 beautifulsoup4==4.12.2
-requests==2.28.2
+requests==2.32.4
 httpx==0.23.3
 pyperclip==1.8.2
 python-vlc==3.0.20123
