@@ -4,17 +4,17 @@ import os
 os.chdir(os.path.abspath(os.path.dirname(__file__)))
 os.add_dll_directory(os.getcwd())
 import settings_handler
-
+from language_handler import init_translation, codes
 settings_handler.config_initialization()  # calling the config_initialization function which sets up the accessible_youtube_downloader_pro.ini file in the user appdata folder
+init_translation("accessible_youtube_downloader")  # program localization
 import database
 import application
 import pyperclip
 import wx
 import webbrowser
-
 import subprocess
-from utiles import youtube_regexp, check_for_updates, get_audio_stream, get_video_stream
-
+import utiles
+import paths
 from gui.activity_dialog import LoadingDialog
 from gui.auto_detect_dialog import AutoDetectDialog
 from gui.download_dialog import DownloadDialog
@@ -24,14 +24,9 @@ from gui.text_viewer import Viewer
 from gui.custom_controls import CustomLabel
 from gui.favorites import Favorites
 from doc_handler import documentation_get
-from language_handler import init_translation, codes
 from media_player.media_gui import MediaGui
 from youtube_browser.browser import YoutubeBrowser
 from threading import Thread
-
-
-settings_handler.config_initialization()  # calling the config_initialization function which sets up the accessible_youtube_downloader_pro.ini file in the user appdata folder
-init_translation("accessible_youtube_downloader")  # program localization
 
 
 class HomeScreen(wx.Frame):
@@ -106,6 +101,10 @@ class HomeScreen(wx.Frame):
         menuBar.Append(
             mainMenu, _("القائمة الرئيسية")
         )  # append the main menu to the menu bar
+        ytdlpMenu = wx.Menu()
+        showYtdlpVersionItem = ytdlpMenu.Append(-1, _("عرض إصدار yt-dlp"))
+        updateYtdlpItem = ytdlpMenu.Append(-1, _("تحديث yt-dlp"))
+        menuBar.Append(ytdlpMenu, _("yt-dlp"))
         aboutMenu = wx.Menu()
         userGuideItem = aboutMenu.Append(-1, _("دليل المستخدم...\tf1"))  # userguide
         checkForUpdatesItem = aboutMenu.Append(-1, _("البحث عن التحديثات"))
@@ -131,6 +130,8 @@ class HomeScreen(wx.Frame):
         self.Bind(wx.EVT_MENU, self.onGuide, userGuideItem)
         self.Bind(wx.EVT_MENU, self.onCheckForUpdates, checkForUpdatesItem)
         self.Bind(wx.EVT_MENU, self.onAbout, aboutItem)
+        self.Bind(wx.EVT_MENU, self.on_show_yt_dlp_version, showYtdlpVersionItem)
+        self.Bind(wx.EVT_MENU, self.on_update_yt_dlp, updateYtdlpItem)
         self.Bind(
             wx.EVT_MENU,
             lambda event: webbrowser.open("mailto:Suleiman.alqusaimi@gmail.com"),
@@ -145,9 +146,27 @@ class HomeScreen(wx.Frame):
         self.Bind(wx.EVT_SHOW, self.onShow)
         self.Bind(wx.EVT_CLOSE, self.onClose)
         self.Show()
+        self.checked = False
         self.detectFromClipboard(settings_handler.config_get("autodetect"))
         if settings_handler.config_get("checkupdates"):
-            Thread(target=check_for_updates, args=[True]).start()
+            Thread(target=utiles.check_for_updates, args=[True]).start()
+
+    def on_show_yt_dlp_version(self, event):
+        if not os.path.exists(paths.yt_dlp_path):
+            wx.MessageBox(_("لم يتم العثور على yt-dlp.exe"), _("خطأ"), style=wx.ICON_ERROR, parent=self)
+            return
+        try:
+            command = [paths.yt_dlp_path, "--version"]
+            result = subprocess.run(command, capture_output=True, text=True, encoding="utf-8", creationflags=subprocess.CREATE_NO_WINDOW)
+            if result.returncode != 0:
+                wx.MessageBox(_("لا يمكن الحصول على إصدار yt-dlp"), _("خطأ"), style=wx.ICON_ERROR, parent=self)
+                return
+            wx.MessageBox(result.stdout, _("إصدار yt-dlp"), parent=self)
+        except Exception as e:
+            wx.MessageBox(str(e), _("خطأ"), style=wx.ICON_ERROR, parent=self)
+
+    def on_update_yt_dlp(self, event):
+        utiles.update_yt_dlp()
 
     def onPlay(
         self, event
@@ -158,9 +177,12 @@ class HomeScreen(wx.Frame):
         stream = LoadingDialog(
             self,
             _("جاري التشغيل"),
-            get_video_stream if not data["audio"] else get_audio_stream,
+            utiles.get_video_stream if not data["audio"] else utiles.get_audio_stream,
             url,
         ).res
+        if stream is None:
+            wx.MessageBox(_("لا يمكن تشغيل الرابط"), _("خطأ"), style=wx.ICON_ERROR, parent=self)
+            return
         gui = MediaGui(
             self, stream.title, stream, data["link"]
         )  # initiating the media gui
@@ -179,7 +201,7 @@ class HomeScreen(wx.Frame):
         if not config:
             return
         clip_content = pyperclip.paste()  # get the clipboard content
-        match = youtube_regexp(clip_content)
+        match = utiles.youtube_regexp(clip_content)
         if match is not None:
             AutoDetectDialog(self, clip_content)
 
@@ -209,6 +231,10 @@ class HomeScreen(wx.Frame):
 
     def onShow(self, event):
         self.instruction.SetFocus()
+        if not self.checked:
+            Thread(target=utiles.check_yt_dlp).start()
+            self.checked = True
+        event.Skip()
 
     def onGuide(self, event):
         content = documentation_get()
@@ -223,7 +249,7 @@ class HomeScreen(wx.Frame):
 
         # speak(_("جاري البحث عن التحديثات. يرجى الانتظار"))
         LoadingDialog(
-            self, _("جاري البحث عن التحديثات. يرجى الانتظار"), check_for_updates
+            self, _("جاري البحث عن التحديثات. يرجى الانتظار"), utiles.check_for_updates
         )
         self.instruction.SetFocus()
 

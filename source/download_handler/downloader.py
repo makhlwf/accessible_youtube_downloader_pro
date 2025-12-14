@@ -1,8 +1,12 @@
-import yt_dlp as youtube_dl
-
+import subprocess
 import wx
 from settings_handler import config_get
+import paths
+import re
+from wx.lib.newevent import NewEvent
+from threading import Thread
 
+ProgressChangedEvent, EVT_PROGRESS_CHANGED = NewEvent()
 
 class Downloader:
     def __init__(
@@ -11,7 +15,7 @@ class Downloader:
         path,
         downloading_format,
         monitor,
-        monitor1,
+        status_label,
         convert=False,
         folder=False,
     ):
@@ -20,136 +24,92 @@ class Downloader:
         self.path = path
         self.downloading_format = downloading_format
         self.monitor = monitor
-        self.monitor1 = monitor1
+        self.status_label = status_label
         self.convert = convert
         self.folder = folder
-
-    # progress bar updator
-    def get_proper_count(self, number):
-        length = len(str(int(number)))
-        if length <= 3:
-            return (number, _("بايت"))
-        elif length >= 4 and length < 7:
-            return (round(number / 1024, 2), _("كيلو بايت"))
-        elif length >= 7 and length < 10:
-            return (round(number / 1024**2, 2), _("ميجا بايت"))
-        elif length >= 10 and length < 13:
-            return (round(number / 1024**3, 2), _("جيجا بايت"))
-        elif length >= 13:
-            return (round(number / 1024**4, 2), _("تيرا بايت"))
+        self.process = None
 
     def get_quality(self):
         qualities = {0: "96", 1: "128", 2: "192"}
         return qualities[int(config_get("conversion"))]
 
-    def my_hook(self, data):
-        if data["status"] == "finished":
+    def progress_parser(self, line):
+        if not self.monitor:
             return
-        percent = (
-            data["downloaded_bytes"]
-            / data.get("total_bytes", data.get("total_bytes_estimate", "0"))
-        ) * 100
-        # percent = percent.replace("%", "") # remove simbles from the percentage value
-        # percent = percent.strip() # remove spaces
-        # percent = float(percent) # convert the progress value to float, the reason why we did not converted directly to integer because it is impocible to convert string containing a floating point number to integer
-        percent = int(percent)  # converted to integer
-        total = data.get("total_bytes", data.get("total_bytes_estimate", 0))
-        print(f"total: {total}")
-        total = self.get_proper_count(total)
-        downloaded = self.get_proper_count(data["downloaded_bytes"])
-        remaining = self.get_proper_count(
-            data.get("total_bytes", data.get("total_bytes_estimate"))
-            - data["downloaded_bytes"]
-        )
-        speed = data["speed"] if data["speed"] else 0
-        speed = self.get_proper_count(int(speed))
-        info = [
-            _("نسبة التنزيل: {}%").format(percent),
-            _("حجم الملف الإجمالي: {} {}").format(total[0], total[1]),
-            _("مقدار الحجم الذي تم تنزيله: {} {}").format(downloaded[0], downloaded[1]),
-            _("المقدار المتبقي: {} {}").format(remaining[0], remaining[1]),
-            _("سرعة التنزيل: {} {}").format(speed[0], speed[1]),
-        ]
-        # updating controls
-        wx.CallAfter(self.monitor.SetValue, percent)
-        for index, value in zip(range(0, len(self.monitor1.Strings)), info):
-            wx.CallAfter(self.monitor1.SetString, index, value)
-
-    def titleCreate(self, title):
-        import requests
-        import bs4
-
-        if title:
-            if "&list=" in self.url:
-                parts = self.url.split("&")
-                for part in parts:
-                    if part.startswith("list="):
-                        self.url = f"https://www.youtube.com/playlist?{part}"
-                        break
-            try:
-                request = requests.get(self.url)
-                content = request.text
-                scraper = bs4.BeautifulSoup(content, "html.parser")
-                title = scraper.find("title")
-                title = title.getText()
-                title = title.removesuffix("- YouTube")
-                return title
-            except:
-                return
+        
+        match = re.search(r"\[download\]\s+([0-9\.]+)% of\s+(.*?)\s+at\s+(.*?)\s+ETA\s+(.*)", line)
+        if match:
+            percent = float(match.group(1))
+            total = match.group(2).strip()
+            speed = match.group(3).strip()
+            eta = match.group(4).strip()
+            wx.PostEvent(self.monitor, ProgressChangedEvent(value=int(percent), total=total, speed=speed, eta=eta))
+        else:
+            match = re.search(r"\[download\]\s+([0-9\.]+)%", line)
+            if match:
+                percent = float(match.group(1))
+                wx.PostEvent(self.monitor, ProgressChangedEvent(value=int(percent), total="", speed="", eta=""))
 
     def download(self):
-        download_options = {
-            "outtmpl": "{}\\%(title)s.%(ext)s".format(self.path),
-            "quiet": True,
-            "format": self.downloading_format,
-            "continuedl": True,
-            "youtube_include_dash_manifest": False,
-            "progress_hooks": [self.my_hook],
-        }
+        command = [
+            paths.yt_dlp_path,
+            "--no-check-certificate",
+            "-o",
+            f"{self.path}\\%(title)s.%(ext)s",
+            "-f",
+            self.downloading_format,
+            "--progress",
+            self.url
+        ]
         if self.convert:
-            download_options["postprocessors"] = [
-                {
-                    "key": "FFmpegExtractAudio",
-                    "preferredcodec": "mp3",
-                    "preferredquality": self.get_quality(),
-                }
-            ]
-        title = self.titleCreate(self.folder)
-        if title is not None:
-            download_options["outtmpl"] = "{}\\{}\\%(title)s.%(ext)s".format(
-                self.path, title
-            )
-            # download_options["ignoreerrors"] = True
-        with youtube_dl.YoutubeDL(download_options) as youtubeDownloader:
-            youtubeDownloader.download([self.url])
-
+            command.extend(["-x", "--audio-format", "mp3", "--audio-quality", self.get_quality()])
+        
+        self.process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True, encoding='utf-8', creationflags=subprocess.CREATE_NO_WINDOW)
+        
+        for line in self.process.stdout:
+            self.progress_parser(line)
+        
+        return self.process.wait()
 
 def downloadAction(
-    url, path, dlg, downloading_format, monitor, monitor1, convert=False, folder=False
+    url, path, dlg, downloading_format, monitor, status_label, convert=False, folder=False
 ):
     downloader = Downloader(
-        url, path, downloading_format, monitor, monitor1, convert=convert, folder=folder
+        url, path, downloading_format, monitor, status_label, convert=convert, folder=folder
     )
-    wx.CallAfter(dlg.Show)
+    
+    def on_progress(event):
+        monitor.SetValue(event.value)
+        status_label.SetString(0, _("نسبة التنزيل: {}%").format(event.value))
+        if hasattr(event, "total") and event.total:
+            status_label.SetString(1, _("حجم الملف الإجمالي: {}").format(event.total))
+        else:
+            status_label.SetString(1, _("حجم الملف الإجمالي: غير معروف"))
+        if hasattr(event, "speed") and event.speed:
+            status_label.SetString(2, _("سرعة التنزيل: {}").format(event.speed))
+        else:
+            status_label.SetString(2, _("سرعة التنزيل: غير معروفة"))
+        if hasattr(event, "eta") and event.eta:
+            status_label.SetString(3, _("الوقت المتبقي: {}").format(event.eta))
+        else:
+            status_label.SetString(3, _("الوقت المتبقي: غير معروف"))
+        status_label.SetString(4, "") # Clear the remaining amount string
 
-    def attempt(at):
-        try:
-            downloader.download()
-            return True
-        except youtube_dl.utils.DownloadError:
-            if at < 3:
-                attempt(at + 1)
-            else:
-                wx.MessageBox(
-                    _(
-                        "لقد أدخلت رابطًأ غير صحيح. يرجى تجربة رابط آخر, أو حاول التأكد من وجود اتصال بالشبكة."
-                    ),
-                    _("خطأ"),
-                    style=wx.ICON_ERROR,
-                    parent=dlg,
-                )
-                wx.CallAfter(dlg.Destroy)
+    monitor.Bind(EVT_PROGRESS_CHANGED, on_progress)
 
-    if attempt(0):
-        wx.MessageBox(_("اكتمل التنزيل بنجاح"), _("نجاح"), parent=dlg)
+    def download_thread():
+        result = downloader.download()
+        if result == 0:
+            wx.MessageBox(_("اكتمل التنزيل بنجاح"), _("نجاح"), parent=dlg)
+        else:
+            wx.MessageBox(
+                _("حدث خطأ أثناء التنزيل. يرجى التحقق من الرابط أو اتصالك بالإنترنت."),
+                _("خطأ"),
+                style=wx.ICON_ERROR,
+                parent=dlg,
+            )
         wx.CallAfter(dlg.Destroy)
+
+    wx.CallAfter(dlg.Show)
+    thread = Thread(target=download_thread)
+    thread.start()

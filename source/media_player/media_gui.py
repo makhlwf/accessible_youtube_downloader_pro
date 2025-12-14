@@ -5,7 +5,8 @@ from gui.download_progress import DownloadProgress
 from nvda_client.client import speak
 from settings_handler import config_get, config_set
 import application
-from utiles import direct_download, get_audio_stream, get_video_stream
+from utiles import get_audio_stream, get_video_stream
+from download_handler.downloader import downloadAction
 from vlc import State
 from gui.settings_dialog import SettingsDialog
 from gui.description import DescriptionDialog
@@ -127,6 +128,26 @@ class MediaGui(wx.Frame):
             self.player.media.set_position(Continue.get_all()[url])
         Thread(target=self.extract_description).start()
         Thread(target=self.extract_comments).start()
+
+    def _download_media(self, option, url, dlg, path=None):
+        if path is None:
+            path = self.path
+        if option == 0:
+            format = "bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4"
+        else:
+            format = "bestaudio[ext=m4a]"
+        convert = True if option == 2 else False
+        folder = False # Not relevant for single video downloads in MediaGui
+        downloadAction(
+            url,
+            path,
+            dlg,
+            format,
+            dlg.gaugeProgress,
+            dlg.textProgress,
+            convert,
+            folder,
+        )
 
     def playAction(self):
         state = self.player.media.get_state()
@@ -394,19 +415,19 @@ class MediaGui(wx.Frame):
 
     def onM4aDownload(self, event):
         dlg = DownloadProgress(wx.GetApp().GetTopWindow(), self.title)
-        direct_download(1, self.url, dlg, path=self.path)
+        self._download_media(1, self.url, dlg, path=self.path)
 
     def onMp3Download(self, event):
         dlg = DownloadProgress(wx.GetApp().GetTopWindow(), self.title)
-        direct_download(2, self.url, dlg, path=self.path)
+        self._download_media(2, self.url, dlg, path=self.path)
 
     def onVideoDownload(self, event):
         dlg = DownloadProgress(wx.GetApp().GetTopWindow(), self.title)
-        direct_download(0, self.url, dlg, path=self.path)
+        self._download_media(0, self.url, dlg, path=self.path)
 
     def onDirect(self, event):
         dlg = DownloadProgress(wx.GetApp().GetTopWindow(), self.title)
-        direct_download(int(config_get("defaultformat")), self.url, dlg, path=self.path)
+        self._download_media(int(config_get("defaultformat")), self.url, dlg, path=self.path)
 
     def onDescription(self, event):
         if hasattr(self, "description"):

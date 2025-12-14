@@ -1,7 +1,7 @@
 import wx
 import pyperclip
 import os
-from download_handler.downloader import Downloader
+from download_handler.downloader import downloadAction
 from settings_handler import config_get, config_set
 from .download_progress import DownloadProgress
 from threading import Thread
@@ -95,7 +95,7 @@ class DownloadDialog(wx.Frame):
                 match.group()
             )  # set the url box content to the detected youtube link if the box was not impty
 
-    def downloadingAction(self):
+    def onDownload(self, event):
         url = self.videoLink.GetValue()
         if url == "" or youtube_regexp(url) is None:
             wx.MessageBox(
@@ -122,46 +122,11 @@ class DownloadDialog(wx.Frame):
             convert = True
         else:
             convert = False
-        downloader = Downloader(
-            url,
-            self.path,
-            format,
-            self.downloadFrame.gaugeProgress,
-            self.downloadFrame.textProgress,
-            convert=convert,
-            folder=folder,
-        )
-        try:
-            wx.CallAfter(self.Hide)
-            self.downloading = True
-            wx.CallAfter(self.downloadFrame.Show)
-            downloader.download()
-        except youtube_dl.utils.DownloadError:
-            wx.MessageBox(
-                _(
-                    "لقد أدخلت رابطًأ غير صحيح. يرجى تجربة رابط آخر, أو حاول التأكد من وجود اتصال بالشبكة."
-                ),
-                _("خطأ"),
-                style=wx.ICON_ERROR,
-                parent=self,
-            )
-            wx.CallAfter(self.videoLink.SetValue, "")
-            wx.CallAfter(self.Show)
-            wx.CallAfter(self.videoLink.SetFocus)
-            wx.CallAfter(self.downloadFrame.Destroy)
-            return
-        wx.MessageBox(_("اكتمل التنزيل بنجاح"), _("نجاح"), parent=self.downloadFrame)
-        wx.CallAfter(self.downloadFrame.Destroy)
-        wx.CallAfter(self.Show)
-        wx.CallAfter(self.videoLink.SetFocus)
-        wx.CallAfter(self.videoLink.SetValue, "")
 
-    def onDownload(self, event):
         config_set("defaultaudio", str(self.convertingFormat.Selection))
-        self.downloadFrame = DownloadProgress(wx.GetApp().GetTopWindow())
-        t = Thread(target=self.downloadingAction)
-        t.daemon = True
-        t.start()
+        downloadFrame = DownloadProgress(wx.GetApp().GetTopWindow())
+        self.Hide()
+        downloadAction(url, self.path, downloadFrame, format, downloadFrame.gaugeProgress, downloadFrame.textProgress, convert=convert, folder=folder)
 
     def onHook(self, event):
         if event.KeyCode == wx.WXK_ESCAPE:

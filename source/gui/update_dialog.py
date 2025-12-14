@@ -14,8 +14,9 @@ DownloadFinishedEvent, EVT_DOWNLOAD_FINISHED = NewEvent()
 
 
 class UpdateDialog(wx.Dialog):
-    def __init__(self, parent, url):
-        super().__init__(None, title=_("تنزيل التحديثات"))
+    def __init__(self, parent, url, dest=None, title=_("تنزيل التحديثات")):
+        super().__init__(None, title=title)
+        self.dest = dest
         self.CentreOnParent()
 
         panel = wx.Panel(self)
@@ -36,10 +37,13 @@ class UpdateDialog(wx.Dialog):
         self.ShowModal()
 
     def updateDownload(self, url):
-        if os.path.exists(update_path):
-            shutil.rmtree(update_path)
-        os.mkdir(update_path)
-        name = os.path.join(update_path, url.split("/")[-1])
+        if self.dest is None:
+            if os.path.exists(update_path):
+                shutil.rmtree(update_path)
+            os.mkdir(update_path)
+            name = os.path.join(update_path, url.split("/")[-1])
+        else:
+            name = self.dest
         try:
             with requests.get(url, stream=True) as r:
                 if r.status_code != 200:
@@ -58,7 +62,10 @@ class UpdateDialog(wx.Dialog):
                         file.write(part)
                         if not self.download:
                             file.close()
-                            shutil.rmtree(update_path)
+                            if self.dest is None:
+                                shutil.rmtree(update_path)
+                            else:
+                                os.remove(self.dest)
                             self.Destroy()
                             return
 
@@ -73,19 +80,24 @@ class UpdateDialog(wx.Dialog):
 
     def errorAction(self):
         wx.MessageBox(
-            _("لا يمكن تحديث البرنامج في الوقت الحالي"),
+            _("لا يمكن اكمال التنزيل في الوقت الحالي"),
             _("خطأ"),
             style=wx.ICON_ERROR,
             parent=self,
         )
-        shutil.rmtree(update_path)
+        if self.dest is None:
+            shutil.rmtree(update_path)
         self.Destroy()
 
     def onChanged(self, event):
         self.progress.SetValue(event.value)
-        self.status.SetValue(_("يتم الآن تنزيل التحديث {}").format(event.value))
+        self.status.SetValue(_("يتم الآن تنزيل الملف {}").format(event.value))
 
     def onFinished(self, event):
+        if self.dest is not None:
+            wx.MessageBox(_("اكتمل تنزيل الملف بنجاح"), _("نجاح"), parent=self)
+            self.Destroy()
+            return
         wx.MessageBox(
             _(
                 "اكتمل تنزيل التحديث بنجاح. يرجى الضغط على موافق للشروع في عملية التثبيت"
