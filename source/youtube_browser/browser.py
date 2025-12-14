@@ -93,6 +93,7 @@ class YoutubeBrowser(wx.Frame):
             self.Parent.Hide()
         else:
             self.Destroy()
+            return
         self.favorites = Favorite()
         self.togleFavorite()
 
@@ -121,13 +122,15 @@ class YoutubeBrowser(wx.Frame):
         if query is None:
             self.togleControls()
             return False
+        
+        search_obj = Search(query, filter)
         try:
             self.search = LoadingDialog(
-                self, _("جاري البحث"), Search, query, filter
+                self, _("جاري البحث"), search_obj.init_async # Pass the async init method
             ).res
             if self.search is None:
                 raise Exception
-        except:
+        except Exception:
             wx.MessageBox(
                 _("تعذر إجراء عملية البحث بسبب وجود خلل ما في الاتصال بالشبكة."),
                 _("خطأ"),
@@ -301,7 +304,10 @@ class YoutubeBrowser(wx.Frame):
         if self.searchResults.Strings == []:
             return
         speak(_("جاري تحميل المزيد من النتائج"))
-        if self.search.load_more() is None:
+        load_more_result = LoadingDialog(
+            self, _("جاري تحميل المزيد من النتائج"), self.search.load_more
+        ).res
+        if load_more_result is None or not load_more_result:
             speak(_("لم يتمكن البرنامج من تحميل المزيد من النتائج"))
             return
         # position = self.searchResults.Selection
@@ -342,6 +348,8 @@ class YoutubeBrowser(wx.Frame):
 
     def togleDownload(self):
         n = self.searchResults.Selection
+        if n == -1:
+            return
         if self.search.get_views(n) is None and self.search.get_type(n) == "video":
             self.contextMenu.Enable(self.downloadId, False)
             self.contextMenu.Enable(self.directDownloadId, False)
@@ -353,6 +361,8 @@ class YoutubeBrowser(wx.Frame):
 
     def toglePlay(self):
         n = self.searchResults.Selection
+        if n == -1:
+            return
         contextMenuIds = (self.videoPlayItemId, self.audioPlayItemId)
         if self.search.get_type(n) == "playlist":
             self.playButton.Label = _("فتح")
@@ -365,6 +375,8 @@ class YoutubeBrowser(wx.Frame):
 
     def onFavorite(self, event):
         n = self.searchResults.Selection
+        if n == -1:
+            return
         url = self.search.get_url(n)
         if self.favCheck.Value:
             title = self.search.get_title(n)
@@ -388,6 +400,8 @@ class YoutubeBrowser(wx.Frame):
 
     def togleFavorite(self):
         n = self.searchResults.Selection
+        if n == -1:
+            return
         self.favCheck.Enabled = self.search.get_type(n) == "video"
         if not self.favCheck.Enabled:
             return
@@ -416,3 +430,4 @@ class YoutubeBrowser(wx.Frame):
 
     def onShow(self, event):
         self.searchResults.SetFocus()
+

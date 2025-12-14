@@ -1,5 +1,7 @@
 import wx
 from threading import Thread
+import inspect
+from async_utils import run_in_async_loop
 
 
 class LoadingDialog(wx.Dialog):
@@ -28,7 +30,12 @@ class LoadingDialog(wx.Dialog):
 
     def run(self):
         try:
-            self.res = self.function(*self.args, **self.kwargs)
+            if inspect.iscoroutinefunction(self.function):
+                # Run async function in the asyncio loop
+                self.res = run_in_async_loop(self.function(*self.args, **self.kwargs))
+            else:
+                # Run synchronous function in the current thread
+                self.res = self.function(*self.args, **self.kwargs)
             wx.CallAfter(self.Destroy)
         except Exception as e:
             wx.CallAfter(self.Destroy)

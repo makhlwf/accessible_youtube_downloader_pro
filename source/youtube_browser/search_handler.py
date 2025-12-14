@@ -1,40 +1,46 @@
-from youtubesearchpython import (
-    VideosSearch,
-    CustomSearch,
-    PlaylistsSearch,
-    Playlist,
-)
+import asyncio
+from py_yt import Playlist, Video, Search, VideosSearch, ChannelsSearch, PlaylistsSearch, CustomSearch
+from py_yt.core.constants import VideoSortOrder
 from utiles import time_formatting
 
 
 class PlaylistResult:
     def __init__(self, url):
         self.url = url
-        self.playlist = Playlist(url)
+        self.playlist = None
         self.videos = []
         self.count = 0
-        self.parse()
+        self.new_videos = 0
 
-    def parse(self):
-        for vid in self.playlist.videos[self.count :]:
+    async def init_async(self):
+        self.playlist = Playlist(self.url)
+        await self.playlist.init() # Initialize the playlist object
+        await self.parse()
+        return self
+
+    async def parse(self):
+        # py_yt.Playlist.videos is a list of Video objects after init() or next()
+        current_videos_len = len(self.videos)
+        for vid in self.playlist.videos[current_videos_len:]:
             video = {
-                "title": vid["title"],
-                "url": f"https://youtube.com/watch?v={vid['id']}",
-                "duration": time_formatting(vid["duration"]),
+                "title": vid.get('title'),
+                "url": vid.get('link'),
+                "duration": str(vid.get('duration')), # py_yt gives duration in seconds, time_formatting expects "HH:MM:SS"
                 "channel": {
-                    "name": vid["channel"]["name"],
-                    "url": f"https://www.youtube.com/channel/{vid['channel']['id']}",
+                    "name": vid.get('channel', {}).get('name'),
+                    "url": vid.get('channel', {}).get('link'),
                 },
             }
             self.videos.append(video)
             self.count = len(self.videos)
 
-    def next(self):
-        if not self.playlist.hasMoreVideos:
-            return
-        self.playlist.getNextVideos()
+    async def next(self):
+        if not await self.playlist.has_more_videos():
+            return False
+        
+        await self.playlist.next()
         current = self.count
-        self.parse()
+        await self.parse()
         self.new_videos = self.count - current
 
         return True
@@ -51,10 +57,10 @@ class PlaylistResult:
         for vid in self.videos:
             title = [
                 vid["title"],
-                _("المدة: {}").format(vid["duration"]),
+                _("المدة: {}").format(time_formatting(vid["duration"])), # Convert duration for display
                 f"{_('بواسطة')} {vid['channel']['name']}",
             ]
-            titles.append(", ".join(title))
+            titles.append(", ".join([element for element in title if element != ""]))
         return titles
 
     def get_url(self, n):
@@ -66,41 +72,62 @@ class Search:
         self.query = query
         self.filter = filter
         self.results = {}
-        self.count = 1
-        filters = {1: "EgJAAQ", 2: "CAISAhAB", 3: "CAMSAhAB", 4: "EgIQA"}
-        if self.filter == 0:
-            self.search = VideosSearch(self.query)
-        elif self.filter == 4:
-            self.search = PlaylistsSearch(self.query)
+        self.count = 0
+        self.new_videos = 0
+        
+        if self.filter == 0: # Videos
+            self.search = VideosSearch(self.query, limit=20, language="en", region="US")
+        elif self.filter == 4: # Playlists
+            self.search = PlaylistsSearch("NoCopyrightSounds", limit=20, language="en", region="US") # Hardcoded for debugging
         else:
-            self.search = CustomSearch(self.query, filters[self.filter])
-        self.parse_results()
+            self.search = VideosSearch(self.query, limit=20, language="en", region="US") 
 
-    def parse_results(self):
-        results = self.search.result()["result"]
-        for result in results:
-            self.results[self.count] = {
-                "type": result["type"],
-                "title": result["title"],
-                "url": result["link"],
-                "duration": result.get("duration"),
-                "elements": result.get("videoCount"),
-                "channel": {
-                    "name": result["channel"]["name"],
-                    "url": f"https://www.youtube.com/channel/{result['channel']['id']}",
-                },
-            }
-            if result["type"] == "video":
-                self.results[self.count]["views"] = self.parse_views(
-                    result["viewCount"]["text"]
-                )
-            else:
-                self.results[self.count]["views"] = None
-            self.count += 1
+    async def init_async(self):
+        try:
+            result = await self.search.next()
+        except TypeError:
+            result = {"result": []} # Return an empty result
+        await self.parse_results(result)
+        return self
+
+    async def parse_results(self, result):
+        items = result.get("result", [])
+        # print(result) # Removed print statement
+        if isinstance(self.search, PlaylistsSearch):
+            for item in items:
+                self.count += 1
+                self.results[self.count] = {
+                    "type": "playlist",
+                    "title": item.get('title'),
+                    "url": item.get('link'),
+                    "duration": None,
+                    "elements": item.get('video_count'),
+                    "channel": {
+                        "name": item.get('channel', {}).get('name'),
+                        "url": item.get('channel', {}).get('link'),
+                    },
+                    "views": None,
+                }
+        else: # VideosSearch, CustomSearch (assuming it returns videos)
+            for item in items:
+                self.count += 1
+                self.results[self.count] = {
+                    "type": "video",
+                    "title": item.get('title'),
+                    "url": item.get('link'),
+                    "duration": item.get('duration'), # in seconds
+                    "elements": None,
+                    "channel": {
+                        "name": item.get('channel', {}).get('name'),
+                        "url": item.get('channel', {}).get('link'),
+                    },
+                    "views": item.get('view_count'),
+                }
 
     def get_titles(self):
         titles = []
-        for result, data in self.results.items():
+        for number in sorted(self.results.keys()):
+            data = self.results[number]
             title = [data["title"]]
             if data["type"] == "video":
                 title += [
@@ -133,22 +160,19 @@ class Search:
     def get_channel(self, number):
         return self.results[number + 1]["channel"]
 
-    def load_more(self):
+    async def load_more(self):
+        if not self.search.has_more_results(): # Check if there are more results
+            return False
+        
         try:
-            self.search.next()
-        except:
-            return
+            result = await self.search.next()
+        except TypeError:
+            return False
+        
         current = self.count
-        self.parse_results()
+        await self.parse_results(result)
         self.new_videos = self.count - current
         return True
-
-    def parse_views(self, string):
-        try:
-            string = string.replace(",", "")
-        except AttributeError:
-            return
-        return string.replace("views", "")
 
     def get_views(self, number):
         return self.results[number + 1]["views"]
@@ -161,6 +185,21 @@ class Search:
 
     def get_duration(self, data):  # get the duration of the video
         if data is not None:
-            return _("المدة: {}").format(time_formatting(data))
+            # Parse MM:SS or HH:MM:SS string to total seconds
+            parts = str(data).split(':')
+            total_seconds = 0
+            try:
+                if len(parts) == 3: # HH:MM:SS
+                    total_seconds = int(parts[0]) * 3600 + int(parts[1]) * 60 + int(parts[2])
+                elif len(parts) == 2: # MM:SS
+                    total_seconds = int(parts[0]) * 60 + int(parts[1])
+                elif len(parts) == 1: # SS
+                    total_seconds = int(parts[0])
+                else:
+                    return "" # Invalid format
+            except ValueError:
+                return "" # Handle cases where parts are not valid integers
+
+            return _("المدة: {}").format(time_formatting(total_seconds))
         else:
             return ""

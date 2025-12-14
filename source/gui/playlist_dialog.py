@@ -54,15 +54,22 @@ class PlaylistDialog(wx.Dialog):
         self.Bind(wx.EVT_CHAR_HOOK, self.onHook)
         self.Bind(wx.EVT_CLOSE, lambda e: wx.Exit())
         try:
+            # Instantiate PlaylistResult
+            playlist_result_obj = PlaylistResult(self.url)
+            # Call LoadingDialog with the async init_async method
             self.result = LoadingDialog(
-                self.Parent, _("جاري عرض قائمة التشغيل"), PlaylistResult, self.url
+                self.Parent, _("جاري عرض قائمة التشغيل"), playlist_result_obj.init_async
             ).res
-            self.title = self.result.playlist.info["info"]["title"]
+            
+            if self.result is None: # Handle case where init_async returns None due to error
+                raise Exception("Failed to initialize playlist")
+
+            self.title = self.result.playlist.title
             self.SetTitle(f"{application.name} - {self.title}")
             self.videosBox.Set(self.result.get_display_titles())
-        except:
+        except Exception as e: # Catch a broader exception here
             wx.MessageBox(
-                _("حدث خطأ ما أثناء محاولة فتح قائمة التشغيل"),
+                _("حدث خطأ ما أثناء محاولة فتح قائمة التشغيل: {}").format(e), # Show the error
                 _("خطأ"),
                 style=wx.ICON_ERROR,
                 parent=self,
@@ -189,7 +196,10 @@ class PlaylistDialog(wx.Dialog):
 
             def load():
                 try:
-                    if self.result.next():
+                    load_more_result = LoadingDialog(
+                        self, _("جاري تحميل المزيد من الفيديوهات"), self.result.next
+                    ).res
+                    if load_more_result:
                         titles = self.result.get_new_titles()
                         wx.CallAfter(self.videosBox.Append, titles)
                         speak(_("تم تحميل المزيد من الفيديوهات"))
@@ -199,6 +209,69 @@ class PlaylistDialog(wx.Dialog):
                     speak(_("لم يتم تحميل المزيد من الفيديوهات"))
 
             Thread(target=load).start()
+
+    def onVideoDownload(self, event):
+        n = self.videosBox.Selection
+        url = self.result.get_url(n)
+        title = self.result.get_title(n)
+        dlg = DownloadProgress(self.Parent, title)
+        self._download_media(
+            0, url, dlg, "video", os.path.join(config_get("path"), self.title)
+        )
+
+    def directDownload(self):
+        n = self.videosBox.Selection
+        url = self.result.get_url(n)
+        title = self.result.get_title(n)
+        dlg = DownloadProgress(wx.GetApp().GetTopWindow(), title)
+        self._download_media(
+            int(config_get("defaultformat")),
+            url,
+            dlg,
+            "video",
+            os.path.join(config_get("path"), self.title),
+        )
+
+    def onM4aDownload(self, event):
+        n = self.videosBox.Selection
+        url = self.result.get_url(n)
+        title = self.result.get_title(n)
+        dlg = DownloadProgress(wx.GetApp().GetTopWindow(), title)
+        self._download_media(
+            1, url, dlg, "video", os.path.join(config_get("path"), self.title)
+        )
+
+    def onMp3Download(self, event):
+        n = self.videosBox.Selection
+        url = self.result.get_url(n)
+        title = self.result.get_title(n)
+        dlg = DownloadProgress(wx.GetApp().GetTopWindow(), title)
+        self._download_media(
+            2, url, dlg, "video", os.path.join(config_get("path"), self.title)
+        )
+
+    def onDownload(self, event):
+        downloadMenu = wx.Menu()
+        videoItem = downloadMenu.Append(-1, _("فيديو"))
+        audioMenu = wx.Menu()
+        m4aItem = audioMenu.Append(-1, "m4a")
+        mp3Item = audioMenu.Append(-1, "mp3")
+        downloadMenu.Append(-1, _("صوت"), audioMenu)
+        self.Bind(wx.EVT_MENU, self.onVideoDownload, videoItem)
+        self.Bind(wx.EVT_MENU, self.onM4aDownload, m4aItem)
+        self.Bind(wx.EVT_MENU, self.onMp3Download, mp3Item)
+        self.PopupMenu(downloadMenu)
+        self.videosBox.SetFocus()
+
+    def back(self):
+        self.Parent.Show()
+        self.Destroy()
+
+    def onHook(self, event):
+        if event.KeyCode == wx.WXK_ESCAPE and not type(self.FindFocus()) == MediaGui:
+            self.back()
+        else:
+            event.Skip()
 
     def onVideoDownload(self, event):
         n = self.videosBox.Selection

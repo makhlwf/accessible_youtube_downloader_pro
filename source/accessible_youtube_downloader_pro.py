@@ -15,6 +15,9 @@ import webbrowser
 import subprocess
 import utiles
 import paths
+import asyncio
+import threading
+from async_utils import start_async_loop, stop_async_loop, run_in_async_loop, _async_thread
 from gui.activity_dialog import LoadingDialog
 from gui.auto_detect_dialog import AutoDetectDialog
 from gui.download_dialog import DownloadDialog
@@ -27,7 +30,6 @@ from doc_handler import documentation_get
 from media_player.media_gui import MediaGui
 from youtube_browser.browser import YoutubeBrowser
 from threading import Thread
-
 
 class HomeScreen(wx.Frame):
     # the main class
@@ -262,8 +264,12 @@ class HomeScreen(wx.Frame):
 
     def onClose(self, event):
         database.disconnect()
+        stop_async_loop()
         wx.Exit()
 
+
+_async_thread = threading.Thread(target=start_async_loop, daemon=True)
+_async_thread.start()
 
 app = wx.App()
 lang_id = codes.get(settings_handler.config_get("lang"), wx.LANGUAGE_ARABIC)
