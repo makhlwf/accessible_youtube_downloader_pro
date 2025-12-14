@@ -46,13 +46,15 @@ backend = "internal"
 if os.environ.get("PAFY_BACKEND") != "internal":
     try:
         import yt_dlp as youtube_dl
+
         backend = "youtube-dl"
     except ImportError:
         raise ImportError(
-               "pafy: youtube-dl not found; you can use the internal backend by "
-               "setting the environmental variable PAFY_BACKEND to \"internal\". "
-               "It is not enabled by default because it is not as well maintained "
-               "as the youtube-dl backend.")
+            "pafy: youtube-dl not found; you can use the internal backend by "
+            'setting the environmental variable PAFY_BACKEND to "internal". '
+            "It is not enabled by default because it is not as well maintained "
+            "as the youtube-dl backend."
+        )
 
 if os.environ.get("pafydebug") == "1":
     logging.basicConfig(level=logging.DEBUG)
@@ -62,17 +64,17 @@ dbg = logging.debug
 
 
 def fetch_decode(url, encoding=None):
-    """ Fetch url and decode. """
+    """Fetch url and decode."""
     try:
         req = g.opener.open(url)
     except HTTPError as e:
         if e.getcode() == 503:
-            time.sleep(.5)
+            time.sleep(0.5)
             return fetch_decode(url, encoding)
         else:
             raise
 
-    ct = req.headers['content-type']
+    ct = req.headers["content-type"]
 
     if encoding:
         return req.read().decode(encoding)
@@ -87,9 +89,8 @@ def fetch_decode(url, encoding=None):
         return req.read()
 
 
-def new(url, basic=True, gdata=False, size=False,
-        callback=None, ydl_opts=None):
-    """ Return a new pafy instance given a url or video id.
+def new(url, basic=True, gdata=False, size=False, callback=None, ydl_opts=None):
+    """Return a new pafy instance given a url or video id.
 
     NOTE: The signature argument has been deprecated and now has no effect,
         it will be removed in a future version.
@@ -117,15 +118,15 @@ def new(url, basic=True, gdata=False, size=False,
     global Pafy
     if Pafy is None:
         if backend == "internal":
-           from .backend_internal import InternPafy as Pafy
+            from .backend_internal import InternPafy as Pafy
         else:
-           from .backend_youtube_dl import YtdlPafy as Pafy
+            from .backend_youtube_dl import YtdlPafy as Pafy
 
     return Pafy(url, basic, gdata, size, callback, ydl_opts=ydl_opts)
 
 
 def cache(name):
-    """ Returns a sub-cache dictionary under which global key, value pairs
+    """Returns a sub-cache dictionary under which global key, value pairs
     can be stored. Regardless of whether a dictionary already exists for
     the given name, the sub-cache is returned by reference.
     """
@@ -135,53 +136,54 @@ def cache(name):
 
 
 def get_categoryname(cat_id):
-    """ Returns a list of video category names for one category ID. """
+    """Returns a list of video category names for one category ID."""
     timestamp = time.time()
-    cat_cache = cache('categories')
+    cat_cache = cache("categories")
     cached = cat_cache.get(cat_id, {})
-    if cached.get('updated', 0) > timestamp - g.lifespan:
-        return cached.get('title', 'unknown')
+    if cached.get("updated", 0) > timestamp - g.lifespan:
+        return cached.get("title", "unknown")
     # call videoCategories API endpoint to retrieve title
-    query = {'id': cat_id,
-             'part': 'snippet'}
-    catinfo = call_gdata('videoCategories', query)
+    query = {"id": cat_id, "part": "snippet"}
+    catinfo = call_gdata("videoCategories", query)
     try:
-        for item in catinfo.get('items', []):
-            title = item.get('snippet', {}).get('title', 'unknown')
-            cat_cache[cat_id] = {'title':title, 'updated':timestamp}
+        for item in catinfo.get("items", []):
+            title = item.get("snippet", {}).get("title", "unknown")
+            cat_cache[cat_id] = {"title": title, "updated": timestamp}
             return title
-        cat_cache[cat_id] = {'updated':timestamp}
-        return 'unknown'
+        cat_cache[cat_id] = {"updated": timestamp}
+        return "unknown"
     except Exception:
         raise IOError("Error fetching category name for ID %s" % cat_id)
 
 
 def set_categories(categories):
-    """ Take a dictionary mapping video category IDs to name and retrieval
+    """Take a dictionary mapping video category IDs to name and retrieval
     time. All items are stored into cache node 'videoCategories', but
     for the ones with a retrieval time too long ago, the v3 API is queried
     before.
     """
     timestamp = time.time()
-    idlist = [cid for cid, item in categories.items()
-              if item.get('updated', 0) < timestamp - g.lifespan]
+    idlist = [
+        cid
+        for cid, item in categories.items()
+        if item.get("updated", 0) < timestamp - g.lifespan
+    ]
     if len(idlist) > 0:
-        query = {'id': ','.join(idlist),
-                 'part': 'snippet'}
-        catinfo = call_gdata('videoCategories', query)
+        query = {"id": ",".join(idlist), "part": "snippet"}
+        catinfo = call_gdata("videoCategories", query)
         try:
-            for item in catinfo.get('items', []):
-                cid = item['id']
-                title = item.get('snippet', {}).get('title', 'unknown')
-                categories[cid] = {'title':title, 'updated':timestamp}
+            for item in catinfo.get("items", []):
+                cid = item["id"]
+                title = item.get("snippet", {}).get("title", "unknown")
+                categories[cid] = {"title": title, "updated": timestamp}
         except Exception:
             raise IOError("Error fetching category name for IDs %s" % idlist)
-    cache('categories').update(categories)
+    cache("categories").update(categories)
 
 
 def load_cache(newcache):
     """Loads a dict into pafy's internal cache."""
-    set_categories(newcache.get('categories', {}))
+    set_categories(newcache.get("categories", {}))
 
 
 def dump_cache():

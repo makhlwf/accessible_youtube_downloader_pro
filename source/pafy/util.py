@@ -15,28 +15,30 @@ from . import g
 
 
 mswin = os.name == "nt"
-not_utf8_environment = mswin or (sys.stdout.encoding and
-                                 "UTF-8" not in sys.stdout.encoding)
+not_utf8_environment = mswin or (
+    sys.stdout.encoding and "UTF-8" not in sys.stdout.encoding
+)
 
 
 class GdataError(Exception):
     """Gdata query failed."""
+
     pass
 
 
 def call_gdata(api, qs):
     """Make a request to the youtube gdata api."""
     qs = dict(qs)
-    qs['key'] = g.api_key
-    url = g.urls['gdata'] + api + '?' + urlencode(qs)
+    qs["key"] = g.api_key
+    url = g.urls["gdata"] + api + "?" + urlencode(qs)
 
     try:
-        data = g.opener.open(url).read().decode('utf-8')
+        data = g.opener.open(url).read().decode("utf-8")
     except HTTPError as e:
         try:
             errdata = e.file.read().decode()
-            error = json.loads(errdata)['error']['message']
-            errmsg = 'Youtube Error %d: %s' % (e.getcode(), error)
+            error = json.loads(errdata)["error"]["message"]
+            errmsg = "Youtube Error %d: %s" % (e.getcode(), error)
         except:
             errmsg = str(e)
         raise GdataError(errmsg)
@@ -59,5 +61,5 @@ def utf8_replace(txt):
 
 
 def xenc(stuff):
-    """ Replace unsupported characters. """
+    """Replace unsupported characters."""
     return utf8_replace(stuff) if not_utf8_environment else stuff

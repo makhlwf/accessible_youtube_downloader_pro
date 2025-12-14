@@ -25,6 +25,7 @@ class LoadingDialog(wx.Dialog):
         self.Bind(wx.EVT_CHAR_HOOK, self.onHook)
         Thread(target=self.run).start()
         self.ShowModal()
+
     def run(self):
         try:
             self.res = self.function(*self.args, **self.kwargs)
@@ -32,6 +33,7 @@ class LoadingDialog(wx.Dialog):
         except Exception as e:
             wx.CallAfter(self.Destroy)
             raise e
+
     def onHook(self, event):
         if event.KeyCode in (wx.WXK_DOWN, wx.WXK_UP, wx.WXK_LEFT, wx.WXK_RIGHT):
             self.message.SetFocus()

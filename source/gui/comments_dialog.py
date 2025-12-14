@@ -5,9 +5,7 @@ from wx.lib.newevent import NewEvent
 import pyperclip
 
 
-
 LoadingComplete, EVT_LOADING_COMPLETE = NewEvent()
-
 
 
 class CommentsDialog(wx.Dialog):
@@ -34,9 +32,11 @@ class CommentsDialog(wx.Dialog):
         self.Bind(wx.EVT_CLOSE, lambda e: self.Destroy())
         self.Bind(wx.EVT_CHAR_HOOK, self.onHook)
         self.contextSetup()
-        hotkeys = wx.AcceleratorTable([
-            (wx.ACCEL_CTRL, ord("L"), wx.ID_COPY),
-        ])
+        hotkeys = wx.AcceleratorTable(
+            [
+                (wx.ACCEL_CTRL, ord("L"), wx.ID_COPY),
+            ]
+        )
         self.commentsBox.SetAcceleratorTable(hotkeys)
         self.count = 0
         self.displayComments()
@@ -46,23 +46,30 @@ class CommentsDialog(wx.Dialog):
             self.commentsBox.Selection = 0
         except:
             pass
+
     def displayComments(self):
-        for comment in self.comments.comments['result'][self.count:]:
-            comment = [comment['content'], _("بواسطة {}").format(comment['author']['name'])]
+        for comment in self.comments.comments["result"][self.count :]:
+            comment = [
+                comment["content"],
+                _("بواسطة {}").format(comment["author"]["name"]),
+            ]
             self.commentsBox.Append(". ".join(comment))
         self.count = self.commentsBox.Count
 
     def getComment(self, n):
-        return self.comments.comments['result'][n]['content']
+        return self.comments.comments["result"][n]["content"]
+
     def loadMore(self):
         if self.comments.hasMoreComments and not self.isLoading:
             try:
                 self.isLoading = True
-                comments = list(self.comments.comments['result'])
+                comments = list(self.comments.comments["result"])
                 self.comments.getNextComments()
-                self.comments.comments['result'] = comments + self.comments.comments['result']
+                self.comments.comments["result"] = (
+                    comments + self.comments.comments["result"]
+                )
                 wx.PostEvent(self, LoadingComplete())
-            except Exception as e:
+            except Exception:
                 speak(_("لم نتمكن من تحميل المزيد من التعليقات"))
             finally:
                 self.isLoading = False
@@ -74,23 +81,31 @@ class CommentsDialog(wx.Dialog):
     def onNavigate(self, event):
         selection = self.commentsBox.Selection
 
-        if selection == self.commentsBox.Count-1:
+        if selection == self.commentsBox.Count - 1:
             Thread(target=self.loadMore).start()
 
     def onComplete(self, event):
         self.displayComments()
         speak(_("تم تحميل المزيد من التعليقات"))
+
     def contextSetup(self):
         contextMenu = wx.Menu()
         copyItem = contextMenu.Append(wx.ID_COPY, _("نسخ التعليق"))
 
-        self.commentsBox.Bind(wx.EVT_CONTEXT_MENU, lambda e: self.commentsBox.PopupMenu(contextMenu) if self.commentsBox.Selection != -1 else None)
+        self.commentsBox.Bind(
+            wx.EVT_CONTEXT_MENU,
+            lambda e: self.commentsBox.PopupMenu(contextMenu)
+            if self.commentsBox.Selection != -1
+            else None,
+        )
         self.commentsBox.Bind(wx.EVT_MENU, self.onCopy, id=wx.ID_COPY)
+
     def onCopy(self, event):
         selection = self.commentsBox.Selection
         if self.commentsBox.Selection != -1:
             pyperclip.copy(self.commentsBox.GetStringSelection())
             speak(_("تم نسخ التعليق المحدد إلى الحافظة"))
+
     def onHook(self, event):
         if event.KeyCode == wx.WXK_ESCAPE:
             self.Destroy()
