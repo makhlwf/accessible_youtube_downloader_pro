@@ -69,10 +69,12 @@ class PlaylistDialog(wx.Dialog):
             self.title = self.result.title
             self.SetTitle(f"{application.name} - {self.title}")
             self.videosBox.Set(self.result.get_display_titles())
-        except Exception as e: # Catch a broader exception here
-            print(e) # Added for debugging
+        except Exception as e:  # Catch a broader exception here
+            print(e)  # Added for debugging
             wx.MessageBox(
-                _("حدث خطأ ما أثناء محاولة فتح قائمة التشغيل: {}").format(e), # Show the error
+                _("حدث خطأ ما أثناء محاولة فتح قائمة التشغيل: {}").format(
+                    e
+                ),  # Show the error
                 _("خطأ"),
                 style=wx.ICON_ERROR,
                 parent=self,

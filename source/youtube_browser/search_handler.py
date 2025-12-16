@@ -23,7 +23,7 @@ class PlaylistResult:
 
     async def init_async(self):
         playlist_info = await Playlist.getInfo(self.url)
-        self.title = playlist_info.get('title', '')
+        self.title = playlist_info.get("title", "")
         self.playlist = Playlist(self.url)
         if self.playlist.hasMoreVideos:
             await self.playlist.getNextVideos()
@@ -112,38 +112,38 @@ class Search:
         items = result.get("result", [])
         if isinstance(self.search, PlaylistsSearch):
             for item in items:
-                video_count_str = item.get('videoCount', '0 videos')
+                video_count_str = item.get("videoCount", "0 videos")
                 try:
-                    video_count = int(video_count_str.split(' ')[0])
+                    video_count = int(video_count_str.split(" ")[0])
                 except (ValueError, IndexError):
                     video_count = 0
                 self.count += 1
                 self.results[self.count] = {
                     "type": "playlist",
-                    "title": item.get('title'),
-                    "url": item.get('link'),
+                    "title": item.get("title"),
+                    "url": item.get("link"),
                     "duration": None,
                     "elements": video_count,
                     "channel": {
-                        "name": item.get('channel', {}).get('name'),
-                        "url": item.get('channel', {}).get('link'),
+                        "name": item.get("channel", {}).get("name"),
+                        "url": item.get("channel", {}).get("link"),
                     },
                     "views": None,
                 }
-        else: # VideosSearch, CustomSearch (assuming it returns videos)
+        else:  # VideosSearch, CustomSearch (assuming it returns videos)
             for item in items:
                 self.count += 1
                 self.results[self.count] = {
                     "type": "video",
-                    "title": item.get('title'),
-                    "url": item.get('link'),
-                    "duration": item.get('duration'), # in seconds
+                    "title": item.get("title"),
+                    "url": item.get("link"),
+                    "duration": item.get("duration"),  # in seconds
                     "elements": None,
                     "channel": {
-                        "name": item.get('channel', {}).get('name'),
-                        "url": item.get('channel', {}).get('link'),
+                        "name": item.get("channel", {}).get("name"),
+                        "url": item.get("channel", {}).get("link"),
                     },
-                    "views": item.get('view_count'),
+                    "views": item.get("view_count"),
                 }
 
     def get_titles(self):
@@ -226,4 +226,4 @@ class Search:
 
             return _("المدة: {}").format(time_formatting(total_seconds))
         else:
-            return _("مباشر") # or _("غير معروف") depending on context of None duration
+            return _("مباشر")  # or _("غير معروف") depending on context of None duration

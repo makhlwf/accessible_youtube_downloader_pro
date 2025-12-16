@@ -52,7 +52,6 @@ command = [
     "pyinstaller",
     "--noconfirm",
     "--windowed",
-    "--onefile",
     "--name",
     app_name,
 ]

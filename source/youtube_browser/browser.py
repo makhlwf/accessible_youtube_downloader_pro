@@ -130,7 +130,7 @@ class YoutubeBrowser(wx.Frame):
         speak(_("جاري البحث..."))
         self.searchResults.Clear()
         self.togleControls()
-        
+
         def search_thread():
             search_obj = Search(query, filter)
             try:
@@ -142,10 +142,13 @@ class YoutubeBrowser(wx.Frame):
                 print(e)
                 wx.CallAfter(
                     wx.MessageBox,
-                    _("تعذر إجراء عملية البحث بسبب وجود خلل ما في الاتصال بالشبكة.\nالتفاصيل: {}").format(e),
+                    _(
+                        "تعذر إجراء عملية البحث بسبب وجود خلل ما في الاتصال بالشبكة.\nالتفاصيل: {}"
+                    ).format(e),
                     _("خطأ"),
                     style=wx.ICON_ERROR,
                 )
+
         Thread(target=search_thread).start()
         return True
 
@@ -161,8 +164,6 @@ class YoutubeBrowser(wx.Frame):
         self.togleDownload()
         self.toglePlay()
         speak(_("اكتمل البحث"))
-
-
 
     def onSearch(self, event):
         if hasattr(self, "search"):
@@ -319,7 +320,7 @@ class YoutubeBrowser(wx.Frame):
         if self.searchResults.Strings == []:
             return
         speak(_("جاري تحميل المزيد من النتائج"))
-        
+
         def load_more_thread():
             try:
                 load_more_result = run_in_async_loop(self.search.load_more())
@@ -328,7 +329,9 @@ class YoutubeBrowser(wx.Frame):
                 print(e)
                 wx.CallAfter(
                     wx.MessageBox,
-                    _("لم يتمكن البرنامج من تحميل المزيد من النتائج.\nالتفاصيل: {}").format(e),
+                    _(
+                        "لم يتمكن البرنامج من تحميل المزيد من النتائج.\nالتفاصيل: {}"
+                    ).format(e),
                     _("خطأ"),
                     style=wx.ICON_ERROR,
                 )
@@ -343,7 +346,6 @@ class YoutubeBrowser(wx.Frame):
         self.searchResults.Append(self.search.get_last_titles())
         speak(_("تم تحميل المزيد من نتائج البحث"))
         self.searchResults.SetFocus()
-
 
     def onListBox(self, event):
         self.togleDownload()
