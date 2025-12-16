@@ -15,6 +15,8 @@ from nvda_client.client import speak
 from settings_handler import config_get
 from youtube_browser.search_handler import Search
 from utiles import get_audio_stream, get_video_stream
+from async_utils import run_in_async_loop
+
 from download_handler.downloader import downloadAction
 from database import Favorite
 
@@ -125,22 +127,29 @@ class YoutubeBrowser(wx.Frame):
             self.togleControls()
             return False
 
-        search_obj = Search(query, filter)
-        try:
-            self.search = LoadingDialog(
-                self,
-                _("جاري البحث"),
-                search_obj.init_async,  # Pass the async init method
-            ).res
-            if self.search is None:
-                raise Exception
-        except Exception:
-            wx.MessageBox(
-                _("تعذر إجراء عملية البحث بسبب وجود خلل ما في الاتصال بالشبكة."),
-                _("خطأ"),
-                style=wx.ICON_ERROR,
-            )
-            return False
+        speak(_("جاري البحث..."))
+        self.searchResults.Clear()
+        self.togleControls()
+        
+        def search_thread():
+            search_obj = Search(query, filter)
+            try:
+                self.search = run_in_async_loop(search_obj.init_async())
+                if self.search is None:
+                    raise Exception
+                wx.CallAfter(self.on_search_complete)
+            except Exception as e:
+                print(e)
+                wx.CallAfter(
+                    wx.MessageBox,
+                    _("تعذر إجراء عملية البحث بسبب وجود خلل ما في الاتصال بالشبكة.\nالتفاصيل: {}").format(e),
+                    _("خطأ"),
+                    style=wx.ICON_ERROR,
+                )
+        Thread(target=search_thread).start()
+        return True
+
+    def on_search_complete(self):
         titles = self.search.get_titles()
         self.searchResults.Set(titles)
         self.togleControls()
@@ -151,7 +160,9 @@ class YoutubeBrowser(wx.Frame):
         self.searchResults.SetFocus()
         self.togleDownload()
         self.toglePlay()
-        return True
+        speak(_("اكتمل البحث"))
+
+
 
     def onSearch(self, event):
         if hasattr(self, "search"):
@@ -308,16 +319,31 @@ class YoutubeBrowser(wx.Frame):
         if self.searchResults.Strings == []:
             return
         speak(_("جاري تحميل المزيد من النتائج"))
-        load_more_result = LoadingDialog(
-            self, _("جاري تحميل المزيد من النتائج"), self.search.load_more
-        ).res
-        if load_more_result is None or not load_more_result:
+        
+        def load_more_thread():
+            try:
+                load_more_result = run_in_async_loop(self.search.load_more())
+                wx.CallAfter(self.on_load_more_complete, load_more_result)
+            except Exception as e:
+                print(e)
+                wx.CallAfter(
+                    wx.MessageBox,
+                    _("لم يتمكن البرنامج من تحميل المزيد من النتائج.\nالتفاصيل: {}").format(e),
+                    _("خطأ"),
+                    style=wx.ICON_ERROR,
+                )
+                speak(_("لم يتمكن البرنامج من تحميل المزيد من النتائج"))
+
+        Thread(target=load_more_thread).start()
+
+    def on_load_more_complete(self, result):
+        if result is None or not result:
             speak(_("لم يتمكن البرنامج من تحميل المزيد من النتائج"))
             return
-        # position = self.searchResults.Selection
-        wx.CallAfter(self.searchResults.Append, self.search.get_last_titles())
+        self.searchResults.Append(self.search.get_last_titles())
         speak(_("تم تحميل المزيد من نتائج البحث"))
-        wx.CallAfter(self.searchResults.SetFocus)
+        self.searchResults.SetFocus()
+
 
     def onListBox(self, event):
         self.togleDownload()

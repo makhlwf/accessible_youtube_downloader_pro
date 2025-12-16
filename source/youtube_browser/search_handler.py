@@ -19,10 +19,14 @@ class PlaylistResult:
         self.videos = []
         self.count = 0
         self.new_videos = 0
+        self.title = ""
 
     async def init_async(self):
+        playlist_info = await Playlist.getInfo(self.url)
+        self.title = playlist_info.get('title', '')
         self.playlist = Playlist(self.url)
-        await self.playlist.init()  # Initialize the playlist object
+        if self.playlist.hasMoreVideos:
+            await self.playlist.getNextVideos()
         await self.parse()
         return self
 
@@ -45,10 +49,10 @@ class PlaylistResult:
             self.count = len(self.videos)
 
     async def next(self):
-        if not await self.playlist.has_more_videos():
+        if not self.playlist.hasMoreVideos:
             return False
 
-        await self.playlist.next()
+        await self.playlist.getNextVideos()
         current = self.count
         await self.parse()
         self.new_videos = self.count - current
@@ -92,7 +96,7 @@ class Search:
         elif self.filter == 4:  # Playlists
             self.search = PlaylistsSearch(
                 self.query, limit=20, language="en", region="US"
-            )  # Hardcoded for debugging
+            )
         else:
             self.search = VideosSearch(self.query, limit=20, language="en", region="US")
 
@@ -106,36 +110,40 @@ class Search:
 
     async def parse_results(self, result):
         items = result.get("result", [])
-        # print(result) # Removed print statement
         if isinstance(self.search, PlaylistsSearch):
             for item in items:
+                video_count_str = item.get('videoCount', '0 videos')
+                try:
+                    video_count = int(video_count_str.split(' ')[0])
+                except (ValueError, IndexError):
+                    video_count = 0
                 self.count += 1
                 self.results[self.count] = {
                     "type": "playlist",
-                    "title": item.get("title"),
-                    "url": item.get("link"),
+                    "title": item.get('title'),
+                    "url": item.get('link'),
                     "duration": None,
-                    "elements": item.get("video_count"),
+                    "elements": video_count,
                     "channel": {
-                        "name": item.get("channel", {}).get("name"),
-                        "url": item.get("channel", {}).get("link"),
+                        "name": item.get('channel', {}).get('name'),
+                        "url": item.get('channel', {}).get('link'),
                     },
                     "views": None,
                 }
-        else:  # VideosSearch, CustomSearch (assuming it returns videos)
+        else: # VideosSearch, CustomSearch (assuming it returns videos)
             for item in items:
                 self.count += 1
                 self.results[self.count] = {
                     "type": "video",
-                    "title": item.get("title"),
-                    "url": item.get("link"),
-                    "duration": item.get("duration"),  # in seconds
+                    "title": item.get('title'),
+                    "url": item.get('link'),
+                    "duration": item.get('duration'), # in seconds
                     "elements": None,
                     "channel": {
-                        "name": item.get("channel", {}).get("name"),
-                        "url": item.get("channel", {}).get("link"),
+                        "name": item.get('channel', {}).get('name'),
+                        "url": item.get('channel', {}).get('link'),
                     },
-                    "views": item.get("view_count"),
+                    "views": item.get('view_count'),
                 }
 
     def get_titles(self):
@@ -212,10 +220,10 @@ class Search:
                 elif len(parts) == 1:  # SS
                     total_seconds = int(parts[0])
                 else:
-                    return ""  # Invalid format
+                    return _("غير معروف")  # Invalid format
             except ValueError:
-                return ""  # Handle cases where parts are not valid integers
+                return _("غير معروف")  # Handle cases where parts are not valid integers
 
             return _("المدة: {}").format(time_formatting(total_seconds))
         else:
-            return ""
+            return _("مباشر") # or _("غير معروف") depending on context of None duration
