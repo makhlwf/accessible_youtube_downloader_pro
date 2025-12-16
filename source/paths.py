@@ -1,10 +1,12 @@
 import os
 import sys
 
+
 def get_app_path():
-    if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+    if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
         return os.path.dirname(sys.executable)
     return os.path.abspath(os.path.dirname(__file__))
+
 
 main_path = get_app_path()
 

@@ -177,19 +177,19 @@ def time_formatting(total_seconds):
 def time_to_seconds(time_str):
     if not isinstance(time_str, str):
         return None
-    parts = time_str.split(':')
+    parts = time_str.split(":")
     total_seconds = 0
     try:
         if len(parts) == 3:  # HH:MM:SS
             total_seconds = int(parts[0]) * 3600 + int(parts[1]) * 60 + int(parts[2])
         elif len(parts) == 2:  # MM:SS
             total_seconds = int(parts[0]) * 60 + int(parts[1])
-        elif len(parts) == 1: # SS
+        elif len(parts) == 1:  # SS
             total_seconds = int(parts[0])
         else:
-            return None # Invalid format
+            return None  # Invalid format
     except ValueError:
-        return None # Handle cases where parts are not valid integers
+        return None  # Handle cases where parts are not valid integers
     return total_seconds
 
 

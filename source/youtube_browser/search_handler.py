@@ -19,7 +19,7 @@ class PlaylistResult:
         self.count = 0
         self.new_videos = 0
         self.title = ""
-        self.videos_data = [] # To store the raw video data from Playlist.getVideos()
+        self.videos_data = []  # To store the raw video data from Playlist.getVideos()
 
     async def init_async(self):
         playlist_data = await Playlist.getVideos(self.url)
@@ -48,7 +48,7 @@ class PlaylistResult:
                 },
             }
             self.videos.append(video)
-        self.count = len(self.videos) # Update count based on all parsed videos
+        self.count = len(self.videos)  # Update count based on all parsed videos
 
     async def next(self):
         # Since Playlist.getVideos() fetches all videos at once, there are no more videos to load
