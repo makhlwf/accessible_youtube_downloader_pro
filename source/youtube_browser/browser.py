@@ -97,7 +97,9 @@ class YoutubeBrowser(wx.Frame):
         self.favorites = Favorite()
         self.togleFavorite()
 
-    def _download_media(self, option, url, dlg, download_type="video", path=config_get("path")):
+    def _download_media(
+        self, option, url, dlg, download_type="video", path=config_get("path")
+    ):
         if option == 0:
             format = "bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4"
         else:
@@ -122,11 +124,13 @@ class YoutubeBrowser(wx.Frame):
         if query is None:
             self.togleControls()
             return False
-        
+
         search_obj = Search(query, filter)
         try:
             self.search = LoadingDialog(
-                self, _("جاري البحث"), search_obj.init_async # Pass the async init method
+                self,
+                _("جاري البحث"),
+                search_obj.init_async,  # Pass the async init method
             ).res
             if self.search is None:
                 raise Exception
@@ -430,4 +434,3 @@ class YoutubeBrowser(wx.Frame):
 
     def onShow(self, event):
         self.searchResults.SetFocus()
-

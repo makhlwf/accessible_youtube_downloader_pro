@@ -132,7 +132,7 @@ class MediaGui(wx.Frame):
         else:
             format = "bestaudio[ext=m4a]"
         convert = True if option == 2 else False
-        folder = False # Not relevant for single video downloads in MediaGui
+        folder = False  # Not relevant for single video downloads in MediaGui
         downloadAction(
             url,
             path,
@@ -419,7 +419,9 @@ class MediaGui(wx.Frame):
 
     def onDirect(self, event):
         dlg = DownloadProgress(wx.GetApp().GetTopWindow(), self.title)
-        self._download_media(int(config_get("defaultformat")), self.url, dlg, path=self.path)
+        self._download_media(
+            int(config_get("defaultformat")), self.url, dlg, path=self.path
+        )
 
     def onDescription(self, event):
         if hasattr(self, "description"):

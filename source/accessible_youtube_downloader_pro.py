@@ -5,6 +5,7 @@ os.chdir(os.path.abspath(os.path.dirname(__file__)))
 os.add_dll_directory(os.getcwd())
 import settings_handler
 from language_handler import init_translation, codes
+
 settings_handler.config_initialization()  # calling the config_initialization function which sets up the accessible_youtube_downloader_pro.ini file in the user appdata folder
 init_translation("accessible_youtube_downloader")  # program localization
 import database
@@ -17,7 +18,12 @@ import utiles
 import paths
 import asyncio
 import threading
-from async_utils import start_async_loop, stop_async_loop, run_in_async_loop, _async_thread
+from async_utils import (
+    start_async_loop,
+    stop_async_loop,
+    run_in_async_loop,
+    _async_thread,
+)
 from gui.activity_dialog import LoadingDialog
 from gui.auto_detect_dialog import AutoDetectDialog
 from gui.download_dialog import DownloadDialog
@@ -30,6 +36,7 @@ from doc_handler import documentation_get
 from media_player.media_gui import MediaGui
 from youtube_browser.browser import YoutubeBrowser
 from threading import Thread
+
 
 class HomeScreen(wx.Frame):
     # the main class
@@ -155,13 +162,29 @@ class HomeScreen(wx.Frame):
 
     def on_show_yt_dlp_version(self, event):
         if not os.path.exists(paths.yt_dlp_path):
-            wx.MessageBox(_("لم يتم العثور على yt-dlp.exe"), _("خطأ"), style=wx.ICON_ERROR, parent=self)
+            wx.MessageBox(
+                _("لم يتم العثور على yt-dlp.exe"),
+                _("خطأ"),
+                style=wx.ICON_ERROR,
+                parent=self,
+            )
             return
         try:
             command = [paths.yt_dlp_path, "--version"]
-            result = subprocess.run(command, capture_output=True, text=True, encoding="utf-8", creationflags=subprocess.CREATE_NO_WINDOW)
+            result = subprocess.run(
+                command,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                creationflags=subprocess.CREATE_NO_WINDOW,
+            )
             if result.returncode != 0:
-                wx.MessageBox(_("لا يمكن الحصول على إصدار yt-dlp"), _("خطأ"), style=wx.ICON_ERROR, parent=self)
+                wx.MessageBox(
+                    _("لا يمكن الحصول على إصدار yt-dlp"),
+                    _("خطأ"),
+                    style=wx.ICON_ERROR,
+                    parent=self,
+                )
                 return
             wx.MessageBox(result.stdout, _("إصدار yt-dlp"), parent=self)
         except Exception as e:
@@ -183,7 +206,9 @@ class HomeScreen(wx.Frame):
             url,
         ).res
         if stream is None:
-            wx.MessageBox(_("لا يمكن تشغيل الرابط"), _("خطأ"), style=wx.ICON_ERROR, parent=self)
+            wx.MessageBox(
+                _("لا يمكن تشغيل الرابط"), _("خطأ"), style=wx.ICON_ERROR, parent=self
+            )
             return
         gui = MediaGui(
             self, stream.title, stream, data["link"]

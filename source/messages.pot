@@ -1,0 +1,153 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-12-14 21:54+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: accessible_youtube_downloader_pro.py:53
+msgid ""
+"اضغط على مفتاح القوائم alt للوصول إلى خيارات البرنامج, أو تنقل بزر التاب "
+"للوصول سريعًا إلى أهم الخيارات المتاحة."
+msgstr ""
+
+#: accessible_youtube_downloader_pro.py:57
+#: accessible_youtube_downloader_pro.py:83
+msgid "البحث في youtube\tctrl+f"
+msgstr ""
+
+#: accessible_youtube_downloader_pro.py:60
+#: accessible_youtube_downloader_pro.py:86
+msgid "التنزيل من خلال رابط\tctrl+d"
+msgstr ""
+
+#: accessible_youtube_downloader_pro.py:63
+#: accessible_youtube_downloader_pro.py:89
+msgid "تشغيل فيديو youtube من خلال الرابط\tctrl+y"
+msgstr ""
+
+#: accessible_youtube_downloader_pro.py:66
+#: accessible_youtube_downloader_pro.py:91
+msgid "الفيديوهات المفضلة\tctrl+shift+f"
+msgstr ""
+
+#: accessible_youtube_downloader_pro.py:93
+msgid "فتح مجلد التنزيل\tctrl+p"
+msgstr ""
+
+#: accessible_youtube_downloader_pro.py:95
+msgid "الإعدادات...\talt+s"
+msgstr ""
+
+#: accessible_youtube_downloader_pro.py:96
+msgid "خروج\tctrl+w"
+msgstr ""
+
+#: accessible_youtube_downloader_pro.py:111
+msgid "القائمة الرئيسية"
+msgstr ""
+
+#: accessible_youtube_downloader_pro.py:114
+msgid "عرض إصدار yt-dlp"
+msgstr ""
+
+#: accessible_youtube_downloader_pro.py:115
+msgid "تحديث yt-dlp"
+msgstr ""
+
+#: accessible_youtube_downloader_pro.py:116
+msgid "yt-dlp"
+msgstr ""
+
+#: accessible_youtube_downloader_pro.py:118
+msgid "دليل المستخدم...\tf1"
+msgstr ""
+
+#: accessible_youtube_downloader_pro.py:119
+msgid "البحث عن التحديثات"
+msgstr ""
+
+#: accessible_youtube_downloader_pro.py:120
+msgid "عن البرنامج..."
+msgstr ""
+
+#: accessible_youtube_downloader_pro.py:122
+msgid "البريد الالكتروني..."
+msgstr ""
+
+#: accessible_youtube_downloader_pro.py:123
+msgid "تويتر..."
+msgstr ""
+
+#: accessible_youtube_downloader_pro.py:124
+msgid "تواصل معي"
+msgstr ""
+
+#: accessible_youtube_downloader_pro.py:125
+#: accessible_youtube_downloader_pro.py:288
+msgid "حول"
+msgstr ""
+
+#: accessible_youtube_downloader_pro.py:166
+msgid "لم يتم العثور على yt-dlp.exe"
+msgstr ""
+
+#: accessible_youtube_downloader_pro.py:167
+#: accessible_youtube_downloader_pro.py:184
+#: accessible_youtube_downloader_pro.py:191
+#: accessible_youtube_downloader_pro.py:210
+msgid "خطأ"
+msgstr ""
+
+#: accessible_youtube_downloader_pro.py:183
+msgid "لا يمكن الحصول على إصدار yt-dlp"
+msgstr ""
+
+#: accessible_youtube_downloader_pro.py:189
+msgid "إصدار yt-dlp"
+msgstr ""
+
+#: accessible_youtube_downloader_pro.py:204
+msgid "جاري التشغيل"
+msgstr ""
+
+#: accessible_youtube_downloader_pro.py:210
+msgid "لا يمكن تشغيل الرابط"
+msgstr ""
+
+#: accessible_youtube_downloader_pro.py:254
+#: accessible_youtube_downloader_pro.py:271
+msgid "دليل استخدام برنامج accessible youtube downloader pro"
+msgstr ""
+
+#: accessible_youtube_downloader_pro.py:279
+msgid "جاري البحث عن التحديثات. يرجى الانتظار"
+msgstr ""
+
+#: accessible_youtube_downloader_pro.py:284
+msgid "اسم البرنامج"
+msgstr ""
+
+#: accessible_youtube_downloader_pro.py:285
+msgid "الإصدار"
+msgstr ""
+
+#: accessible_youtube_downloader_pro.py:286
+msgid "طُوِر بواسطة"
+msgstr ""
+
+#: accessible_youtube_downloader_pro.py:287
+msgid "الوصف: "
+msgstr ""

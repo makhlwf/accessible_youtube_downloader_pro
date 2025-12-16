@@ -61,7 +61,9 @@ class Favorites(wx.Frame):
         sizer.Fit(p)
         self.Show()
 
-    def _download_media(self, option, url, dlg, download_type="video", path=config_get("path")):
+    def _download_media(
+        self, option, url, dlg, download_type="video", path=config_get("path")
+    ):
         if option == 0:
             format = "bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4"
         else:

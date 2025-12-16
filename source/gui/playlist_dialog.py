@@ -60,16 +60,20 @@ class PlaylistDialog(wx.Dialog):
             self.result = LoadingDialog(
                 self.Parent, _("جاري عرض قائمة التشغيل"), playlist_result_obj.init_async
             ).res
-            
-            if self.result is None: # Handle case where init_async returns None due to error
+
+            if (
+                self.result is None
+            ):  # Handle case where init_async returns None due to error
                 raise Exception("Failed to initialize playlist")
 
             self.title = self.result.playlist.title
             self.SetTitle(f"{application.name} - {self.title}")
             self.videosBox.Set(self.result.get_display_titles())
-        except Exception as e: # Catch a broader exception here
+        except Exception as e:  # Catch a broader exception here
             wx.MessageBox(
-                _("حدث خطأ ما أثناء محاولة فتح قائمة التشغيل: {}").format(e), # Show the error
+                _("حدث خطأ ما أثناء محاولة فتح قائمة التشغيل: {}").format(
+                    e
+                ),  # Show the error
                 _("خطأ"),
                 style=wx.ICON_ERROR,
                 parent=self,
@@ -80,7 +84,9 @@ class PlaylistDialog(wx.Dialog):
         self.Show()
         self.videosBox.Selection = 0
 
-    def _download_media(self, option, url, dlg, download_type="video", path=config_get("path")):
+    def _download_media(
+        self, option, url, dlg, download_type="video", path=config_get("path")
+    ):
         if option == 0:
             format = "bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4"
         else:

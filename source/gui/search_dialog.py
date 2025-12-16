@@ -18,7 +18,7 @@ class SearchDialog(wx.Dialog):
                 _("بث مباشر"),
                 _("تاريخ الرفع"),
                 _("عدد المشاهدات"),
-                _("قائمة تشغيل")
+                _("قائمة تشغيل"),
             ],
         )
         self.filterBox.Selection = 0

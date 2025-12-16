@@ -126,7 +126,16 @@ class DownloadDialog(wx.Frame):
         config_set("defaultaudio", str(self.convertingFormat.Selection))
         downloadFrame = DownloadProgress(wx.GetApp().GetTopWindow())
         self.Hide()
-        downloadAction(url, self.path, downloadFrame, format, downloadFrame.gaugeProgress, downloadFrame.textProgress, convert=convert, folder=folder)
+        downloadAction(
+            url,
+            self.path,
+            downloadFrame,
+            format,
+            downloadFrame.gaugeProgress,
+            downloadFrame.textProgress,
+            convert=convert,
+            folder=folder,
+        )
 
     def onHook(self, event):
         if event.KeyCode == wx.WXK_ESCAPE:

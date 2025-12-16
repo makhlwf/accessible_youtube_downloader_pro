@@ -5,16 +5,19 @@ import threading
 _async_loop = None
 _async_thread = None
 
+
 def start_async_loop():
     global _async_loop
     _async_loop = asyncio.new_event_loop()
     asyncio.set_event_loop(_async_loop)
     _async_loop.run_forever()
 
+
 def stop_async_loop():
     global _async_loop
     if _async_loop and _async_loop.is_running():
         _async_loop.call_soon_threadsafe(_async_loop.stop)
+
 
 def run_in_async_loop(coro):
     global _async_loop

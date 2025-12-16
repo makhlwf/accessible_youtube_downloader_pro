@@ -11,41 +11,67 @@ import subprocess
 import json
 import os
 
+
 def download_yt_dlp():
-	url = "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe"
-	wx.CallAfter(UpdateDialog, wx.GetApp().GetTopWindow(), url, paths.yt_dlp_path, _("جاري تنزيل yt-dlp"))
+    url = "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe"
+    wx.CallAfter(
+        UpdateDialog,
+        wx.GetApp().GetTopWindow(),
+        url,
+        paths.yt_dlp_path,
+        _("جاري تنزيل yt-dlp"),
+    )
+
 
 def update_yt_dlp():
-    msg = wx.MessageBox(_("سيتم الآن البحث عن تحديث لبرنامج yt-dlp وتنزيله إن وجد, هل تريد المتابعة؟"), _("تحديث"), style=wx.YES_NO|wx.ICON_INFORMATION, parent=wx.GetApp().GetTopWindow())
+    msg = wx.MessageBox(
+        _("سيتم الآن البحث عن تحديث لبرنامج yt-dlp وتنزيله إن وجد, هل تريد المتابعة؟"),
+        _("تحديث"),
+        style=wx.YES_NO | wx.ICON_INFORMATION,
+        parent=wx.GetApp().GetTopWindow(),
+    )
     if msg == wx.YES:
         download_yt_dlp()
 
+
 def check_yt_dlp():
-	if not os.path.exists(paths.yt_dlp_path):
-		msg = wx.MessageBox(_("لم يتم العثور على yt-dlp.exe, هل تريد تنزيله الآن؟"), _("تنبيه"), style=wx.YES_NO|wx.ICON_INFORMATION, parent=wx.GetApp().GetTopWindow())
-		if msg == wx.YES:
-			download_yt_dlp()
-			return True
-		return False
-	return True
+    if not os.path.exists(paths.yt_dlp_path):
+        msg = wx.MessageBox(
+            _("لم يتم العثور على yt-dlp.exe, هل تريد تنزيله الآن؟"),
+            _("تنبيه"),
+            style=wx.YES_NO | wx.ICON_INFORMATION,
+            parent=wx.GetApp().GetTopWindow(),
+        )
+        if msg == wx.YES:
+            download_yt_dlp()
+            return True
+        return False
+    return True
+
 
 class Stream:
     def __init__(self, title, url):
         self.title = title
         self.url = url
 
+
 def get_media_info(url):
     if not os.path.exists(paths.yt_dlp_path):
         return None
     try:
         command = [paths.yt_dlp_path, "-j", url]
-        result = subprocess.run(command, capture_output=True, text=True, encoding="utf-8", creationflags=subprocess.CREATE_NO_WINDOW)
+        result = subprocess.run(
+            command,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            creationflags=subprocess.CREATE_NO_WINDOW,
+        )
         if result.returncode != 0:
             return None
         return json.loads(result.stdout)
     except (subprocess.SubprocessError, json.JSONDecodeError):
         return None
-
 
 
 def get_audio_stream(url):
@@ -54,19 +80,22 @@ def get_audio_stream(url):
         return None
     title = info.get("title")
     formats = info.get("formats", [])
-    audio_streams = [f for f in formats if f.get("acodec") != "none" and f.get("vcodec") == "none"]
+    audio_streams = [
+        f for f in formats if f.get("acodec") != "none" and f.get("vcodec") == "none"
+    ]
     stream = None
     for s in reversed(audio_streams):
         if s.get("ext") == "webm":
             stream = s
             break
     if stream is None:
-        best_audio = sorted(audio_streams, key=lambda x: x.get('abr', 0), reverse=True)
+        best_audio = sorted(audio_streams, key=lambda x: x.get("abr", 0), reverse=True)
         if best_audio:
             stream = best_audio[0]
     if stream:
         return Stream(title, stream["url"])
     return None
+
 
 def get_video_stream(url):
     info = get_media_info(url)
@@ -82,7 +111,11 @@ def get_video_stream(url):
             break
     if stream is None:
         # Fallback to best available stream
-        video_streams = sorted(video_streams, key=lambda x: x.get('width', 0) * x.get('height', 0), reverse=True)
+        video_streams = sorted(
+            video_streams,
+            key=lambda x: x.get("width", 0) * x.get("height", 0),
+            reverse=True,
+        )
         if video_streams:
             stream = video_streams[0]
 
@@ -112,7 +145,7 @@ def time_formatting(total_seconds):
             parts.append(_("{} ساعات").format(hours))
         else:
             parts.append(_("{} ساعة").format(hours))
-    
+
     if minutes > 0:
         if minutes == 1:
             parts.append(_("دقيقة واحدة"))
@@ -122,8 +155,10 @@ def time_formatting(total_seconds):
             parts.append(_("{} دقائق").format(minutes))
         else:
             parts.append(_("{} دقيقة").format(minutes))
-            
-    if seconds > 0 or (not parts and total_seconds == 0): # Include seconds if no other parts, or if it's the only part and total_seconds is 0
+
+    if (
+        seconds > 0 or (not parts and total_seconds == 0)
+    ):  # Include seconds if no other parts, or if it's the only part and total_seconds is 0
         if seconds == 1:
             parts.append(_("ثانية واحدة"))
         elif seconds == 2:
@@ -132,7 +167,7 @@ def time_formatting(total_seconds):
             parts.append(_("{} ثواني").format(seconds))
         else:
             parts.append(_("{} ثانية").format(seconds))
-            
+
     if not parts and total_seconds == 0:
         return _("0 ثانية")
 

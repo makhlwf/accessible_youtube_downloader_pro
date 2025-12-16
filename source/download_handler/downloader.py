@@ -8,6 +8,7 @@ from threading import Thread
 
 ProgressChangedEvent, EVT_PROGRESS_CHANGED = NewEvent()
 
+
 class Downloader:
     def __init__(
         self,
@@ -36,19 +37,31 @@ class Downloader:
     def progress_parser(self, line):
         if not self.monitor:
             return
-        
-        match = re.search(r"\[download\]\s+([0-9\.]+)% of\s+(.*?)\s+at\s+(.*?)\s+ETA\s+(.*)", line)
+
+        match = re.search(
+            r"\[download\]\s+([0-9\.]+)% of\s+(.*?)\s+at\s+(.*?)\s+ETA\s+(.*)", line
+        )
         if match:
             percent = float(match.group(1))
             total = match.group(2).strip()
             speed = match.group(3).strip()
             eta = match.group(4).strip()
-            wx.PostEvent(self.monitor, ProgressChangedEvent(value=int(percent), total=total, speed=speed, eta=eta))
+            wx.PostEvent(
+                self.monitor,
+                ProgressChangedEvent(
+                    value=int(percent), total=total, speed=speed, eta=eta
+                ),
+            )
         else:
             match = re.search(r"\[download\]\s+([0-9\.]+)%", line)
             if match:
                 percent = float(match.group(1))
-                wx.PostEvent(self.monitor, ProgressChangedEvent(value=int(percent), total="", speed="", eta=""))
+                wx.PostEvent(
+                    self.monitor,
+                    ProgressChangedEvent(
+                        value=int(percent), total="", speed="", eta=""
+                    ),
+                )
 
     def download(self):
         command = [
@@ -59,25 +72,48 @@ class Downloader:
             "-f",
             self.downloading_format,
             "--progress",
-            self.url
+            self.url,
         ]
         if self.convert:
-            command.extend(["-x", "--audio-format", "mp3", "--audio-quality", self.get_quality()])
-        
-        self.process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True, encoding='utf-8', creationflags=subprocess.CREATE_NO_WINDOW)
-        
+            command.extend(
+                ["-x", "--audio-format", "mp3", "--audio-quality", self.get_quality()]
+            )
+
+        self.process = subprocess.Popen(
+            command,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            universal_newlines=True,
+            encoding="utf-8",
+            creationflags=subprocess.CREATE_NO_WINDOW,
+        )
+
         for line in self.process.stdout:
             self.progress_parser(line)
-        
+
         return self.process.wait()
 
+
 def downloadAction(
-    url, path, dlg, downloading_format, monitor, status_label, convert=False, folder=False
+    url,
+    path,
+    dlg,
+    downloading_format,
+    monitor,
+    status_label,
+    convert=False,
+    folder=False,
 ):
     downloader = Downloader(
-        url, path, downloading_format, monitor, status_label, convert=convert, folder=folder
+        url,
+        path,
+        downloading_format,
+        monitor,
+        status_label,
+        convert=convert,
+        folder=folder,
     )
-    
+
     def on_progress(event):
         monitor.SetValue(event.value)
         status_label.SetString(0, _("نسبة التنزيل: {}%").format(event.value))
@@ -93,7 +129,7 @@ def downloadAction(
             status_label.SetString(3, _("الوقت المتبقي: {}").format(event.eta))
         else:
             status_label.SetString(3, _("الوقت المتبقي: غير معروف"))
-        status_label.SetString(4, "") # Clear the remaining amount string
+        status_label.SetString(4, "")  # Clear the remaining amount string
 
     monitor.Bind(EVT_PROGRESS_CHANGED, on_progress)
 
