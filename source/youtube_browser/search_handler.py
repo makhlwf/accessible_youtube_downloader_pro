@@ -9,59 +9,53 @@ from py_yt import (
     CustomSearch,
 )
 from py_yt.core.constants import VideoSortOrder
-from utiles import time_formatting
+from utiles import time_formatting, time_to_seconds
 
 
 class PlaylistResult:
     def __init__(self, url):
         self.url = url
-        self.playlist = None
         self.videos = []
         self.count = 0
         self.new_videos = 0
         self.title = ""
+        self.videos_data = [] # To store the raw video data from Playlist.getVideos()
 
     async def init_async(self):
-        playlist_info = await Playlist.getInfo(self.url)
-        self.title = playlist_info.get("title", "")
-        self.playlist = Playlist(self.url)
-        if self.playlist.hasMoreVideos:
-            await self.playlist.getNextVideos()
+        playlist_data = await Playlist.getVideos(self.url)
+        self.videos_data = playlist_data.get("videos", [])
+        self.title = playlist_data.get("title", "")
+        # If the title is not available in playlist_data, try to get it from the first video
+        if not self.title and self.videos_data:
+            self.title = self.videos_data[0].get("playlistTitle", "")
         await self.parse()
         return self
 
     async def parse(self):
-        # py_yt.Playlist.videos is a list of Video objects after init() or next()
-        current_videos_len = len(self.videos)
-        for vid in self.playlist.videos[current_videos_len:]:
+        # Iterate through the raw video data obtained from Playlist.getVideos()
+        for vid in self.videos_data:
+            duration_str = vid.get("duration")
+            # Convert duration string (e.g., "MM:SS") to total seconds
+            duration_seconds = time_to_seconds(duration_str) if duration_str else None
             video = {
+                "id": vid.get("id"),
                 "title": vid.get("title"),
                 "url": vid.get("link"),
-                "duration": str(
-                    vid.get("duration")
-                ),  # py_yt gives duration in seconds, time_formatting expects "HH:MM:SS"
+                "duration": duration_seconds,  # Store duration in seconds
                 "channel": {
                     "name": vid.get("channel", {}).get("name"),
                     "url": vid.get("channel", {}).get("link"),
                 },
             }
             self.videos.append(video)
-            self.count = len(self.videos)
+        self.count = len(self.videos) # Update count based on all parsed videos
 
     async def next(self):
-        if not self.playlist.hasMoreVideos:
-            return False
+        # Since Playlist.getVideos() fetches all videos at once, there are no more videos to load
+        return False
 
-        await self.playlist.getNextVideos()
-        current = self.count
-        await self.parse()
-        self.new_videos = self.count - current
-
-        return True
-
-    def get_new_titles(self):
-        titles = self.get_display_titles()
-        return titles[len(titles) - self.new_videos : len(titles)]
+    def get_id(self, n):
+        return self.videos[n]["id"]
 
     def get_title(self, n):
         return self.videos[n]["title"]

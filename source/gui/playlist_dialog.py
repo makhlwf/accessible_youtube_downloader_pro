@@ -47,7 +47,6 @@ class PlaylistDialog(wx.Dialog):
                 ctrlSizer.Add(control, 1)
         sizer.Add(ctrlSizer)
         p.SetSizer(sizer)
-        self.videosBox.Bind(wx.EVT_LISTBOX, self.onListBox)
         self.playButton.Bind(wx.EVT_BUTTON, lambda e: self.playVideo())
         self.downloadButton.Bind(wx.EVT_BUTTON, self.onDownload)
         backButton.Bind(wx.EVT_BUTTON, lambda e: self.back())
@@ -176,10 +175,9 @@ class PlaylistDialog(wx.Dialog):
 
     def playVideo(self):
         n = self.videosBox.Selection
-        url = self.result.get_url(n)
-
+        video_id = self.result.get_id(n)
+        url = f"https://www.youtube.com/watch?v={video_id}"
         title = self.result.get_title(n)
-
         stream = LoadingDialog(self, _("جاري التشغيل"), get_video_stream, url).res
         gui = MediaGui(self, title, stream, url, True, self.result)
         gui.path = os.path.join(gui.path, self.title)
@@ -187,35 +185,13 @@ class PlaylistDialog(wx.Dialog):
 
     def playAudio(self):
         n = self.videosBox.Selection
-        url = self.result.get_url(n)
-
+        video_id = self.result.get_id(n)
+        url = f"https://www.youtube.com/watch?v={video_id}"
         title = self.result.get_title(n)
-
         stream = LoadingDialog(self, _("جاري التشغيل"), get_audio_stream, url).res
-
         gui = MediaGui(self, title, stream, url, audio_mode=True, results=self.result)
         gui.path = os.path.join(gui.path, self.title)
         self.Hide()
-
-    def onListBox(self, event):
-        n = self.videosBox.Selection
-        if n == self.videosBox.Count - 1:
-
-            def load():
-                try:
-                    load_more_result = LoadingDialog(
-                        self, _("جاري تحميل المزيد من الفيديوهات"), self.result.next
-                    ).res
-                    if load_more_result:
-                        titles = self.result.get_new_titles()
-                        wx.CallAfter(self.videosBox.Append, titles)
-                        speak(_("تم تحميل المزيد من الفيديوهات"))
-                    else:
-                        speak(_("ليس هناك فيديوهات أخرى"))
-                except Exception:
-                    speak(_("لم يتم تحميل المزيد من الفيديوهات"))
-
-            Thread(target=load).start()
 
     def onVideoDownload(self, event):
         n = self.videosBox.Selection
