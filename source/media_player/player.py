@@ -1,5 +1,4 @@
 import vlc
-from datetime import timedelta
 from utiles import time_formatting
 from threading import Thread
 from settings_handler import config_get
@@ -42,13 +41,24 @@ class Player:
         duration = self.media.get_length()
         if duration == -1 or not isinstance(duration, int):
             return ""
-        return time_formatting(str(timedelta(seconds=duration // 1000)))
+        return time_formatting(duration // 1000)
 
     def get_elapsed(self):
         elapsed = self.media.get_time()
         if elapsed == -1 or not isinstance(elapsed, int):
             return ""
-        return time_formatting(str(timedelta(seconds=elapsed // 1000)))
+        return time_formatting(elapsed // 1000)
+
+    def get_remaining(self):
+        length = self.media.get_length()
+        time = self.media.get_time()
+        if length == -1 or time == -1:
+            return ""
+        remaining = length - time
+        return time_formatting(remaining // 1000)
+
+    def get_position_percentage(self):
+        return int(self.media.get_position() * 100)
 
     def reset(self):
         self.do_reset = False

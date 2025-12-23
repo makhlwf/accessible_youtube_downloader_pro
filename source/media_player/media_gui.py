@@ -156,6 +156,7 @@ class MediaGui(wx.Frame):
 
     has_player
 
+    @has_player
     def forwardAction(self):
         position = self.player.media.get_position()
         self.player.media.set_position(position + self.player.seek(self.seek))
@@ -268,7 +269,7 @@ class MediaGui(wx.Frame):
 
             config_set("seek", self.seek)
 
-        elif event.KeyCode == ord("R"):
+        elif event.KeyCode == ord("R") and event.controlDown:
             if config_get("repeatetracks"):
                 config_set("repeatetracks", False)
 
@@ -278,6 +279,23 @@ class MediaGui(wx.Frame):
 
                 speak(_("التكرار مفعل"))
                 config_set("autonext", False)
+
+        elif event.KeyCode == ord("R"):
+            if self.player is not None:
+                speak(_("المتبقي: {}").format(self.player.get_remaining()))
+
+        elif event.KeyCode == ord("E"):
+            if self.player is not None:
+                speak(_("المنقضي: {}").format(self.player.get_elapsed()))
+
+        elif event.KeyCode == ord("T"):
+            if self.player is not None:
+                speak(_("الإجمالي: {}").format(self.player.get_duration()))
+
+        elif event.KeyCode == ord("P"):
+            if self.player is not None:
+                speak(_("{} بالمائة").format(self.player.get_position_percentage()))
+
         elif event.KeyCode == ord("N"):
             if config_get("autonext"):
                 config_set("autonext", False)
@@ -415,7 +433,7 @@ class MediaGui(wx.Frame):
 
     def onVideoDownload(self, event):
         dlg = DownloadProgress(wx.GetApp().GetTopWindow(), self.title)
-        self._download_media(0, self.url, dlg, path.self.path)
+        self._download_media(0, self.url, dlg, path=self.path)
 
     def onDirect(self, event):
         dlg = DownloadProgress(wx.GetApp().GetTopWindow(), self.title)
