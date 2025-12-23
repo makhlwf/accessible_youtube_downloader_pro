@@ -1,6 +1,7 @@
 import webbrowser
 from threading import Thread
-
+import os
+import re
 
 import pyperclip
 import wx
@@ -99,8 +100,17 @@ class YoutubeBrowser(wx.Frame):
         self.favorites = Favorite()
         self.togleFavorite()
 
+    def sanitize_filename(self, filename):
+        return re.sub(r'[<>:"/\\|?*]', '_', filename)
+
     def _download_media(
-        self, option, url, dlg, download_type="video", path=config_get("path")
+        self,
+        option,
+        url,
+        dlg,
+        download_type="video",
+        path=config_get("path"),
+        title=None,
     ):
         if option == 0:
             format = "bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4"
@@ -108,6 +118,8 @@ class YoutubeBrowser(wx.Frame):
             format = "bestaudio[ext=m4a]"
         convert = True if option == 2 else False
         folder = False if download_type == "video" else True
+        if download_type == "playlist" and title:
+            path = os.path.join(path, self.sanitize_filename(title))
         downloadAction(
             url,
             path,
@@ -272,7 +284,9 @@ class YoutubeBrowser(wx.Frame):
         url = channel["url"]
         download_type = "channel"
         dlg = DownloadProgress(wx.GetApp().GetTopWindow(), title)
-        self._download_media(int(config_get("defaultformat")), url, dlg, download_type)
+        self._download_media(
+            int(config_get("defaultformat")), url, dlg, download_type, title=title
+        )
 
     def onOpenInBrowser(self, event):
         number = self.searchResults.Selection
@@ -296,21 +310,21 @@ class YoutubeBrowser(wx.Frame):
         title = self.search.get_title(self.searchResults.Selection)
         download_type = self.search.get_type(self.searchResults.Selection)
         dlg = DownloadProgress(wx.GetApp().GetTopWindow(), title)
-        self._download_media(1, url, dlg, download_type)
+        self._download_media(1, url, dlg, download_type, title=title)
 
     def onMp3Download(self, event):
         url = self.search.get_url(self.searchResults.Selection)
         title = self.search.get_title(self.searchResults.Selection)
         download_type = self.search.get_type(self.searchResults.Selection)
         dlg = DownloadProgress(wx.GetApp().GetTopWindow(), title)
-        self._download_media(2, url, dlg, download_type)
+        self._download_media(2, url, dlg, download_type, title=title)
 
     def onVideoDownload(self, event):
         url = self.search.get_url(self.searchResults.Selection)
         title = self.search.get_title(self.searchResults.Selection)
         download_type = self.search.get_type(self.searchResults.Selection)
         dlg = DownloadProgress(wx.GetApp().GetTopWindow(), title)
-        self._download_media(0, url, dlg, download_type)
+        self._download_media(0, url, dlg, download_type, title=title)
 
     def onCopy(self, event):
         pyperclip.copy(self.search.get_url(self.searchResults.Selection))
@@ -450,15 +464,27 @@ class YoutubeBrowser(wx.Frame):
 
         Thread(target=check_url, args=[url]).start()
 
-    def directDownload(self):
-        n = self.searchResults.Selection
-        if self.search.get_views(n) is None and self.search.get_type(n) == "video":
-            return
-        url = self.search.get_url(self.searchResults.Selection)
-        title = self.search.get_title(self.searchResults.Selection)
-        download_type = self.search.get_type(self.searchResults.Selection)
-        dlg = DownloadProgress(wx.GetApp().GetTopWindow(), title)
-        self._download_media(int(config_get("defaultformat")), url, dlg, download_type)
+        def directDownload(self):
+
+            n = self.searchResults.Selection
+
+            if self.search.get_views(n) is None and self.search.get_type(n) == "video":
+
+                return
+
+            url = self.search.get_url(self.searchResults.Selection)
+
+            title = self.search.get_title(self.searchResults.Selection)
+
+            download_type = self.search.get_type(self.searchResults.Selection)
+
+            dlg = DownloadProgress(wx.GetApp().GetTopWindow(), title)
+
+            self._download_media(
+
+                int(config_get("defaultformat")), url, dlg, download_type, title=title
+
+            )
 
     def onShow(self, event):
         self.searchResults.SetFocus()
