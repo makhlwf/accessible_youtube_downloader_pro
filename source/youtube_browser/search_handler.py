@@ -127,6 +127,12 @@ class Search:
         else:  # VideosSearch, CustomSearch (assuming it returns videos)
             for item in items:
                 self.count += 1
+                view_count = item.get("viewCount")
+                if isinstance(view_count, dict):
+                    views = view_count.get("short") or view_count.get("text")
+                else:
+                    views = view_count if view_count is not None else item.get("view_count")
+
                 self.results[self.count] = {
                     "type": "video",
                     "title": item.get("title"),
@@ -137,7 +143,7 @@ class Search:
                         "name": item.get("channel", {}).get("name"),
                         "url": item.get("channel", {}).get("link"),
                     },
-                    "views": item.get("view_count"),
+                    "views": views,
                 }
 
     def get_titles(self):
