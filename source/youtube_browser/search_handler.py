@@ -183,7 +183,7 @@ class Search:
         return self.results[number + 1]["channel"]
 
     async def load_more(self):
-        if not self.search.has_more_results():  # Check if there are more results
+        if not self.search.continuationKey:  # Check if there are more results
             return False
 
         try:
