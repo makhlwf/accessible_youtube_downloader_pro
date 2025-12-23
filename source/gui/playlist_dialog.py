@@ -85,7 +85,12 @@ class PlaylistDialog(wx.Dialog):
         self.videosBox.Selection = 0
 
     def _download_media(
-        self, option, url, dlg, download_type="video", path=config_get("path")
+        self,
+        option,
+        url,
+        dlg,
+        download_type="video",
+        path=config_get("path")
     ):
         if option == 0:
             format = "bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4"
@@ -154,11 +159,15 @@ class PlaylistDialog(wx.Dialog):
 
     def onOpenInBrowser(self, event):
         n = self.videosBox.Selection
-        webbrowser.open(self.result.get_url(n))
+        video_id = self.result.get_id(n)
+        url = f"https://www.youtube.com/watch?v={video_id}"
+        webbrowser.open(url)
 
     def onCopy(self, event):
         n = self.videosBox.Selection
-        pyperclip.copy(self.result.get_url(n))
+        video_id = self.result.get_id(n)
+        url = f"https://www.youtube.com/watch?v={video_id}"
+        pyperclip.copy(url)
         wx.MessageBox(_("تم نسخ رابط المقطع بنجاح"), _("اكتمال"), parent=self)
 
     def onOpenChannel(self, event):
@@ -195,7 +204,8 @@ class PlaylistDialog(wx.Dialog):
 
     def onVideoDownload(self, event):
         n = self.videosBox.Selection
-        url = self.result.get_url(n)
+        video_id = self.result.get_id(n)
+        url = f"https://www.youtube.com/watch?v={video_id}"
         title = self.result.get_title(n)
         dlg = DownloadProgress(self.Parent, title)
         self._download_media(
@@ -204,7 +214,8 @@ class PlaylistDialog(wx.Dialog):
 
     def directDownload(self):
         n = self.videosBox.Selection
-        url = self.result.get_url(n)
+        video_id = self.result.get_id(n)
+        url = f"https://www.youtube.com/watch?v={video_id}"
         title = self.result.get_title(n)
         dlg = DownloadProgress(wx.GetApp().GetTopWindow(), title)
         self._download_media(
@@ -217,7 +228,8 @@ class PlaylistDialog(wx.Dialog):
 
     def onM4aDownload(self, event):
         n = self.videosBox.Selection
-        url = self.result.get_url(n)
+        video_id = self.result.get_id(n)
+        url = f"https://www.youtube.com/watch?v={video_id}"
         title = self.result.get_title(n)
         dlg = DownloadProgress(wx.GetApp().GetTopWindow(), title)
         self._download_media(
@@ -226,70 +238,8 @@ class PlaylistDialog(wx.Dialog):
 
     def onMp3Download(self, event):
         n = self.videosBox.Selection
-        url = self.result.get_url(n)
-        title = self.result.get_title(n)
-        dlg = DownloadProgress(wx.GetApp().GetTopWindow(), title)
-        self._download_media(
-            2, url, dlg, "video", os.path.join(config_get("path"), self.title)
-        )
-
-    def onDownload(self, event):
-        downloadMenu = wx.Menu()
-        videoItem = downloadMenu.Append(-1, _("فيديو"))
-        audioMenu = wx.Menu()
-        m4aItem = audioMenu.Append(-1, "m4a")
-        mp3Item = audioMenu.Append(-1, "mp3")
-        downloadMenu.Append(-1, _("صوت"), audioMenu)
-        self.Bind(wx.EVT_MENU, self.onVideoDownload, videoItem)
-        self.Bind(wx.EVT_MENU, self.onM4aDownload, m4aItem)
-        self.Bind(wx.EVT_MENU, self.onMp3Download, mp3Item)
-        self.PopupMenu(downloadMenu)
-        self.videosBox.SetFocus()
-
-    def back(self):
-        self.Parent.Show()
-        self.Destroy()
-
-    def onHook(self, event):
-        if event.KeyCode == wx.WXK_ESCAPE and not type(self.FindFocus()) == MediaGui:
-            self.back()
-        else:
-            event.Skip()
-
-    def onVideoDownload(self, event):
-        n = self.videosBox.Selection
-        url = self.result.get_url(n)
-        title = self.result.get_title(n)
-        dlg = DownloadProgress(self.Parent, title)
-        self._download_media(
-            0, url, dlg, "video", os.path.join(config_get("path"), self.title)
-        )
-
-    def directDownload(self):
-        n = self.videosBox.Selection
-        url = self.result.get_url(n)
-        title = self.result.get_title(n)
-        dlg = DownloadProgress(wx.GetApp().GetTopWindow(), title)
-        self._download_media(
-            int(config_get("defaultformat")),
-            url,
-            dlg,
-            "video",
-            os.path.join(config_get("path"), self.title),
-        )
-
-    def onM4aDownload(self, event):
-        n = self.videosBox.Selection
-        url = self.result.get_url(n)
-        title = self.result.get_title(n)
-        dlg = DownloadProgress(wx.GetApp().GetTopWindow(), title)
-        self._download_media(
-            1, url, dlg, "video", os.path.join(config_get("path"), self.title)
-        )
-
-    def onMp3Download(self, event):
-        n = self.videosBox.Selection
-        url = self.result.get_url(n)
+        video_id = self.result.get_id(n)
+        url = f"https://www.youtube.com/watch?v={video_id}"
         title = self.result.get_title(n)
         dlg = DownloadProgress(wx.GetApp().GetTopWindow(), title)
         self._download_media(
