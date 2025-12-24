@@ -30,7 +30,7 @@ class YoutubeBrowser(wx.Frame):
         self.Maximize(True)
         self.panel = wx.Panel(self)
         lbl = wx.StaticText(self.panel, -1, _("نتائج البحث: "))
-        self.searchResults = wx.ListBox(self.panel, -1, style=wx.LB_MULTIPLE)
+        self.searchResults = wx.ListBox(self.panel, -1)
         self.loadMoreButton = wx.Button(self.panel, -1, _("تحميل المزيد من النتائج"))
         self.loadMoreButton.Enabled = False
         self.loadMoreButton.Show(not config_get("autoload"))
@@ -68,7 +68,7 @@ class YoutubeBrowser(wx.Frame):
             [
                 (wx.ACCEL_ALT, ord("S"), settingsItem.GetId()),
                 (wx.ACCEL_CTRL, ord("F"), searchButton.GetId()),
-                (wx.ACCEL_CTRL | wx.ACCEL_SHIFT, ord("D"), self.directDownloadId),
+                (wx.ACCEL_CTRL, ord("D"), self.directDownloadId),
                 (wx.ACCEL_CTRL, ord("L"), self.copyItemId),
             ]
         )
@@ -184,10 +184,7 @@ class YoutubeBrowser(wx.Frame):
             self.searchAction()
 
     def playVideo(self):
-        selections = self.searchResults.GetSelections()
-        if not selections:
-            return
-        number = selections[0]
+        number = self.searchResults.Selection
         if self.search.get_type(number) == "playlist":
             PlaylistDialog(self, self.search.get_url(number))
             return
@@ -206,10 +203,7 @@ class YoutubeBrowser(wx.Frame):
         self.Hide()
 
     def playAudio(self):
-        selections = self.searchResults.GetSelections()
-        if not selections:
-            return
-        number = selections[0]
+        number = self.searchResults.Selection
         if self.search.get_type(number) == "playlist":
             return
         title = self.search.get_title(number)
@@ -220,18 +214,14 @@ class YoutubeBrowser(wx.Frame):
 
     def onHook(self, event):
         if (
-            event.controlDown
-            and event.KeyCode == ord("D")
+            event.KeyCode == wx.WXK_SPACE
+            and self.search.get_type(self.searchResults.Selection) == "video"
             and self.FindFocus() == self.searchResults
         ):
-            selections = self.searchResults.GetSelections()
-            if selections and self.search.get_type(selections[0]) == "video":
-                self.favCheck.Value = not self.favCheck.Value
-                self.onFavorite(None)
-                return
-        elif event.KeyCode == wx.WXK_BACK and not isinstance(self.FindFocus(), MediaGui):
+            self.favCheck.Value = not self.favCheck.Value
+            self.onFavorite(None)
+        elif event.KeyCode == wx.WXK_BACK and not type(self.FindFocus()) == MediaGui:
             self.backAction()
-            return
         else:
             event.Skip()
 
@@ -252,7 +242,7 @@ class YoutubeBrowser(wx.Frame):
             self.downloadMenu, _("تنزيل")
         ).GetId()
         directDownloadItem = self.contextMenu.Append(
-            -1, _("التنزيل المباشر...\tctrl+shift+d")
+            -1, _("التنزيل المباشر...\tctrl+d")
         )
         self.directDownloadId = directDownloadItem.GetId()
         openChannelItem = self.contextMenu.Append(-1, _("الانتقال إلى القناة"))
@@ -284,17 +274,11 @@ class YoutubeBrowser(wx.Frame):
         self.Bind(wx.EVT_MENU, lambda event: self.directDownload(), directDownloadItem)
 
     def onOpenChannel(self, event):
-        selections = self.searchResults.GetSelections()
-        if not selections:
-            return
-        n = selections[0]
+        n = self.searchResults.Selection
         webbrowser.open(self.search.get_channel(n)["url"])
 
     def onDownloadChannel(self, event):
-        selections = self.searchResults.GetSelections()
-        if not selections:
-            return
-        n = selections[0]
+        n = self.searchResults.Selection
         channel = self.search.get_channel(n)
         title = channel["name"]
         url = channel["url"]
@@ -305,10 +289,7 @@ class YoutubeBrowser(wx.Frame):
         )
 
     def onOpenInBrowser(self, event):
-        selections = self.searchResults.GetSelections()
-        if not selections:
-            return
-        number = selections[0]
+        number = self.searchResults.Selection
         url = self.search.get_url(number)
         webbrowser.open(url)
 
@@ -325,49 +306,28 @@ class YoutubeBrowser(wx.Frame):
         self.PopupMenu(downloadMenu)
 
     def onM4aDownload(self, event):
-        selections = self.searchResults.GetSelections()
-        if not selections:
-            return
-        for n in selections:
-            if self.search.get_views(n) is None and self.search.get_type(n) == "video":
-                continue
-            url = self.search.get_url(n)
-            title = self.search.get_title(n)
-            download_type = self.search.get_type(n)
-            dlg = DownloadProgress(wx.GetApp().GetTopWindow(), title)
-            self._download_media(1, url, dlg, download_type, title=title)
+        url = self.search.get_url(self.searchResults.Selection)
+        title = self.search.get_title(self.searchResults.Selection)
+        download_type = self.search.get_type(self.searchResults.Selection)
+        dlg = DownloadProgress(wx.GetApp().GetTopWindow(), title)
+        self._download_media(1, url, dlg, download_type, title=title)
 
     def onMp3Download(self, event):
-        selections = self.searchResults.GetSelections()
-        if not selections:
-            return
-        for n in selections:
-            if self.search.get_views(n) is None and self.search.get_type(n) == "video":
-                continue
-            url = self.search.get_url(n)
-            title = self.search.get_title(n)
-            download_type = self.search.get_type(n)
-            dlg = DownloadProgress(wx.GetApp().GetTopWindow(), title)
-            self._download_media(2, url, dlg, download_type, title=title)
+        url = self.search.get_url(self.searchResults.Selection)
+        title = self.search.get_title(self.searchResults.Selection)
+        download_type = self.search.get_type(self.searchResults.Selection)
+        dlg = DownloadProgress(wx.GetApp().GetTopWindow(), title)
+        self._download_media(2, url, dlg, download_type, title=title)
 
     def onVideoDownload(self, event):
-        selections = self.searchResults.GetSelections()
-        if not selections:
-            return
-        for n in selections:
-            if self.search.get_views(n) is None and self.search.get_type(n) == "video":
-                continue
-            url = self.search.get_url(n)
-            title = self.search.get_title(n)
-            download_type = self.search.get_type(n)
-            dlg = DownloadProgress(wx.GetApp().GetTopWindow(), title)
-            self._download_media(0, url, dlg, download_type, title=title)
+        url = self.search.get_url(self.searchResults.Selection)
+        title = self.search.get_title(self.searchResults.Selection)
+        download_type = self.search.get_type(self.searchResults.Selection)
+        dlg = DownloadProgress(wx.GetApp().GetTopWindow(), title)
+        self._download_media(0, url, dlg, download_type, title=title)
 
     def onCopy(self, event):
-        selections = self.searchResults.GetSelections()
-        if not selections:
-            return
-        pyperclip.copy(self.search.get_url(selections[0]))
+        pyperclip.copy(self.search.get_url(self.searchResults.Selection))
         wx.MessageBox(_("تم نسخ رابط المقطع بنجاح"), _("اكتمال"), parent=self)
 
     def loadMore(self):
@@ -399,20 +359,13 @@ class YoutubeBrowser(wx.Frame):
             return
         self.searchResults.Append(self.search.get_last_titles())
         speak(_("تم تحميل المزيد من نتائج البحث"))
+        self.searchResults.SetFocus()
 
     def onListBox(self, event):
-        selections = self.searchResults.GetSelections()
-        if not selections:
-            self.contextMenu.Enable(self.downloadId, False)
-            self.contextMenu.Enable(self.directDownloadId, False)
-            self.downloadButton.Enabled = False
-            self.playButton.Enabled = False
-            self.favCheck.Enabled = False
-            return
         self.togleDownload()
         self.toglePlay()
         self.togleFavorite()
-        if len(selections) == 1 and selections[0] == len(self.searchResults.Strings) - 1:
+        if self.searchResults.Selection == len(self.searchResults.Strings) - 1:
             if not config_get("autoload"):
                 self.loadMoreButton.Enabled = True
                 return
@@ -440,20 +393,10 @@ class YoutubeBrowser(wx.Frame):
             self.loadMoreButton.Show(not config_get("autoload"))
 
     def togleDownload(self):
-        selections = self.searchResults.GetSelections()
-        if not selections:
-            self.contextMenu.Enable(self.downloadId, False)
-            self.contextMenu.Enable(self.directDownloadId, False)
-            self.downloadButton.Enabled = False
+        n = self.searchResults.Selection
+        if n == -1:
             return
-        
-        enable = False
-        for n in selections:
-            if not (self.search.get_views(n) is None and self.search.get_type(n) == "video"):
-                enable = True
-                break
-        
-        if not enable:
+        if self.search.get_views(n) is None and self.search.get_type(n) == "video":
             self.contextMenu.Enable(self.downloadId, False)
             self.contextMenu.Enable(self.directDownloadId, False)
             self.downloadButton.Enabled = False
@@ -463,26 +406,23 @@ class YoutubeBrowser(wx.Frame):
         self.downloadButton.Enabled = True
 
     def toglePlay(self):
-        selections = self.searchResults.GetSelections()
-        if not selections:
+        n = self.searchResults.Selection
+        if n == -1:
             return
-        n = selections[0]
         contextMenuIds = (self.videoPlayItemId, self.audioPlayItemId)
         if self.search.get_type(n) == "playlist":
             self.playButton.Label = _("فتح")
             for i in contextMenuIds:
                 self.contextMenu.Enable(i, False)
             return
-        self.playButton.Label = _("تشغيل (enter)")
-        self.playButton.Enabled = True
-        for i in contextMenuIds:
-            self.contextMenu.Enable(i, True)
+            self.playButton.Enabled = True
+            for i in contextMenuIds:
+                self.contextMenu.Enable(i, True)
 
     def onFavorite(self, event):
-        selections = self.searchResults.GetSelections()
-        if not selections:
+        n = self.searchResults.Selection
+        if n == -1:
             return
-        n = selections[0]
         url = self.search.get_url(n)
         if self.favCheck.Value:
             title = self.search.get_title(n)
@@ -505,11 +445,9 @@ class YoutubeBrowser(wx.Frame):
             speak(_("تم حذف الفيديو من قائمة المفضلة"))
 
     def togleFavorite(self):
-        selections = self.searchResults.GetSelections()
-        if len(selections) != 1:
-            self.favCheck.Enabled = False
+        n = self.searchResults.Selection
+        if n == -1:
             return
-        n = selections[0]
         self.favCheck.Enabled = self.search.get_type(n) == "video"
         if not self.favCheck.Enabled:
             return
@@ -526,19 +464,26 @@ class YoutubeBrowser(wx.Frame):
 
         Thread(target=check_url, args=[url]).start()
 
-    def directDownload(self):
-        selections = self.searchResults.GetSelections()
-        if not selections:
-            return
-        for n in selections:
+        def directDownload(self):
+
+            n = self.searchResults.Selection
+
             if self.search.get_views(n) is None and self.search.get_type(n) == "video":
-                continue
-            url = self.search.get_url(n)
-            title = self.search.get_title(n)
-            download_type = self.search.get_type(n)
+
+                return
+
+            url = self.search.get_url(self.searchResults.Selection)
+
+            title = self.search.get_title(self.searchResults.Selection)
+
+            download_type = self.search.get_type(self.searchResults.Selection)
+
             dlg = DownloadProgress(wx.GetApp().GetTopWindow(), title)
+
             self._download_media(
+
                 int(config_get("defaultformat")), url, dlg, download_type, title=title
+
             )
 
     def onShow(self, event):

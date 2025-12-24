@@ -370,20 +370,11 @@ class MediaGui(wx.Frame):
         if self.results is None:
             return
         if hasattr(self.Parent, "searchResults"):
-            control = self.Parent.searchResults
-            selections = control.GetSelections()
-            index = selections[0] if selections else -1
-            index += 1
-            if index >= self.results.count:
-                return
-            control.SetSelection(index)
+            self.Parent.searchResults.Selection += 1
+            index = self.Parent.searchResults.Selection
         elif hasattr(self.Parent, "videosBox"):
-            control = self.Parent.videosBox
-            index = control.Selection
-            index += 1
-            if index >= self.results.count:
-                return
-            control.Selection = index
+            self.Parent.videosBox.Selection += 1
+            index = self.Parent.videosBox.Selection
 
         else:
             self.Parent.favList.Selection += 1
@@ -414,21 +405,14 @@ class MediaGui(wx.Frame):
             return
         if hasattr(self.Parent, "searchResults"):
             videosBox = self.Parent.searchResults
-            if videosBox.HasMultipleSelection():
-                selections = videosBox.GetSelections()
-                selection = selections[0] if selections else 0
-            else:
-                selection = videosBox.Selection
         elif hasattr(self.Parent, "videosBox"):
             videosBox = self.Parent.videosBox
-            selection = videosBox.Selection
         else:
             videosBox = self.Parent.favList
-            selection = videosBox.Selection
 
-        if not selection == 0:
-            index = selection - 1
-            videosBox.SetSelection(index)
+        if not videosBox.Selection == 0:
+            videosBox.Selection -= 1
+            index = videosBox.Selection
             self.changeTrack(index)
 
     def onCopy(self, event):
