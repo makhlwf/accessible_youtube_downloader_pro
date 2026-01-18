@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 #define MyAppName "Accessible YouTube Downloader Pro"
 #define MyAppExeName "accessible_youtube_downloader_pro.exe"
-#define MyAppVersion "1.8.0"
+#define MyAppVersion "1.8.5"
 #define MyAppPublisher "makhlwf"
 #define MyAppURL "https://github.com/makhlwf/accessible_youtube_downloader_pro"
 
