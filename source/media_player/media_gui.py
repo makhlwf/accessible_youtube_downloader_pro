@@ -353,12 +353,17 @@ class MediaGui(wx.Frame):
         if hasattr(self, "description"):
             del self.description
         try:
-            stream = (
-                get_video_stream(url) if not self.audio_mode else get_audio_stream(url)
-            )
+            stream = get_playable_stream(url)
         except:
             return
-        self.player.set_media(stream.url)
+        
+        options = []
+        if hasattr(stream, "headers") and stream.headers:
+             ua = stream.headers.get("User-Agent")
+             if ua:
+                 options.append(f":http-user-agent={ua}")
+
+        self.player.set_media(stream.url, options=options)
         self.url = url
         self.title = title
         wx.CallAfter(self.SetTitle, f"{title} - {application.name}")

@@ -15,7 +15,7 @@ from media_player.media_gui import MediaGui
 from nvda_client.client import speak
 from settings_handler import config_get
 from youtube_browser.search_handler import Search
-from utiles import get_audio_stream, get_video_stream
+from utiles import get_audio_stream, get_video_stream, get_playable_stream
 from async_utils import run_in_async_loop
 
 from download_handler.downloader import downloadAction
@@ -191,7 +191,7 @@ class YoutubeBrowser(wx.Frame):
         title = self.search.get_title(number)
         url = self.search.get_url(number)
         print(url)
-        stream = LoadingDialog(self, _("جاري التشغيل"), get_video_stream, url).res
+        stream = LoadingDialog(self, _("جاري التشغيل"), get_playable_stream, url).res
         gui = MediaGui(
             self,
             title,
@@ -208,7 +208,7 @@ class YoutubeBrowser(wx.Frame):
             return
         title = self.search.get_title(number)
         url = self.search.get_url(number)
-        stream = LoadingDialog(self, _("جاري التشغيل"), get_audio_stream, url).res
+        stream = LoadingDialog(self, _("جاري التشغيل"), get_playable_stream, url).res
         gui = MediaGui(self, title, stream, url, results=self.search, audio_mode=True)
         self.Hide()
 

@@ -202,7 +202,7 @@ class HomeScreen(wx.Frame):
         stream = LoadingDialog(
             self,
             _("جاري التشغيل"),
-            utiles.get_video_stream if not data["audio"] else utiles.get_audio_stream,
+            utiles.get_playable_stream,
             url,
         ).res
         if stream is None:

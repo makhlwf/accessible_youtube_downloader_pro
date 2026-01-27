@@ -10,6 +10,20 @@ from gui.update_dialog import UpdateDialog
 import subprocess
 import json
 import os
+import queue
+
+try:
+    from yt_dlp import YoutubeDL
+except ImportError:
+    YoutubeDL = None
+
+PLAYER_OPTS = {
+    "quiet": True,
+    "no_warnings": True,
+    "noplaylist": True,
+    "format": "18",
+    "extractor_args": {"youtube": {"player_client": ["android"]}},
+}
 
 
 def download_yt_dlp():
@@ -50,9 +64,46 @@ def check_yt_dlp():
 
 
 class Stream:
-    def __init__(self, title, url):
+    def __init__(self, title, url, headers=None):
         self.title = title
         self.url = url
+        self.headers = headers or {}
+
+
+def get_playable_stream(url):
+    if not YoutubeDL:
+        return get_video_stream(url) # Fallback if library missing
+    try:
+        with YoutubeDL(PLAYER_OPTS) as ydl:
+            # Check if it's already a direct URL or ID
+            if "youtube.com" not in url and "youtu.be" not in url:
+                 # Assume ID
+                 url = f"https://www.youtube.com/watch?v={url}"
+
+            entry = ydl.extract_info(url, download=False)
+            
+            fmt = next((f for f in entry.get("formats", []) if f.get("format_id") == "18"), None)
+            title = entry.get("title")
+            
+            if not fmt:
+                 # Fallback if 18 not found, just take best url found in entry or url itself
+                 # But the snippet returns None, title.
+                 # Let's try to find any URL if 18 fails? 
+                 # User snippet specifically wants 18.
+                 return Stream(title, entry.get("url") or url)
+
+            # Headers
+            headers = {}
+            headers.update(entry.get("http_headers", {}) or {})
+            headers.update(fmt.get("http_headers", {}) or {})
+            headers.setdefault("User-Agent", "libmpv")
+
+            return Stream(title, fmt.get("url"), headers)
+
+    except Exception as e:
+        print(f"Error in get_playable_stream: {e}")
+        return None
+
 
 
 def get_media_info(url):
