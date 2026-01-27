@@ -37,7 +37,7 @@ def update_yt_dlp():
 def check_yt_dlp():
     if not os.path.exists(paths.yt_dlp_path):
         msg = wx.MessageBox(
-            _("لم يتم العثور على yt-dlp.exe, هل تريد تنزيله الآن؟"),
+            _("لم يتم العثور على أداة yt-dlp.exe, هل تريد تنزيله الآن؟"),
             _("تنبيه"),
             style=wx.YES_NO | wx.ICON_INFORMATION,
             parent=wx.GetApp().GetTopWindow(),
