@@ -144,6 +144,7 @@ class Search:
                         "url": item.get("channel", {}).get("link"),
                     },
                     "views": views,
+                    "stream": None,
                 }
 
     def get_titles(self):
@@ -181,6 +182,12 @@ class Search:
 
     def get_channel(self, number):
         return self.results[number + 1]["channel"]
+
+    def get_stream(self, number):
+        return self.results[number + 1].get("stream")
+
+    def set_stream(self, number, stream):
+        self.results[number + 1]["stream"] = stream
 
     async def load_more(self):
         if not self.search.continuationKey:  # Check if there are more results
