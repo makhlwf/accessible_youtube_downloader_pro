@@ -2,6 +2,7 @@ import webbrowser
 from threading import Thread
 import os
 import re
+import queue
 
 import pyperclip
 import wx
@@ -99,6 +100,8 @@ class YoutubeBrowser(wx.Frame):
             return
         self.favorites = Favorite()
         self.togleFavorite()
+        self.scraping_queue = queue.Queue()
+        Thread(target=self._scraper_worker, daemon=True).start()
 
     def sanitize_filename(self, filename):
         return re.sub(r'[<>:"/\\|?*]', '_', filename)
@@ -176,6 +179,15 @@ class YoutubeBrowser(wx.Frame):
         self.togleDownload()
         self.toglePlay()
         speak(_("اكتمل البحث"))
+        while not self.scraping_queue.empty():
+            try:
+                self.scraping_queue.get_nowait()
+                self.scraping_queue.task_done()
+            except queue.Empty:
+                break
+        for i in range(self.search.count):
+            if self.search.get_type(i) == "video":
+                self.scraping_queue.put((self.search, i))
 
     def onSearch(self, event):
         if hasattr(self, "search"):
@@ -191,7 +203,9 @@ class YoutubeBrowser(wx.Frame):
         title = self.search.get_title(number)
         url = self.search.get_url(number)
         print(url)
-        stream = LoadingDialog(self, _("جاري التشغيل"), get_playable_stream, url).res
+        stream = self.search.get_stream(number)
+        if stream is None:
+            stream = LoadingDialog(self, _("جاري التشغيل"), get_playable_stream, url).res
         gui = MediaGui(
             self,
             title,
@@ -208,8 +222,18 @@ class YoutubeBrowser(wx.Frame):
             return
         title = self.search.get_title(number)
         url = self.search.get_url(number)
-        stream = LoadingDialog(self, _("جاري التشغيل"), get_playable_stream, url).res
-        gui = MediaGui(self, title, stream, url, results=self.search, audio_mode=True)
+        stream = self.search.get_stream(number)
+        if stream is None:
+            stream = LoadingDialog(self, _("جاري التشغيل"), get_playable_stream, url).res
+        gui = MediaGui(
+            self,
+            title,
+            stream,
+            url,
+            True if self.search.get_views(number) is not None else False,
+            results=self.search,
+            audio_mode=True,
+        )
         self.Hide()
 
     def onHook(self, event):
@@ -358,6 +382,9 @@ class YoutubeBrowser(wx.Frame):
             speak(_("لم يتمكن البرنامج من تحميل المزيد من النتائج"))
             return
         self.searchResults.Append(self.search.get_last_titles())
+        for i in range(self.search.count - self.search.new_videos, self.search.count):
+            if self.search.get_type(i) == "video":
+                self.scraping_queue.put((self.search, i))
         speak(_("تم تحميل المزيد من نتائج البحث"))
         self.searchResults.SetFocus()
 
@@ -485,6 +512,23 @@ class YoutubeBrowser(wx.Frame):
                 int(config_get("defaultformat")), url, dlg, download_type, title=title
 
             )
+
+    def _scraper_worker(self):
+        while True:
+            item = self.scraping_queue.get()
+            if item is None:
+                break
+            search_obj, index = item
+            if search_obj == getattr(self, "search", None):
+                if search_obj.get_type(index) == "video" and search_obj.get_stream(index) is None:
+                    url = search_obj.get_url(index)
+                    try:
+                        stream = get_playable_stream(url)
+                        if stream and search_obj == getattr(self, "search", None):
+                            search_obj.set_stream(index, stream)
+                    except:
+                        pass
+            self.scraping_queue.task_done()
 
     def onShow(self, event):
         self.searchResults.SetFocus()
