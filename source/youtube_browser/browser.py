@@ -3,7 +3,6 @@ from threading import Thread
 import os
 import re
 import queue
-import time
 
 import pyperclip
 import wx
@@ -102,41 +101,38 @@ class YoutubeBrowser(wx.Frame):
         self.favorites = Favorite()
         self.togleFavorite()
         self.scraping_queue = queue.Queue()
-        for i in range(15):
-            Thread(target=self._scraper_worker, daemon=True).start()
+        Thread(target=self._scraper_worker, daemon=True).start()
 
     def sanitize_filename(self, filename):
         return re.sub(r'[<>:"/\\|?*]', '_', filename)
 
-    def _add_result(self, title, search_obj, is_load_more=False):
-        if self.search != search_obj:
-            return
-        self.searchResults.Append(title)
-        if not is_load_more and self.searchResults.Count == 1:
-            self.togleControls()
-            self.togleDownload()
-            self.toglePlay()
-            if self.IsShown():
-                self.searchResults.SetSelection(0)
-                self.searchResults.SetFocus()
-
-    def _on_task_finished(self, search_obj, task_type="search", result=True):
-        if self.search != search_obj:
-            return
-        if not self.IsShown():
-            return
-            
-        if task_type == "search":
-            if self.search.count > 0:
-                speak(_("اكتمل البحث"))
-            else:
-                speak(_("لم يتم العثور على نتائج"))
-        elif task_type == "load_more":
-            if result:
-                speak(_("تم تحميل المزيد من نتائج البحث"))
-                self.searchResults.SetFocus()
-            else:
-                speak(_("لم يتمكن البرنامج من تحميل المزيد من النتائج"))
+    def _download_media(
+        self,
+        option,
+        url,
+        dlg,
+        download_type="video",
+        path=config_get("path"),
+        title=None,
+    ):
+        if option == 0:
+            format = "bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4"
+        else:
+            format = "bestaudio[ext=m4a]"
+        convert = True if option == 2 else False
+        folder = False if download_type == "video" else True
+        if download_type == "playlist" and title:
+            path = os.path.join(path, self.sanitize_filename(title))
+        downloadAction(
+            url,
+            path,
+            dlg,
+            format,
+            dlg.gaugeProgress,
+            dlg.textProgress,
+            convert,
+            folder,
+        )
 
     def searchAction(self, value=""):
         dialog = SearchDialog(self, value=value)
@@ -151,38 +147,12 @@ class YoutubeBrowser(wx.Frame):
         self.togleControls()
 
         def search_thread():
-            search_obj_local = Search(query, filter)
+            search_obj = Search(query, filter)
             try:
-                self.search = run_in_async_loop(search_obj_local.init_async())
+                self.search = run_in_async_loop(search_obj.init_async())
                 if self.search is None:
                     raise Exception
-                
-                raw_results = self.search.results
-                raw_count = self.search.count
-                self.search.results = {}
-                self.search.count = 0
-                
-                for i in range(raw_count):
-                    item = raw_results[i + 1]
-                    if item["type"] == "video":
-                        self.scraping_queue.put((self.search, item))
-                
-                for i in range(raw_count):
-                    item = raw_results[i + 1]
-                    if item["type"] == "video":
-                        while not item.get("scraped") and self.search == search_obj_local:
-                            time.sleep(0.05)
-                    
-                    if self.search != search_obj_local:
-                        return
-                        
-                    if item.get("type") == "playlist" or item.get("stream"):
-                        self.search.count += 1
-                        self.search.results[self.search.count] = item
-                        title = self.search.get_display_title(self.search.count - 1)
-                        wx.CallAfter(self._add_result, title, search_obj_local)
-                
-                wx.CallAfter(self._on_task_finished, search_obj_local, "search")
+                wx.CallAfter(self.on_search_complete)
             except Exception as e:
                 print(e)
                 wx.CallAfter(
@@ -196,6 +166,28 @@ class YoutubeBrowser(wx.Frame):
 
         Thread(target=search_thread).start()
         return True
+
+    def on_search_complete(self):
+        titles = self.search.get_titles()
+        self.searchResults.Set(titles)
+        self.togleControls()
+        try:
+            self.searchResults.SetSelection(0)
+        except:
+            pass
+        self.searchResults.SetFocus()
+        self.togleDownload()
+        self.toglePlay()
+        speak(_("اكتمل البحث"))
+        while not self.scraping_queue.empty():
+            try:
+                self.scraping_queue.get_nowait()
+                self.scraping_queue.task_done()
+            except queue.Empty:
+                break
+        for i in range(self.search.count):
+            if self.search.get_type(i) == "video":
+                self.scraping_queue.put((self.search, i))
 
     def onSearch(self, event):
         if hasattr(self, "search"):
@@ -368,45 +360,9 @@ class YoutubeBrowser(wx.Frame):
         speak(_("جاري تحميل المزيد من النتائج"))
 
         def load_more_thread():
-            search_obj_local = self.search
             try:
-                current_count = self.search.count
                 load_more_result = run_in_async_loop(self.search.load_more())
-                if not load_more_result:
-                    wx.CallAfter(self._on_task_finished, search_obj_local, "load_more", False)
-                    return
-
-                new_items = []
-                for i in range(current_count + 1, self.search.count + 1):
-                    new_items.append(self.search.results[i])
-                
-                # Temporarily remove new items from Search to re-add them after scraping in order
-                for i in range(current_count + 1, self.search.count + 1):
-                    del self.search.results[i]
-                self.search.count = current_count
-
-                for item in new_items:
-                    if item["type"] == "video":
-                        self.scraping_queue.put((self.search, item))
-
-                new_added = 0
-                for item in new_items:
-                    if item["type"] == "video":
-                        while not item.get("scraped") and self.search == search_obj_local:
-                            time.sleep(0.05)
-                    
-                    if self.search != search_obj_local:
-                        return
-
-                    if item.get("type") == "playlist" or item.get("stream"):
-                        self.search.count += 1
-                        self.search.results[self.search.count] = item
-                        new_added += 1
-                        title = self.search.get_display_title(self.search.count - 1)
-                        wx.CallAfter(self._add_result, title, search_obj_local, is_load_more=True)
-
-                self.search.new_videos = new_added
-                wx.CallAfter(self._on_task_finished, search_obj_local, "load_more", True)
+                wx.CallAfter(self.on_load_more_complete, load_more_result)
             except Exception as e:
                 print(e)
                 wx.CallAfter(
@@ -417,8 +373,20 @@ class YoutubeBrowser(wx.Frame):
                     _("خطأ"),
                     style=wx.ICON_ERROR,
                 )
+                speak(_("لم يتمكن البرنامج من تحميل المزيد من النتائج"))
 
         Thread(target=load_more_thread).start()
+
+    def on_load_more_complete(self, result):
+        if result is None or not result:
+            speak(_("لم يتمكن البرنامج من تحميل المزيد من النتائج"))
+            return
+        self.searchResults.Append(self.search.get_last_titles())
+        for i in range(self.search.count - self.search.new_videos, self.search.count):
+            if self.search.get_type(i) == "video":
+                self.scraping_queue.put((self.search, i))
+        speak(_("تم تحميل المزيد من نتائج البحث"))
+        self.searchResults.SetFocus()
 
     def onListBox(self, event):
         self.togleDownload()
@@ -523,33 +491,43 @@ class YoutubeBrowser(wx.Frame):
 
         Thread(target=check_url, args=[url]).start()
 
-    def directDownload(self):
-        n = self.searchResults.Selection
-        if self.search.get_views(n) is None and self.search.get_type(n) == "video":
-            return
-        url = self.search.get_url(self.searchResults.Selection)
-        title = self.search.get_title(self.searchResults.Selection)
-        download_type = self.search.get_type(self.searchResults.Selection)
-        dlg = DownloadProgress(wx.GetApp().GetTopWindow(), title)
-        self._download_media(
-            int(config_get("defaultformat")), url, dlg, download_type, title=title
-        )
+        def directDownload(self):
+
+            n = self.searchResults.Selection
+
+            if self.search.get_views(n) is None and self.search.get_type(n) == "video":
+
+                return
+
+            url = self.search.get_url(self.searchResults.Selection)
+
+            title = self.search.get_title(self.searchResults.Selection)
+
+            download_type = self.search.get_type(self.searchResults.Selection)
+
+            dlg = DownloadProgress(wx.GetApp().GetTopWindow(), title)
+
+            self._download_media(
+
+                int(config_get("defaultformat")), url, dlg, download_type, title=title
+
+            )
 
     def _scraper_worker(self):
         while True:
             item = self.scraping_queue.get()
             if item is None:
                 break
-            search_obj, item_data = item
+            search_obj, index = item
             if search_obj == getattr(self, "search", None):
-                if item_data.get("type") == "video" and item_data.get("stream") is None:
-                    url = item_data.get("url")
+                if search_obj.get_type(index) == "video" and search_obj.get_stream(index) is None:
+                    url = search_obj.get_url(index)
                     try:
                         stream = get_playable_stream(url)
-                        item_data["stream"] = stream
+                        if stream and search_obj == getattr(self, "search", None):
+                            search_obj.set_stream(index, stream)
                     except:
                         pass
-                item_data["scraped"] = True
             self.scraping_queue.task_done()
 
     def onShow(self, event):
