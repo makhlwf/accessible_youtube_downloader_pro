@@ -17,7 +17,7 @@ if os.path.exists("build"):
 entry_point = os.path.join("source", "accessible_youtube_downloader_pro.py")
 
 # Name of the output executable
-app_name = "accessible_youtube_downloader_pro"
+app_name = "HexPlayer"
 
 # Data files and directories to be included
 # The format is 'source_path:destination_in_bundle'
@@ -25,6 +25,7 @@ app_name = "accessible_youtube_downloader_pro"
 data_to_add = [
     # DLLs and EXEs
     "api-ms-win-core-path-l1-1-0.dll",
+    "yt-dlp.exe",
     "avcodec-60.dll",
     "avdevice-60.dll",
     "avfilter-9.dll",

@@ -1,4 +1,4 @@
-# Accessible Youtuber Downloader Plus
+# HexPlayer
 
 A windows app for brousing, watching, and downloading of Youtube content
 
@@ -11,4 +11,4 @@ you can get the latest upto dated version for the app from the releases page
 
 # ⚠️ Disclaimer
 
-This project is a fork of the original repository created by Sulaiman Al Qusaimi. I am not the original developer of this application.
+This project is a fork of the original Acessible Youtube Downloader Pro repository created by Sulaiman Al Qusaimi. I am not the original developer of this application.

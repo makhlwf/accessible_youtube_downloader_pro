@@ -1,8 +1,8 @@
-beautifulsoup4==4.12.2
-requests==2.32.4
-httpx==0.23.3
-pyperclip==1.8.2
+beautifulsoup4
+requests
+httpx
+pyperclip
 python-vlc==3.0.20123
 yt-dlp[default]
-youtube-search-python==1.6.6
-wxpython==4.2.4
+py-yt-search
+wxpython
