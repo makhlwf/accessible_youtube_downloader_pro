@@ -46,6 +46,7 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 [Files]
 Source: "C:\accessible_youtube_downloader_pro\dist\HexPlayer.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\accessible_youtube_downloader_pro\dist\_internal\*"; DestDir: "{app}\_internal"; Flags: recursesubdirs createallsubdirs
+Source: "C:\accessible_youtube_downloader_pro\source\yt-dlp.exe"; DestDir: "{app}\_internal"; Flags: ignoreversion
 
 [Icons]
 Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"

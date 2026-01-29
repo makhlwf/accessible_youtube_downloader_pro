@@ -26,21 +26,11 @@ data_to_add = [
     # DLLs and EXEs
     "api-ms-win-core-path-l1-1-0.dll",
     "yt-dlp.exe",
-    "avcodec-60.dll",
-    "avdevice-60.dll",
-    "avfilter-9.dll",
-    "avformat-60.dll",
-    "avutil-58.dll",
     "ffmpeg.exe",
-    "ffplay.exe",
-    "ffprobe.exe",
     "libvlc.dll",
     "libvlccore.dll",
-    "nvdaControllerClient32.dll",
     "nvdaControllerClient64.dll",
-    "postproc-57.dll",
-    "swresample-4.dll",
-    "swscale-7.dll",
+
     # Directories
     "assets",
     "docs",
