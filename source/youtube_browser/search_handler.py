@@ -183,6 +183,23 @@ class Search:
     def get_channel(self, number):
         return self.results[number + 1]["channel"]
 
+    def get_display_title(self, number):
+        data = self.results[number + 1]
+        title = [data["title"]]
+        if data["type"] == "video":
+            title += [
+                self.get_duration(data["duration"]),
+                f"{_('بواسطة')} {data['channel']['name']}",
+                self.views_part(data["views"]),
+            ]
+        elif data["type"] == "playlist":
+            title += [
+                _("قائمة تشغيل"),
+                f"{_('بواسطة')} {data['channel']['name']}",
+                _("تحتوي على {} من الفيديوهات").format(data["elements"]),
+            ]
+        return ", ".join([element for element in title if element != ""])
+
     def get_stream(self, number):
         return self.results[number + 1].get("stream")
 
