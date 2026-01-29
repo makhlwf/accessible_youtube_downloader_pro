@@ -9,9 +9,6 @@ supported_languages = OrderedDict(
     {
         "العربية": "ar",
         "English": "en",
-        "français": "fr",
-        "Türkçe": "tr",
-        "italiano": "it",
     }
 )
 
@@ -20,9 +17,6 @@ languages = list(supported_languages.values())
 codes = {
     "ar": wx.LANGUAGE_ARABIC,
     "en": wx.LANGUAGE_ENGLISH,
-    "fr": wx.LANGUAGE_FRENCH,
-    "tr": wx.LANGUAGE_TURKISH,
-    "it": wx.LANGUAGE_ITALIAN,
 }
 lang_id = wx.LANGUAGE_ARABIC
 

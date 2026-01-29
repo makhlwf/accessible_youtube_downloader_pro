@@ -4,10 +4,11 @@ import os
 os.chdir(os.path.abspath(os.path.dirname(__file__)))
 os.add_dll_directory(os.getcwd())
 import settings_handler
+import gettext
 from language_handler import init_translation, codes
 
 settings_handler.config_initialization()  # calling the config_initialization function which sets up the accessible_youtube_downloader_pro.ini file in the user appdata folder
-init_translation("accessible_youtube_downloader")  # program localization
+init_translation("HexPlayer")  # program localization
 import database
 import application
 import pyperclip
@@ -163,7 +164,7 @@ class HomeScreen(wx.Frame):
     def on_show_yt_dlp_version(self, event):
         if not os.path.exists(paths.yt_dlp_path):
             wx.MessageBox(
-                _("لم يتم العثور على yt-dlp.exe"),
+                _("لم يتم العثور على أداة yt-dlp.exe والتي تستعمل لتنزيل الفيديوهات, هل ترغب بتنزيلها الآن؟"),
                 _("خطأ"),
                 style=wx.ICON_ERROR,
                 parent=self,
@@ -251,7 +252,7 @@ class HomeScreen(wx.Frame):
                 return
             Viewer(
                 self,
-                _("دليل استخدام برنامج accessible youtube downloader pro"),
+                _("دليل استخدام برنامج HexPlayer"),
                 content,
             )
         event.Skip()
@@ -268,7 +269,7 @@ class HomeScreen(wx.Frame):
         if content is None:
             return
         Viewer(
-            self, _("دليل استخدام برنامج accessible youtube downloader pro"), content
+            self, _("دليل استخدام برنامج HexPlayer"), content
         ).ShowModal()
 
     def onCheckForUpdates(self, event):

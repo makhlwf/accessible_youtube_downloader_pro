@@ -6,7 +6,7 @@ from paths import settings_path
 # settings_path = os.path.join(os.getenv("appdata"), "accessible youtube downloader pro")
 
 defaults = {
-    "path": f"{os.getenv('USERPROFILE')}\\downloads\\accessible youtube downloader",
+    "path": f"{os.getenv('USERPROFILE')}\\downloads\\HexPlayer",
     "defaultaudio": 0,
     "lang": get_default_language(),
     "autodetect": True,
