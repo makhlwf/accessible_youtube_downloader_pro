@@ -1,61 +1,102 @@
 # HexPlayer
 
-A windows app for brousing, watching, and downloading of Youtube content
+![GitHub stars](https://img.shields.io/github/stars/makhlwf/accessible_youtube_downloader_pro)
+![GitHub forks](https://img.shields.io/github/forks/makhlwf/accessible_youtube_downloader_pro)
+![GitHub watchers](https://img.shields.io/github/watchers/makhlwf/accessible_youtube_downloader_pro)
+![Release](https://img.shields.io/github/v/release/makhlwf/accessible_youtube_downloader_pro)
+![Commits](https://img.shields.io/github/commit-activity/m/makhlwf/accessible_youtube_downloader_pro)
 
-# features
-1. **Simple UI**: the app comes with a simple user interface that helps you get the most out of the app
-2. **OS compatibility**: the app is highly proforment on windows, making operations faster
+A Windows app for browsing, watching, and downloading YouTube content.
 
-# downloading
-you can get the latest upto dated version for the app from the releases page
+---
 
-# running from source
-1. clone this repo locally
-```
+## Features
+1. **Simple UI** – The app comes with a clean and simple user interface for easy navigation.  
+2. **OS Compatibility** – Optimized for Windows to ensure smooth and fast operations.
+
+---
+
+## Downloading
+Get the latest up-to-date version from the [releases page](https://github.com/makhlwf/accessible_youtube_downloader_pro/releases).
+
+---
+
+## Running from Source
+1. Clone this repository locally:  
+```bash
 git clone https://github.com/makhlwf/accessible_youtube_downloader_pro.git
-```
-2. ensure you have python 3.11 installed
-3. install uv if you didn't
-```
+
+2. Make sure Python 3.11 is installed.
+
+
+3. Install uv if you don’t have it:
+
+
+
 pip install --upgrade uv
-```
-4. cd to the cloned repo
-5. make a venv, change the value after -p to the python version you want the app to run with, i use 3.14
-```
+
+4. Change directory to the cloned repo.
+
+
+5. Create a virtual environment (replace 3.14 with your Python version):
+
+
+
 uv venv -p 3.14
-```
-6. activate the venv
-```
+
+6. Activate the virtual environment:
+
+
+
 .venv\Scripts\activate
-```
-7. install all the needed Dependencies to run
-```
+
+7. Install dependencies:
+
+
+
 uv pip install -r requirements.txt
-```
-9. cd to source folder
-```
+
+8. Change directory to source:
+
+
+
 cd source
-```
-10. run the app
-```
+
+9. Run the app:
+
+
+
 uv run accessible_youtube_downloader_pro.py
-```
 
-# building the app
-if you need to make an exe do this after conferming that the app works
-1. ensure that you are in the root folder of the repo
-2. ensure you have activated the venv
-3. install pyinstaller
-```
+
+---
+
+Building the App
+
+If you want to create an executable:
+
+1. Ensure you are in the root folder of the repo and the virtual environment is activated.
+
+
+2. Install PyInstaller:
+
+
+
 uv pip install --upgrade pyinstaller
-```
-4. run the build Script
-```
+
+3. Run the build script:
+
+
+
 uv run build.py
-```
-5. after compleating you will find the files in the dist folder
+
+4. The executable files will appear in the dist folder.
 
 
-# ⚠️ Disclaimer
 
-This project is a fork of the original Acessible Youtube Downloader Pro repository created by Sulaiman Al Qusaimi. I am not the original developer of this application.
+
+---
+
+⚠️ Disclaimer
+
+This project is a fork of the original Accessible YouTube Downloader Pro repository created by Sulaiman Al Qusaimi. I am not the original developer of this application.
