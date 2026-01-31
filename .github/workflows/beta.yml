@@ -1,0 +1,84 @@
+name: Beta Release
+
+on:
+  push:
+    branches:
+      - '**'
+
+jobs:
+  beta-release:
+    name: Build and Release Beta
+    runs-on: windows-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Build Application
+        run: python build.py
+
+      - name: Update Inno Setup script
+        shell: pwsh
+        run: |
+          # Read the Inno Setup script
+          $innoContent = Get-Content "inno.iss" -Raw
+          
+          # Replace absolute paths with relative paths valid in CI
+          # The build.py creates output in dist/HexPlayer/
+          # We replace the hardcoded local paths with the CI relative paths
+          $innoContent = $innoContent -replace 'Source: ".*\\dist\\HexPlayer.exe"', 'Source: "dist\HexPlayer\HexPlayer.exe"'
+          $innoContent = $innoContent -replace 'Source: ".*\\dist\\_internal\\*"', 'Source: "dist\HexPlayer\_internal\*"'
+          
+          # Save the modified script
+          $innoContent | Set-Content "inno_ci.iss"
+
+      - name: Install Inno Setup
+        run: choco install innosetup -y
+
+      - name: Compile Installer
+        run: iscc "inno_ci.iss"
+
+      - name: Delete existing beta release
+        shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Try to delete the release and tag 'beta'. Ignore errors if it doesn't exist.
+          gh release delete beta --cleanup-tag -y 2>$null || Write-Host "No existing beta release to delete."
+
+      - name: Create Beta Release
+        shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
+        run: |
+          $commitTitle = $env:COMMIT_MSG.Split("`n")[0]
+          
+          # Use a temp file for notes to safely handle special chars
+          $env:COMMIT_MSG | Set-Content release_notes.txt
+          
+          # inno.iss has OutputDir=HexPlayer and OutputBaseFilename=HexPlayer
+          $installerPath = "HexPlayer\HexPlayer.exe"
+          
+          if (-not (Test-Path $installerPath)) {
+            Write-Error "Installer not found at $installerPath"
+            exit 1
+          }
+
+          gh release create beta $installerPath `
+            --title "Beta: $commitTitle" `
+            --notes-file release_notes.txt `
+            --prerelease `
+            --target "${{ github.sha }}"
