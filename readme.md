@@ -4,6 +4,7 @@
 [![Python Version](https://img.shields.io/badge/Python-3.14+-brightgreen?style=for-the-badge&logo=python)](https://www.python.org/)
 [![Platform](https://img.shields.io/badge/Platform-Windows-0078D6?style=for-the-badge&logo=windows)](https://www.microsoft.com/windows)
 [![Accessibility](https://img.shields.io/badge/Accessibility-Screen%20Reader%20Friendly-orange?style=for-the-badge)](https://en.wikipedia.org/wiki/Web_Accessibility)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg?style=for-the-badge)](https://www.gnu.org/licenses/gpl-3.0)
 
 **HexPlayer** is a powerful, lightweight, and highly accessible Windows application designed for browsing, watching, and downloading YouTube content. Built with a focus on blind and visually impaired users, it provides a seamless experience without the complexities of a web browser.
 
@@ -83,6 +84,11 @@ To create your own standalone executable:
 - **Original Developer:** Suleiman Al Qusaimi.
 - **Maintainer & Fork Author:** [Makhlwf](https://github.com/makhlwf).
 - **Core Engine:** Powered by [yt-dlp](https://github.com/yt-dlp/yt-dlp) and [wxPython](https://www.wxpython.org/).
+
+---
+
+## 📜 License
+This project is licensed under the **GNU General Public License v3.0**. See the [LICENSE](LICENSE) file for details.
 
 ---
 

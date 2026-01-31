@@ -38,7 +38,6 @@ data_to_add = [
     "libvlc.dll",
     "libvlccore.dll",
     "nvdaControllerClient64.dll",
-
     # Directories
     "assets",
     "docs",
