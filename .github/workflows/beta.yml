@@ -57,6 +57,7 @@ jobs:
         run: |
           # Try to delete the release and tag 'beta'. Ignore errors if it doesn't exist.
           gh release delete beta --cleanup-tag -y 2>$null || Write-Host "No existing beta release to delete."
+          exit 0
 
       - name: Create Beta Release
         shell: pwsh
