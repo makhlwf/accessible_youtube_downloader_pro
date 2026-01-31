@@ -35,7 +35,6 @@ data_to_add = [
     "swscale-7.dll",
     "ffmpeg.exe",
     "ffprobe.exe",
-    "yt-dlp.exe",
     "libvlc.dll",
     "libvlccore.dll",
     "nvdaControllerClient64.dll",
