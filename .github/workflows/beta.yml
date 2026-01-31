@@ -39,7 +39,7 @@ jobs:
           # The build.py creates output in dist/HexPlayer/
           # We replace the hardcoded local paths with the CI relative paths
           $innoContent = $innoContent -replace 'Source: ".*\\dist\\HexPlayer.exe"', 'Source: "dist\HexPlayer\HexPlayer.exe"'
-          $innoContent = $innoContent -replace 'Source: ".*\\dist\\_internal\\*"', 'Source: "dist\HexPlayer\_internal\*"'
+          $innoContent = $innoContent -replace 'Source: ".*\\dist\\_internal\\\*"', 'Source: "dist\HexPlayer\_internal\*"'
           
           # Save the modified script
           $innoContent | Set-Content "inno_ci.iss"
