@@ -25,7 +25,17 @@ app_name = "HexPlayer"
 data_to_add = [
     # DLLs and EXEs
     "api-ms-win-core-path-l1-1-0.dll",
+    "avcodec-60.dll",
+    "avdevice-60.dll",
+    "avfilter-9.dll",
+    "avformat-60.dll",
+    "avutil-58.dll",
+    "postproc-57.dll",
+    "swresample-4.dll",
+    "swscale-7.dll",
     "ffmpeg.exe",
+    "ffprobe.exe",
+    "yt-dlp.exe",
     "libvlc.dll",
     "libvlccore.dll",
     "nvdaControllerClient64.dll",

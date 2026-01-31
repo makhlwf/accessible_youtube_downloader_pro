@@ -1,4 +1,5 @@
 import subprocess
+import os
 import wx
 from settings_handler import config_get
 import paths
@@ -64,6 +65,13 @@ class Downloader:
                 )
 
     def download(self):
+        env = os.environ.copy()
+        abs_ffmpeg_dir = os.path.abspath(paths.ffmpeg_dir)
+        abs_ffmpeg_dir = os.path.normpath(abs_ffmpeg_dir).replace("\\", "/")
+        
+        # Add the local directory to PATH so the DLLs can be found by the EXE
+        env["PATH"] = abs_ffmpeg_dir + os.pathsep + env.get("PATH", "")
+
         command = [
             paths.yt_dlp_path,
             "--no-check-certificate",
@@ -72,12 +80,17 @@ class Downloader:
             "-f",
             self.downloading_format,
             "--progress",
-            self.url,
+            "--ffmpeg-location",
+            abs_ffmpeg_dir,
+            "--no-cache-dir",
         ]
+
         if self.convert:
             command.extend(
                 ["-x", "--audio-format", "mp3", "--audio-quality", self.get_quality()]
             )
+        
+        command.append(self.url)
 
         self.process = subprocess.Popen(
             command,
@@ -86,6 +99,7 @@ class Downloader:
             universal_newlines=True,
             encoding="utf-8",
             creationflags=subprocess.CREATE_NO_WINDOW,
+            env=env,
         )
 
         for line in self.process.stdout:
