@@ -4,7 +4,6 @@ import os
 from download_handler.downloader import downloadAction
 from settings_handler import config_get, config_set
 from .download_progress import DownloadProgress
-from threading import Thread
 from utiles import youtube_regexp
 
 

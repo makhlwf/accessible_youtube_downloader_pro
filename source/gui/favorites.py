@@ -10,7 +10,6 @@ from gui.download_progress import DownloadProgress
 from .activity_dialog import LoadingDialog
 from settings_handler import config_get
 import webbrowser
-from threading import Thread
 
 
 class Favorites(wx.Frame):

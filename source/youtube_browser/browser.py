@@ -16,7 +16,7 @@ from media_player.media_gui import MediaGui
 from nvda_client.client import speak
 from settings_handler import config_get
 from youtube_browser.search_handler import Search
-from utiles import get_audio_stream, get_video_stream, get_playable_stream
+from utiles import get_playable_stream
 from async_utils import run_in_async_loop
 
 from download_handler.downloader import downloadAction
@@ -104,7 +104,7 @@ class YoutubeBrowser(wx.Frame):
         Thread(target=self._scraper_worker, daemon=True).start()
 
     def sanitize_filename(self, filename):
-        return re.sub(r'[<>:"/\\|?*]', '_', filename)
+        return re.sub(r'[<>:"/\\|?*]', "_", filename)
 
     def _download_media(
         self,
@@ -205,7 +205,9 @@ class YoutubeBrowser(wx.Frame):
         print(url)
         stream = self.search.get_stream(number)
         if stream is None:
-            stream = LoadingDialog(self, _("جاري التشغيل"), get_playable_stream, url).res
+            stream = LoadingDialog(
+                self, _("جاري التشغيل"), get_playable_stream, url
+            ).res
         gui = MediaGui(
             self,
             title,
@@ -224,7 +226,9 @@ class YoutubeBrowser(wx.Frame):
         url = self.search.get_url(number)
         stream = self.search.get_stream(number)
         if stream is None:
-            stream = LoadingDialog(self, _("جاري التشغيل"), get_playable_stream, url).res
+            stream = LoadingDialog(
+                self, _("جاري التشغيل"), get_playable_stream, url
+            ).res
         gui = MediaGui(
             self,
             title,
@@ -492,11 +496,9 @@ class YoutubeBrowser(wx.Frame):
         Thread(target=check_url, args=[url]).start()
 
         def directDownload(self):
-
             n = self.searchResults.Selection
 
             if self.search.get_views(n) is None and self.search.get_type(n) == "video":
-
                 return
 
             url = self.search.get_url(self.searchResults.Selection)
@@ -508,9 +510,7 @@ class YoutubeBrowser(wx.Frame):
             dlg = DownloadProgress(wx.GetApp().GetTopWindow(), title)
 
             self._download_media(
-
                 int(config_get("defaultformat")), url, dlg, download_type, title=title
-
             )
 
     def _scraper_worker(self):
@@ -520,7 +520,10 @@ class YoutubeBrowser(wx.Frame):
                 break
             search_obj, index = item
             if search_obj == getattr(self, "search", None):
-                if search_obj.get_type(index) == "video" and search_obj.get_stream(index) is None:
+                if (
+                    search_obj.get_type(index) == "video"
+                    and search_obj.get_stream(index) is None
+                ):
                     url = search_obj.get_url(index)
                     try:
                         stream = get_playable_stream(url)

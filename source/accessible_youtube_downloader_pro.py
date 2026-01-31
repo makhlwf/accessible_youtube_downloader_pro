@@ -4,7 +4,6 @@ import os
 os.chdir(os.path.abspath(os.path.dirname(__file__)))
 os.add_dll_directory(os.getcwd())
 import settings_handler
-import gettext
 from language_handler import init_translation, codes
 
 settings_handler.config_initialization()  # calling the config_initialization function which sets up the accessible_youtube_downloader_pro.ini file in the user appdata folder
@@ -17,12 +16,10 @@ import webbrowser
 import subprocess
 import utiles
 import paths
-import asyncio
 import threading
 from async_utils import (
     start_async_loop,
     stop_async_loop,
-    run_in_async_loop,
     _async_thread,
 )
 from gui.activity_dialog import LoadingDialog
@@ -164,7 +161,9 @@ class HomeScreen(wx.Frame):
     def on_show_yt_dlp_version(self, event):
         if not os.path.exists(paths.yt_dlp_path):
             wx.MessageBox(
-                _("لم يتم العثور على أداة yt-dlp.exe والتي تستعمل لتنزيل الفيديوهات, هل ترغب بتنزيلها الآن؟"),
+                _(
+                    "لم يتم العثور على أداة yt-dlp.exe والتي تستعمل لتنزيل الفيديوهات, هل ترغب بتنزيلها الآن؟"
+                ),
                 _("خطأ"),
                 style=wx.ICON_ERROR,
                 parent=self,
@@ -268,9 +267,7 @@ class HomeScreen(wx.Frame):
         content = documentation_get()
         if content is None:
             return
-        Viewer(
-            self, _("دليل استخدام برنامج HexPlayer"), content
-        ).ShowModal()
+        Viewer(self, _("دليل استخدام برنامج HexPlayer"), content).ShowModal()
 
     def onCheckForUpdates(self, event):
         from gui.activity_dialog import LoadingDialog

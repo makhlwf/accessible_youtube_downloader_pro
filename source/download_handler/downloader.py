@@ -68,7 +68,7 @@ class Downloader:
         env = os.environ.copy()
         abs_ffmpeg_dir = os.path.abspath(paths.ffmpeg_dir)
         abs_ffmpeg_dir = os.path.normpath(abs_ffmpeg_dir).replace("\\", "/")
-        
+
         # Add the local directory to PATH so the DLLs can be found by the EXE
         env["PATH"] = abs_ffmpeg_dir + os.pathsep + env.get("PATH", "")
 
@@ -89,7 +89,7 @@ class Downloader:
             command.extend(
                 ["-x", "--audio-format", "mp3", "--audio-quality", self.get_quality()]
             )
-        
+
         command.append(self.url)
 
         self.process = subprocess.Popen(

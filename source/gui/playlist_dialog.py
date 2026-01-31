@@ -3,12 +3,10 @@ from youtube_browser.search_handler import PlaylistResult
 from utiles import get_audio_stream, get_video_stream
 from download_handler.downloader import downloadAction
 from media_player.media_gui import MediaGui
-from nvda_client.client import speak
 import pyperclip
 from gui.download_progress import DownloadProgress
 from settings_handler import config_get
 import webbrowser
-from threading import Thread
 import os
 from .activity_dialog import LoadingDialog
 import application
@@ -85,12 +83,7 @@ class PlaylistDialog(wx.Dialog):
         self.videosBox.Selection = 0
 
     def _download_media(
-        self,
-        option,
-        url,
-        dlg,
-        download_type="video",
-        path=config_get("path")
+        self, option, url, dlg, download_type="video", path=config_get("path")
     ):
         if option == 0:
             format = "bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4"

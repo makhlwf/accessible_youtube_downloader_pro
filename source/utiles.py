@@ -1,7 +1,4 @@
 import re
-from threading import Thread
-from settings_handler import config_get
-from download_handler.downloader import downloadAction
 import requests
 import wx
 import application
@@ -10,7 +7,6 @@ from gui.update_dialog import UpdateDialog
 import subprocess
 import json
 import os
-import queue
 
 try:
     from yt_dlp import YoutubeDL
@@ -72,25 +68,28 @@ class Stream:
 
 def get_playable_stream(url):
     if not YoutubeDL:
-        return get_video_stream(url) # Fallback if library missing
+        return get_video_stream(url)  # Fallback if library missing
     try:
         with YoutubeDL(PLAYER_OPTS) as ydl:
             # Check if it's already a direct URL or ID
             if "youtube.com" not in url and "youtu.be" not in url:
-                 # Assume ID
-                 url = f"https://www.youtube.com/watch?v={url}"
+                # Assume ID
+                url = f"https://www.youtube.com/watch?v={url}"
 
             entry = ydl.extract_info(url, download=False)
-            
-            fmt = next((f for f in entry.get("formats", []) if f.get("format_id") == "18"), None)
+
+            fmt = next(
+                (f for f in entry.get("formats", []) if f.get("format_id") == "18"),
+                None,
+            )
             title = entry.get("title")
-            
+
             if not fmt:
-                 # Fallback if 18 not found, just take best url found in entry or url itself
-                 # But the snippet returns None, title.
-                 # Let's try to find any URL if 18 fails? 
-                 # User snippet specifically wants 18.
-                 return Stream(title, entry.get("url") or url)
+                # Fallback if 18 not found, just take best url found in entry or url itself
+                # But the snippet returns None, title.
+                # Let's try to find any URL if 18 fails?
+                # User snippet specifically wants 18.
+                return Stream(title, entry.get("url") or url)
 
             # Headers
             headers = {}
@@ -103,7 +102,6 @@ def get_playable_stream(url):
     except Exception as e:
         print(f"Error in get_playable_stream: {e}")
         return None
-
 
 
 def get_media_info(url):

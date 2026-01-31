@@ -1,14 +1,9 @@
-import asyncio
 from py_yt import (
     Playlist,
-    Video,
     Search,
     VideosSearch,
-    ChannelsSearch,
     PlaylistsSearch,
-    CustomSearch,
 )
-from py_yt.core.constants import VideoSortOrder
 from utiles import time_formatting, time_to_seconds
 
 
@@ -131,7 +126,9 @@ class Search:
                 if isinstance(view_count, dict):
                     views = view_count.get("short") or view_count.get("text")
                 else:
-                    views = view_count if view_count is not None else item.get("view_count")
+                    views = (
+                        view_count if view_count is not None else item.get("view_count")
+                    )
 
                 self.results[self.count] = {
                     "type": "video",

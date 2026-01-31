@@ -1,5 +1,4 @@
 import asyncio
-import threading
 
 # Global asyncio event loop and thread
 _async_loop = None

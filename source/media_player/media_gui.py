@@ -5,7 +5,7 @@ from gui.download_progress import DownloadProgress
 from nvda_client.client import speak
 from settings_handler import config_get, config_set
 import application
-from utiles import get_audio_stream, get_video_stream, get_playable_stream
+from utiles import get_playable_stream
 from download_handler.downloader import downloadAction
 from vlc import State
 from gui.settings_dialog import SettingsDialog
@@ -362,12 +362,12 @@ class MediaGui(wx.Frame):
                 stream = get_playable_stream(url)
         except:
             return
-        
+
         options = []
         if hasattr(stream, "headers") and stream.headers:
-             ua = stream.headers.get("User-Agent")
-             if ua:
-                 options.append(f":http-user-agent={ua}")
+            ua = stream.headers.get("User-Agent")
+            if ua:
+                options.append(f":http-user-agent={ua}")
 
         self.player.set_media(stream.url, options=options)
         self.url = url
