@@ -2,6 +2,7 @@ import wx
 import re
 import webbrowser
 import pyperclip
+from language_handler import _
 
 
 url = re.compile(

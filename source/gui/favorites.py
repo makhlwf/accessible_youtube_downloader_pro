@@ -1,4 +1,5 @@
 import wx
+from language_handler import _
 import application
 from database import Favorite
 from utiles import get_audio_stream, get_video_stream
@@ -91,7 +92,7 @@ class Favorites(wx.Frame):
         self.togleControls()
         try:
             self.favList.Selection = n
-        except:
+        except Exception:
             pass
         self.favList.SetFocus()
         speak(_("تم حذف الفيديو من قائمة المفضلة"))
@@ -101,7 +102,7 @@ class Favorites(wx.Frame):
         url = self.rows[n]["url"]
         title = self.rows[n]["title"]
         stream = LoadingDialog(self, _("جاري التشغيل"), get_video_stream, url).res
-        gui = MediaGui(
+        MediaGui(
             self,
             title,
             stream,
@@ -116,7 +117,7 @@ class Favorites(wx.Frame):
         url = self.rows[n]["url"]
         title = self.rows[n]["title"]
         stream = LoadingDialog(self, _("جاري التشغيل"), get_audio_stream, url).res
-        gui = MediaGui(self, title, stream, url, audio_mode=True, results=self.rows)
+        MediaGui(self, title, stream, url, audio_mode=True, results=self.rows)
         self.Hide()
 
     def togleControls(self):

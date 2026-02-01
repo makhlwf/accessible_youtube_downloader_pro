@@ -1,5 +1,6 @@
 import requests
 import wx
+from language_handler import _
 from wx.lib.newevent import NewEvent
 import os
 from paths import update_path
@@ -109,7 +110,7 @@ class UpdateDialog(wx.Dialog):
             self.status.Value = _("جاري تثبيت التحديث")
             path = os.path.join(update_path, event.path)
             subprocess.Popen('"{}" /silent'.format(path), shell=True)
-        except:
+        except Exception:
             wx.MessageBox(
                 _(
                     "حدث خطأ ما عند محاولة فتح ملف التثبيت. فضلًا أعد محاولة التحديث مجددًا, أو تواصل مع المطور للإبلاغ بالمشكلة"

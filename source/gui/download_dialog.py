@@ -5,6 +5,7 @@ from download_handler.downloader import downloadAction
 from settings_handler import config_get, config_set
 from .download_progress import DownloadProgress
 from utiles import youtube_regexp
+from language_handler import _
 
 
 class DownloadDialog(wx.Frame):

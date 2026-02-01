@@ -1,4 +1,5 @@
 import wx
+from language_handler import _
 
 
 class Viewer(wx.Dialog):

@@ -2,6 +2,7 @@ import os
 import sys
 
 import wx
+from language_handler import _
 from settings_handler import config_get, config_set
 from language_handler import supported_languages
 
@@ -25,7 +26,7 @@ class SettingsDialog(wx.Dialog):
             self.languageBox.Selection = languages[config_get("lang")]
         except KeyError:
             self.languageBox.Selection = 0
-        lbl1 = wx.StaticText(panel, -1, _("مسار مجلد التنزيل: "), name="path")
+        wx.StaticText(panel, -1, _("مسار مجلد التنزيل: "), name="path")
         self.pathField = wx.TextCtrl(
             panel,
             -1,
@@ -34,7 +35,7 @@ class SettingsDialog(wx.Dialog):
             style=wx.TE_READONLY | wx.TE_MULTILINE | wx.HSCROLL,
         )
         changeButton = wx.Button(panel, -1, _("&تغيير المسار"), name="path")
-        lblCookies = wx.StaticText(panel, -1, _("مسار ملف الكوكيز: "), name="cookies")
+        wx.StaticText(panel, -1, _("مسار ملف الكوكيز: "), name="cookies")
         self.cookiesPathField = wx.TextCtrl(
             panel,
             -1,
@@ -108,7 +109,7 @@ class SettingsDialog(wx.Dialog):
         self.repeateTracks.Value = config_get("repeatetracks")
         okButton = wx.Button(panel, wx.ID_OK, _("مواف&ق"), name="ok_cancel")
         okButton.SetDefault()
-        cancelButton = wx.Button(panel, wx.ID_CANCEL, _("إل&غاء"), name="ok_cancel")
+        wx.Button(panel, wx.ID_CANCEL, _("إل&غاء"), name="ok_cancel")
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer1 = wx.BoxSizer(wx.HORIZONTAL)
         sizer2 = wx.BoxSizer(wx.HORIZONTAL)

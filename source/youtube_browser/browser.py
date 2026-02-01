@@ -6,6 +6,7 @@ import queue
 
 import pyperclip
 import wx
+from language_handler import _
 from gui.download_progress import DownloadProgress
 from gui.search_dialog import SearchDialog
 from gui.settings_dialog import SettingsDialog
@@ -173,7 +174,7 @@ class YoutubeBrowser(wx.Frame):
         self.togleControls()
         try:
             self.searchResults.SetSelection(0)
-        except:
+        except Exception:
             pass
         self.searchResults.SetFocus()
         self.togleDownload()
@@ -208,7 +209,7 @@ class YoutubeBrowser(wx.Frame):
             stream = LoadingDialog(
                 self, _("جاري التشغيل"), get_playable_stream, url
             ).res
-        gui = MediaGui(
+        MediaGui(
             self,
             title,
             stream,
@@ -229,7 +230,7 @@ class YoutubeBrowser(wx.Frame):
             stream = LoadingDialog(
                 self, _("جاري التشغيل"), get_playable_stream, url
             ).res
-        gui = MediaGui(
+        MediaGui(
             self,
             title,
             stream,
@@ -248,7 +249,7 @@ class YoutubeBrowser(wx.Frame):
         ):
             self.favCheck.Value = not self.favCheck.Value
             self.onFavorite(None)
-        elif event.KeyCode == wx.WXK_BACK and not type(self.FindFocus()) == MediaGui:
+        elif event.KeyCode == wx.WXK_BACK and not isinstance(self.FindFocus(), MediaGui):
             self.backAction()
         else:
             event.Skip()
@@ -529,7 +530,7 @@ class YoutubeBrowser(wx.Frame):
                         stream = get_playable_stream(url)
                         if stream and search_obj == getattr(self, "search", None):
                             search_obj.set_stream(index, stream)
-                    except:
+                    except Exception:
                         pass
             self.scraping_queue.task_done()
 

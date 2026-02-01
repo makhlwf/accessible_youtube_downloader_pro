@@ -8,6 +8,7 @@ import subprocess
 import json
 import os
 from settings_handler import config_get
+from language_handler import _
 
 try:
     from yt_dlp import YoutubeDL

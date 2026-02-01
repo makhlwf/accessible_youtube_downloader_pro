@@ -3,37 +3,36 @@ import os
 
 os.chdir(os.path.abspath(os.path.dirname(__file__)))
 os.add_dll_directory(os.getcwd())
-import settings_handler
-from language_handler import init_translation, codes
+import settings_handler  # noqa: E402
+from language_handler import init_translation, codes, _  # noqa: E402
 
 settings_handler.config_initialization()  # calling the config_initialization function which sets up the accessible_youtube_downloader_pro.ini file in the user appdata folder
 init_translation("HexPlayer")  # program localization
-import database
-import application
-import pyperclip
-import wx
-import webbrowser
-import subprocess
-import utiles
-import paths
-import threading
-from async_utils import (
+import database  # noqa: E402
+import application  # noqa: E402
+import pyperclip  # noqa: E402
+import wx  # noqa: E402
+import webbrowser  # noqa: E402
+import subprocess  # noqa: E402
+import utiles  # noqa: E402
+import paths  # noqa: E402
+import threading  # noqa: E402
+from async_utils import (  # noqa: E402
     start_async_loop,
     stop_async_loop,
-    _async_thread,
 )
-from gui.activity_dialog import LoadingDialog
-from gui.auto_detect_dialog import AutoDetectDialog
-from gui.download_dialog import DownloadDialog
-from gui.link_dlg import LinkDlg
-from gui.settings_dialog import SettingsDialog
-from gui.text_viewer import Viewer
-from gui.custom_controls import CustomLabel
-from gui.favorites import Favorites
-from doc_handler import documentation_get
-from media_player.media_gui import MediaGui
-from youtube_browser.browser import YoutubeBrowser
-from threading import Thread
+from gui.activity_dialog import LoadingDialog  # noqa: E402
+from gui.auto_detect_dialog import AutoDetectDialog  # noqa: E402
+from gui.download_dialog import DownloadDialog  # noqa: E402
+from gui.link_dlg import LinkDlg  # noqa: E402
+from gui.settings_dialog import SettingsDialog  # noqa: E402
+from gui.text_viewer import Viewer  # noqa: E402
+from gui.custom_controls import CustomLabel  # noqa: E402
+from gui.favorites import Favorites  # noqa: E402
+from doc_handler import documentation_get  # noqa: E402
+from media_player.media_gui import MediaGui  # noqa: E402
+from youtube_browser.browser import YoutubeBrowser  # noqa: E402
+from threading import Thread  # noqa: E402
 
 
 class HomeScreen(wx.Frame):
@@ -210,7 +209,7 @@ class HomeScreen(wx.Frame):
                 _("لا يمكن تشغيل الرابط"), _("خطأ"), style=wx.ICON_ERROR, parent=self
             )
             return
-        gui = MediaGui(
+        MediaGui(
             self, stream.title, stream, data["link"]
         )  # initiating the media gui
         self.Hide()
@@ -222,7 +221,7 @@ class HomeScreen(wx.Frame):
         dlg.Show()
 
     def onSearch(self, event):  # showing the youtube browser window event function
-        browser = YoutubeBrowser(self)
+        YoutubeBrowser(self)
 
     def detectFromClipboard(self, config):
         if not config:
