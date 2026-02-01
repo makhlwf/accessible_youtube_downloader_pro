@@ -1,4 +1,5 @@
 import wx
+from language_handler import _
 from youtube_browser.search_handler import PlaylistResult
 from utiles import get_audio_stream, get_video_stream
 from download_handler.downloader import downloadAction
@@ -257,7 +258,7 @@ class PlaylistDialog(wx.Dialog):
         self.Destroy()
 
     def onHook(self, event):
-        if event.KeyCode == wx.WXK_ESCAPE and not type(self.FindFocus()) == MediaGui:
+        if event.KeyCode == wx.WXK_ESCAPE and not isinstance(self.FindFocus(), MediaGui):
             self.back()
         else:
             event.Skip()

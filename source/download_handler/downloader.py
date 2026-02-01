@@ -6,6 +6,7 @@ import paths
 import re
 from wx.lib.newevent import NewEvent
 from threading import Thread
+from language_handler import _
 
 ProgressChangedEvent, EVT_PROGRESS_CHANGED = NewEvent()
 

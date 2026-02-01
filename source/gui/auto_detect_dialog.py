@@ -1,4 +1,5 @@
 import wx
+from language_handler import _
 
 from .playlist_dialog import PlaylistDialog
 from .download_dialog import DownloadDialog
@@ -23,7 +24,7 @@ class AutoDetectDialog(wx.Dialog):
         self.url = url
         self.Centre()
         panel = wx.Panel(self)
-        msg = wx.StaticText(
+        wx.StaticText(
             panel,
             -1,
             _(
@@ -37,7 +38,7 @@ class AutoDetectDialog(wx.Dialog):
             playButton.Label = _("فتح...")
         elif link_type(url) != _("فيديو"):
             playButton.Disable()
-        cancelButton = wx.Button(panel, wx.ID_CANCEL, _("إلغاء"))
+        wx.Button(panel, wx.ID_CANCEL, _("إلغاء"))
         downloadButton.Bind(wx.EVT_BUTTON, self.onDownload)
         playButton.Bind(wx.EVT_BUTTON, self.onPlay)
         self.ShowModal()
@@ -59,4 +60,4 @@ class AutoDetectDialog(wx.Dialog):
         stream = LoadingDialog(
             parent, _("جاري التشغيل"), get_audio_stream, self.url
         ).res
-        gui = MediaGui(parent, stream.title, stream, self.url)
+        MediaGui(parent, stream.title, stream, self.url)

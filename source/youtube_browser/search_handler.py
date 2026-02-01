@@ -1,10 +1,10 @@
 from py_yt import (
     Playlist,
-    Search,
     VideosSearch,
     PlaylistsSearch,
 )
 from utiles import time_formatting, time_to_seconds
+from language_handler import _
 
 
 class PlaylistResult:

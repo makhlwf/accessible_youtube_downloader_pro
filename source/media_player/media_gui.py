@@ -1,6 +1,7 @@
 import webbrowser
 import pyperclip
 import wx
+from language_handler import _
 from gui.download_progress import DownloadProgress
 from nvda_client.client import speak
 from settings_handler import config_get, config_set
@@ -360,7 +361,7 @@ class MediaGui(wx.Frame):
             )
             if stream is None:
                 stream = get_playable_stream(url)
-        except:
+        except Exception:
             return
 
         options = []
@@ -475,6 +476,6 @@ class MediaGui(wx.Frame):
         try:
             # Use run_in_async_loop for the async call
             info = run_in_async_loop(Video.get(self.url))
-        except:
+        except Exception:
             return
         self.description = info["description"]

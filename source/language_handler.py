@@ -3,6 +3,11 @@ import ctypes
 import locale
 from collections import OrderedDict
 import wx
+import builtins
+
+
+def _(text):
+    return getattr(builtins, "_", lambda x: x)(text)
 
 
 supported_languages = OrderedDict(
@@ -28,7 +33,7 @@ def get_default_language():
         language = locale.windows_locale[lang_id].split("_")[0]
         if language not in supported_languages.values():
             language = "en"
-    except:
+    except Exception:
         language = "en"
     return language
 
@@ -40,6 +45,6 @@ def init_translation(domain):
         tr = gettext.translation(
             domain, localedir="languages", languages=[config_get("lang")]
         )
-    except:
+    except Exception:
         tr = gettext.translation(domain, fallback=True)
     tr.install()
