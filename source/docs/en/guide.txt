@@ -108,6 +108,8 @@ Auto-Loop: Automatically restarts the clip (Off by default).
 
 Auto-Next: Automatically plays the next video (Off by default).
 
+Cookies File Path: Path to a Netscape HTTP cookies file to be used for viewing and downloading (Optional).
+
 Note: Auto-Loop and Auto-Next cannot be enabled at the same time.
 
 Search & Browsing

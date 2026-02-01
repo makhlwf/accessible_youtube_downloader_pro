@@ -7,6 +7,7 @@ from gui.update_dialog import UpdateDialog
 import subprocess
 import json
 import os
+from settings_handler import config_get
 
 try:
     from yt_dlp import YoutubeDL
@@ -70,7 +71,11 @@ def get_playable_stream(url):
     if not YoutubeDL:
         return get_video_stream(url)  # Fallback if library missing
     try:
-        with YoutubeDL(PLAYER_OPTS) as ydl:
+        opts = PLAYER_OPTS.copy()
+        cookies_path = config_get("cookiespath")
+        if cookies_path and os.path.exists(cookies_path):
+            opts["cookiefile"] = cookies_path
+        with YoutubeDL(opts) as ydl:
             # Check if it's already a direct URL or ID
             if "youtube.com" not in url and "youtu.be" not in url:
                 # Assume ID
@@ -109,6 +114,9 @@ def get_media_info(url):
         return None
     try:
         command = [paths.yt_dlp_path, "-j", url]
+        cookies_path = config_get("cookiespath")
+        if cookies_path and os.path.exists(cookies_path):
+            command.extend(["--cookies", cookies_path])
         result = subprocess.run(
             command,
             capture_output=True,

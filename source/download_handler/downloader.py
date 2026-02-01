@@ -85,6 +85,10 @@ class Downloader:
             "--no-cache-dir",
         ]
 
+        cookies_path = config_get("cookiespath")
+        if cookies_path and os.path.exists(cookies_path):
+            command.extend(["--cookies", cookies_path])
+
         if self.convert:
             command.extend(
                 ["-x", "--audio-format", "mp3", "--audio-quality", self.get_quality()]

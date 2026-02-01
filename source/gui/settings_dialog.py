@@ -34,6 +34,16 @@ class SettingsDialog(wx.Dialog):
             style=wx.TE_READONLY | wx.TE_MULTILINE | wx.HSCROLL,
         )
         changeButton = wx.Button(panel, -1, _("&تغيير المسار"), name="path")
+        lblCookies = wx.StaticText(panel, -1, _("مسار ملف الكوكيز: "), name="cookies")
+        self.cookiesPathField = wx.TextCtrl(
+            panel,
+            -1,
+            value=config_get("cookiespath"),
+            name="cookies",
+            style=wx.TE_READONLY | wx.TE_MULTILINE | wx.HSCROLL,
+        )
+        changeCookiesButton = wx.Button(panel, -1, _("تغيير"), name="cookies")
+        clearCookiesButton = wx.Button(panel, -1, _("حذف"), name="cookies")
         preferencesBox = wx.StaticBox(panel, -1, _("التفضيلات العامة"))
         self.autoDetectItem = wx.CheckBox(
             preferencesBox,
@@ -107,6 +117,7 @@ class SettingsDialog(wx.Dialog):
         sizer5 = wx.BoxSizer(wx.HORIZONTAL)
         sizer6 = wx.BoxSizer(wx.HORIZONTAL)
         sizer7 = wx.BoxSizer(wx.HORIZONTAL)
+        cookiesSizer = wx.BoxSizer(wx.HORIZONTAL)
         okCancelSizer = wx.BoxSizer(wx.HORIZONTAL)
         sizer1.Add(lbl, 1)
         sizer1.Add(self.languageBox, 1, wx.EXPAND)
@@ -115,6 +126,8 @@ class SettingsDialog(wx.Dialog):
                 okCancelSizer.Add(control, 1)
             elif control.Name == "path":
                 sizer2.Add(control, 1)
+            elif control.Name == "cookies":
+                cookiesSizer.Add(control, 1)
         for item in preferencesBox.GetChildren():
             sizer3.Add(item, 1)
         preferencesBox.SetSizer(sizer3)
@@ -130,12 +143,15 @@ class SettingsDialog(wx.Dialog):
         playerOptions.SetSizer(sizer7)
         sizer.Add(sizer1, 1, wx.EXPAND)
         sizer.Add(sizer2, 1, wx.EXPAND)
+        sizer.Add(cookiesSizer, 1, wx.EXPAND)
         sizer.Add(preferencesBox, 1, wx.EXPAND)
         sizer.Add(downloadPreferencesBox, 1, wx.EXPAND)
         sizer.Add(playerOptions, 1, wx.EXPAND)
         sizer.Add(okCancelSizer, 1, wx.EXPAND)
         panel.SetSizer(sizer)
         changeButton.Bind(wx.EVT_BUTTON, self.onChange)
+        changeCookiesButton.Bind(wx.EVT_BUTTON, self.onChangeCookies)
+        clearCookiesButton.Bind(wx.EVT_BUTTON, self.onClearCookies)
         self.autoDetectItem.Bind(wx.EVT_CHECKBOX, self.onCheck)
         self.autoLoadItem.Bind(wx.EVT_CHECKBOX, self.onCheck)
         self.autoCheckForUpdates.Bind(wx.EVT_CHECKBOX, self.onCheck)
@@ -167,6 +183,27 @@ class SettingsDialog(wx.Dialog):
             self.preferences["path"] = new
             self.pathField.Value = new
             self.pathField.SetFocus()
+
+    def onChangeCookies(self, event):
+        wildcard = "Text Files (*.txt)|*.txt"
+        dlg = wx.FileDialog(
+            self,
+            message=_("اختر ملف الكوكيز"),
+            defaultDir=os.getcwd(),
+            defaultFile="",
+            wildcard=wildcard,
+            style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST | wx.FD_CHANGE_DIR,
+        )
+        if dlg.ShowModal() == wx.ID_OK:
+            path = dlg.GetPath()
+            self.preferences["cookiespath"] = path
+            self.cookiesPathField.Value = path
+            self.cookiesPathField.SetFocus()
+        dlg.Destroy()
+
+    def onClearCookies(self, event):
+        self.preferences["cookiespath"] = ""
+        self.cookiesPathField.Value = ""
 
     def onOk(self, event):
         for key, item in self.preferences.items():
