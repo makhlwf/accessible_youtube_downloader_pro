@@ -17,9 +17,9 @@ def get_bundled_data_path():
     return main_path
 
 
-settings_path = os.path.join(os.getenv("appdata"), "accessible youtube downloader pro")
+settings_path = os.path.join(os.getenv("appdata"), "HexPlayer")
 update_path = os.path.join(settings_path, "updates")
-db_path = os.path.join(settings_path, "accessible_youtube_downloader_pro.db")
+db_path = os.path.join(settings_path, "aHexPlayer.db")
 yt_dlp_path = os.path.join(main_path, "yt-dlp.exe")
 ffmpeg_path = os.path.join(get_bundled_data_path(), "ffmpeg.exe")
 ffmpeg_dir = get_bundled_data_path()
