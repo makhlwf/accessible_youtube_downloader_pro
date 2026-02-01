@@ -89,8 +89,8 @@ msgstr ""
 msgid "البريد الالكتروني..."
 msgstr ""
 
-#: C:\accessible_youtube_downloader_pro\source\accessible_youtube_downloader_pro.py:132
-msgid "تويتر..."
+#: source/accessible_youtube_downloader_pro.py:121
+msgid "تلجرام..."
 msgstr ""
 
 #: C:\accessible_youtube_downloader_pro\source\accessible_youtube_downloader_pro.py:133

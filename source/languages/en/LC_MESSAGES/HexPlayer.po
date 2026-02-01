@@ -86,9 +86,9 @@ msgstr "About..."
 msgid "البريد الالكتروني..."
 msgstr "Email..."
 
-#: C:\accessible_youtube_downloader_pro\source\accessible_youtube_downloader_pro.py:132
-msgid "تويتر..."
-msgstr "Twitter..."
+#: C:\accessible_youtube_downloader_pro\source\accessible_youtube_downloader_pro.py:121
+msgid "تلجرام..."
+msgstr "Telegram..."
 
 #: C:\accessible_youtube_downloader_pro\source\accessible_youtube_downloader_pro.py:133
 msgid "تواصل معي"

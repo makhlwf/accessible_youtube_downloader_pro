@@ -118,7 +118,7 @@ class HomeScreen(wx.Frame):
         aboutItem = aboutMenu.Append(-1, _("عن البرنامج..."))  # about item
         contactMenu = wx.Menu()
         emailItem = contactMenu.Append(-1, _("البريد الالكتروني..."))
-        twitterItem = contactMenu.Append(-1, _("تويتر..."))
+        telegramItem = contactMenu.Append(-1, _("تلجرام..."))
         aboutMenu.AppendSubMenu(contactMenu, _("تواصل معي"))
         menuBar.Append(aboutMenu, _("حول"))  # append the about menu to the menu bar
         self.SetMenuBar(menuBar)  # add the menu bar to the window
@@ -141,13 +141,13 @@ class HomeScreen(wx.Frame):
         self.Bind(wx.EVT_MENU, self.on_update_yt_dlp, updateYtdlpItem)
         self.Bind(
             wx.EVT_MENU,
-            lambda event: webbrowser.open("mailto:Suleiman.alqusaimi@gmail.com"),
+            lambda event: webbrowser.open("mailto:altrhwnyashrf1@gmail.com"),
             emailItem,
         )
         self.Bind(
             wx.EVT_MENU,
-            lambda event: webbrowser.open("https://twitter.com/suleiman3ahmed"),
-            twitterItem,
+            lambda event: webbrowser.open("https://t.me/makhlwf"),
+            telegramItem,
         )
         self.Bind(wx.EVT_CHAR_HOOK, self.onHook)
         self.Bind(wx.EVT_SHOW, self.onShow)
