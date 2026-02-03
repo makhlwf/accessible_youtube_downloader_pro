@@ -107,10 +107,12 @@ class HomeScreen(wx.Frame):
         menuBar.Append(
             mainMenu, _("القائمة الرئيسية")
         )  # append the main menu to the menu bar
-        ytdlpMenu = wx.Menu()
-        showYtdlpVersionItem = ytdlpMenu.Append(-1, _("عرض إصدار yt-dlp"))
-        updateYtdlpItem = ytdlpMenu.Append(-1, _("تحديث yt-dlp"))
-        menuBar.Append(ytdlpMenu, _("yt-dlp"))
+        toolsMenu = wx.Menu()
+        showYtdlpVersionItem = toolsMenu.Append(-1, _("عرض إصدار yt-dlp"))
+        updateYtdlpItem = toolsMenu.Append(-1, _("التحقق من وجود تحديث لـ yt-dlp"))
+        showDenoVersionItem = toolsMenu.Append(-1, _("عرض إصدار Deno.js"))
+        updateDenoItem = toolsMenu.Append(-1, _("التحقق من وجود تحديث لـ Deno.js"))
+        menuBar.Append(toolsMenu, _("قائمة الأدوات الخارجية"))
         aboutMenu = wx.Menu()
         userGuideItem = aboutMenu.Append(-1, _("دليل المستخدم...\tf1"))  # userguide
         checkForUpdatesItem = aboutMenu.Append(-1, _("البحث عن التحديثات"))
@@ -138,6 +140,8 @@ class HomeScreen(wx.Frame):
         self.Bind(wx.EVT_MENU, self.onAbout, aboutItem)
         self.Bind(wx.EVT_MENU, self.on_show_yt_dlp_version, showYtdlpVersionItem)
         self.Bind(wx.EVT_MENU, self.on_update_yt_dlp, updateYtdlpItem)
+        self.Bind(wx.EVT_MENU, self.on_show_deno_version, showDenoVersionItem)
+        self.Bind(wx.EVT_MENU, self.on_update_deno, updateDenoItem)
         self.Bind(
             wx.EVT_MENU,
             lambda event: webbrowser.open("mailto:altrhwnyashrf1@gmail.com"),
@@ -158,36 +162,35 @@ class HomeScreen(wx.Frame):
             Thread(target=utiles.check_for_updates, args=[True]).start()
 
     def on_show_yt_dlp_version(self, event):
-        if not os.path.exists(paths.yt_dlp_path):
+        version = utiles.get_yt_dlp_version()
+        if not version:
             wx.MessageBox(
                 _(
-                    "لم يتم العثور على أداة yt-dlp.exe والتي تستعمل لتنزيل الفيديوهات, هل ترغب بتنزيلها الآن؟"
+                    "لم يتم العثور على أداة yt-dlp.exe أو تعذر الحصول على إصدارها"
                 ),
                 _("خطأ"),
                 style=wx.ICON_ERROR,
                 parent=self,
             )
             return
-        try:
-            command = [paths.yt_dlp_path, "--version"]
-            result = subprocess.run(
-                command,
-                capture_output=True,
-                text=True,
-                encoding="utf-8",
-                creationflags=subprocess.CREATE_NO_WINDOW,
+        wx.MessageBox(version, _("إصدار yt-dlp"), parent=self)
+
+    def on_show_deno_version(self, event):
+        version = utiles.get_deno_version()
+        if not version:
+            wx.MessageBox(
+                _(
+                    "لم يتم العثور على أداة deno.exe أو تعذر الحصول على إصدارها"
+                ),
+                _("خطأ"),
+                style=wx.ICON_ERROR,
+                parent=self,
             )
-            if result.returncode != 0:
-                wx.MessageBox(
-                    _("لا يمكن الحصول على إصدار yt-dlp"),
-                    _("خطأ"),
-                    style=wx.ICON_ERROR,
-                    parent=self,
-                )
-                return
-            wx.MessageBox(result.stdout, _("إصدار yt-dlp"), parent=self)
-        except Exception as e:
-            wx.MessageBox(str(e), _("خطأ"), style=wx.ICON_ERROR, parent=self)
+            return
+        wx.MessageBox(version, _("إصدار Deno.js"), parent=self)
+
+    def on_update_deno(self, event):
+        utiles.update_deno()
 
     def on_update_yt_dlp(self, event):
         utiles.update_yt_dlp()
@@ -258,9 +261,13 @@ class HomeScreen(wx.Frame):
     def onShow(self, event):
         self.instruction.SetFocus()
         if not self.checked:
-            Thread(target=utiles.check_yt_dlp).start()
+            wx.CallAfter(self.startup_checks)
             self.checked = True
         event.Skip()
+
+    def startup_checks(self):
+        if utiles.check_yt_dlp(self):
+            utiles.check_deno(self)
 
     def onGuide(self, event):
         content = documentation_get()

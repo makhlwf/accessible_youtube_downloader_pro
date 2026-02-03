@@ -21,13 +21,13 @@ PLAYER_OPTS = {
     "noplaylist": True,
     "format": "18",
     "extractor_args": {"youtube": {"player_client": ["android"]}},
+    "js_runtimes": ["deno"],
 }
 
 
 def download_yt_dlp():
     url = "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe"
-    wx.CallAfter(
-        UpdateDialog,
+    UpdateDialog(
         wx.GetApp().GetTopWindow(),
         url,
         paths.yt_dlp_path,
@@ -35,28 +35,160 @@ def download_yt_dlp():
     )
 
 
-def update_yt_dlp():
-    msg = wx.MessageBox(
-        _("سيتم الآن البحث عن تحديث لبرنامج yt-dlp وتنزيله إن وجد, هل تريد المتابعة؟"),
-        _("تحديث"),
-        style=wx.YES_NO | wx.ICON_INFORMATION,
-        parent=wx.GetApp().GetTopWindow(),
-    )
-    if msg == wx.YES:
-        download_yt_dlp()
+def get_latest_github_release(repo):
+    url = f"https://api.github.com/repos/{repo}/releases/latest"
+    try:
+        r = requests.get(url, timeout=10)
+        if r.status_code == 200:
+            return r.json().get("tag_name")
+    except Exception:
+        pass
+    return None
 
 
-def check_yt_dlp():
+def get_yt_dlp_version():
     if not os.path.exists(paths.yt_dlp_path):
+        return None
+    try:
+        result = subprocess.run(
+            [paths.yt_dlp_path, "--version"],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            creationflags=subprocess.CREATE_NO_WINDOW,
+        )
+        if result.returncode == 0:
+            return result.stdout.strip()
+    except Exception:
+        pass
+    return None
+
+
+def update_yt_dlp():
+    current = get_yt_dlp_version()
+    latest = get_latest_github_release("yt-dlp/yt-dlp")
+    if not latest:
+        wx.MessageBox(
+            _("تعذر الحصول على معلومات التحديث من GitHub"),
+            _("خطأ"),
+            style=wx.ICON_ERROR,
+            parent=wx.GetApp().GetTopWindow(),
+        )
+        return
+
+    if current == latest:
+        wx.MessageBox(
+            _("أنت تستخدم بالفعل أحدث إصدار من yt-dlp ({})").format(current),
+            _("لا يوجد تحديث"),
+            parent=wx.GetApp().GetTopWindow(),
+        )
+    else:
         msg = wx.MessageBox(
-            _("لم يتم العثور على أداة yt-dlp.exe, هل تريد تنزيله الآن؟"),
-            _("تنبيه"),
+            _(
+                "هناك إصدار جديد متوفر من yt-dlp\nالإصدار الحالي: {}\nالإصدار الأحدث: {}\nهل تريد التحديث الآن؟"
+            ).format(current or _("غير معروف"), latest),
+            _("تحديث متوفر"),
             style=wx.YES_NO | wx.ICON_INFORMATION,
             parent=wx.GetApp().GetTopWindow(),
         )
         if msg == wx.YES:
             download_yt_dlp()
-            return True
+
+
+def download_deno():
+    url = "https://github.com/denoland/deno/releases/latest/download/deno-x86_64-pc-windows-msvc.zip"
+    UpdateDialog(
+        wx.GetApp().GetTopWindow(),
+        url,
+        os.path.join(paths.main_path, "deno.zip"),
+        _("جاري تنزيل Deno"),
+        is_zip=True,
+    )
+
+
+def get_deno_version():
+    if not os.path.exists(paths.deno_path):
+        return None
+    try:
+        result = subprocess.run(
+            [paths.deno_path, "--version"],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            creationflags=subprocess.CREATE_NO_WINDOW,
+        )
+        if result.returncode == 0:
+            # Deno version output usually looks like:
+            # deno 1.40.2 (release, x86_64-pc-windows-msvc)
+            # v8 12.1.285.27
+            # typescript 5.3.3
+            line = result.stdout.splitlines()[0]
+            version = line.split(" ")[1]
+            if not version.startswith("v"):
+                version = "v" + version
+            return version
+    except Exception:
+        pass
+    return None
+
+
+def update_deno():
+    current = get_deno_version()
+    latest = get_latest_github_release("denoland/deno")
+    if not latest:
+        wx.MessageBox(
+            _("تعذر الحصول على معلومات التحديث من GitHub"),
+            _("خطأ"),
+            style=wx.ICON_ERROR,
+            parent=wx.GetApp().GetTopWindow(),
+        )
+        return
+
+    if current == latest:
+        wx.MessageBox(
+            _("أنت تستخدم بالفعل أحدث إصدار من Deno ({})").format(current),
+            _("لا يوجد تحديث"),
+            parent=wx.GetApp().GetTopWindow(),
+        )
+    else:
+        msg = wx.MessageBox(
+            _(
+                "هناك إصدار جديد متوفر من Deno\nالإصدار الحالي: {}\nالإصدار الأحدث: {}\nهل تريد التحديث الآن؟"
+            ).format(current or _("غير معروف"), latest),
+            _("تحديث متوفر"),
+            style=wx.YES_NO | wx.ICON_INFORMATION,
+            parent=wx.GetApp().GetTopWindow(),
+        )
+        if msg == wx.YES:
+            download_deno()
+
+
+def check_yt_dlp(parent=None):
+    if not os.path.exists(paths.yt_dlp_path):
+        msg = wx.MessageBox(
+            _("لم يتم العثور على أداة yt-dlp.exe, هل تريد تنزيله الآن؟"),
+            _("تنبيه"),
+            style=wx.YES_NO | wx.ICON_INFORMATION,
+            parent=parent or wx.GetApp().GetTopWindow(),
+        )
+        if msg == wx.YES:
+            download_yt_dlp()
+            return os.path.exists(paths.yt_dlp_path)
+        return False
+    return True
+
+
+def check_deno(parent=None):
+    if not os.path.exists(paths.deno_path):
+        msg = wx.MessageBox(
+            _("لم يتم العثور على أداة deno.exe, وهي مطلوبة لبعض وظائف اليوتيوب. هل تريد تنزيلها الآن؟"),
+            _("تنبيه"),
+            style=wx.YES_NO | wx.ICON_INFORMATION,
+            parent=parent or wx.GetApp().GetTopWindow(),
+        )
+        if msg == wx.YES:
+            download_deno()
+            return os.path.exists(paths.deno_path)
         return False
     return True
 
@@ -72,6 +204,10 @@ def get_playable_stream(url):
     if not YoutubeDL:
         return get_video_stream(url)  # Fallback if library missing
     try:
+        # Ensure deno is in the path for yt-dlp
+        if paths.main_path not in os.environ.get("PATH", ""):
+            os.environ["PATH"] = paths.main_path + os.pathsep + os.environ.get("PATH", "")
+        
         opts = PLAYER_OPTS.copy()
         cookies_path = config_get("cookiespath")
         if cookies_path and os.path.exists(cookies_path):
@@ -114,7 +250,9 @@ def get_media_info(url):
     if not os.path.exists(paths.yt_dlp_path):
         return None
     try:
-        command = [paths.yt_dlp_path, "-j", url]
+        env = os.environ.copy()
+        env["PATH"] = paths.main_path + os.pathsep + env.get("PATH", "")
+        command = [paths.yt_dlp_path, "-j", url, "--js-runtime", "deno"]
         cookies_path = config_get("cookiespath")
         if cookies_path and os.path.exists(cookies_path):
             command.extend(["--cookies", cookies_path])
@@ -124,6 +262,7 @@ def get_media_info(url):
             text=True,
             encoding="utf-8",
             creationflags=subprocess.CREATE_NO_WINDOW,
+            env=env,
         )
         if result.returncode != 0:
             return None

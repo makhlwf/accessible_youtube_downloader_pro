@@ -71,7 +71,13 @@ class Downloader:
         abs_ffmpeg_dir = os.path.normpath(abs_ffmpeg_dir).replace("\\", "/")
 
         # Add the local directory to PATH so the DLLs can be found by the EXE
-        env["PATH"] = abs_ffmpeg_dir + os.pathsep + env.get("PATH", "")
+        env["PATH"] = (
+            abs_ffmpeg_dir
+            + os.pathsep
+            + os.path.abspath(paths.main_path)
+            + os.pathsep
+            + env.get("PATH", "")
+        )
 
         command = [
             paths.yt_dlp_path,
@@ -84,6 +90,8 @@ class Downloader:
             "--ffmpeg-location",
             abs_ffmpeg_dir,
             "--no-cache-dir",
+            "--js-runtime",
+            "deno",
         ]
 
         cookies_path = config_get("cookiespath")

@@ -15,9 +15,10 @@ DownloadFinishedEvent, EVT_DOWNLOAD_FINISHED = NewEvent()
 
 
 class UpdateDialog(wx.Dialog):
-    def __init__(self, parent, url, dest=None, title=_("تنزيل التحديثات")):
+    def __init__(self, parent, url, dest=None, title=_("تنزيل التحديثات"), is_zip=False):
         super().__init__(None, title=title)
         self.dest = dest
+        self.is_zip = is_zip
         self.CentreOnParent()
 
         panel = wx.Panel(self)
@@ -36,6 +37,7 @@ class UpdateDialog(wx.Dialog):
         Thread(target=self.updateDownload, args=[url]).start()
         self.download = True
         self.ShowModal()
+        self.Destroy()
 
     def updateDownload(self, url):
         if self.dest is None:
@@ -67,7 +69,7 @@ class UpdateDialog(wx.Dialog):
                                 shutil.rmtree(update_path)
                             else:
                                 os.remove(self.dest)
-                            self.Destroy()
+                            self.EndModal(wx.ID_CANCEL)
                             return
 
                         recieved += len(part)
@@ -88,7 +90,7 @@ class UpdateDialog(wx.Dialog):
         )
         if self.dest is None:
             shutil.rmtree(update_path)
-        self.Destroy()
+        self.EndModal(wx.ID_ERROR)
 
     def onChanged(self, event):
         self.progress.SetValue(event.value)
@@ -96,8 +98,25 @@ class UpdateDialog(wx.Dialog):
 
     def onFinished(self, event):
         if self.dest is not None:
+            if self.is_zip:
+                import zipfile
+
+                try:
+                    with zipfile.ZipFile(event.path, "r") as zip_ref:
+                        zip_ref.extractall(os.path.dirname(event.path))
+                    os.remove(event.path)
+                except Exception as e:
+                    wx.MessageBox(
+                        _("حدث خطأ أثناء استخراج الملف: {}").format(str(e)),
+                        _("خطأ"),
+                        style=wx.ICON_ERROR,
+                        parent=self,
+                    )
+                    self.EndModal(wx.ID_ERROR)
+                    return
+
             wx.MessageBox(_("اكتمل تنزيل الملف بنجاح"), _("نجاح"), parent=self)
-            self.Destroy()
+            self.EndModal(wx.ID_OK)
             return
         wx.MessageBox(
             _(
@@ -119,7 +138,7 @@ class UpdateDialog(wx.Dialog):
                 style=wx.ICON_ERROR,
                 parent=self,
             )
-            self.Destroy()
+            self.EndModal(wx.ID_ERROR)
             return
         sys.exit()
 
@@ -137,4 +156,4 @@ class UpdateDialog(wx.Dialog):
             if message == wx.YES:
                 self.download = False
             return
-        self.Destroy()
+        self.EndModal(wx.ID_CANCEL)

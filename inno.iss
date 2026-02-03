@@ -38,21 +38,25 @@ Name: "arabic"; MessagesFile: "compiler:Languages\Arabic.isl"
 english.DownloadYtDlp=Download yt-dlp (recommended)
 arabic.DownloadYtDlp=تحميل yt-dlp (موصى به)
 
+english.DownloadDeno=Download Deno (recommended for YouTube)
+arabic.DownloadDeno=تحميل Deno (موصى به لليوتيوب)
+
 english.DownloadTitle=Downloading components
 arabic.DownloadTitle=جاري تحميل المكونات
 
 english.DownloadDesc=Please wait while additional files are downloaded.
 arabic.DownloadDesc=يرجى الانتظار أثناء تحميل الملفات الإضافية.
 
-english.NoInternet=Internet connection not detected.%n%nyt-dlp was not downloaded.
-arabic.NoInternet=لم يتم اكتشاف اتصال بالإنترنت.%n%nلم يتم تحميل yt-dlp.
+english.NoInternet=Internet connection not detected.%n%nComponents were not downloaded.
+arabic.NoInternet=لم يتم اكتشاف اتصال بالإنترنت.%n%nلم يتم تحميل المكونات.
 
-english.DownloadFailed=Failed to download yt-dlp.%n%nyou can download it manually later.
-arabic.DownloadFailed=فشل تحميل yt-dlp.%n%nيمكنك تحميله يدويًا لاحقًا.
+english.DownloadFailed=Failed to download some components.%n%nyou can download them manually later.
+arabic.DownloadFailed=فشل تحميل بعض المكونات.%n%nيمكنك تحميلها يدويًا لاحقًا.
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 Name: "download_ytdlp"; Description: "{cm:DownloadYtDlp}"; Flags: unchecked
+Name: "download_deno"; Description: "{cm:DownloadDeno}"; Flags: unchecked
 
 [Files]
 Source: "C:\accessible_youtube_downloader_pro\dist\HexPlayer.exe"; DestDir: "{app}"; Flags: ignoreversion
@@ -68,6 +72,7 @@ Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChang
 [Code]
 const
   YtDlpUrl = 'https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe';
+  DenoUrl = 'https://github.com/denoland/deno/releases/latest/download/deno-x86_64-pc-windows-msvc.zip';
 
 var
   DownloadPage: TDownloadWizardPage;
@@ -87,47 +92,71 @@ begin
   end;
 end;
 
-procedure DownloadYtDlp;
+procedure DownloadComponents;
 var
-  TargetFile: string;
+  YtDlpTargetFile: string;
+  DenoTargetFile: string;
+  DenoZipFile: string;
   TargetDir: string;
+  DownloadYtDlp: Boolean;
+  DownloadDeno: Boolean;
+  ResultCode: Integer;
 begin
-  TargetFile := ExpandConstant('{app}\yt-dlp.exe');
+  YtDlpTargetFile := ExpandConstant('{app}\yt-dlp.exe');
+  DenoTargetFile := ExpandConstant('{app}\deno.exe');
+  DenoZipFile := ExpandConstant('{tmp}\deno.zip');
   TargetDir := ExpandConstant('{app}');
 
-  // 1. Skip if file already exists
-  if FileExists(TargetFile) then
+  DownloadYtDlp := WizardIsTaskSelected('download_ytdlp') and not FileExists(YtDlpTargetFile);
+  DownloadDeno := WizardIsTaskSelected('download_deno') and not FileExists(DenoTargetFile);
+
+  if not (DownloadYtDlp or DownloadDeno) then
     Exit;
 
-  // 2. Check internet connection
   if not IsOnline then
   begin
     MsgBox(ExpandConstant('{cm:NoInternet}'), mbInformation, MB_OK);
     Exit;
   end;
 
-  // 3. Ensure the destination directory exists (safety measure)
   if not DirExists(TargetDir) then
     ForceDirectories(TargetDir);
 
-  // 4. Initialize and show download page
   DownloadPage := CreateDownloadPage(
     ExpandConstant('{cm:DownloadTitle}'),
     ExpandConstant('{cm:DownloadDesc}'),
     nil
   );
   DownloadPage.Clear;
-  DownloadPage.Add(YtDlpUrl, 'yt-dlp.exe', '');
+  if DownloadYtDlp then
+    DownloadPage.Add(YtDlpUrl, 'yt-dlp.exe', '');
+  if DownloadDeno then
+    DownloadPage.Add(DenoUrl, 'deno.zip', '');
+  
   DownloadPage.Show;
 
   try
     try
       DownloadPage.Download;
       
-      // 5. Copy from Temp to the final App folder
-      if not FileCopy(ExpandConstant('{tmp}\yt-dlp.exe'), TargetFile, False) then
+      if DownloadYtDlp then
       begin
-        MsgBox(ExpandConstant('{cm:DownloadFailed}'), mbError, MB_OK);
+        if not FileCopy(ExpandConstant('{tmp}\yt-dlp.exe'), YtDlpTargetFile, False) then
+          MsgBox(ExpandConstant('{cm:DownloadFailed}'), mbError, MB_OK);
+      end;
+
+      if DownloadDeno then
+      begin
+        // Extract deno.exe from zip using PowerShell
+        if Exec('powershell.exe', ExpandConstant('-NoProfile -Command "Expand-Archive -Path ''{tmp}\deno.zip'' -DestinationPath ''{app}'' -Force"'), '', SW_HIDE, ewWaitUntilTerminated, ResultCode) then
+        begin
+          if not FileExists(DenoTargetFile) then
+             MsgBox(ExpandConstant('{cm:DownloadFailed}'), mbError, MB_OK);
+          // Delete the zip file after extraction
+          DeleteFile(DenoZipFile);
+        end
+        else
+          MsgBox(ExpandConstant('{cm:DownloadFailed}'), mbError, MB_OK);
       end;
       
     except
@@ -141,10 +170,8 @@ end;
 
 procedure CurStepChanged(CurStep: TSetupStep);
 begin
-  // We use ssPostInstall because the {app} folder is created 
-  // and fixed files are extracted BEFORE this step runs.
-  if (CurStep = ssPostInstall) and WizardIsTaskSelected('download_ytdlp') then
+  if (CurStep = ssPostInstall) then
   begin
-    DownloadYtDlp;
+    DownloadComponents;
   end;
 end;
