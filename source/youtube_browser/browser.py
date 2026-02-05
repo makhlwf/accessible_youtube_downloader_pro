@@ -249,7 +249,9 @@ class YoutubeBrowser(wx.Frame):
         ):
             self.favCheck.Value = not self.favCheck.Value
             self.onFavorite(None)
-        elif event.KeyCode == wx.WXK_BACK and not isinstance(self.FindFocus(), MediaGui):
+        elif event.KeyCode == wx.WXK_BACK and not isinstance(
+            self.FindFocus(), MediaGui
+        ):
             self.backAction()
         else:
             event.Skip()

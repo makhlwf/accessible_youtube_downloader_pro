@@ -1,0 +1,27 @@
+{
+  "version": "5",
+  "specifiers": {
+    "npm:youtubei.js@*": "16.0.1",
+    "npm:youtubei.js@^16.0.1": "16.0.1"
+  },
+  "npm": {
+    "@bufbuild/protobuf@2.11.0": {
+      "integrity": "sha512-sBXGT13cpmPR5BMgHE6UEEfEaShh5Ror6rfN3yEK5si7QVrtZg8LEPQb0VVhiLRUslD2yLnXtnRzG035J/mZXQ=="
+    },
+    "meriyah@6.1.4": {
+      "integrity": "sha512-Sz8FzjzI0kN13GK/6MVEsVzMZEPvOhnmmI1lU5+/1cGOiK3QUahntrNNtdVeihrO7t9JpoH75iMNXg6R6uWflQ=="
+    },
+    "youtubei.js@16.0.1": {
+      "integrity": "sha512-3802bCAGkBc2/G5WUTc0l/bO5mPYJbQAHL04d9hE9PnrDHoBUT8MN721Yqt4RCNncAXdHcfee9VdJy3Fhq1r5g==",
+      "dependencies": [
+        "@bufbuild/protobuf",
+        "meriyah"
+      ]
+    }
+  },
+  "workspace": {
+    "dependencies": [
+      "npm:youtubei.js@^16.0.1"
+    ]
+  }
+}

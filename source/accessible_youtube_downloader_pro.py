@@ -29,6 +29,7 @@ from gui.settings_dialog import SettingsDialog  # noqa: E402
 from gui.text_viewer import Viewer  # noqa: E402
 from gui.custom_controls import CustomLabel  # noqa: E402
 from gui.favorites import Favorites  # noqa: E402
+from gui.history import HistoryDialog  # noqa: E402
 from doc_handler import documentation_get  # noqa: E402
 from media_player.media_gui import MediaGui  # noqa: E402
 from youtube_browser.browser import YoutubeBrowser  # noqa: E402
@@ -62,6 +63,10 @@ class HomeScreen(wx.Frame):
         favButton = wx.Button(
             panel, -1, _("الفيديوهات المفضلة	ctrl+shift+f"), name="tab"
         )
+        self.historyButton = wx.Button(
+            panel, -1, _("سجل المشاهدة\tctrl+h"), name="tab"
+        )
+        self.historyButton.Hide()
         # quick access buttons
         sizer = wx.BoxSizer(wx.VERTICAL)  # the main sizer
         sizer1 = wx.BoxSizer(wx.HORIZONTAL)  # quick access buttons sizer
@@ -70,7 +75,15 @@ class HomeScreen(wx.Frame):
                 sizer1.Add(
                     control, 1
                 )  # adding quick access buttons using for loop sins that eatch button named by the "tab" word
-        sizer.Add(self.instruction, 1)
+        sizer.Add(self.instruction, 0, wx.ALL, 10)
+        self.home_feed_list = wx.ListBox(panel, -1, name="home_feed")
+        self.home_feed_list.Hide()
+        self.home_feed_data = []
+        self.home_feed_continuation = None
+        self.load_more_home_button = wx.Button(panel, -1, _("تحميل المزيد من الفيديوهات المقترحة"))
+        self.load_more_home_button.Hide()
+        sizer.Add(self.home_feed_list, 1, wx.EXPAND | wx.ALL, 5)
+        sizer.Add(self.load_more_home_button, 0, wx.ALIGN_CENTER | wx.ALL, 5)
         sizer.AddStretchSpacer()
         sizer.Add(sizer1, 1, wx.EXPAND)
         panel.SetSizer(sizer)  # adding the sizer to the main panel
@@ -86,6 +99,8 @@ class HomeScreen(wx.Frame):
             -1, _("تشغيل فيديو youtube من خلال الرابط\tctrl+y")
         )  # play youtube link item
         favoriteItem = mainMenu.Append(-1, _("الفيديوهات المفضلة	ctrl+shift+f"))
+        self.historyItem = mainMenu.Append(-1, _("سجل المشاهدة\tctrl+h"))
+        self.historyItem.Enable(False)
         openDownloadingPathItem = mainMenu.Append(
             -1, _("فتح مجلد التنزيل\tctrl+p")
         )  # open downloading folder item
@@ -97,6 +112,7 @@ class HomeScreen(wx.Frame):
                 (wx.ACCEL_CTRL, ord("D"), downloadItem.GetId()),
                 (wx.ACCEL_CTRL, ord("Y"), playItem.GetId()),
                 (wx.ACCEL_CTRL + wx.ACCEL_SHIFT, ord("F"), favoriteItem.GetId()),
+                (wx.ACCEL_CTRL, ord("H"), self.historyItem.GetId()),
                 (wx.ACCEL_CTRL, ord("P"), openDownloadingPathItem.GetId()),
                 (wx.ACCEL_ALT, ord("S"), settingsItem.GetId()),
                 (wx.ACCEL_CTRL, ord("W"), exitItem.GetId()),
@@ -132,8 +148,10 @@ class HomeScreen(wx.Frame):
         playYoutubeLinkButton.Bind(wx.EVT_BUTTON, self.onPlay)
         self.Bind(wx.EVT_MENU, self.onFavorite, favoriteItem)
         favButton.Bind(wx.EVT_BUTTON, self.onFavorite)
+        self.Bind(wx.EVT_MENU, self.onHistory, self.historyItem)
+        self.historyButton.Bind(wx.EVT_BUTTON, self.onHistory)
         self.Bind(wx.EVT_MENU, self.onOpen, openDownloadingPathItem)
-        self.Bind(wx.EVT_MENU, lambda event: SettingsDialog(self), settingsItem)
+        self.Bind(wx.EVT_MENU, self.onSettings, settingsItem)
         self.Bind(wx.EVT_MENU, lambda event: wx.Exit(), exitItem)
         self.Bind(wx.EVT_MENU, self.onGuide, userGuideItem)
         self.Bind(wx.EVT_MENU, self.onCheckForUpdates, checkForUpdatesItem)
@@ -152,11 +170,19 @@ class HomeScreen(wx.Frame):
             lambda event: webbrowser.open("https://t.me/makhlwf"),
             telegramItem,
         )
+        self.Bind(wx.EVT_LISTBOX_DCLICK, self.on_home_feed_play, self.home_feed_list)
+        self.home_feed_list.Bind(wx.EVT_CHAR_HOOK, self.on_home_feed_hook)
+        self.load_more_home_button.Bind(wx.EVT_BUTTON, lambda event: self.load_home_feed(True))
         self.Bind(wx.EVT_CHAR_HOOK, self.onHook)
         self.Bind(wx.EVT_SHOW, self.onShow)
         self.Bind(wx.EVT_CLOSE, self.onClose)
         self.Show()
         self.checked = False
+        cookies_path = settings_handler.config_get("cookiespath")
+        if cookies_path and os.path.exists(cookies_path):
+            self.historyButton.Show()
+            self.historyItem.Enable(True)
+            self.load_home_feed()
         self.detectFromClipboard(settings_handler.config_get("autodetect"))
         if settings_handler.config_get("checkupdates"):
             Thread(target=utiles.check_for_updates, args=[True]).start()
@@ -165,9 +191,7 @@ class HomeScreen(wx.Frame):
         version = utiles.get_yt_dlp_version()
         if not version:
             wx.MessageBox(
-                _(
-                    "لم يتم العثور على أداة yt-dlp.exe أو تعذر الحصول على إصدارها"
-                ),
+                _("لم يتم العثور على أداة yt-dlp.exe أو تعذر الحصول على إصدارها"),
                 _("خطأ"),
                 style=wx.ICON_ERROR,
                 parent=self,
@@ -175,13 +199,75 @@ class HomeScreen(wx.Frame):
             return
         wx.MessageBox(version, _("إصدار yt-dlp"), parent=self)
 
+    def load_home_feed(self, load_more=False):
+        if not load_more:
+            self.home_feed_list.Set([_("جاري تحميل الاقتراحات... يرجى الانتظار")])
+            self.home_feed_list.Show()
+            self.Layout()
+        
+        continuation = self.home_feed_continuation if load_more else None
+        def _load():
+            data = utiles.get_home_feed(continuation)
+            wx.CallAfter(self._update_home_feed, data, load_more)
+
+        Thread(target=_load, daemon=True).start()
+
+    def _update_home_feed(self, data, load_more=False):
+        new_videos = data.get("videos", [])
+        self.home_feed_continuation = data.get("continuation")
+        
+        if load_more:
+            self.home_feed_data.extend(new_videos)
+        else:
+            self.home_feed_data = new_videos
+            self.home_feed_list.Clear()
+
+        titles = [f"{item['title']} - {item['author']}" for item in self.home_feed_data]
+        self.home_feed_list.Set(titles)
+        
+        if self.home_feed_data:
+            self.home_feed_list.Show()
+            if self.home_feed_continuation:
+                self.load_more_home_button.Show()
+            else:
+                self.load_more_home_button.Hide()
+            self.Layout()
+        else:
+            self.home_feed_list.Hide()
+            self.load_more_home_button.Hide()
+            self.Layout()
+
+    def on_home_feed_play(self, event):
+        selection = self.home_feed_list.GetSelection()
+        if selection == wx.NOT_FOUND:
+            return
+        video_data = self.home_feed_data[selection]
+        url = video_data["url"]
+        stream = LoadingDialog(
+            self,
+            _("جاري التشغيل"),
+            utiles.get_playable_stream,
+            url,
+        ).res
+        if stream is None:
+            wx.MessageBox(
+                _("لا يمكن تشغيل الرابط"), _("خطأ"), style=wx.ICON_ERROR, parent=self
+            )
+            return
+        MediaGui(self, stream.title, stream, url)
+        self.Hide()
+
+    def on_home_feed_hook(self, event):
+        if event.KeyCode == wx.WXK_RETURN:
+            self.on_home_feed_play(None)
+        else:
+            event.Skip()
+
     def on_show_deno_version(self, event):
         version = utiles.get_deno_version()
         if not version:
             wx.MessageBox(
-                _(
-                    "لم يتم العثور على أداة deno.exe أو تعذر الحصول على إصدارها"
-                ),
+                _("لم يتم العثور على أداة deno.exe أو تعذر الحصول على إصدارها"),
                 _("خطأ"),
                 style=wx.ICON_ERROR,
                 parent=self,
@@ -212,9 +298,7 @@ class HomeScreen(wx.Frame):
                 _("لا يمكن تشغيل الرابط"), _("خطأ"), style=wx.ICON_ERROR, parent=self
             )
             return
-        MediaGui(
-            self, stream.title, stream, data["link"]
-        )  # initiating the media gui
+        MediaGui(self, stream.title, stream, data["link"])  # initiating the media gui
         self.Hide()
 
     def onDownload(
@@ -226,6 +310,9 @@ class HomeScreen(wx.Frame):
     def onSearch(self, event):  # showing the youtube browser window event function
         YoutubeBrowser(self)
 
+    def onHistory(self, event):
+        HistoryDialog(self)
+
     def detectFromClipboard(self, config):
         if not config:
             return
@@ -233,6 +320,17 @@ class HomeScreen(wx.Frame):
         match = utiles.youtube_regexp(clip_content)
         if match is not None:
             AutoDetectDialog(self, clip_content)
+
+    def onSettings(self, event):
+        SettingsDialog(self)
+        cookies_path = settings_handler.config_get("cookiespath")
+        if cookies_path and os.path.exists(cookies_path):
+            if not self.home_feed_list.IsShown() or not self.home_feed_data:
+                self.load_home_feed()
+        else:
+            self.home_feed_list.Hide()
+            self.load_more_home_button.Hide()
+            self.Layout()
 
     def onFavorite(self, event):
         Favorites(self)
@@ -267,7 +365,8 @@ class HomeScreen(wx.Frame):
 
     def startup_checks(self):
         if utiles.check_yt_dlp(self):
-            utiles.check_deno(self)
+            if utiles.check_deno(self):
+                utiles.ensure_js_dependencies()
 
     def onGuide(self, event):
         content = documentation_get()

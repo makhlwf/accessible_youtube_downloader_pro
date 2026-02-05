@@ -19,9 +19,8 @@ PLAYER_OPTS = {
     "quiet": True,
     "no_warnings": True,
     "noplaylist": True,
-    "format": "18",
     "extractor_args": {"youtube": {"player_client": ["android"]}},
-    "js_runtimes": ["deno"],
+    "js_runtimes": {"deno": {}},
 }
 
 
@@ -181,7 +180,9 @@ def check_yt_dlp(parent=None):
 def check_deno(parent=None):
     if not os.path.exists(paths.deno_path):
         msg = wx.MessageBox(
-            _("لم يتم العثور على أداة deno.exe, وهي مطلوبة لبعض وظائف اليوتيوب. هل تريد تنزيلها الآن؟"),
+            _(
+                "لم يتم العثور على أداة deno.exe, وهي مطلوبة لبعض وظائف اليوتيوب. هل تريد تنزيلها الآن؟"
+            ),
             _("تنبيه"),
             style=wx.YES_NO | wx.ICON_INFORMATION,
             parent=parent or wx.GetApp().GetTopWindow(),
@@ -191,6 +192,36 @@ def check_deno(parent=None):
             return os.path.exists(paths.deno_path)
         return False
     return True
+
+
+def ensure_js_dependencies():
+    """Silently ensure JavaScript dependencies are cached by Deno."""
+    if not os.path.exists(paths.deno_path):
+        return
+    
+    bundled_path = paths.get_bundled_data_path()
+    script_path = os.path.join(bundled_path, "get_recommendations.js")
+    history_script_path = os.path.join(bundled_path, "get_watch_history.js")
+    config_path = os.path.join(bundled_path, "deno.json")
+    
+    if not os.path.exists(script_path) or not os.path.exists(config_path):
+        return
+
+    def _cache_task():
+        try:
+            env = os.environ.copy()
+            env["PATH"] = paths.main_path + os.pathsep + env.get("PATH", "")
+            subprocess.run(
+                [paths.deno_path, "cache", "--config", config_path, script_path, history_script_path],
+                creationflags=subprocess.CREATE_NO_WINDOW,
+                env=env,
+                cwd=bundled_path
+            )
+        except Exception:
+            pass
+
+    import threading
+    threading.Thread(target=_cache_task, daemon=True).start()
 
 
 class Stream:
@@ -206,32 +237,60 @@ def get_playable_stream(url):
     try:
         # Ensure deno is in the path for yt-dlp
         if paths.main_path not in os.environ.get("PATH", ""):
-            os.environ["PATH"] = paths.main_path + os.pathsep + os.environ.get("PATH", "")
-        
+            os.environ["PATH"] = (
+                paths.main_path + os.pathsep + os.environ.get("PATH", "")
+            )
+
         opts = PLAYER_OPTS.copy()
         cookies_path = config_get("cookiespath")
         if cookies_path and os.path.exists(cookies_path):
             opts["cookiefile"] = cookies_path
+        
         with YoutubeDL(opts) as ydl:
             # Check if it's already a direct URL or ID
             if "youtube.com" not in url and "youtu.be" not in url:
                 # Assume ID
                 url = f"https://www.youtube.com/watch?v={url}"
 
-            entry = ydl.extract_info(url, download=False)
+            try:
+                entry = ydl.extract_info(url, download=False)
+            except Exception as e:
+                # If it's a format error, try again with absolute defaults
+                if "format" in str(e).lower():
+                    with YoutubeDL({"quiet": True, "no_warnings": True, "js_runtimes": {"deno": {}}}) as ydl_retry:
+                        entry = ydl_retry.extract_info(url, download=False)
+                else:
+                    raise e
 
+            # Try to find format 18 (360p progressive MP4)
             fmt = next(
                 (f for f in entry.get("formats", []) if f.get("format_id") == "18"),
                 None,
             )
-            title = entry.get("title")
-
+            
+            # If 18 is not found, try any progressive MP4 (combined audio and video)
             if not fmt:
-                # Fallback if 18 not found, just take best url found in entry or url itself
-                # But the snippet returns None, title.
-                # Let's try to find any URL if 18 fails?
-                # User snippet specifically wants 18.
-                return Stream(title, entry.get("url") or url)
+                fmt = next(
+                    (f for f in entry.get("formats", []) if f.get("ext") == "mp4" and f.get("vcodec") != "none" and f.get("acodec") != "none"),
+                    None,
+                )
+            
+            # If still not found, try any combined stream
+            if not fmt:
+                fmt = next(
+                    (f for f in entry.get("formats", []) if f.get("vcodec") != "none" and f.get("acodec") != "none"),
+                    None,
+                )
+
+            # Final fallback: best single stream found by yt-dlp
+            if not fmt:
+                fmt = entry
+            
+            title = entry.get("title")
+            url_to_play = fmt.get("url")
+            
+            if not url_to_play:
+                return None
 
             # Headers
             headers = {}
@@ -239,7 +298,7 @@ def get_playable_stream(url):
             headers.update(fmt.get("http_headers", {}) or {})
             headers.setdefault("User-Agent", "libmpv")
 
-            return Stream(title, fmt.get("url"), headers)
+            return Stream(title, url_to_play, headers)
 
     except Exception as e:
         print(f"Error in get_playable_stream: {e}")
@@ -319,6 +378,136 @@ def get_video_stream(url):
     if stream:
         return Stream(title, stream["url"])
     return None
+
+
+def get_home_feed(continuation=None):
+    cookies_path = config_get("cookiespath")
+    if not cookies_path or not os.path.exists(cookies_path):
+        return {"videos": [], "continuation": None}
+    try:
+        env = os.environ.copy()
+        env["PATH"] = paths.main_path + os.pathsep + env.get("PATH", "")
+        bundled_path = paths.get_bundled_data_path()
+        script_path = os.path.join(bundled_path, "get_recommendations.js")
+        config_path = os.path.join(bundled_path, "deno.json")
+        command = [
+            paths.deno_path,
+            "run",
+            "--allow-read",
+            "--allow-write",
+            "--allow-net",
+            "--allow-env",
+            "--config",
+            config_path,
+            script_path,
+            cookies_path,
+        ]
+        if continuation:
+            command.append(continuation)
+
+        result = subprocess.run(
+            command,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            creationflags=subprocess.CREATE_NO_WINDOW,
+            cwd=paths.main_path,
+            env=env,
+        )
+        if result.returncode != 0:
+            print(f"Deno error: {result.stderr}")
+            return {"videos": [], "continuation": None}
+        return json.loads(result.stdout)
+    except (subprocess.SubprocessError, json.JSONDecodeError) as e:
+        print(f"Error getting home feed: {e}")
+        return {"videos": [], "continuation": None}
+
+
+def get_watch_history(continuation=None):
+    cookies_path = config_get("cookiespath")
+    if not cookies_path or not os.path.exists(cookies_path):
+        return {"videos": [], "continuation": None}
+    try:
+        env = os.environ.copy()
+        env["PATH"] = paths.main_path + os.pathsep + env.get("PATH", "")
+        bundled_path = paths.get_bundled_data_path()
+        script_path = os.path.join(bundled_path, "get_watch_history.js")
+        config_path = os.path.join(bundled_path, "deno.json")
+        command = [
+            paths.deno_path,
+            "run",
+            "--allow-read",
+            "--allow-write",
+            "--allow-net",
+            "--allow-env",
+            "--config",
+            config_path,
+            script_path,
+            cookies_path,
+        ]
+        if continuation:
+            command.append(continuation)
+
+        result = subprocess.run(
+            command,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            creationflags=subprocess.CREATE_NO_WINDOW,
+            cwd=paths.main_path,
+            env=env,
+        )
+        if result.returncode != 0:
+            print(f"Deno error: {result.stderr}")
+            return {"videos": [], "continuation": None}
+        return json.loads(result.stdout)
+    except (subprocess.SubprocessError, json.JSONDecodeError) as e:
+        print(f"Error getting watch history: {e}")
+        return {"videos": [], "continuation": None}
+
+
+def update_watch_history(url, watched_seconds=0):
+    cookies_path = config_get("cookiespath")
+    if not cookies_path or not os.path.exists(cookies_path):
+        return
+    
+    # Extract video ID from URL
+    match = youtube_regexp(url)
+    if not match:
+        return
+    video_id = match.group(5)
+
+    try:
+        env = os.environ.copy()
+        env["PATH"] = paths.main_path + os.pathsep + env.get("PATH", "")
+        bundled_path = paths.get_bundled_data_path()
+        script_path = os.path.join(bundled_path, "update_history.js")
+        config_path = os.path.join(bundled_path, "deno.json")
+        
+        command = [
+            paths.deno_path,
+            "run",
+            "--allow-read",
+            "--allow-write",
+            "--allow-net",
+            "--allow-env",
+            "--config",
+            config_path,
+            script_path,
+            video_id,
+            cookies_path,
+            str(watched_seconds)
+        ]
+
+        subprocess.run(
+            command,
+            creationflags=subprocess.CREATE_NO_WINDOW,
+            cwd=paths.main_path,
+            env=env,
+            capture_output=True
+        )
+    except Exception as e:
+        print(f"Error updating watch history: {e}")
 
 
 def time_formatting(total_seconds):

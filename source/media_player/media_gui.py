@@ -6,6 +6,7 @@ from gui.download_progress import DownloadProgress
 from nvda_client.client import speak
 from settings_handler import config_get, config_set
 import application
+import utiles
 from utiles import get_playable_stream
 from download_handler.downloader import downloadAction
 from vlc import State
@@ -124,6 +125,22 @@ class MediaGui(wx.Frame):
         if self.url in Continue.get_all() and config_get("continue"):
             self.player.media.set_position(Continue.get_all()[url])
         Thread(target=self.extract_description).start()
+        self.history_timer = wx.Timer(self)
+        self.Bind(wx.EVT_TIMER, self.on_history_timer, self.history_timer)
+        self.history_timer.Start(10000)  # 10 seconds
+        try:
+            Thread(target=utiles.update_watch_history, args=(self.url, self.player.media.get_time() / 1000 if self.player.media.get_time() != -1 else 0), daemon=True).start()
+        except Exception:
+            pass
+
+    def on_history_timer(self, event):
+        try:
+            if self.player and self.player.media.get_state() == State.Playing:
+                watched_seconds = self.player.media.get_time() / 1000
+                if watched_seconds > 0:
+                    Thread(target=utiles.update_watch_history, args=(self.url, watched_seconds), daemon=True).start()
+        except Exception:
+            pass
 
     def _download_media(self, option, url, dlg, path=None):
         if path is None:
@@ -180,6 +197,8 @@ class MediaGui(wx.Frame):
             self.player.media.play()
 
     def closeAction(self):
+        if hasattr(self, "history_timer"):
+            self.history_timer.Stop()
         if self.player is not None:
             if (
                 self.player.media.get_position() in (0.0, -1)
@@ -190,6 +209,15 @@ class MediaGui(wx.Frame):
                 Continue.update(self.url, self.player.media.get_position())
             else:
                 Continue.new_continue(self.url, self.player.media.get_position())
+            
+            # Final history update
+            try:
+                watched_seconds = self.player.media.get_time() / 1000
+                if watched_seconds > 0:
+                    Thread(target=utiles.update_watch_history, args=(self.url, watched_seconds), daemon=True).start()
+            except Exception:
+                pass
+                
             self.player.media.stop()
         self.GetParent().Show()
 
@@ -377,6 +405,11 @@ class MediaGui(wx.Frame):
         self.player.media.play()
         self.player.media.audio_set_volume(self.player.volume)
         Thread(target=self.extract_description).start()
+        # Report new track to history
+        try:
+            Thread(target=utiles.update_watch_history, args=(self.url, 0), daemon=True).start()
+        except Exception:
+            pass
 
     def next(self):
         if self.results is None:

@@ -258,7 +258,9 @@ class PlaylistDialog(wx.Dialog):
         self.Destroy()
 
     def onHook(self, event):
-        if event.KeyCode == wx.WXK_ESCAPE and not isinstance(self.FindFocus(), MediaGui):
+        if event.KeyCode == wx.WXK_ESCAPE and not isinstance(
+            self.FindFocus(), MediaGui
+        ):
             self.back()
         else:
             event.Skip()

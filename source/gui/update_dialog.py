@@ -15,7 +15,9 @@ DownloadFinishedEvent, EVT_DOWNLOAD_FINISHED = NewEvent()
 
 
 class UpdateDialog(wx.Dialog):
-    def __init__(self, parent, url, dest=None, title=_("تنزيل التحديثات"), is_zip=False):
+    def __init__(
+        self, parent, url, dest=None, title=_("تنزيل التحديثات"), is_zip=False
+    ):
         super().__init__(None, title=title)
         self.dest = dest
         self.is_zip = is_zip
