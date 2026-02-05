@@ -15,7 +15,6 @@ import wx  # noqa: E402
 import webbrowser  # noqa: E402
 import subprocess  # noqa: E402
 import utiles  # noqa: E402
-import paths  # noqa: E402
 import threading  # noqa: E402
 from async_utils import (  # noqa: E402
     start_async_loop,
@@ -63,9 +62,7 @@ class HomeScreen(wx.Frame):
         favButton = wx.Button(
             panel, -1, _("الفيديوهات المفضلة	ctrl+shift+f"), name="tab"
         )
-        self.historyButton = wx.Button(
-            panel, -1, _("سجل المشاهدة\tctrl+h"), name="tab"
-        )
+        self.historyButton = wx.Button(panel, -1, _("سجل المشاهدة\tctrl+h"), name="tab")
         self.historyButton.Hide()
         # quick access buttons
         sizer = wx.BoxSizer(wx.VERTICAL)  # the main sizer
@@ -80,7 +77,9 @@ class HomeScreen(wx.Frame):
         self.home_feed_list.Hide()
         self.home_feed_data = []
         self.home_feed_continuation = None
-        self.load_more_home_button = wx.Button(panel, -1, _("تحميل المزيد من الفيديوهات المقترحة"))
+        self.load_more_home_button = wx.Button(
+            panel, -1, _("تحميل المزيد من الفيديوهات المقترحة")
+        )
         self.load_more_home_button.Hide()
         sizer.Add(self.home_feed_list, 1, wx.EXPAND | wx.ALL, 5)
         sizer.Add(self.load_more_home_button, 0, wx.ALIGN_CENTER | wx.ALL, 5)
@@ -172,7 +171,9 @@ class HomeScreen(wx.Frame):
         )
         self.Bind(wx.EVT_LISTBOX_DCLICK, self.on_home_feed_play, self.home_feed_list)
         self.home_feed_list.Bind(wx.EVT_CHAR_HOOK, self.on_home_feed_hook)
-        self.load_more_home_button.Bind(wx.EVT_BUTTON, lambda event: self.load_home_feed(True))
+        self.load_more_home_button.Bind(
+            wx.EVT_BUTTON, lambda event: self.load_home_feed(True)
+        )
         self.Bind(wx.EVT_CHAR_HOOK, self.onHook)
         self.Bind(wx.EVT_SHOW, self.onShow)
         self.Bind(wx.EVT_CLOSE, self.onClose)
@@ -204,8 +205,9 @@ class HomeScreen(wx.Frame):
             self.home_feed_list.Set([_("جاري تحميل الاقتراحات... يرجى الانتظار")])
             self.home_feed_list.Show()
             self.Layout()
-        
+
         continuation = self.home_feed_continuation if load_more else None
+
         def _load():
             data = utiles.get_home_feed(continuation)
             wx.CallAfter(self._update_home_feed, data, load_more)
@@ -215,7 +217,7 @@ class HomeScreen(wx.Frame):
     def _update_home_feed(self, data, load_more=False):
         new_videos = data.get("videos", [])
         self.home_feed_continuation = data.get("continuation")
-        
+
         if load_more:
             self.home_feed_data.extend(new_videos)
         else:
@@ -224,7 +226,7 @@ class HomeScreen(wx.Frame):
 
         titles = [f"{item['title']} - {item['author']}" for item in self.home_feed_data]
         self.home_feed_list.Set(titles)
-        
+
         if self.home_feed_data:
             self.home_feed_list.Show()
             if self.home_feed_continuation:

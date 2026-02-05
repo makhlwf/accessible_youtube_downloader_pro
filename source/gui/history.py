@@ -1,8 +1,5 @@
 import webbrowser
 from threading import Thread
-import os
-import re
-import queue
 
 import pyperclip
 import wx
@@ -17,6 +14,7 @@ import utiles
 from download_handler.downloader import downloadAction
 from database import Favorite
 
+
 class HistoryDialog(wx.Frame):
     def __init__(self, parent):
         wx.Frame.__init__(self, parent=parent, title=_("سجل المشاهدة"))
@@ -28,31 +26,31 @@ class HistoryDialog(wx.Frame):
         self.historyList = wx.ListBox(self.panel, -1)
         self.loadMoreButton = wx.Button(self.panel, -1, _("تحميل المزيد من السجل"))
         self.loadMoreButton.Hide()
-        
+
         self.playButton = wx.Button(self.panel, -1, _("تشغيل (enter)"), name="controls")
         self.downloadButton = wx.Button(self.panel, -1, _("تنزيل"), name="controls")
         self.favCheck = wx.CheckBox(self.panel, -1, _("تفضيل الفيديو"))
-        
+
         backButton = wx.Button(self.panel, -1, _("العودة إلى النافذة الرئيسية"))
-        
+
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer1 = wx.BoxSizer(wx.HORIZONTAL)
         sizer1.Add(backButton, 1, wx.ALL)
-        
+
         sizer2 = wx.BoxSizer(wx.HORIZONTAL)
         for control in self.panel.GetChildren():
             if control.Name == "controls":
                 sizer2.Add(control, 1)
-        
+
         sizer.Add(sizer1, 0, wx.EXPAND)
         sizer.Add(lbl, 0, wx.ALL, 5)
         sizer.Add(self.historyList, 1, wx.EXPAND | wx.ALL, 5)
         sizer.Add(self.loadMoreButton, 0, wx.ALIGN_CENTER | wx.ALL, 5)
         sizer.Add(sizer2, 0, wx.EXPAND | wx.ALL, 5)
-        
+
         self.panel.SetSizer(sizer)
         self.contextSetup()
-        
+
         results_shortcuts = wx.AcceleratorTable(
             [
                 (0, wx.WXK_RETURN, self.audioPlayItemId),
@@ -60,21 +58,23 @@ class HistoryDialog(wx.Frame):
             ]
         )
         self.historyList.SetAcceleratorTable(results_shortcuts)
-        
+
         self.loadMoreButton.Bind(wx.EVT_BUTTON, self.onLoadMore)
         self.playButton.Bind(wx.EVT_BUTTON, lambda event: self.playVideo())
         self.downloadButton.Bind(wx.EVT_BUTTON, self.onDownload)
         self.favCheck.Bind(wx.EVT_CHECKBOX, self.onFavorite)
         backButton.Bind(wx.EVT_BUTTON, lambda event: self.backAction())
-        
-        self.Bind(wx.EVT_LISTBOX_DCLICK, lambda event: self.playVideo(), self.historyList)
+
+        self.Bind(
+            wx.EVT_LISTBOX_DCLICK, lambda event: self.playVideo(), self.historyList
+        )
         self.historyList.Bind(wx.EVT_LISTBOX, self.onListBox)
         self.Bind(wx.EVT_CLOSE, self.onClose)
-        
+
         self.history_data = []
         self.continuation = None
         self.favorites = Favorite()
-        
+
         self.load_history()
         self.Show()
         self.Parent.Hide()
@@ -95,7 +95,7 @@ class HistoryDialog(wx.Frame):
     def _update_history(self, data, load_more=False):
         new_videos = data.get("videos", [])
         self.continuation = data.get("continuation")
-        
+
         if load_more:
             self.history_data.extend(new_videos)
         else:
@@ -104,15 +104,15 @@ class HistoryDialog(wx.Frame):
 
         titles = [f"{item['title']} - {item['author']}" for item in self.history_data]
         self.historyList.Set(titles)
-        
+
         if self.continuation:
             self.loadMoreButton.Show()
         else:
             self.loadMoreButton.Hide()
-        
+
         if not self.history_data:
             self.historyList.Set([_("لا يوجد سجل مشاهدة متاح")])
-        
+
         self.Layout()
         self.historyList.SetFocus()
         if load_more:
@@ -131,20 +131,20 @@ class HistoryDialog(wx.Frame):
         video_data = self.history_data[selection]
         url = video_data["url"]
         title = video_data["title"]
-        
+
         stream = LoadingDialog(
             self,
             _("جاري التشغيل"),
             utiles.get_playable_stream,
             url,
         ).res
-        
+
         if stream is None:
             wx.MessageBox(
                 _("لا يمكن تشغيل الرابط"), _("خطأ"), style=wx.ICON_ERROR, parent=self
             )
             return
-        
+
         MediaGui(self, title, stream, url, audio_mode=audio_mode)
         self.Hide()
 
@@ -168,7 +168,7 @@ class HistoryDialog(wx.Frame):
         self.videoPlayItemId = videoPlayItem.GetId()
         audioPlayItem = self.contextMenu.Append(-1, _("التشغيل كمقطع صوتي"))
         self.audioPlayItemId = audioPlayItem.GetId()
-        
+
         self.downloadMenu = wx.Menu()
         videoItem = self.downloadMenu.Append(-1, _("فيديو"))
         audioMenu = wx.Menu()
@@ -178,7 +178,7 @@ class HistoryDialog(wx.Frame):
         self.downloadId = self.contextMenu.AppendSubMenu(
             self.downloadMenu, _("تنزيل")
         ).GetId()
-        
+
         copyItem = self.contextMenu.Append(-1, _("نسخ رابط المقطع"))
         webbrowserItem = self.contextMenu.Append(-1, _("الفتح من خلال متصفح الإنترنت"))
 
@@ -192,11 +192,11 @@ class HistoryDialog(wx.Frame):
         self.historyList.Bind(
             wx.EVT_MENU, lambda event: self.playAudio(), id=self.audioPlayItemId
         )
-        
+
         self.Bind(wx.EVT_MENU, self.onCopy, copyItem)
         self.Bind(wx.EVT_MENU, self.onOpenInBrowser, webbrowserItem)
         self.historyList.Bind(wx.EVT_CONTEXT_MENU, lambda event: popup())
-        
+
         self.Bind(wx.EVT_MENU, self.onVideoDownload, videoItem)
         self.Bind(wx.EVT_MENU, self.onM4aDownload, m4aItem)
         self.Bind(wx.EVT_MENU, self.onMp3Download, mp3Item)
@@ -237,7 +237,8 @@ class HistoryDialog(wx.Frame):
 
     def onM4aDownload(self, event):
         selection = self.historyList.GetSelection()
-        if selection == wx.NOT_FOUND or not self.history_data: return
+        if selection == wx.NOT_FOUND or not self.history_data:
+            return
         url = self.history_data[selection]["url"]
         title = self.history_data[selection]["title"]
         dlg = DownloadProgress(self, title)
@@ -245,7 +246,8 @@ class HistoryDialog(wx.Frame):
 
     def onMp3Download(self, event):
         selection = self.historyList.GetSelection()
-        if selection == wx.NOT_FOUND or not self.history_data: return
+        if selection == wx.NOT_FOUND or not self.history_data:
+            return
         url = self.history_data[selection]["url"]
         title = self.history_data[selection]["title"]
         dlg = DownloadProgress(self, title)
@@ -253,7 +255,8 @@ class HistoryDialog(wx.Frame):
 
     def onVideoDownload(self, event):
         selection = self.historyList.GetSelection()
-        if selection == wx.NOT_FOUND or not self.history_data: return
+        if selection == wx.NOT_FOUND or not self.history_data:
+            return
         url = self.history_data[selection]["url"]
         title = self.history_data[selection]["title"]
         dlg = DownloadProgress(self, title)
@@ -281,7 +284,7 @@ class HistoryDialog(wx.Frame):
                 "display_title": display_title,
                 "url": url,
                 "live": 1 if video_data.get("is_live") else 0,
-                "channel_url": "", # We don't have this in history easily
+                "channel_url": "",  # We don't have this in history easily
                 "channel_name": author,
             }
             self.favorites.add_favorite(data)

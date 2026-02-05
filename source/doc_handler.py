@@ -3,6 +3,7 @@ import os
 import application
 import paths
 
+
 def documentation_get():
     docs_path = os.path.join(paths.get_bundled_data_path(), "docs")
     available_languages = os.listdir(docs_path)

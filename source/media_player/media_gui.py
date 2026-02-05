@@ -129,7 +129,16 @@ class MediaGui(wx.Frame):
         self.Bind(wx.EVT_TIMER, self.on_history_timer, self.history_timer)
         self.history_timer.Start(10000)  # 10 seconds
         try:
-            Thread(target=utiles.update_watch_history, args=(self.url, self.player.media.get_time() / 1000 if self.player.media.get_time() != -1 else 0), daemon=True).start()
+            Thread(
+                target=utiles.update_watch_history,
+                args=(
+                    self.url,
+                    self.player.media.get_time() / 1000
+                    if self.player.media.get_time() != -1
+                    else 0,
+                ),
+                daemon=True,
+            ).start()
         except Exception:
             pass
 
@@ -138,7 +147,11 @@ class MediaGui(wx.Frame):
             if self.player and self.player.media.get_state() == State.Playing:
                 watched_seconds = self.player.media.get_time() / 1000
                 if watched_seconds > 0:
-                    Thread(target=utiles.update_watch_history, args=(self.url, watched_seconds), daemon=True).start()
+                    Thread(
+                        target=utiles.update_watch_history,
+                        args=(self.url, watched_seconds),
+                        daemon=True,
+                    ).start()
         except Exception:
             pass
 
@@ -209,15 +222,19 @@ class MediaGui(wx.Frame):
                 Continue.update(self.url, self.player.media.get_position())
             else:
                 Continue.new_continue(self.url, self.player.media.get_position())
-            
+
             # Final history update
             try:
                 watched_seconds = self.player.media.get_time() / 1000
                 if watched_seconds > 0:
-                    Thread(target=utiles.update_watch_history, args=(self.url, watched_seconds), daemon=True).start()
+                    Thread(
+                        target=utiles.update_watch_history,
+                        args=(self.url, watched_seconds),
+                        daemon=True,
+                    ).start()
             except Exception:
                 pass
-                
+
             self.player.media.stop()
         self.GetParent().Show()
 
@@ -407,7 +424,9 @@ class MediaGui(wx.Frame):
         Thread(target=self.extract_description).start()
         # Report new track to history
         try:
-            Thread(target=utiles.update_watch_history, args=(self.url, 0), daemon=True).start()
+            Thread(
+                target=utiles.update_watch_history, args=(self.url, 0), daemon=True
+            ).start()
         except Exception:
             pass
 

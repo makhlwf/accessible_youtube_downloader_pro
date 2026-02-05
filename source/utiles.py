@@ -198,12 +198,12 @@ def ensure_js_dependencies():
     """Silently ensure JavaScript dependencies are cached by Deno."""
     if not os.path.exists(paths.deno_path):
         return
-    
+
     bundled_path = paths.get_bundled_data_path()
     script_path = os.path.join(bundled_path, "get_recommendations.js")
     history_script_path = os.path.join(bundled_path, "get_watch_history.js")
     config_path = os.path.join(bundled_path, "deno.json")
-    
+
     if not os.path.exists(script_path) or not os.path.exists(config_path):
         return
 
@@ -212,15 +212,23 @@ def ensure_js_dependencies():
             env = os.environ.copy()
             env["PATH"] = paths.main_path + os.pathsep + env.get("PATH", "")
             subprocess.run(
-                [paths.deno_path, "cache", "--config", config_path, script_path, history_script_path],
+                [
+                    paths.deno_path,
+                    "cache",
+                    "--config",
+                    config_path,
+                    script_path,
+                    history_script_path,
+                ],
                 creationflags=subprocess.CREATE_NO_WINDOW,
                 env=env,
-                cwd=bundled_path
+                cwd=bundled_path,
             )
         except Exception:
             pass
 
     import threading
+
     threading.Thread(target=_cache_task, daemon=True).start()
 
 
@@ -245,7 +253,7 @@ def get_playable_stream(url):
         cookies_path = config_get("cookiespath")
         if cookies_path and os.path.exists(cookies_path):
             opts["cookiefile"] = cookies_path
-        
+
         with YoutubeDL(opts) as ydl:
             # Check if it's already a direct URL or ID
             if "youtube.com" not in url and "youtu.be" not in url:
@@ -257,7 +265,13 @@ def get_playable_stream(url):
             except Exception as e:
                 # If it's a format error, try again with absolute defaults
                 if "format" in str(e).lower():
-                    with YoutubeDL({"quiet": True, "no_warnings": True, "js_runtimes": {"deno": {}}}) as ydl_retry:
+                    with YoutubeDL(
+                        {
+                            "quiet": True,
+                            "no_warnings": True,
+                            "js_runtimes": {"deno": {}},
+                        }
+                    ) as ydl_retry:
                         entry = ydl_retry.extract_info(url, download=False)
                 else:
                     raise e
@@ -267,28 +281,38 @@ def get_playable_stream(url):
                 (f for f in entry.get("formats", []) if f.get("format_id") == "18"),
                 None,
             )
-            
+
             # If 18 is not found, try any progressive MP4 (combined audio and video)
             if not fmt:
                 fmt = next(
-                    (f for f in entry.get("formats", []) if f.get("ext") == "mp4" and f.get("vcodec") != "none" and f.get("acodec") != "none"),
+                    (
+                        f
+                        for f in entry.get("formats", [])
+                        if f.get("ext") == "mp4"
+                        and f.get("vcodec") != "none"
+                        and f.get("acodec") != "none"
+                    ),
                     None,
                 )
-            
+
             # If still not found, try any combined stream
             if not fmt:
                 fmt = next(
-                    (f for f in entry.get("formats", []) if f.get("vcodec") != "none" and f.get("acodec") != "none"),
+                    (
+                        f
+                        for f in entry.get("formats", [])
+                        if f.get("vcodec") != "none" and f.get("acodec") != "none"
+                    ),
                     None,
                 )
 
             # Final fallback: best single stream found by yt-dlp
             if not fmt:
                 fmt = entry
-            
+
             title = entry.get("title")
             url_to_play = fmt.get("url")
-            
+
             if not url_to_play:
                 return None
 
@@ -470,7 +494,7 @@ def update_watch_history(url, watched_seconds=0):
     cookies_path = config_get("cookiespath")
     if not cookies_path or not os.path.exists(cookies_path):
         return
-    
+
     # Extract video ID from URL
     match = youtube_regexp(url)
     if not match:
@@ -483,7 +507,7 @@ def update_watch_history(url, watched_seconds=0):
         bundled_path = paths.get_bundled_data_path()
         script_path = os.path.join(bundled_path, "update_history.js")
         config_path = os.path.join(bundled_path, "deno.json")
-        
+
         command = [
             paths.deno_path,
             "run",
@@ -496,7 +520,7 @@ def update_watch_history(url, watched_seconds=0):
             script_path,
             video_id,
             cookies_path,
-            str(watched_seconds)
+            str(watched_seconds),
         ]
 
         subprocess.run(
@@ -504,7 +528,7 @@ def update_watch_history(url, watched_seconds=0):
             creationflags=subprocess.CREATE_NO_WINDOW,
             cwd=paths.main_path,
             env=env,
-            capture_output=True
+            capture_output=True,
         )
     except Exception as e:
         print(f"Error updating watch history: {e}")
