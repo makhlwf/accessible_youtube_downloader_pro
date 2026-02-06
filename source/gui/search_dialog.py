@@ -42,9 +42,11 @@ class SearchDialog(wx.Dialog):
         panel.SetSizer(sizer)
         self.searchField.Bind(
             wx.EVT_TEXT,
-            lambda event: searchButton.Disable()
-            if self.searchField.Value == ""
-            else searchButton.Enable(),
+            lambda event: (
+                searchButton.Disable()
+                if self.searchField.Value == ""
+                else searchButton.Enable()
+            ),
         )
         searchButton.Bind(wx.EVT_BUTTON, self.onSearch)
         closeButton.Bind(wx.EVT_BUTTON, self.onClose)
