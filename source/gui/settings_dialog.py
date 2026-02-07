@@ -86,6 +86,24 @@ class SettingsDialog(wx.Dialog):
         )
         self.mp3Quality.Selection = int(config_get("conversion"))
         playerOptions = wx.StaticBox(panel, -1, _("إعدادات المشغل"))
+        self.videoQualityLabel = wx.StaticText(
+            playerOptions, -1, _("جودة الفيديو الافتراضية: ")
+        )
+        self.videoQuality = wx.Choice(
+            playerOptions,
+            -1,
+            choices=["144p", "240p", "360p", "480p", "720p", "1080p", "1440p", "2160p"],
+        )
+        self.videoQuality.Selection = int(config_get("defaultvideoquality"))
+        self.audioQualityLabel = wx.StaticText(
+            playerOptions, -1, _("جودة الصوت الافتراضية: ")
+        )
+        self.audioQuality = wx.Choice(
+            playerOptions,
+            -1,
+            choices=[_("منخفضة"), _("متوسطة"), _("عالية")],
+        )
+        self.audioQuality.Selection = int(config_get("defaultaudioquality"))
         self.continueWatching = wx.CheckBox(
             playerOptions,
             -1,
@@ -117,7 +135,6 @@ class SettingsDialog(wx.Dialog):
         sizer4 = wx.BoxSizer(wx.VERTICAL)
         sizer5 = wx.BoxSizer(wx.HORIZONTAL)
         sizer6 = wx.BoxSizer(wx.HORIZONTAL)
-        sizer7 = wx.BoxSizer(wx.HORIZONTAL)
         cookiesSizer = wx.BoxSizer(wx.HORIZONTAL)
         okCancelSizer = wx.BoxSizer(wx.HORIZONTAL)
         sizer1.Add(lbl, 1)
@@ -139,9 +156,19 @@ class SettingsDialog(wx.Dialog):
         sizer4.Add(sizer5)
         sizer4.Add(sizer6)
         downloadPreferencesBox.SetSizer(sizer4)
-        for ctrl in playerOptions.GetChildren():
-            sizer7.Add(ctrl, 1)
-        playerOptions.SetSizer(sizer7)
+        playerOptionsSizer = wx.BoxSizer(wx.VERTICAL)
+        videoQualitySizer = wx.BoxSizer(wx.HORIZONTAL)
+        audioQualitySizer = wx.BoxSizer(wx.HORIZONTAL)
+        videoQualitySizer.Add(self.videoQualityLabel, 1)
+        videoQualitySizer.Add(self.videoQuality, 1)
+        audioQualitySizer.Add(self.audioQualityLabel, 1)
+        audioQualitySizer.Add(self.audioQuality, 1)
+        playerOptionsSizer.Add(videoQualitySizer, 0, wx.EXPAND | wx.ALL, 5)
+        playerOptionsSizer.Add(audioQualitySizer, 0, wx.EXPAND | wx.ALL, 5)
+        playerOptionsSizer.Add(self.continueWatching, 0, wx.ALL, 5)
+        playerOptionsSizer.Add(self.repeateTracks, 0, wx.ALL, 5)
+        playerOptionsSizer.Add(self.autoPlayNext, 0, wx.ALL, 5)
+        playerOptions.SetSizer(playerOptionsSizer)
         sizer.Add(sizer1, 1, wx.EXPAND)
         sizer.Add(sizer2, 1, wx.EXPAND)
         sizer.Add(cookiesSizer, 1, wx.EXPAND)
@@ -214,6 +241,8 @@ class SettingsDialog(wx.Dialog):
         config_set(
             "defaultformat", self.formats.Selection
         ) if not self.formats.Selection == int(config_get("defaultformat")) else None
+        config_set("defaultvideoquality", self.videoQuality.Selection)
+        config_set("defaultaudioquality", self.audioQuality.Selection)
         lang = {value: key for key, value in languages.items()}
         if not lang[self.languageBox.Selection] == config_get("lang"):
             config_set("lang", lang[self.languageBox.Selection])

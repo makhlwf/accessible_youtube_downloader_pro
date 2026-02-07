@@ -80,6 +80,11 @@ class MediaGui(wx.Frame):
         trackOptions.Enable(downloadId, can_download)
         directDownloadItem = trackOptions.Append(-1, _("التنزيل المباشر...\tctrl+d"))
         directDownloadItem.Enable(can_download)
+        self.qualityMenu = wx.Menu()
+        self.qualitySubMenu = trackOptions.AppendSubMenu(
+            self.qualityMenu, _("جودة التشغيل")
+        )
+        self.qualitySubMenu.Enable(not audio_mode)
         descriptionItem = trackOptions.Append(-1, _("وصف الفيديو\tctrl+shift+d"))
         copyItem = trackOptions.Append(-1, _("نسخ رابط المقطع\tctrl+l"))
         browserItem = trackOptions.Append(-1, _("الفتح من خلال متصفح الإنترنت\tctrl+b"))
@@ -122,6 +127,8 @@ class MediaGui(wx.Frame):
         self.Bind(wx.EVT_CLOSE, lambda event: self.closeAction())
         self.Show()
         self.player = Player(stream.url, self.GetHandle(), self)
+        if not audio_mode:
+            Thread(target=self.fetch_qualities, daemon=True).start()
         if self.url in Continue.get_all() and config_get("continue"):
             self.player.media.set_position(Continue.get_all()[url])
         Thread(target=self.extract_description).start()
@@ -154,6 +161,46 @@ class MediaGui(wx.Frame):
                     ).start()
         except Exception:
             pass
+
+    def fetch_qualities(self):
+        qualities = utiles.get_available_qualities(self.url)
+        if qualities:
+            wx.CallAfter(self.populate_quality_menu, qualities)
+
+    def populate_quality_menu(self, qualities):
+        # Clear existing items if any
+        for item in self.qualityMenu.GetMenuItems():
+            self.qualityMenu.DestroyItem(item)
+
+        for q in qualities:
+            item = self.qualityMenu.AppendCheckItem(-1, f"{q}p")
+            self.Bind(wx.EVT_MENU, lambda event, h=q: self.on_change_quality(h), item)
+
+    def on_change_quality(self, height):
+        speak(_("جاري تغيير الجودة إلى {}").format(f"{height}p"))
+        position = self.player.media.get_position()
+        self.player.media.stop()
+
+        def reload():
+            new_stream = utiles.get_specific_quality_stream(self.url, height)
+            if new_stream:
+
+                def update_player():
+                    options = []
+                    if hasattr(new_stream, "headers") and new_stream.headers:
+                        ua = new_stream.headers.get("User-Agent")
+                        if ua:
+                            options.append(f":http-user-agent={ua}")
+                    self.player.set_media(new_stream.url, options)
+                    self.player.media.play()
+                    self.player.media.set_position(position)
+
+                wx.CallAfter(update_player)
+            else:
+                speak(_("تعذر تغيير الجودة"))
+                wx.CallAfter(self.player.media.play)
+
+        Thread(target=reload, daemon=True).start()
 
     def _download_media(self, option, url, dlg, path=None):
         if path is None:
@@ -422,6 +469,10 @@ class MediaGui(wx.Frame):
         self.player.media.play()
         self.player.media.audio_set_volume(self.player.volume)
         Thread(target=self.extract_description).start()
+        if not self.audio_mode:
+            for item in self.qualityMenu.GetMenuItems():
+                self.qualityMenu.DestroyItem(item)
+            Thread(target=self.fetch_qualities, daemon=True).start()
         # Report new track to history
         try:
             Thread(

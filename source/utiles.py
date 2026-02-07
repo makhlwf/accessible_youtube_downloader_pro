@@ -23,6 +23,9 @@ PLAYER_OPTS = {
     "js_runtimes": {"deno": {}},
 }
 
+VIDEO_QUALITIES = [144, 240, 360, 480, 720, 1080, 1440, 2160]
+AUDIO_QUALITIES = [64, 128, 256]
+
 
 def download_yt_dlp():
     url = "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe"
@@ -232,6 +235,95 @@ def ensure_js_dependencies():
     threading.Thread(target=_cache_task, daemon=True).start()
 
 
+def pick_best_format(formats, preferred_index, is_video=True, target_height=None):
+    if is_video:
+        target_list = VIDEO_QUALITIES
+        if target_height is not None:
+            preferred_val = target_height
+        else:
+            preferred_val = target_list[preferred_index]
+
+        # Progressive only for now as we return a single URL for VLC
+        available = [
+            f
+            for f in formats
+            if f.get("vcodec") != "none"
+            and f.get("acodec") != "none"
+            and f.get("height") is not None
+        ]
+
+        if not available:
+            return None
+
+        # Sort available by height
+        available.sort(key=lambda x: x.get("height", 0))
+
+        if target_height is not None:
+            match = [f for f in available if f.get("height") == target_height]
+            if match:
+                return match[0]
+            # If target not found, fall back to smart logic using target_height as preferred_val
+
+        # Find the index of preferred_val in target_list
+        try:
+            pref_idx = (
+                target_list.index(preferred_val)
+                if target_height is None
+                else next(
+                    i
+                    for i, v in enumerate(target_list)
+                    if v >= preferred_val or i == len(target_list) - 1
+                )
+            )
+        except (ValueError, StopIteration):
+            pref_idx = preferred_index
+
+        # Try from preferred downwards
+        for i in range(pref_idx, -1, -1):
+            target = target_list[i]
+            match = [f for f in available if f.get("height") == target]
+            if match:
+                return match[0]
+
+        # If not found, try from preferred upwards
+        for i in range(pref_idx + 1, len(target_list)):
+            target = target_list[i]
+            match = [f for f in available if f.get("height") == target]
+            if match:
+                return match[0]
+
+        # Final fallback: best available progressive
+        return available[-1]
+    else:
+        # Audio
+        available = [
+            f
+            for f in formats
+            if f.get("acodec") != "none"
+            and f.get("vcodec") == "none"
+            and f.get("abr") is not None
+        ]
+        if not available:
+            # Fallback to any audio
+            available = [f for f in formats if f.get("acodec") != "none"]
+        if not available:
+            return None
+
+        available.sort(key=lambda x: x.get("abr", 0))
+
+        # Audio levels are simpler. 0: low, 1: med, 2: high
+        # We can map them to abr targets
+        target_abr = AUDIO_QUALITIES[preferred_index]
+
+        # Try to find closest abr <= target
+        for f in reversed(available):
+            if f.get("abr", 0) <= target_abr:
+                return f
+
+        # If all are higher, take the lowest available
+        return available[0]
+
+
 class Stream:
     def __init__(self, title, url, headers=None):
         self.title = title
@@ -276,35 +368,9 @@ def get_playable_stream(url):
                 else:
                     raise e
 
-            # Try to find format 18 (360p progressive MP4)
-            fmt = next(
-                (f for f in entry.get("formats", []) if f.get("format_id") == "18"),
-                None,
-            )
-
-            # If 18 is not found, try any progressive MP4 (combined audio and video)
-            if not fmt:
-                fmt = next(
-                    (
-                        f
-                        for f in entry.get("formats", [])
-                        if f.get("ext") == "mp4"
-                        and f.get("vcodec") != "none"
-                        and f.get("acodec") != "none"
-                    ),
-                    None,
-                )
-
-            # If still not found, try any combined stream
-            if not fmt:
-                fmt = next(
-                    (
-                        f
-                        for f in entry.get("formats", [])
-                        if f.get("vcodec") != "none" and f.get("acodec") != "none"
-                    ),
-                    None,
-                )
+            preferred_video = int(config_get("defaultvideoquality"))
+            formats = entry.get("formats", [])
+            fmt = pick_best_format(formats, preferred_video, is_video=True)
 
             # Final fallback: best single stream found by yt-dlp
             if not fmt:
@@ -360,18 +426,8 @@ def get_audio_stream(url):
         return None
     title = info.get("title")
     formats = info.get("formats", [])
-    audio_streams = [
-        f for f in formats if f.get("acodec") != "none" and f.get("vcodec") == "none"
-    ]
-    stream = None
-    for s in reversed(audio_streams):
-        if s.get("ext") == "webm":
-            stream = s
-            break
-    if stream is None:
-        best_audio = sorted(audio_streams, key=lambda x: x.get("abr", 0), reverse=True)
-        if best_audio:
-            stream = best_audio[0]
+    preferred = int(config_get("defaultaudioquality"))
+    stream = pick_best_format(formats, preferred, is_video=False)
     if stream:
         return Stream(title, stream["url"])
     return None
@@ -383,22 +439,38 @@ def get_video_stream(url):
         return None
     title = info.get("title")
     formats = info.get("formats", [])
-    video_streams = [f for f in formats if f.get("vcodec") != "none"]
-    stream = None
-    for s in video_streams:
-        if s.get("ext") == "mp4" and f"{s.get('width')}x{s.get('height')}" == "640x360":
-            stream = s
-            break
-    if stream is None:
-        # Fallback to best available stream
-        video_streams = sorted(
-            video_streams,
-            key=lambda x: x.get("width", 0) * x.get("height", 0),
-            reverse=True,
-        )
-        if video_streams:
-            stream = video_streams[0]
+    preferred = int(config_get("defaultvideoquality"))
+    stream = pick_best_format(formats, preferred, is_video=True)
 
+    if stream:
+        return Stream(title, stream["url"])
+    return None
+
+
+def get_available_qualities(url):
+    info = get_media_info(url)
+    if info is None:
+        return []
+    formats = info.get("formats", [])
+    # Filter for progressive mp4 streams
+    available = [
+        f.get("height")
+        for f in formats
+        if f.get("vcodec") != "none"
+        and f.get("acodec") != "none"
+        and f.get("height") is not None
+    ]
+    # Deduplicate and sort
+    return sorted(list(set(available)))
+
+
+def get_specific_quality_stream(url, height):
+    info = get_media_info(url)
+    if info is None:
+        return None
+    title = info.get("title")
+    formats = info.get("formats", [])
+    stream = pick_best_format(formats, 0, is_video=True, target_height=height)
     if stream:
         return Stream(title, stream["url"])
     return None

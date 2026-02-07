@@ -20,6 +20,8 @@ defaults = {
     "volume": 100,
     "continue": True,
     "cookiespath": "",
+    "defaultvideoquality": 4,
+    "defaultaudioquality": 2,
 }
 
 
