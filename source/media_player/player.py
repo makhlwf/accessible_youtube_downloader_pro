@@ -16,7 +16,8 @@ class Player:
         self.hwnd = hwnd
         self.media = media_player
         self.set_media(self.filename, options)
-        self.media.set_hwnd(self.hwnd)
+        if self.hwnd:
+            self.media.set_hwnd(self.hwnd)
         self.manager = self.media.event_manager()
         self.manager.event_attach(vlc.EventType.MediaPlayerEndReached, self.onEnd)
         self.media.play()

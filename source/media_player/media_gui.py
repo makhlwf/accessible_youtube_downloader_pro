@@ -1,5 +1,6 @@
 import webbrowser
 import pyperclip
+import time
 import wx
 from language_handler import _
 from gui.download_progress import DownloadProgress
@@ -81,10 +82,12 @@ class MediaGui(wx.Frame):
         directDownloadItem = trackOptions.Append(-1, _("التنزيل المباشر...\tctrl+d"))
         directDownloadItem.Enable(can_download)
         self.qualityMenu = wx.Menu()
+        self.qualityMenu.Append(-1, _("جاري التحميل...")).Enable(False)
         self.qualitySubMenu = trackOptions.AppendSubMenu(
             self.qualityMenu, _("جودة التشغيل")
         )
         self.qualitySubMenu.Enable(not audio_mode)
+
         descriptionItem = trackOptions.Append(-1, _("وصف الفيديو\tctrl+shift+d"))
         copyItem = trackOptions.Append(-1, _("نسخ رابط المقطع\tctrl+l"))
         browserItem = trackOptions.Append(-1, _("الفتح من خلال متصفح الإنترنت\tctrl+b"))
@@ -126,7 +129,29 @@ class MediaGui(wx.Frame):
         nextButton.Bind(wx.EVT_BUTTON, lambda event: self.next())
         self.Bind(wx.EVT_CLOSE, lambda event: self.closeAction())
         self.Show()
-        self.player = Player(stream.url, self.GetHandle(), self)
+        if stream is None:
+            wx.MessageBox(
+                _("لا يمكن تشغيل الرابط"), _("خطأ"), style=wx.ICON_ERROR, parent=self
+            )
+            self.closeAction()
+            return
+        options = []
+        ua = None
+        if hasattr(stream, "headers") and stream.headers:
+            ua = stream.headers.get("User-Agent")
+            if ua:
+                options.append(f":http-user-agent={ua}")
+        if hasattr(stream, "audio_url") and stream.audio_url:
+            options.append(f":input-slave={stream.audio_url}")
+        if audio_mode:
+            options.append(":no-video")
+
+        self.player = Player(
+            stream.url,
+            self.GetHandle() if not audio_mode else None,
+            self,
+            options=options,
+        )
         if not audio_mode:
             Thread(target=self.fetch_qualities, daemon=True).start()
         if self.url in Continue.get_all() and config_get("continue"):
@@ -164,13 +189,16 @@ class MediaGui(wx.Frame):
 
     def fetch_qualities(self):
         qualities = utiles.get_available_qualities(self.url)
-        if qualities:
-            wx.CallAfter(self.populate_quality_menu, qualities)
+        wx.CallAfter(self.populate_quality_menu, qualities)
 
     def populate_quality_menu(self, qualities):
-        # Clear existing items if any
+        # Clear existing items
         for item in self.qualityMenu.GetMenuItems():
             self.qualityMenu.DestroyItem(item)
+
+        if not qualities:
+            self.qualityMenu.Append(-1, _("لا توجد جودات متاحة")).Enable(False)
+            return
 
         for q in qualities:
             item = self.qualityMenu.AppendCheckItem(-1, f"{q}p")
@@ -179,9 +207,10 @@ class MediaGui(wx.Frame):
     def on_change_quality(self, height):
         speak(_("جاري تغيير الجودة إلى {}").format(f"{height}p"))
         position = self.player.media.get_position()
-        self.player.media.stop()
 
         def reload():
+            self.player.media.stop()
+            time.sleep(0.5)
             new_stream = utiles.get_specific_quality_stream(self.url, height)
             if new_stream:
 
@@ -191,6 +220,10 @@ class MediaGui(wx.Frame):
                         ua = new_stream.headers.get("User-Agent")
                         if ua:
                             options.append(f":http-user-agent={ua}")
+                    if hasattr(new_stream, "audio_url") and new_stream.audio_url:
+                        options.append(f":input-slave={new_stream.audio_url}")
+                    if self.audio_mode:
+                        options.append(":no-video")
                     self.player.set_media(new_stream.url, options)
                     self.player.media.play()
                     self.player.media.set_position(position)
@@ -452,7 +485,7 @@ class MediaGui(wx.Frame):
                 else None
             )
             if stream is None:
-                stream = get_playable_stream(url)
+                stream = get_playable_stream(url, audio_mode=self.audio_mode)
         except Exception:
             return
 
@@ -461,6 +494,10 @@ class MediaGui(wx.Frame):
             ua = stream.headers.get("User-Agent")
             if ua:
                 options.append(f":http-user-agent={ua}")
+        if hasattr(stream, "audio_url") and stream.audio_url:
+            options.append(f":input-slave={stream.audio_url}")
+        if self.audio_mode:
+            options.append(":no-video")
 
         self.player.set_media(stream.url, options=options)
         self.url = url
@@ -472,6 +509,7 @@ class MediaGui(wx.Frame):
         if not self.audio_mode:
             for item in self.qualityMenu.GetMenuItems():
                 self.qualityMenu.DestroyItem(item)
+            self.qualityMenu.Append(-1, _("جاري التحميل...")).Enable(False)
             Thread(target=self.fetch_qualities, daemon=True).start()
         # Report new track to history
         try:

@@ -137,6 +137,7 @@ class HistoryDialog(wx.Frame):
             _("جاري التشغيل"),
             utiles.get_playable_stream,
             url,
+            audio_mode,
         ).res
 
         if stream is None:
@@ -145,7 +146,9 @@ class HistoryDialog(wx.Frame):
             )
             return
 
-        MediaGui(self, title, stream, url, audio_mode=audio_mode)
+        MediaGui(
+            self, title, stream, url, audio_mode=audio_mode, results=self.history_data
+        )
         self.Hide()
 
     def playAudio(self):

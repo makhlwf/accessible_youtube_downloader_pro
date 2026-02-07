@@ -207,7 +207,7 @@ class YoutubeBrowser(wx.Frame):
         stream = self.search.get_stream(number)
         if stream is None:
             stream = LoadingDialog(
-                self, _("جاري التشغيل"), get_playable_stream, url
+                self, _("جاري التشغيل"), get_playable_stream, url, False
             ).res
         MediaGui(
             self,
@@ -225,11 +225,9 @@ class YoutubeBrowser(wx.Frame):
             return
         title = self.search.get_title(number)
         url = self.search.get_url(number)
-        stream = self.search.get_stream(number)
-        if stream is None:
-            stream = LoadingDialog(
-                self, _("جاري التشغيل"), get_playable_stream, url
-            ).res
+        stream = LoadingDialog(
+            self, _("جاري التشغيل"), get_playable_stream, url, True
+        ).res
         MediaGui(
             self,
             title,
@@ -448,8 +446,8 @@ class YoutubeBrowser(wx.Frame):
             self.playButton.Label = _("فتح")
             for i in contextMenuIds:
                 self.contextMenu.Enable(i, False)
-            return
-            self.playButton.Enabled = True
+        else:
+            self.playButton.Label = _("تشغيل (enter)")
             for i in contextMenuIds:
                 self.contextMenu.Enable(i, True)
 

@@ -108,7 +108,7 @@ class Favorites(wx.Frame):
             stream,
             url,
             True if not self.rows[n]["live"] else False,
-            self.rows,
+            results=self.rows,
         )
         self.Hide()
 

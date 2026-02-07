@@ -239,7 +239,7 @@ class HomeScreen(wx.Frame):
             self.load_more_home_button.Hide()
             self.Layout()
 
-    def on_home_feed_play(self, event):
+    def on_home_feed_play(self, event, audio_mode=False):
         selection = self.home_feed_list.GetSelection()
         if selection == wx.NOT_FOUND:
             return
@@ -250,18 +250,29 @@ class HomeScreen(wx.Frame):
             _("جاري التشغيل"),
             utiles.get_playable_stream,
             url,
+            audio_mode,
         ).res
         if stream is None:
             wx.MessageBox(
                 _("لا يمكن تشغيل الرابط"), _("خطأ"), style=wx.ICON_ERROR, parent=self
             )
             return
-        MediaGui(self, stream.title, stream, url)
+        MediaGui(
+            self,
+            stream.title,
+            stream,
+            url,
+            audio_mode=audio_mode,
+            results=self.home_feed_data,
+        )
         self.Hide()
 
     def on_home_feed_hook(self, event):
         if event.KeyCode == wx.WXK_RETURN:
-            self.on_home_feed_play(None)
+            if event.ControlDown():
+                self.on_home_feed_play(None, audio_mode=False)
+            else:
+                self.on_home_feed_play(None, audio_mode=True)
         else:
             event.Skip()
 
@@ -288,19 +299,25 @@ class HomeScreen(wx.Frame):
     ):  # the event function called when the play youtube link is clicked
         linkDlg = LinkDlg(self)
         data = linkDlg.data  # get the link and playing format from the dialog
+        if data["link"] == "":
+            return
         url = data["link"]
+        audio_mode = data["audio"]
         stream = LoadingDialog(
             self,
             _("جاري التشغيل"),
             utiles.get_playable_stream,
             url,
+            audio_mode,
         ).res
         if stream is None:
             wx.MessageBox(
                 _("لا يمكن تشغيل الرابط"), _("خطأ"), style=wx.ICON_ERROR, parent=self
             )
             return
-        MediaGui(self, stream.title, stream, data["link"])  # initiating the media gui
+        MediaGui(
+            self, stream.title, stream, data["link"], audio_mode=audio_mode
+        )  # initiating the media gui
         self.Hide()
 
     def onDownload(

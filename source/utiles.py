@@ -19,7 +19,7 @@ PLAYER_OPTS = {
     "quiet": True,
     "no_warnings": True,
     "noplaylist": True,
-    "extractor_args": {"youtube": {"player_client": ["android"]}},
+    "extractor_args": {"youtube": {"player_client": ["tv"], "js_variant": "tv"}},
     "js_runtimes": {"deno": {}},
 }
 
@@ -243,57 +243,76 @@ def pick_best_format(formats, preferred_index, is_video=True, target_height=None
         else:
             preferred_val = target_list[preferred_index]
 
-        # Progressive only for now as we return a single URL for VLC
+        # Look for any video stream
         available = [
             f
             for f in formats
-            if f.get("vcodec") != "none"
-            and f.get("acodec") != "none"
-            and f.get("height") is not None
+            if f.get("vcodec") != "none" and f.get("height") is not None
         ]
 
         if not available:
-            return None
+            return None, None
 
         # Sort available by height
         available.sort(key=lambda x: x.get("height", 0))
 
+        fmt = None
         if target_height is not None:
             match = [f for f in available if f.get("height") == target_height]
             if match:
-                return match[0]
-            # If target not found, fall back to smart logic using target_height as preferred_val
+                fmt = match[0]
 
-        # Find the index of preferred_val in target_list
-        try:
-            pref_idx = (
-                target_list.index(preferred_val)
-                if target_height is None
-                else next(
-                    i
-                    for i, v in enumerate(target_list)
-                    if v >= preferred_val or i == len(target_list) - 1
+        if not fmt:
+            # Find the index of preferred_val in target_list
+            try:
+                pref_idx = (
+                    target_list.index(preferred_val)
+                    if target_height is None
+                    else next(
+                        i
+                        for i, v in enumerate(target_list)
+                        if v >= preferred_val or i == len(target_list) - 1
+                    )
                 )
-            )
-        except (ValueError, StopIteration):
-            pref_idx = preferred_index
+            except (ValueError, StopIteration):
+                pref_idx = preferred_index
 
-        # Try from preferred downwards
-        for i in range(pref_idx, -1, -1):
-            target = target_list[i]
-            match = [f for f in available if f.get("height") == target]
-            if match:
-                return match[0]
+            # Try from preferred downwards
+            for i in range(pref_idx, -1, -1):
+                target = target_list[i]
+                match = [f for f in available if f.get("height") == target]
+                if match:
+                    fmt = match[0]
+                    break
 
-        # If not found, try from preferred upwards
-        for i in range(pref_idx + 1, len(target_list)):
-            target = target_list[i]
-            match = [f for f in available if f.get("height") == target]
-            if match:
-                return match[0]
+        if not fmt:
+            # If not found, try from preferred upwards
+            for i in range(pref_idx + 1, len(target_list)):
+                target = target_list[i]
+                match = [f for f in available if f.get("height") == target]
+                if match:
+                    fmt = match[0]
+                    break
 
-        # Final fallback: best available progressive
-        return available[-1]
+        # Final fallback: best available
+        if not fmt:
+            fmt = available[-1]
+
+        # If it's a DASH format (no audio), find best audio
+        audio_fmt = None
+        if fmt.get("acodec") == "none":
+            audio_formats = [
+                f
+                for f in formats
+                if f.get("acodec") != "none" and f.get("vcodec") == "none"
+            ]
+            if audio_formats:
+                # Sort by abr
+                audio_formats.sort(key=lambda x: x.get("abr") or 0)
+                # Take best audio
+                audio_fmt = audio_formats[-1]
+
+        return fmt, audio_fmt
     else:
         # Audio
         available = [
@@ -309,7 +328,7 @@ def pick_best_format(formats, preferred_index, is_video=True, target_height=None
         if not available:
             return None
 
-        available.sort(key=lambda x: x.get("abr", 0))
+        available.sort(key=lambda x: x.get("abr") or 0)
 
         # Audio levels are simpler. 0: low, 1: med, 2: high
         # We can map them to abr targets
@@ -317,7 +336,8 @@ def pick_best_format(formats, preferred_index, is_video=True, target_height=None
 
         # Try to find closest abr <= target
         for f in reversed(available):
-            if f.get("abr", 0) <= target_abr:
+            abr = f.get("abr") or 0
+            if abr <= target_abr:
                 return f
 
         # If all are higher, take the lowest available
@@ -325,99 +345,157 @@ def pick_best_format(formats, preferred_index, is_video=True, target_height=None
 
 
 class Stream:
-    def __init__(self, title, url, headers=None):
+    def __init__(self, title, url, headers=None, audio_url=None):
         self.title = title
         self.url = url
         self.headers = headers or {}
+        self.audio_url = audio_url
 
 
-def get_playable_stream(url):
+def get_playable_stream(url, audio_mode=False):
     if not YoutubeDL:
+        if audio_mode:
+            return get_audio_stream(url)
         return get_video_stream(url)  # Fallback if library missing
-    try:
-        # Ensure deno is in the path for yt-dlp
-        if paths.main_path not in os.environ.get("PATH", ""):
-            os.environ["PATH"] = (
-                paths.main_path + os.pathsep + os.environ.get("PATH", "")
-            )
 
-        opts = PLAYER_OPTS.copy()
-        cookies_path = config_get("cookiespath")
-        if cookies_path and os.path.exists(cookies_path):
-            opts["cookiefile"] = cookies_path
+    if audio_mode:
+        clients_to_try = [["android"], ["web"], ["ios"], ["mweb"]]
+    else:
+        clients_to_try = [
+            ["tv"],
+            ["web_embedded"],
+            ["android"],
+            ["web"],
+            ["ios"],
+            ["mweb"],
+        ]
 
-        with YoutubeDL(opts) as ydl:
-            # Check if it's already a direct URL or ID
-            if "youtube.com" not in url and "youtu.be" not in url:
-                # Assume ID
-                url = f"https://www.youtube.com/watch?v={url}"
+    # Ensure deno is in the path for yt-dlp
+    if paths.main_path not in os.environ.get("PATH", ""):
+        os.environ["PATH"] = paths.main_path + os.pathsep + os.environ.get("PATH", "")
 
-            try:
-                entry = ydl.extract_info(url, download=False)
-            except Exception as e:
-                # If it's a format error, try again with absolute defaults
-                if "format" in str(e).lower():
-                    with YoutubeDL(
-                        {
-                            "quiet": True,
-                            "no_warnings": True,
-                            "js_runtimes": {"deno": {}},
-                        }
-                    ) as ydl_retry:
-                        entry = ydl_retry.extract_info(url, download=False)
+    last_exception = None
+    for client in clients_to_try:
+        try:
+            opts = PLAYER_OPTS.copy()
+            # If audio mode, we use different extractor args if needed,
+            # but mainly we just pick the best audio format later.
+            opts["extractor_args"] = {
+                "youtube": {"player_client": client, "js_variant": "tv"}
+            }
+            cookies_path = config_get("cookiespath")
+            if cookies_path and os.path.exists(cookies_path):
+                opts["cookiefile"] = cookies_path
+
+            with YoutubeDL(opts) as ydl:
+                # Check if it's already a direct URL or ID
+                if "youtube.com" not in url and "youtu.be" not in url:
+                    # Assume ID
+                    url = f"https://www.youtube.com/watch?v={url}"
+
+                try:
+                    entry = ydl.extract_info(url, download=False)
+                except Exception as e:
+                    # If it's a format error, try again with absolute defaults
+                    if "format" in str(e).lower():
+                        with YoutubeDL(
+                            {
+                                "quiet": True,
+                                "no_warnings": True,
+                                "js_runtimes": {"deno": {}},
+                            }
+                        ) as ydl_retry:
+                            entry = ydl_retry.extract_info(url, download=False)
+                    else:
+                        raise e
+
+                formats = entry.get("formats", [])
+                if audio_mode:
+                    preferred_audio = int(config_get("defaultaudioquality"))
+                    stream_fmt = pick_best_format(
+                        formats, preferred_audio, is_video=False
+                    )
+                    # For audio mode pick_best_format returns single format dict, not tuple
+                    fmt = stream_fmt
+                    audio_fmt = None
                 else:
-                    raise e
+                    preferred_video = int(config_get("defaultvideoquality"))
+                    fmt, audio_fmt = pick_best_format(
+                        formats, preferred_video, is_video=True
+                    )
 
-            preferred_video = int(config_get("defaultvideoquality"))
-            formats = entry.get("formats", [])
-            fmt = pick_best_format(formats, preferred_video, is_video=True)
+                # Final fallback: best single stream found by yt-dlp
+                if not fmt:
+                    fmt = entry
 
-            # Final fallback: best single stream found by yt-dlp
-            if not fmt:
-                fmt = entry
+                title = entry.get("title")
+                url_to_play = fmt.get("url")
 
-            title = entry.get("title")
-            url_to_play = fmt.get("url")
+                if not url_to_play:
+                    continue
 
-            if not url_to_play:
-                return None
+                # Headers
+                headers = {}
+                headers.update(entry.get("http_headers", {}) or {})
+                headers.update(fmt.get("http_headers", {}) or {})
+                headers.setdefault("User-Agent", "libmpv")
 
-            # Headers
-            headers = {}
-            headers.update(entry.get("http_headers", {}) or {})
-            headers.update(fmt.get("http_headers", {}) or {})
-            headers.setdefault("User-Agent", "libmpv")
+                audio_url = audio_fmt.get("url") if audio_fmt else None
 
-            return Stream(title, url_to_play, headers)
+                return Stream(title, url_to_play, headers, audio_url)
+        except Exception as e:
+            last_exception = e
+            if "restricted" in str(e).lower() or "sign in" in str(e).lower():
+                continue  # Try next client
+            else:
+                break  # Non-restriction error, stop trying
 
-    except Exception as e:
-        print(f"Error in get_playable_stream: {e}")
-        return None
+    print(f"Error in get_playable_stream: {last_exception}")
+    return None
 
 
 def get_media_info(url):
     if not os.path.exists(paths.yt_dlp_path):
         return None
-    try:
-        env = os.environ.copy()
-        env["PATH"] = paths.main_path + os.pathsep + env.get("PATH", "")
-        command = [paths.yt_dlp_path, "-j", url, "--js-runtime", "deno"]
-        cookies_path = config_get("cookiespath")
-        if cookies_path and os.path.exists(cookies_path):
-            command.extend(["--cookies", cookies_path])
-        result = subprocess.run(
-            command,
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            creationflags=subprocess.CREATE_NO_WINDOW,
-            env=env,
-        )
-        if result.returncode != 0:
-            return None
-        return json.loads(result.stdout)
-    except (subprocess.SubprocessError, json.JSONDecodeError):
-        return None
+
+    clients_to_try = ["tv", "web_embedded", "android", "web", "ios", "mweb"]
+    last_err = ""
+
+    for client in clients_to_try:
+        try:
+            env = os.environ.copy()
+            env["PATH"] = paths.main_path + os.pathsep + env.get("PATH", "")
+            command = [
+                paths.yt_dlp_path,
+                "-j",
+                url,
+                "--js-runtime",
+                "deno",
+                "--extractor-args",
+                f"youtube:player_client={client};js_variant=tv",
+            ]
+            cookies_path = config_get("cookiespath")
+            if cookies_path and os.path.exists(cookies_path):
+                command.extend(["--cookies", cookies_path])
+            result = subprocess.run(
+                command,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                creationflags=subprocess.CREATE_NO_WINDOW,
+                env=env,
+            )
+            if result.returncode != 0:
+                last_err = result.stderr
+                continue
+            return json.loads(result.stdout)
+        except (subprocess.SubprocessError, json.JSONDecodeError) as e:
+            last_err = str(e)
+            continue
+
+    if last_err:
+        print(f"get_media_info failed for all clients. Last error: {last_err}")
+    return None
 
 
 def get_audio_stream(url):
@@ -440,10 +518,11 @@ def get_video_stream(url):
     title = info.get("title")
     formats = info.get("formats", [])
     preferred = int(config_get("defaultvideoquality"))
-    stream = pick_best_format(formats, preferred, is_video=True)
+    stream, audio_stream = pick_best_format(formats, preferred, is_video=True)
 
     if stream:
-        return Stream(title, stream["url"])
+        audio_url = audio_stream.get("url") if audio_stream else None
+        return Stream(title, stream["url"], audio_url=audio_url)
     return None
 
 
@@ -452,13 +531,11 @@ def get_available_qualities(url):
     if info is None:
         return []
     formats = info.get("formats", [])
-    # Filter for progressive mp4 streams
+    # Filter for any video streams
     available = [
         f.get("height")
         for f in formats
-        if f.get("vcodec") != "none"
-        and f.get("acodec") != "none"
-        and f.get("height") is not None
+        if f.get("vcodec") != "none" and f.get("height") is not None
     ]
     # Deduplicate and sort
     return sorted(list(set(available)))
@@ -470,9 +547,12 @@ def get_specific_quality_stream(url, height):
         return None
     title = info.get("title")
     formats = info.get("formats", [])
-    stream = pick_best_format(formats, 0, is_video=True, target_height=height)
+    stream, audio_stream = pick_best_format(
+        formats, 0, is_video=True, target_height=height
+    )
     if stream:
-        return Stream(title, stream["url"])
+        audio_url = audio_stream.get("url") if audio_stream else None
+        return Stream(title, stream["url"], audio_url=audio_url)
     return None
 
 
