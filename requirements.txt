@@ -5,4 +5,4 @@ pyperclip==1.11.0
 python-vlc==3.0.21203
 yt-dlp[default]
 py-yt-search==0.5.7
-wxpython==4.2.4
+wxpython==4.2.5
