@@ -115,7 +115,7 @@ class SettingsDialog(wx.Dialog):
             playerOptions,
             -1,
             _("إعادة تشغيل المقطع تلقائيًا عند انتهائه"),
-            name="repeatetracks",
+            name="repeatTracks",
         )
         self.autoPlayNext = wx.CheckBox(
             playerOptions,
@@ -124,7 +124,7 @@ class SettingsDialog(wx.Dialog):
             name="autonext",
         )
         self.autoPlayNext.Value = config_get("autonext")
-        self.repeateTracks.Value = config_get("repeatetracks")
+        self.repeateTracks.Value = config_get("repeatTracks")
         okButton = wx.Button(panel, wx.ID_OK, _("مواف&ق"), name="ok_cancel")
         okButton.SetDefault()
         wx.Button(panel, wx.ID_CANCEL, _("إل&غاء"), name="ok_cancel")

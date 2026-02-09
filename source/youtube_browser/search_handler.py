@@ -3,7 +3,7 @@ from py_yt import (
     VideosSearch,
     PlaylistsSearch,
 )
-from utiles import time_formatting, time_to_seconds
+from utils import time_formatting, time_to_seconds, format_duration
 from language_handler import _
 
 
@@ -60,9 +60,7 @@ class PlaylistResult:
         for vid in self.videos:
             title = [
                 vid["title"],
-                _("المدة: {}").format(
-                    time_formatting(vid["duration"])
-                ),  # Convert duration for display
+                format_duration(vid["duration"]),
                 f"{_('بواسطة')} {vid['channel']['name']}",
             ]
             titles.append(", ".join([element for element in title if element != ""]))
@@ -210,24 +208,4 @@ class Search:
             return _("بث مباشر")
 
     def get_duration(self, data):  # get the duration of the video
-        if data is not None:
-            # Parse MM:SS or HH:MM:SS string to total seconds
-            parts = str(data).split(":")
-            total_seconds = 0
-            try:
-                if len(parts) == 3:  # HH:MM:SS
-                    total_seconds = (
-                        int(parts[0]) * 3600 + int(parts[1]) * 60 + int(parts[2])
-                    )
-                elif len(parts) == 2:  # MM:SS
-                    total_seconds = int(parts[0]) * 60 + int(parts[1])
-                elif len(parts) == 1:  # SS
-                    total_seconds = int(parts[0])
-                else:
-                    return _("غير معروف")  # Invalid format
-            except ValueError:
-                return _("غير معروف")  # Handle cases where parts are not valid integers
-
-            return _("المدة: {}").format(time_formatting(total_seconds))
-        else:
-            return _("مباشر")  # or _("غير معروف") depending on context of None duration
+        return format_duration(data)

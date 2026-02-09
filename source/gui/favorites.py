@@ -2,7 +2,7 @@ import wx
 from language_handler import _
 import application
 from database import Favorite
-from utiles import get_audio_stream, get_video_stream
+from utils import get_audio_stream, get_video_stream
 from download_handler.downloader import downloadAction
 from media_player.media_gui import MediaGui
 from nvda_client.client import speak
@@ -49,7 +49,7 @@ class Favorites(wx.Frame):
             if control.Name == "control":
                 ctrlSizer.Add(control, 1)
         sizer.Add(ctrlSizer)
-        self.togleControls()
+        self.toggleControls()
 
         self.playButton.Bind(wx.EVT_BUTTON, lambda e: self.playVideo())
         self.downloadButton.Bind(wx.EVT_BUTTON, self.onDownload)
@@ -89,7 +89,7 @@ class Favorites(wx.Frame):
         self.favorites.remove_favorite(url)
         self.favList.Delete(n)
         self.rows.pop(n)
-        self.togleControls()
+        self.toggleControls()
         try:
             self.favList.Selection = n
         except Exception:
@@ -120,7 +120,7 @@ class Favorites(wx.Frame):
         MediaGui(self, title, stream, url, audio_mode=True, results=self.rows)
         self.Hide()
 
-    def togleControls(self):
+    def toggleControls(self):
         for control in (self.playButton, self.downloadButton, self.deleteButton):
             if self.rows == []:
                 control.Disable()

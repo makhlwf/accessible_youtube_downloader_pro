@@ -17,7 +17,7 @@ def get_bundled_data_path():
     return main_path
 
 
-settings_path = os.path.join(os.getenv("appdata"), "HexPlayer")
+settings_path = os.path.join(os.getenv("appdata") or os.path.expanduser("~/.HexPlayer"), "HexPlayer")
 update_path = os.path.join(settings_path, "updates")
 db_path = os.path.join(settings_path, "aHexPlayer.db")
 yt_dlp_path = os.path.join(main_path, "yt-dlp.exe")

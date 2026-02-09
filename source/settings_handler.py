@@ -14,7 +14,7 @@ defaults = {
     "autoload": True,
     "seek": 5,
     "conversion": 1,
-    "repeatetracks": False,
+    "repeatTracks": False,
     "autonext": False,
     "defaultformat": 0,
     "volume": 100,
@@ -24,19 +24,42 @@ defaults = {
     "defaultaudioquality": 2,
 }
 
+_cache = {}
+
 
 def config_initialization():
     try:
-        os.mkdir(settings_path)
-    except FileExistsError:
+        os.makedirs(settings_path, exist_ok=True)
+    except Exception:
         pass
-    if not os.path.exists(os.path.join(settings_path, "settings.ini")):
+    settings_file = os.path.join(settings_path, "settings.ini")
+    if not os.path.exists(settings_file):
         config = configparser.ConfigParser()
         config.add_section("settings")
         for key, value in defaults.items():
             config["settings"][key] = str(value)
-        with open(os.path.join(settings_path, "settings.ini"), "w") as file:
+        with open(settings_file, "w", encoding="utf-8") as file:
             config.write(file)
+    _load_cache()
+
+
+def _load_cache():
+    global _cache
+    settings_file = os.path.join(settings_path, "settings.ini")
+    if not os.path.exists(settings_file):
+        _cache = defaults.copy()
+        return
+    config = configparser.ConfigParser()
+    config.read(settings_file, encoding="utf-8")
+    if "settings" not in config:
+        _cache = defaults.copy()
+        return
+    for key in config["settings"]:
+        _cache[key] = string_to_bool(config["settings"][key])
+    # Ensure all defaults are present
+    for key, value in defaults.items():
+        if key not in _cache:
+            _cache[key] = value
 
 
 def string_to_bool(string):
@@ -44,24 +67,33 @@ def string_to_bool(string):
         return True
     elif string == "False":
         return False
-    else:
+    try:
+        if string.isdigit():
+            return int(string)
+        return float(string)
+    except ValueError:
         return string
 
 
-def config_get(string):
-    config = configparser.ConfigParser()
-    config.read(os.path.join(settings_path, "settings.ini"))
-    try:
-        value = config["settings"][string]
-        return string_to_bool(value)
-    except KeyError:
-        config_set(string, defaults[string])
-        return defaults[string]
+def config_get(key):
+    if not _cache:
+        _load_cache()
+    if key in _cache:
+        return _cache[key]
+    # Fallback to defaults if key not found
+    val = defaults.get(key)
+    if val is not None:
+        config_set(key, val)
+    return val
 
 
 def config_set(key, value):
+    _cache[key] = value
     config = configparser.ConfigParser()
-    config.read(os.path.join(settings_path, "settings.ini"))
+    settings_file = os.path.join(settings_path, "settings.ini")
+    config.read(settings_file, encoding="utf-8")
+    if "settings" not in config:
+        config.add_section("settings")
     config["settings"][key] = str(value)
-    with open(os.path.join(settings_path, "settings.ini"), "w") as file:
+    with open(settings_file, "w", encoding="utf-8") as file:
         config.write(file)

@@ -1,6 +1,6 @@
 import wx
 import pyperclip
-from utiles import youtube_regexp
+from utils import youtube_regexp
 from language_handler import _
 
 
