@@ -1,31 +1,52 @@
 import sqlite3 as sql
+import logging
 from paths import db_path
+
+logger = logging.getLogger(__name__)
 
 
 def db_init():
     try:
-        con = sql.connect(db_path)
+        connection = sql.connect(db_path, check_same_thread=False)
+        connection.row_factory = sql.Row
+        return connection
     except Exception as e:
-        print(e)
-        con = None
-    return con
+        logger.error(f"Database initialization failed: {e}")
+        return None
 
 
 def is_valid(function):
-    def rapper(*args, **kwargs):
+    def wrapper(*args, **kwargs):
         if con is not None:
-            return function(*args, **kwargs)
+            try:
+                return function(*args, **kwargs)
+            except sql.Error as e:
+                logger.error(f"Database error in {function.__name__}: {e}")
+        return None
 
-    return rapper
+    return wrapper
 
 
 @is_valid
 def prepare_tables():
-    favorites_query = """create table if not exists favorite (id integer primary key, title text not null, display_title text not null, url text not null, is_live integer not null, channel_name text not null, channel_url not null)"""
+    favorites_query = """
+    CREATE TABLE IF NOT EXISTS favorite (
+        id INTEGER PRIMARY KEY,
+        title TEXT NOT NULL,
+        display_title TEXT NOT NULL,
+        url TEXT NOT NULL,
+        is_live INTEGER NOT NULL,
+        channel_name TEXT NOT NULL,
+        channel_url TEXT NOT NULL
+    )"""
     con.execute(favorites_query)
-    con.commit()
-    continue_quiry = "create table if not exists continue (id integer primary key, url text not null, position real not null)"
-    con.execute(continue_quiry)
+    continue_query = """
+    CREATE TABLE IF NOT EXISTS continue (
+        id INTEGER PRIMARY KEY,
+        url TEXT NOT NULL,
+        position REAL NOT NULL
+    )"""
+    con.execute(continue_query)
     con.commit()
 
 
@@ -37,66 +58,78 @@ def disconnect():
 class Favorite:
     @is_valid
     def add_favorite(self, data):
-        query = f"""insert into favorite (title, display_title, url, is_live, channel_name, channel_url) 
-values ("{data["title"]}", "{data["display_title"]}" ,"{data["url"]}", {data["live"]}, "{data["channel_name"]}", "{data["channel_url"]}")"""
-        con.execute(query)
+        query = """
+        INSERT INTO favorite (title, display_title, url, is_live, channel_name, channel_url)
+        VALUES (?, ?, ?, ?, ?, ?)
+        """
+        con.execute(
+            query,
+            (
+                data["title"],
+                data["display_title"],
+                data["url"],
+                data["live"],
+                data["channel_name"],
+                data["channel_url"],
+            ),
+        )
         con.commit()
 
     @is_valid
     def remove_favorite(self, url):
-        con.execute(f'delete from favorite where url="{url}"')
+        con.execute("DELETE FROM favorite WHERE url = ?", (url,))
         con.commit()
 
     @is_valid
     def get_all(self):
         cursor = con.execute(
-            "select title, display_title, url, is_live, channel_name, channel_url from favorite"
-        ).fetchall()
+            "SELECT title, display_title, url, is_live, channel_name, channel_url FROM favorite"
+        )
+        rows = cursor.fetchall()
         data = []
-        for title, display_title, url, live, channel_name, channel_url in cursor:
-            row = {
-                "title": title,
-                "display_title": display_title,
-                "url": url,
-                "live": live,
-                "channel_name": channel_name,
-                "channel_url": channel_url,
-            }
-            data.append(row)
+        for row in rows:
+            data.append(
+                {
+                    "title": row["title"],
+                    "display_title": row["display_title"],
+                    "url": row["url"],
+                    "live": row["is_live"],
+                    "channel_name": row["channel_name"],
+                    "channel_url": row["channel_url"],
+                }
+            )
         return data
 
 
 class Continue:
     @classmethod
     @is_valid
-    def new_continue(self, url, position):
-        quiry = f"""insert into continue (url, position)
-values ("{url}", {position})"""
-        con.execute(quiry)
+    def new_continue(cls, url, position):
+        query = "INSERT INTO continue (url, position) VALUES (?, ?)"
+        con.execute(query, (url, position))
         con.commit()
 
     @classmethod
     @is_valid
-    def get_all(self):
-        cursor = con.execute("select url, position from continue").fetchall()
+    def get_all(cls):
+        cursor = con.execute("SELECT url, position FROM continue")
+        rows = cursor.fetchall()
         data = {}
-        for url, position in cursor:
-            data[url] = position
+        for row in rows:
+            data[row["url"]] = row["position"]
         return data
 
     @classmethod
     @is_valid
-    def update(self, url, position):
-        quiry = f"""update continue 
-set position={position} where url="{url}"
-"""
-        con.execute(quiry)
+    def update(cls, url, position):
+        query = "UPDATE continue SET position = ? WHERE url = ?"
+        con.execute(query, (position, url))
         con.commit()
 
     @classmethod
     @is_valid
-    def remove_continue(self, url):
-        con.execute(f'delete from continue where url="{url}"')
+    def remove_continue(cls, url):
+        con.execute("DELETE FROM continue WHERE url = ?", (url,))
         con.commit()
 
 

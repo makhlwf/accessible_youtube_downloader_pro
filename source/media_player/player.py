@@ -1,5 +1,5 @@
 import vlc
-from utiles import time_formatting
+from utils import time_formatting
 from threading import Thread
 from settings_handler import config_get
 
@@ -64,9 +64,9 @@ class Player:
     def reset(self):
         self.do_reset = False
         self.media.set_media(self.media.get_media())
-        if config_get("repeatetracks") and not config_get("autonext"):
+        if config_get("repeatTracks") and not config_get("autonext"):
             self.media.play()
-        elif config_get("autonext") and not config_get("repeatetracks"):
+        elif config_get("autonext") and not config_get("repeatTracks"):
             self.window.next()
 
     def set_media(self, m, options=None):

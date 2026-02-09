@@ -7,8 +7,8 @@ from gui.download_progress import DownloadProgress
 from nvda_client.client import speak
 from settings_handler import config_get, config_set
 import application
-import utiles
-from utiles import get_playable_stream
+import utils
+from utils import get_playable_stream
 from download_handler.downloader import downloadAction
 from vlc import State
 from gui.settings_dialog import SettingsDialog
@@ -22,11 +22,12 @@ from media_player.player import Player
 
 
 def has_player(method):
-    def rapper(self, *args):
+    def wrapper(self, *args, **kwargs):
         if self.player is not None:
-            method(self, *args)
+            return method(self, *args, **kwargs)
+        return None
 
-    return rapper
+    return wrapper
 
 
 class MediaGui(wx.Frame):
@@ -162,7 +163,7 @@ class MediaGui(wx.Frame):
         self.history_timer.Start(10000)  # 10 seconds
         try:
             Thread(
-                target=utiles.update_watch_history,
+                target=utils.update_watch_history,
                 args=(
                     self.url,
                     self.player.media.get_time() / 1000
@@ -180,7 +181,7 @@ class MediaGui(wx.Frame):
                 watched_seconds = self.player.media.get_time() / 1000
                 if watched_seconds > 0:
                     Thread(
-                        target=utiles.update_watch_history,
+                        target=utils.update_watch_history,
                         args=(self.url, watched_seconds),
                         daemon=True,
                     ).start()
@@ -188,7 +189,7 @@ class MediaGui(wx.Frame):
             pass
 
     def fetch_qualities(self):
-        qualities = utiles.get_available_qualities(self.url)
+        qualities = utils.get_available_qualities(self.url)
         wx.CallAfter(self.populate_quality_menu, qualities)
 
     def populate_quality_menu(self, qualities):
@@ -211,7 +212,7 @@ class MediaGui(wx.Frame):
         def reload():
             self.player.media.stop()
             time.sleep(0.5)
-            new_stream = utiles.get_specific_quality_stream(self.url, height)
+            new_stream = utils.get_specific_quality_stream(self.url, height)
             if new_stream:
 
                 def update_player():
@@ -308,7 +309,7 @@ class MediaGui(wx.Frame):
                 watched_seconds = self.player.media.get_time() / 1000
                 if watched_seconds > 0:
                     Thread(
-                        target=utiles.update_watch_history,
+                        target=utils.update_watch_history,
                         args=(self.url, watched_seconds),
                         daemon=True,
                     ).start()
@@ -396,12 +397,12 @@ class MediaGui(wx.Frame):
             config_set("seek", self.seek)
 
         elif event.KeyCode == ord("R") and event.controlDown:
-            if config_get("repeatetracks"):
-                config_set("repeatetracks", False)
+            if config_get("repeatTracks"):
+                config_set("repeatTracks", False)
 
                 speak(_("التكرار متوقف"))
             else:
-                config_set("repeatetracks", True)
+                config_set("repeatTracks", True)
 
                 speak(_("التكرار مفعل"))
                 config_set("autonext", False)
@@ -431,10 +432,10 @@ class MediaGui(wx.Frame):
                 config_set("autonext", True)
 
                 speak(_("تشغيل المقطع التالي تلقائيًا مفعل"))
-                config_set("repeatetracks", False)
+                config_set("repeatTracks", False)
 
         elif event.GetKeyCode() in (wx.WXK_RETURN, wx.WXK_NUMPAD_ENTER):
-            self.togleFullScreen()
+            self.toggleFullScreen()
 
         elif event.GetKeyCode() == wx.WXK_ALT:
             if self.IsFullScreen():
@@ -461,7 +462,7 @@ class MediaGui(wx.Frame):
         speak(f"{self.player.volume}%")
         config_set("volume", self.player.volume)
 
-    def togleFullScreen(self):
+    def toggleFullScreen(self):
         self.ShowFullScreen(not self.IsFullScreen())
         if self.IsFullScreen():
             speak(_("وضع ملء الشاشة مفعل"))
@@ -514,7 +515,7 @@ class MediaGui(wx.Frame):
         # Report new track to history
         try:
             Thread(
-                target=utiles.update_watch_history, args=(self.url, 0), daemon=True
+                target=utils.update_watch_history, args=(self.url, 0), daemon=True
             ).start()
         except Exception:
             pass

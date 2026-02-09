@@ -5,7 +5,7 @@ from .playlist_dialog import PlaylistDialog
 from .download_dialog import DownloadDialog
 
 from media_player.media_gui import MediaGui
-from utiles import get_audio_stream
+from utils import get_audio_stream
 
 
 def link_type(url):

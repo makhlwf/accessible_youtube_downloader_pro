@@ -1,7 +1,7 @@
 import wx
 from language_handler import _
 from youtube_browser.search_handler import PlaylistResult
-from utiles import get_audio_stream, get_video_stream
+from utils import get_audio_stream, get_video_stream
 from download_handler.downloader import downloadAction
 from media_player.media_gui import MediaGui
 import pyperclip

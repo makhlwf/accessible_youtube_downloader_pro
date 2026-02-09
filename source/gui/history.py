@@ -10,7 +10,7 @@ from gui.activity_dialog import LoadingDialog
 from media_player.media_gui import MediaGui
 from nvda_client.client import speak
 from settings_handler import config_get
-import utiles
+import utils
 from download_handler.downloader import downloadAction
 from database import Favorite
 
@@ -87,7 +87,7 @@ class HistoryDialog(wx.Frame):
             speak(_("جاري تحميل المزيد من السجل"))
 
         def _load():
-            data = utiles.get_watch_history(self.continuation if load_more else None)
+            data = utils.get_watch_history(self.continuation if load_more else None)
             wx.CallAfter(self._update_history, data, load_more)
 
         Thread(target=_load, daemon=True).start()
@@ -119,7 +119,7 @@ class HistoryDialog(wx.Frame):
             speak(_("تم تحميل المزيد من السجل"))
         else:
             speak(_("تم تحميل السجل"))
-        self.togleFavorite()
+        self.toggleFavorite()
 
     def onLoadMore(self, event):
         self.load_history(True)
@@ -135,7 +135,7 @@ class HistoryDialog(wx.Frame):
         stream = LoadingDialog(
             self,
             _("جاري التشغيل"),
-            utiles.get_playable_stream,
+            utils.get_playable_stream,
             url,
             audio_mode,
         ).res
@@ -155,7 +155,7 @@ class HistoryDialog(wx.Frame):
         self.playVideo(audio_mode=True)
 
     def onListBox(self, event):
-        self.togleFavorite()
+        self.toggleFavorite()
 
     def backAction(self):
         self.Destroy()
@@ -296,7 +296,7 @@ class HistoryDialog(wx.Frame):
             self.favorites.remove_favorite(url)
             speak(_("تم حذف الفيديو من قائمة المفضلة"))
 
-    def togleFavorite(self):
+    def toggleFavorite(self):
         selection = self.historyList.GetSelection()
         if selection == wx.NOT_FOUND or not self.history_data:
             self.favCheck.Disable()

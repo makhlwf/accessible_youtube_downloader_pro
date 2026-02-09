@@ -4,7 +4,7 @@ import os
 from download_handler.downloader import downloadAction
 from settings_handler import config_get, config_set
 from .download_progress import DownloadProgress
-from utiles import youtube_regexp
+from utils import youtube_regexp
 from language_handler import _
 
 
@@ -51,7 +51,7 @@ class DownloadDialog(wx.Frame):
         self.Bind(wx.EVT_CHAR_HOOK, self.onHook)
 
     # a method to show/hide the audio formats box depending on the downloading type
-    def togleChoices(self):
+    def toggleChoices(self):
         for control in self.panel.GetChildren():
             if self.downloadingFormat.Selection == 0:
                 if control.Name == "convert":
@@ -62,7 +62,7 @@ class DownloadDialog(wx.Frame):
 
     # an event method which is called when the radio box selection is changed
     def onRadioBox(self, event):
-        self.togleChoices()
+        self.toggleChoices()
 
     # an event method to call the detect clipboard function when activating the window
     def onActivate(self, event):

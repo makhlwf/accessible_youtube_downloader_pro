@@ -7,8 +7,11 @@ from gui.update_dialog import UpdateDialog
 import subprocess
 import json
 import os
+import logging
 from settings_handler import config_get
 from language_handler import _
+
+logger = logging.getLogger(__name__)
 
 try:
     from yt_dlp import YoutubeDL
@@ -43,8 +46,8 @@ def get_latest_github_release(repo):
         r = requests.get(url, timeout=10)
         if r.status_code == 200:
             return r.json().get("tag_name")
-    except Exception:
-        pass
+    except Exception as e:
+        logger.error(f"Failed to get latest release for {repo}: {e}")
     return None
 
 
@@ -120,10 +123,6 @@ def get_deno_version():
             creationflags=subprocess.CREATE_NO_WINDOW,
         )
         if result.returncode == 0:
-            # Deno version output usually looks like:
-            # deno 1.40.2 (release, x86_64-pc-windows-msvc)
-            # v8 12.1.285.27
-            # typescript 5.3.3
             line = result.stdout.splitlines()[0]
             version = line.split(" ")[1]
             if not version.startswith("v"):
@@ -243,7 +242,6 @@ def pick_best_format(formats, preferred_index, is_video=True, target_height=None
         else:
             preferred_val = target_list[preferred_index]
 
-        # Look for any video stream
         available = [
             f
             for f in formats
@@ -253,7 +251,6 @@ def pick_best_format(formats, preferred_index, is_video=True, target_height=None
         if not available:
             return None, None
 
-        # Sort available by height
         available.sort(key=lambda x: x.get("height", 0))
 
         fmt = None
@@ -263,7 +260,6 @@ def pick_best_format(formats, preferred_index, is_video=True, target_height=None
                 fmt = match[0]
 
         if not fmt:
-            # Find the index of preferred_val in target_list
             try:
                 pref_idx = (
                     target_list.index(preferred_val)
@@ -277,7 +273,6 @@ def pick_best_format(formats, preferred_index, is_video=True, target_height=None
             except (ValueError, StopIteration):
                 pref_idx = preferred_index
 
-            # Try from preferred downwards
             for i in range(pref_idx, -1, -1):
                 target = target_list[i]
                 match = [f for f in available if f.get("height") == target]
@@ -286,7 +281,6 @@ def pick_best_format(formats, preferred_index, is_video=True, target_height=None
                     break
 
         if not fmt:
-            # If not found, try from preferred upwards
             for i in range(pref_idx + 1, len(target_list)):
                 target = target_list[i]
                 match = [f for f in available if f.get("height") == target]
@@ -294,11 +288,9 @@ def pick_best_format(formats, preferred_index, is_video=True, target_height=None
                     fmt = match[0]
                     break
 
-        # Final fallback: best available
         if not fmt:
             fmt = available[-1]
 
-        # If it's a DASH format (no audio), find best audio
         audio_fmt = None
         if fmt.get("acodec") == "none":
             audio_formats = [
@@ -307,14 +299,11 @@ def pick_best_format(formats, preferred_index, is_video=True, target_height=None
                 if f.get("acodec") != "none" and f.get("vcodec") == "none"
             ]
             if audio_formats:
-                # Sort by abr
                 audio_formats.sort(key=lambda x: x.get("abr") or 0)
-                # Take best audio
                 audio_fmt = audio_formats[-1]
 
         return fmt, audio_fmt
     else:
-        # Audio
         available = [
             f
             for f in formats
@@ -323,24 +312,18 @@ def pick_best_format(formats, preferred_index, is_video=True, target_height=None
             and f.get("abr") is not None
         ]
         if not available:
-            # Fallback to any audio
             available = [f for f in formats if f.get("acodec") != "none"]
         if not available:
             return None
 
         available.sort(key=lambda x: x.get("abr") or 0)
-
-        # Audio levels are simpler. 0: low, 1: med, 2: high
-        # We can map them to abr targets
         target_abr = AUDIO_QUALITIES[preferred_index]
 
-        # Try to find closest abr <= target
         for f in reversed(available):
             abr = f.get("abr") or 0
             if abr <= target_abr:
                 return f
 
-        # If all are higher, take the lowest available
         return available[0]
 
 
@@ -354,9 +337,10 @@ class Stream:
 
 def get_playable_stream(url, audio_mode=False):
     if not YoutubeDL:
+        logger.error("yt-dlp is not installed")
         if audio_mode:
             return get_audio_stream(url)
-        return get_video_stream(url)  # Fallback if library missing
+        return get_video_stream(url)
 
     if audio_mode:
         clients_to_try = [["android"], ["web"], ["ios"], ["mweb"]]
@@ -370,7 +354,6 @@ def get_playable_stream(url, audio_mode=False):
             ["mweb"],
         ]
 
-    # Ensure deno is in the path for yt-dlp
     if paths.main_path not in os.environ.get("PATH", ""):
         os.environ["PATH"] = paths.main_path + os.pathsep + os.environ.get("PATH", "")
 
@@ -378,8 +361,6 @@ def get_playable_stream(url, audio_mode=False):
     for client in clients_to_try:
         try:
             opts = PLAYER_OPTS.copy()
-            # If audio mode, we use different extractor args if needed,
-            # but mainly we just pick the best audio format later.
             opts["extractor_args"] = {
                 "youtube": {"player_client": client, "js_variant": "tv"}
             }
@@ -388,15 +369,12 @@ def get_playable_stream(url, audio_mode=False):
                 opts["cookiefile"] = cookies_path
 
             with YoutubeDL(opts) as ydl:
-                # Check if it's already a direct URL or ID
                 if "youtube.com" not in url and "youtu.be" not in url:
-                    # Assume ID
                     url = f"https://www.youtube.com/watch?v={url}"
 
                 try:
                     entry = ydl.extract_info(url, download=False)
                 except Exception as e:
-                    # If it's a format error, try again with absolute defaults
                     if "format" in str(e).lower():
                         with YoutubeDL(
                             {
@@ -412,11 +390,7 @@ def get_playable_stream(url, audio_mode=False):
                 formats = entry.get("formats", [])
                 if audio_mode:
                     preferred_audio = int(config_get("defaultaudioquality"))
-                    stream_fmt = pick_best_format(
-                        formats, preferred_audio, is_video=False
-                    )
-                    # For audio mode pick_best_format returns single format dict, not tuple
-                    fmt = stream_fmt
+                    fmt = pick_best_format(formats, preferred_audio, is_video=False)
                     audio_fmt = None
                 else:
                     preferred_video = int(config_get("defaultvideoquality"))
@@ -424,7 +398,6 @@ def get_playable_stream(url, audio_mode=False):
                         formats, preferred_video, is_video=True
                     )
 
-                # Final fallback: best single stream found by yt-dlp
                 if not fmt:
                     fmt = entry
 
@@ -434,23 +407,22 @@ def get_playable_stream(url, audio_mode=False):
                 if not url_to_play:
                     continue
 
-                # Headers
                 headers = {}
                 headers.update(entry.get("http_headers", {}) or {})
                 headers.update(fmt.get("http_headers", {}) or {})
                 headers.setdefault("User-Agent", "libmpv")
 
                 audio_url = audio_fmt.get("url") if audio_fmt else None
-
                 return Stream(title, url_to_play, headers, audio_url)
         except Exception as e:
             last_exception = e
+            logger.warning(f"Failed to get stream with client {client}: {e}")
             if "restricted" in str(e).lower() or "sign in" in str(e).lower():
-                continue  # Try next client
+                continue
             else:
-                break  # Non-restriction error, stop trying
+                break
 
-    print(f"Error in get_playable_stream: {last_exception}")
+    logger.error(f"Error in get_playable_stream: {last_exception}")
     return None
 
 
@@ -489,12 +461,12 @@ def get_media_info(url):
                 last_err = result.stderr
                 continue
             return json.loads(result.stdout)
-        except (subprocess.SubprocessError, json.JSONDecodeError) as e:
+        except (subprocess.SubprocessError, json.JSONDecodeError, Exception) as e:
             last_err = str(e)
             continue
 
     if last_err:
-        print(f"get_media_info failed for all clients. Last error: {last_err}")
+        logger.error(f"get_media_info failed for all clients. Last error: {last_err}")
     return None
 
 
@@ -531,13 +503,11 @@ def get_available_qualities(url):
     if info is None:
         return []
     formats = info.get("formats", [])
-    # Filter for any video streams
     available = [
         f.get("height")
         for f in formats
         if f.get("vcodec") != "none" and f.get("height") is not None
     ]
-    # Deduplicate and sort
     return sorted(list(set(available)))
 
 
@@ -591,11 +561,11 @@ def get_home_feed(continuation=None):
             env=env,
         )
         if result.returncode != 0:
-            print(f"Deno error: {result.stderr}")
+            logger.error(f"Deno error: {result.stderr}")
             return {"videos": [], "continuation": None}
         return json.loads(result.stdout)
-    except (subprocess.SubprocessError, json.JSONDecodeError) as e:
-        print(f"Error getting home feed: {e}")
+    except (subprocess.SubprocessError, json.JSONDecodeError, Exception) as e:
+        logger.error(f"Error getting home feed: {e}")
         return {"videos": [], "continuation": None}
 
 
@@ -634,11 +604,11 @@ def get_watch_history(continuation=None):
             env=env,
         )
         if result.returncode != 0:
-            print(f"Deno error: {result.stderr}")
+            logger.error(f"Deno error: {result.stderr}")
             return {"videos": [], "continuation": None}
         return json.loads(result.stdout)
-    except (subprocess.SubprocessError, json.JSONDecodeError) as e:
-        print(f"Error getting watch history: {e}")
+    except (subprocess.SubprocessError, json.JSONDecodeError, Exception) as e:
+        logger.error(f"Error getting watch history: {e}")
         return {"videos": [], "continuation": None}
 
 
@@ -647,7 +617,6 @@ def update_watch_history(url, watched_seconds=0):
     if not cookies_path or not os.path.exists(cookies_path):
         return
 
-    # Extract video ID from URL
     match = youtube_regexp(url)
     if not match:
         return
@@ -683,7 +652,7 @@ def update_watch_history(url, watched_seconds=0):
             capture_output=True,
         )
     except Exception as e:
-        print(f"Error updating watch history: {e}")
+        logger.error(f"Error updating watch history: {e}")
 
 
 def time_formatting(total_seconds):
@@ -718,9 +687,7 @@ def time_formatting(total_seconds):
         else:
             parts.append(_("{} دقيقة").format(minutes))
 
-    if (
-        seconds > 0 or (not parts and total_seconds == 0)
-    ):  # Include seconds if no other parts, or if it's the only part and total_seconds is 0
+    if seconds > 0 or (not parts and total_seconds == 0):
         if seconds == 1:
             parts.append(_("ثانية واحدة"))
         elif seconds == 2:
@@ -736,6 +703,18 @@ def time_formatting(total_seconds):
     return _(" و").join(parts)
 
 
+def format_duration(duration):
+    if duration is None:
+        return _("مباشر")
+    if isinstance(duration, str):
+        seconds = time_to_seconds(duration)
+    else:
+        seconds = duration
+    if seconds is None:
+        return _("غير معروف")
+    return _("المدة: {}").format(time_formatting(seconds))
+
+
 def time_to_seconds(time_str):
     if not isinstance(time_str, str):
         return None
@@ -749,36 +728,36 @@ def time_to_seconds(time_str):
         elif len(parts) == 1:  # SS
             total_seconds = int(parts[0])
         else:
-            return None  # Invalid format
+            return None
     except ValueError:
-        return None  # Handle cases where parts are not valid integers
+        return None
     return total_seconds
 
 
 def youtube_regexp(string):
     pattern = re.compile(
         r"^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?$"
-    )  # youtube links regular expression pattern
+    )
     return pattern.search(string)
 
 
 def check_for_updates(quiet=False):
     url = "https://raw.githubusercontent.com/makhlwf/accessible_youtube_downloader_pro/refs/heads/master/update_info.json"
     try:
-        r = requests.get(url)
+        r = requests.get(url, timeout=10)
         if r.status_code != 200:
-            wx.MessageBox(
-                _(
-                    "حدث خطأ ما أثناء الاتصال بخدمة العثور على التحديثات. تأكد من وجود اتصال مستقر بالإنترنت ثم عاود المحاولة"
-                ),
-                _("خطأ"),
-                parent=wx.GetApp().GetTopWindow(),
-                style=wx.ICON_ERROR,
-            ) if not quiet else None
+            if not quiet:
+                wx.MessageBox(
+                    _(
+                        "حدث خطأ ما أثناء الاتصال بخدمة العثور على التحديثات. تأكد من وجود اتصال مستقر بالإنترنت ثم عاود المحاولة"
+                    ),
+                    _("خطأ"),
+                    parent=wx.GetApp().GetTopWindow(),
+                    style=wx.ICON_ERROR,
+                )
             return
         info = r.json()
         if application.version != info["version"]:
-            print(info)
             message = wx.MessageBox(
                 _("هناك تحديث جديد متوفر. هل ترغب في تنزيله الآن؟"),
                 _("تحديث جديد"),
@@ -791,17 +770,20 @@ def check_for_updates(quiet=False):
 
                 wx.CallAfter(UpdateDialog, wx.GetApp().GetTopWindow(), url)
             return
-        wx.MessageBox(
-            _("أنت تعمل الآن على آخر تحديث متوفر من التطبيق"),
-            _("لا يوجد تحديث"),
-            parent=wx.GetApp().GetTopWindow(),
-        ) if not quiet else None
-    except requests.ConnectionError:
-        wx.MessageBox(
-            _(
-                "حدث خطأ ما أثناء الاتصال بخدمة العثور على التحديثات. تأكد من وجود اتصال مستقر بالإنترنت ثم عاود المحاولة"
-            ),
-            _("خطأ"),
-            parent=wx.GetApp().GetTopWindow(),
-            style=wx.ICON_ERROR,
-        ) if not quiet else None
+        if not quiet:
+            wx.MessageBox(
+                _("أنت تعمل الآن على آخر تحديث متوفر من التطبيق"),
+                _("لا يوجد تحديث"),
+                parent=wx.GetApp().GetTopWindow(),
+            )
+    except Exception as e:
+        logger.error(f"Update check failed: {e}")
+        if not quiet:
+            wx.MessageBox(
+                _(
+                    "حدث خطأ ما أثناء الاتصال بخدمة العثور على التحديثات. تأكد من وجود اتصال مستقر بالإنترنت ثم عاود المحاولة"
+                ),
+                _("خطأ"),
+                parent=wx.GetApp().GetTopWindow(),
+                style=wx.ICON_ERROR,
+            )
