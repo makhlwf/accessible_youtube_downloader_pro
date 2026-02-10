@@ -302,7 +302,7 @@ def pick_best_format(formats, preferred_index, is_video=True, target_height=None
                 audio_formats.sort(key=lambda x: x.get("abr") or 0)
                 audio_fmt = audio_formats[-1]
 
-        return fmt, audio_fmt
+        return fmt, audio_fmt, fmt.get("height")
     else:
         available = [
             f
@@ -314,25 +314,28 @@ def pick_best_format(formats, preferred_index, is_video=True, target_height=None
         if not available:
             available = [f for f in formats if f.get("acodec") != "none"]
         if not available:
-            return None
+            return None, None, None
 
         available.sort(key=lambda x: x.get("abr") or 0)
         target_abr = AUDIO_QUALITIES[preferred_index]
 
+        fmt = available[0]
         for f in reversed(available):
             abr = f.get("abr") or 0
             if abr <= target_abr:
-                return f
+                fmt = f
+                break
 
-        return available[0]
+        return fmt, None, fmt.get("abr")
 
 
 class Stream:
-    def __init__(self, title, url, headers=None, audio_url=None):
+    def __init__(self, title, url, headers=None, audio_url=None, quality=None):
         self.title = title
         self.url = url
         self.headers = headers or {}
         self.audio_url = audio_url
+        self.quality = quality
 
 
 def get_playable_stream(url, audio_mode=False):
@@ -390,11 +393,12 @@ def get_playable_stream(url, audio_mode=False):
                 formats = entry.get("formats", [])
                 if audio_mode:
                     preferred_audio = int(config_get("defaultaudioquality"))
-                    fmt = pick_best_format(formats, preferred_audio, is_video=False)
-                    audio_fmt = None
+                    fmt, audio_fmt, quality = pick_best_format(
+                        formats, preferred_audio, is_video=False
+                    )
                 else:
                     preferred_video = int(config_get("defaultvideoquality"))
-                    fmt, audio_fmt = pick_best_format(
+                    fmt, audio_fmt, quality = pick_best_format(
                         formats, preferred_video, is_video=True
                     )
 
@@ -413,7 +417,7 @@ def get_playable_stream(url, audio_mode=False):
                 headers.setdefault("User-Agent", "libmpv")
 
                 audio_url = audio_fmt.get("url") if audio_fmt else None
-                return Stream(title, url_to_play, headers, audio_url)
+                return Stream(title, url_to_play, headers, audio_url, quality=quality)
         except Exception as e:
             last_exception = e
             logger.warning(f"Failed to get stream with client {client}: {e}")
@@ -477,9 +481,11 @@ def get_audio_stream(url):
     title = info.get("title")
     formats = info.get("formats", [])
     preferred = int(config_get("defaultaudioquality"))
-    stream = pick_best_format(formats, preferred, is_video=False)
+    stream, audio_stream, quality = pick_best_format(
+        formats, preferred, is_video=False
+    )
     if stream:
-        return Stream(title, stream["url"])
+        return Stream(title, stream["url"], quality=quality)
     return None
 
 
@@ -490,39 +496,58 @@ def get_video_stream(url):
     title = info.get("title")
     formats = info.get("formats", [])
     preferred = int(config_get("defaultvideoquality"))
-    stream, audio_stream = pick_best_format(formats, preferred, is_video=True)
+    stream, audio_stream, quality = pick_best_format(formats, preferred, is_video=True)
 
     if stream:
         audio_url = audio_stream.get("url") if audio_stream else None
-        return Stream(title, stream["url"], audio_url=audio_url)
+        return Stream(title, stream["url"], audio_url=audio_url, quality=quality)
     return None
 
 
-def get_available_qualities(url):
+def get_available_qualities(url, audio_mode=False):
     info = get_media_info(url)
     if info is None:
         return []
     formats = info.get("formats", [])
-    available = [
-        f.get("height")
-        for f in formats
-        if f.get("vcodec") != "none" and f.get("height") is not None
-    ]
+    if not audio_mode:
+        available = [
+            f.get("height")
+            for f in formats
+            if f.get("vcodec") != "none" and f.get("height") is not None
+        ]
+    else:
+        available = [
+            f.get("abr")
+            for f in formats
+            if f.get("acodec") != "none" and f.get("vcodec") == "none" and f.get("abr") is not None
+        ]
     return sorted(list(set(available)))
 
 
-def get_specific_quality_stream(url, height):
+def get_specific_quality_stream(url, height, audio_mode=False):
     info = get_media_info(url)
     if info is None:
         return None
     title = info.get("title")
     formats = info.get("formats", [])
-    stream, audio_stream = pick_best_format(
-        formats, 0, is_video=True, target_height=height
+    stream, audio_stream, quality = pick_best_format(
+        formats, 0, is_video=not audio_mode, target_height=height if not audio_mode else None
     )
+    if audio_mode:
+        # For audio, target_height is not really height but we might want to handle it
+        # Actually pick_best_format for audio doesn't support target_height yet
+        # But we can pass preferred_index
+        # Let's just find the closest abr if audio_mode
+        if isinstance(height, int):
+            for f in formats:
+                if f.get("acodec") != "none" and f.get("vcodec") == "none" and f.get("abr") == height:
+                    stream = f
+                    quality = f.get("abr")
+                    break
+
     if stream:
         audio_url = audio_stream.get("url") if audio_stream else None
-        return Stream(title, stream["url"], audio_url=audio_url)
+        return Stream(title, stream["url"], audio_url=audio_url, quality=quality)
     return None
 
 

@@ -143,19 +143,19 @@ class YoutubeBrowser(wx.Frame):
     def _bind_events(self):
         self.Bind(wx.EVT_MENU, self.onSettings, id=self.settingsItemId)
         self.loadMoreButton.Bind(wx.EVT_BUTTON, self.onLoadMore)
-        self.playButton.Bind(wx.EVT_BUTTON, lambda e: self.playVideo())
+        self.playButton.Bind(wx.EVT_BUTTON, lambda e: self.playAudio())
         self.downloadButton.Bind(wx.EVT_BUTTON, self.onDownload)
         self.favCheck.Bind(wx.EVT_CHECKBOX, self.onFavorite)
         self.searchButton.Bind(wx.EVT_BUTTON, self.onSearch)
         self.Bind(wx.EVT_BUTTON, self.backAction)  # Assuming backButton is focused correctly
 
-        self.searchResults.Bind(wx.EVT_LISTBOX_DCLICK, lambda e: self.playVideo())
+        self.searchResults.Bind(wx.EVT_LISTBOX_DCLICK, lambda e: self.playAudio())
         self.searchResults.Bind(wx.EVT_LISTBOX, self.onListBox)
         self.searchResults.Bind(wx.EVT_CONTEXT_MENU, self.onContextMenu)
 
-        self.Bind(wx.EVT_MENU, lambda e: self.playVideo(), id=1001)
+        self.Bind(wx.EVT_MENU, lambda e: self.playAudio(), id=1001)
+        self.Bind(wx.EVT_MENU, lambda e: self.playVideo(), id=1002)
         self.Bind(wx.EVT_MENU, lambda e: self.playVideo(), id=self.videoPlayItemId)
-        self.Bind(wx.EVT_MENU, lambda e: self.playAudio(), id=1002)
         self.Bind(wx.EVT_MENU, lambda e: self.playAudio(), id=self.audioPlayItemId)
 
         self.Bind(wx.EVT_MENU, self.onVideoDownload, id=self.videoDownloadId)
