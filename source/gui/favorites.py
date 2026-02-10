@@ -51,7 +51,7 @@ class Favorites(wx.Frame):
         sizer.Add(ctrlSizer)
         self.toggleControls()
 
-        self.playButton.Bind(wx.EVT_BUTTON, lambda e: self.playVideo())
+        self.playButton.Bind(wx.EVT_BUTTON, lambda e: self.playAudio())
         self.downloadButton.Bind(wx.EVT_BUTTON, self.onDownload)
         self.deleteButton.Bind(wx.EVT_BUTTON, self.onDelete)
         backButton.Bind(wx.EVT_BUTTON, self.onBack)

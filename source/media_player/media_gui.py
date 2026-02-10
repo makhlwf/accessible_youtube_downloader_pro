@@ -47,6 +47,7 @@ class MediaGui(wx.Frame):
         self.seek = int(config_get("seek"))
         self.results = results
         self.audio_mode = audio_mode
+        self.current_quality = getattr(stream, "quality", None)
         self.path = config_get("path")
         self.Centre()
         self.SetSize(wx.DisplaySize())
@@ -87,7 +88,6 @@ class MediaGui(wx.Frame):
         self.qualitySubMenu = trackOptions.AppendSubMenu(
             self.qualityMenu, _("جودة التشغيل")
         )
-        self.qualitySubMenu.Enable(not audio_mode)
 
         descriptionItem = trackOptions.Append(-1, _("وصف الفيديو\tctrl+shift+d"))
         copyItem = trackOptions.Append(-1, _("نسخ رابط المقطع\tctrl+l"))
@@ -189,7 +189,7 @@ class MediaGui(wx.Frame):
             pass
 
     def fetch_qualities(self):
-        qualities = utils.get_available_qualities(self.url)
+        qualities = utils.get_available_qualities(self.url, audio_mode=self.audio_mode)
         wx.CallAfter(self.populate_quality_menu, qualities)
 
     def populate_quality_menu(self, qualities):
@@ -202,18 +202,25 @@ class MediaGui(wx.Frame):
             return
 
         for q in qualities:
-            item = self.qualityMenu.AppendCheckItem(-1, f"{q}p")
+            label = f"{q}kbps" if self.audio_mode else f"{q}p"
+            item = self.qualityMenu.AppendCheckItem(-1, label)
+            if q == self.current_quality:
+                item.Check(True)
             self.Bind(wx.EVT_MENU, lambda event, h=q: self.on_change_quality(h), item)
 
     def on_change_quality(self, height):
-        speak(_("جاري تغيير الجودة إلى {}").format(f"{height}p"))
+        label = f"{height}kbps" if self.audio_mode else f"{height}p"
+        speak(_("جاري تغيير الجودة إلى {}").format(label))
         position = self.player.media.get_position()
 
         def reload():
             self.player.media.stop()
             time.sleep(0.5)
-            new_stream = utils.get_specific_quality_stream(self.url, height)
+            new_stream = utils.get_specific_quality_stream(
+                self.url, height, audio_mode=self.audio_mode
+            )
             if new_stream:
+                self.current_quality = height
 
                 def update_player():
                     options = []

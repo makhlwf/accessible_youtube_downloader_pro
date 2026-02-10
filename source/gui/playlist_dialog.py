@@ -48,7 +48,7 @@ class PlaylistDialog(wx.Dialog):
                 ctrlSizer.Add(control, 1)
         sizer.Add(ctrlSizer)
         p.SetSizer(sizer)
-        self.playButton.Bind(wx.EVT_BUTTON, lambda e: self.playVideo())
+        self.playButton.Bind(wx.EVT_BUTTON, lambda e: self.playAudio())
         self.downloadButton.Bind(wx.EVT_BUTTON, self.onDownload)
         self.videosBox.Bind(wx.EVT_LISTBOX, self.onListBox)
         backButton.Bind(wx.EVT_BUTTON, lambda e: self.back())

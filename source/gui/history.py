@@ -63,13 +63,13 @@ class HistoryDialog(wx.Frame):
         self.historyList.SetAcceleratorTable(results_shortcuts)
 
         self.loadMoreButton.Bind(wx.EVT_BUTTON, self.onLoadMore)
-        self.playButton.Bind(wx.EVT_BUTTON, lambda event: self.playVideo())
+        self.playButton.Bind(wx.EVT_BUTTON, lambda event: self.playAudio())
         self.downloadButton.Bind(wx.EVT_BUTTON, self.onDownload)
         self.favCheck.Bind(wx.EVT_CHECKBOX, self.onFavorite)
         backButton.Bind(wx.EVT_BUTTON, lambda event: self.backAction())
 
         self.Bind(
-            wx.EVT_LISTBOX_DCLICK, lambda event: self.playVideo(), self.historyList
+            wx.EVT_LISTBOX_DCLICK, lambda event: self.playAudio(), self.historyList
         )
         self.historyList.Bind(wx.EVT_LISTBOX, self.onListBox)
         self.Bind(wx.EVT_CLOSE, self.onClose)

@@ -195,7 +195,7 @@ class HomeScreen(wx.Frame):
 
         # List box
         self.home_feed_list.Bind(wx.EVT_LISTBOX, self.on_home_feed_list_box)
-        self.home_feed_list.Bind(wx.EVT_LISTBOX_DCLICK, self.on_home_feed_play)
+        self.home_feed_list.Bind(wx.EVT_LISTBOX_DCLICK, lambda e: self.on_home_feed_play(None, audio_mode=True))
         self.home_feed_list.Bind(wx.EVT_CHAR_HOOK, self.on_home_feed_hook)
 
         # Frame events
