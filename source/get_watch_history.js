@@ -53,55 +53,98 @@ function parseCookies(filePath) {
     const processedVideos = [];
     let nextToken = null;
 
-    const extract = (obj) => {
-        if (!obj || typeof obj !== 'object') return;
-        
-        // Video renderers
-        if (obj.videoRenderer || obj.compactVideoRenderer || obj.gridVideoRenderer) {
-            const v = obj.videoRenderer || obj.compactVideoRenderer || obj.gridVideoRenderer;
-            
-            // Filter Shorts
-            const isShort = 
-              v.navigationEndpoint?.reelWatchEndpoint || 
-              v.navigationEndpoint?.commandMetadata?.webCommandMetadata?.url?.includes('/shorts/') ||
-              v.thumbnailOverlays?.some(o => o.thumbnailOverlayTimeStatusRenderer?.style === 'SHORTS');
+    let feed;
+    if (continuationToken) {
+        feed = await yt.browse(continuationToken);
+    } else {
+        feed = await yt.getHistory();
+    }
 
-            if (!isShort) {
-                const id = v.videoId;
-                const title = v.title?.runs?.[0]?.text || v.title?.simpleText || v.headline?.simpleText;
-                const author = v.shortBylineText?.runs?.[0]?.text || v.longBylineText?.runs?.[0]?.text || v.author?.name || 'Unknown';
+    if (feed) {
+        let items = [];
+        if (feed.videos) {
+            items = feed.videos;
+        } else if (feed.contents && feed.contents.contents) {
+             feed.contents.contents.forEach(item => {
+                  if (item.type === 'Video' || item.type === 'CompactVideo' || item.type === 'GridVideo' || item.type === 'HistoryVideo') {
+                      items.push(item);
+                  } else if (item.type === 'RichItem' && item.content) {
+                      items.push(item.content);
+                  }
+             });
+        }
+
+        items.forEach(v => {
+            try {
+                if (!v) return;
+                const type = v.type || v.constructor?.name || '';
+                const isShort = type === 'ShortsLockupView' ||
+                                type === 'ReelItem' ||
+                                type.includes('Short') ||
+                                (v.overlay_metadata && JSON.stringify(v.overlay_metadata).includes('Shorts')) ||
+                                (v.accessibility_text && v.accessibility_text.includes('Shorts'));
+
+                if (isShort) return;
+
+                const id = v.videoId || v.id;
+                const title = v.title?.toString() || v.headline?.toString();
+                const author = v.author?.name || v.shortBylineText?.runs?.[0]?.text || v.longBylineText?.runs?.[0]?.text || 'Unknown';
                 
                 if (id && title) {
                     processedVideos.push({
-                        title: title.toString(),
+                        title: title,
                         url: `https://www.youtube.com/watch?v=${id}`,
-                        author: author.toString(),
-                        is_live: v.badges?.some(b => b.metadataBadgeRenderer?.style === 'BADGE_STYLE_TYPE_LIVE_NOW') || v.thumbnailOverlays?.some(o => o.thumbnailOverlayTimeStatusRenderer?.style === 'LIVE')
+                        author: author,
+                        is_live: v.is_live || false
                     });
                 }
+            } catch (err) {
+                // skip
             }
-        } 
-        
-        // Continuation tokens
-        if (obj.continuationItemRenderer) {
-            const token = obj.continuationItemRenderer.continuationEndpoint?.continuationCommand?.token;
-            if (token) nextToken = token;
-        }
+        });
 
-        // Recursive search
-        for (const k in obj) {
-            if (k !== 'trackingParams' && processedVideos.length < 30) {
-                extract(obj[k]);
+        nextToken = feed.continuation || null;
+    }
+
+    // Fallback to manual extraction from raw data if still empty
+    if (processedVideos.length === 0 && feed && feed.page) {
+        const extract = (obj) => {
+            if (!obj || typeof obj !== 'object') return;
+
+            const v = obj.videoRenderer || obj.compactVideoRenderer || obj.gridVideoRenderer || obj.historyVideoRenderer;
+            if (v) {
+                const isShort =
+                  v.navigationEndpoint?.reelWatchEndpoint ||
+                  v.navigationEndpoint?.commandMetadata?.webCommandMetadata?.url?.includes('/shorts/') ||
+                  v.thumbnailOverlays?.some(o => o.thumbnailOverlayTimeStatusRenderer?.style === 'SHORTS');
+
+                if (!isShort) {
+                    const id = v.videoId;
+                    const title = v.title?.runs?.[0]?.text || v.title?.simpleText || v.headline?.simpleText;
+                    const author = v.shortBylineText?.runs?.[0]?.text || v.longBylineText?.runs?.[0]?.text || v.author?.name || 'Unknown';
+
+                    if (id && title) {
+                        processedVideos.push({
+                            title: title.toString(),
+                            url: `https://www.youtube.com/watch?v=${id}`,
+                            author: author.toString(),
+                            is_live: !!(v.badges?.some(b => b.metadataBadgeRenderer?.style === 'BADGE_STYLE_TYPE_LIVE_NOW') || v.thumbnailOverlays?.some(o => o.thumbnailOverlayTimeStatusRenderer?.style === 'LIVE'))
+                        });
+                    }
+                }
             }
-        }
-    };
 
-    if (continuationToken) {
-        const response = await yt.actions.execute('/browse', { continuation: continuationToken });
-        extract(response.data);
-    } else {
-        const response = await yt.actions.execute('/browse', { browseId: 'FEhistory' });
-        extract(response.data);
+            if (obj.continuationItemRenderer && !nextToken) {
+                nextToken = obj.continuationItemRenderer.continuationEndpoint?.continuationCommand?.token;
+            }
+
+            for (const k in obj) {
+                if (k !== 'trackingParams' && processedVideos.length < 30) {
+                    extract(obj[k]);
+                }
+            }
+        };
+        extract(feed.page);
     }
 
     console.log(JSON.stringify({
