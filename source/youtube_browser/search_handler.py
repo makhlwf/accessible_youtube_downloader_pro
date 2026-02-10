@@ -69,6 +69,21 @@ class PlaylistResult:
     def get_url(self, n):
         return self.videos[n]["url"]
 
+    def get_stream(self, n):
+        try:
+            return self.videos[n].get("stream")
+        except (IndexError, KeyError):
+            return None
+
+    def set_stream(self, n, stream):
+        try:
+            self.videos[n]["stream"] = stream
+        except IndexError:
+            pass
+
+    def get_type(self, n):
+        return "video"
+
 
 class Search:
     def __init__(self, query, filter=0):

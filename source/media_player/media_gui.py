@@ -470,6 +470,8 @@ class MediaGui(wx.Frame):
             speak(_("وضع ملء الشاشة متوقف"))
 
     def changeTrack(self, index):
+        if hasattr(self.results, "scraper"):
+            self.results.scraper.add_item(index, priority=0)
         if not isinstance(self.results, list):
             url = self.results.get_url(index)
             title = self.results.get_title(index)
