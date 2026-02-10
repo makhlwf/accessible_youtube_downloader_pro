@@ -18,6 +18,7 @@ from media_player.media_gui import MediaGui
 from nvda_client.client import speak
 from settings_handler import config_get
 from youtube_browser.search_handler import Search
+from youtube_browser.scraper import Scraper
 from utils import get_playable_stream
 from async_utils import run_in_async_loop
 
@@ -31,7 +32,7 @@ class YoutubeBrowser(wx.Frame):
     def __init__(self, parent):
         wx.Frame.__init__(self, parent=parent, title=parent.Title)
         self.favorites = Favorite()
-        self.scraping_queue = queue.Queue()
+        self.scraper = Scraper()
         self.search = None
 
         self._init_ui()
@@ -42,7 +43,6 @@ class YoutubeBrowser(wx.Frame):
             self.Show()
             self.Parent.Hide()
             self.toggleFavorite()
-            Thread(target=self._scraper_worker, daemon=True).start()
         else:
             self.Destroy()
 
@@ -257,15 +257,10 @@ class YoutubeBrowser(wx.Frame):
         speak(_("اكتمل البحث"))
 
         # Clear queue and add new videos for scraping
-        while not self.scraping_queue.empty():
-            try:
-                self.scraping_queue.get_nowait()
-                self.scraping_queue.task_done()
-            except queue.Empty:
-                break
-        for i in range(self.search.count):
-            if self.search.get_type(i) == "video":
-                self.scraping_queue.put((self.search, i))
+        self.scraper.set_results(self.search)
+        self.search.scraper = self.scraper
+        for i in range(min(10, self.search.count)):
+            self.scraper.add_item(i, priority=10)
 
     def onSearch(self, event):
         if self.search:
@@ -436,8 +431,7 @@ class YoutubeBrowser(wx.Frame):
             return
         self.searchResults.Append(self.search.get_last_titles())
         for i in range(self.search.count - self.search.new_videos, self.search.count):
-            if self.search.get_type(i) == "video":
-                self.scraping_queue.put((self.search, i))
+            self.scraper.add_item(i, priority=10)
         speak(_("تم تحميل المزيد من نتائج البحث"))
         self.searchResults.SetFocus()
 
@@ -445,6 +439,13 @@ class YoutubeBrowser(wx.Frame):
         self.toggleDownload()
         self.togglePlay()
         self.toggleFavorite()
+        n = self.searchResults.Selection
+        if n != wx.NOT_FOUND:
+            self.scraper.add_item(n, priority=0)
+            if n > 0 and n % 10 == 0:
+                for i in range(n, min(n + 10, self.search.count)):
+                    self.scraper.add_item(i, priority=10)
+
         if self.searchResults.Selection == self.searchResults.GetCount() - 1:
             if not config_get("autoload"):
                 self.loadMoreButton.Enabled = True
@@ -540,31 +541,6 @@ class YoutubeBrowser(wx.Frame):
             int(config_get("defaultformat")), url, dlg, download_type, title=title
         )
 
-    def _scraper_worker(self):
-        while True:
-            try:
-                item = self.scraping_queue.get(timeout=1)
-                if item is None:
-                    break
-                search_obj, index = item
-                # Only scrape if it's still the current search object
-                if search_obj == self.search:
-                    if (
-                        search_obj.get_type(index) == "video"
-                        and search_obj.get_stream(index) is None
-                    ):
-                        url = search_obj.get_url(index)
-                        try:
-                            stream = get_playable_stream(url)
-                            if stream and search_obj == self.search:
-                                search_obj.set_stream(index, stream)
-                        except Exception as e:
-                            logger.debug(f"Scraper failed for {url}: {e}")
-                self.scraping_queue.task_done()
-            except queue.Empty:
-                continue
-            except Exception as e:
-                logger.error(f"Scraper worker error: {e}")
 
     def onShow(self, event):
         self.searchResults.SetFocus()

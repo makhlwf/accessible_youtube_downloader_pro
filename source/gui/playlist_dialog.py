@@ -1,6 +1,7 @@
 import wx
 from language_handler import _
 from youtube_browser.search_handler import PlaylistResult
+from youtube_browser.scraper import Scraper
 from utils import get_audio_stream, get_video_stream
 from download_handler.downloader import downloadAction
 from media_player.media_gui import MediaGui
@@ -18,6 +19,7 @@ class PlaylistDialog(wx.Dialog):
         super().__init__(parent, title=application.name)
         self.CenterOnParent()
         self.url = url
+        self.scraper = Scraper()
         self.Maximize(True)
         p = wx.Panel(self)
         l1 = wx.StaticText(p, -1, _("قائمة الفيديوهات: "))
@@ -48,6 +50,7 @@ class PlaylistDialog(wx.Dialog):
         p.SetSizer(sizer)
         self.playButton.Bind(wx.EVT_BUTTON, lambda e: self.playVideo())
         self.downloadButton.Bind(wx.EVT_BUTTON, self.onDownload)
+        self.videosBox.Bind(wx.EVT_LISTBOX, self.onListBox)
         backButton.Bind(wx.EVT_BUTTON, lambda e: self.back())
         self.Bind(wx.EVT_CHAR_HOOK, self.onHook)
         self.Bind(wx.EVT_CLOSE, lambda e: wx.Exit())
@@ -67,6 +70,10 @@ class PlaylistDialog(wx.Dialog):
             self.title = self.result.title
             self.SetTitle(f"{application.name} - {self.title}")
             self.videosBox.Set(self.result.get_display_titles())
+            self.scraper.set_results(self.result)
+            self.result.scraper = self.scraper
+            for i in range(min(10, self.result.count)):
+                self.scraper.add_item(i, priority=10)
         except Exception as e:  # Catch a broader exception here
             print(e)  # Added for debugging
             wx.MessageBox(
@@ -239,6 +246,14 @@ class PlaylistDialog(wx.Dialog):
         self._download_media(
             2, url, dlg, "video", os.path.join(config_get("path"), self.title)
         )
+
+    def onListBox(self, event):
+        n = self.videosBox.Selection
+        if n != wx.NOT_FOUND:
+            self.scraper.add_item(n, priority=0)
+            if n > 0 and n % 10 == 0:
+                for i in range(n, min(n + 10, self.result.count)):
+                    self.scraper.add_item(i, priority=10)
 
     def onDownload(self, event):
         downloadMenu = wx.Menu()

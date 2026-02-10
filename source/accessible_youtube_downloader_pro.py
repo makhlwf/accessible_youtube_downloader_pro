@@ -33,6 +33,8 @@ from gui.history import HistoryDialog
 from doc_handler import documentation_get
 from media_player.media_gui import MediaGui
 from youtube_browser.browser import YoutubeBrowser
+from youtube_browser.scraper import Scraper
+from youtube_browser.search_handler import SimpleResult
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -46,6 +48,8 @@ class HomeScreen(wx.Frame):
 
         self.checked = False
         self.home_feed_data = []
+        self.home_feed_results = None
+        self.scraper = Scraper()
         self.home_feed_continuation = None
 
         self._init_ui()
@@ -190,6 +194,7 @@ class HomeScreen(wx.Frame):
         self.load_more_home_button.Bind(wx.EVT_BUTTON, lambda e: self.load_home_feed(True))
 
         # List box
+        self.home_feed_list.Bind(wx.EVT_LISTBOX, self.on_home_feed_list_box)
         self.home_feed_list.Bind(wx.EVT_LISTBOX_DCLICK, self.on_home_feed_play)
         self.home_feed_list.Bind(wx.EVT_CHAR_HOOK, self.on_home_feed_hook)
 
@@ -252,19 +257,33 @@ class HomeScreen(wx.Frame):
         new_videos = data.get("videos", [])
         self.home_feed_continuation = data.get("continuation")
 
+        old_count = len(self.home_feed_data)
         if load_more:
             self.home_feed_data.extend(new_videos)
         else:
             self.home_feed_data = new_videos
             self.home_feed_list.Clear()
 
+        self.home_feed_results = SimpleResult(self.home_feed_data)
+        self.home_feed_results.scraper = self.scraper
+        self.scraper.set_results(self.home_feed_results)
+
         titles = [f"{item['title']} - {item['author']}" for item in self.home_feed_data]
         self.home_feed_list.Set(titles)
 
         show_list = len(self.home_feed_data) > 0
         self.home_feed_list.Show(show_list)
-        self.load_more_home_button.Show(show_list and self.home_feed_continuation is not None)
+        self.load_more_home_button.Show(
+            show_list and self.home_feed_continuation is not None
+        )
         self.Layout()
+
+        if not load_more:
+            for i in range(min(10, self.home_feed_results.count)):
+                self.scraper.add_item(i, priority=10)
+        else:
+            for i in range(old_count, self.home_feed_results.count):
+                self.scraper.add_item(i, priority=10)
 
     def on_home_feed_play(self, event, audio_mode=False):
         selection = self.home_feed_list.GetSelection()
@@ -272,14 +291,33 @@ class HomeScreen(wx.Frame):
             return
         video_data = self.home_feed_data[selection]
         url = video_data["url"]
-        stream = LoadingDialog(
-            self, _("جاري التشغيل"), utils.get_playable_stream, url, audio_mode
-        ).res
+        stream = self.home_feed_results.get_stream(selection)
         if stream is None:
-            wx.MessageBox(_("لا يمكن تشغيل الرابط"), _("خطأ"), style=wx.ICON_ERROR, parent=self)
+            stream = LoadingDialog(
+                self, _("جاري التشغيل"), utils.get_playable_stream, url, audio_mode
+            ).res
+        if stream is None:
+            wx.MessageBox(
+                _("لا يمكن تشغيل الرابط"), _("خطأ"), style=wx.ICON_ERROR, parent=self
+            )
             return
-        MediaGui(self, stream.title, stream, url, audio_mode=audio_mode, results=self.home_feed_data)
+        MediaGui(
+            self,
+            stream.title,
+            stream,
+            url,
+            audio_mode=audio_mode,
+            results=self.home_feed_results,
+        )
         self.Hide()
+
+    def on_home_feed_list_box(self, event):
+        n = self.home_feed_list.Selection
+        if n != wx.NOT_FOUND:
+            self.scraper.add_item(n, priority=0)
+            if n > 0 and n % 10 == 0:
+                for i in range(n, min(n + 10, self.home_feed_results.count)):
+                    self.scraper.add_item(i, priority=10)
 
     def on_home_feed_hook(self, event):
         if event.KeyCode == wx.WXK_RETURN:
