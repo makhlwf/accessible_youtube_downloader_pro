@@ -6,13 +6,16 @@ from utils import get_playable_stream
 logger = logging.getLogger(__name__)
 
 class Scraper:
-    def __init__(self):
+    def __init__(self, num_workers=5):
         self.queue = queue.PriorityQueue()
         self.results = None
         self.queued_indices = set()
         self.lock = threading.Lock()
-        self.worker_thread = threading.Thread(target=self._worker, daemon=True)
-        self.worker_thread.start()
+        self.workers = []
+        for _ in range(num_workers):
+            t = threading.Thread(target=self._worker, daemon=True)
+            t.start()
+            self.workers.append(t)
 
     def set_results(self, results):
         with self.lock:

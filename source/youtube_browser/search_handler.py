@@ -85,6 +85,28 @@ class PlaylistResult:
         return "video"
 
 
+class SimpleResult:
+    def __init__(self, data_list):
+        self.data_list = data_list
+        self.count = len(data_list)
+        self.scraper = None
+
+    def get_url(self, n):
+        return self.data_list[n]["url"]
+
+    def get_title(self, n):
+        return self.data_list[n].get("title", "")
+
+    def get_stream(self, n):
+        return self.data_list[n].get("stream")
+
+    def set_stream(self, n, stream):
+        self.data_list[n]["stream"] = stream
+
+    def get_type(self, n):
+        return self.data_list[n].get("type", "video")
+
+
 class Search:
     def __init__(self, query, filter=0):
         self.query = query

@@ -11,6 +11,8 @@ from media_player.media_gui import MediaGui
 from nvda_client.client import speak
 from settings_handler import config_get
 import utils
+from youtube_browser.scraper import Scraper
+from youtube_browser.search_handler import SimpleResult
 from download_handler.downloader import downloadAction
 from database import Favorite
 
@@ -22,6 +24,7 @@ class HistoryDialog(wx.Frame):
         self.SetSize(wx.DisplaySize())
         self.Maximize(True)
         self.panel = wx.Panel(self)
+        self.scraper = Scraper()
         lbl = wx.StaticText(self.panel, -1, _("الفيديوهات التي شاهدتها مؤخرًا: "))
         self.historyList = wx.ListBox(self.panel, -1)
         self.loadMoreButton = wx.Button(self.panel, -1, _("تحميل المزيد من السجل"))
@@ -96,11 +99,16 @@ class HistoryDialog(wx.Frame):
         new_videos = data.get("videos", [])
         self.continuation = data.get("continuation")
 
+        old_count = len(self.history_data)
         if load_more:
             self.history_data.extend(new_videos)
         else:
             self.history_data = new_videos
             self.historyList.Clear()
+
+        self.history_results = SimpleResult(self.history_data)
+        self.history_results.scraper = self.scraper
+        self.scraper.set_results(self.history_results)
 
         titles = [f"{item['title']} - {item['author']}" for item in self.history_data]
         self.historyList.Set(titles)
@@ -117,8 +125,12 @@ class HistoryDialog(wx.Frame):
         self.historyList.SetFocus()
         if load_more:
             speak(_("تم تحميل المزيد من السجل"))
+            for i in range(old_count, self.history_results.count):
+                self.scraper.add_item(i, priority=10)
         else:
             speak(_("تم تحميل السجل"))
+            for i in range(min(10, self.history_results.count)):
+                self.scraper.add_item(i, priority=10)
         self.toggleFavorite()
 
     def onLoadMore(self, event):
@@ -132,13 +144,15 @@ class HistoryDialog(wx.Frame):
         url = video_data["url"]
         title = video_data["title"]
 
-        stream = LoadingDialog(
-            self,
-            _("جاري التشغيل"),
-            utils.get_playable_stream,
-            url,
-            audio_mode,
-        ).res
+        stream = self.history_results.get_stream(selection)
+        if stream is None:
+            stream = LoadingDialog(
+                self,
+                _("جاري التشغيل"),
+                utils.get_playable_stream,
+                url,
+                audio_mode,
+            ).res
 
         if stream is None:
             wx.MessageBox(
@@ -147,7 +161,12 @@ class HistoryDialog(wx.Frame):
             return
 
         MediaGui(
-            self, title, stream, url, audio_mode=audio_mode, results=self.history_data
+            self,
+            title,
+            stream,
+            url,
+            audio_mode=audio_mode,
+            results=self.history_results,
         )
         self.Hide()
 
@@ -156,6 +175,12 @@ class HistoryDialog(wx.Frame):
 
     def onListBox(self, event):
         self.toggleFavorite()
+        n = self.historyList.Selection
+        if n != wx.NOT_FOUND:
+            self.scraper.add_item(n, priority=0)
+            if n > 0 and n % 10 == 0:
+                for i in range(n, min(n + 10, self.history_results.count)):
+                    self.scraper.add_item(i, priority=10)
 
     def backAction(self):
         self.Destroy()

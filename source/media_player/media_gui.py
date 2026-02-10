@@ -531,7 +531,12 @@ class MediaGui(wx.Frame):
         elif hasattr(self.Parent, "videosBox"):
             self.Parent.videosBox.Selection += 1
             index = self.Parent.videosBox.Selection
-
+        elif hasattr(self.Parent, "home_feed_list"):
+            self.Parent.home_feed_list.Selection += 1
+            index = self.Parent.home_feed_list.Selection
+        elif hasattr(self.Parent, "historyList"):
+            self.Parent.historyList.Selection += 1
+            index = self.Parent.historyList.Selection
         else:
             self.Parent.favList.Selection += 1
             index = self.Parent.favList.Selection
@@ -563,6 +568,10 @@ class MediaGui(wx.Frame):
             videosBox = self.Parent.searchResults
         elif hasattr(self.Parent, "videosBox"):
             videosBox = self.Parent.videosBox
+        elif hasattr(self.Parent, "home_feed_list"):
+            videosBox = self.Parent.home_feed_list
+        elif hasattr(self.Parent, "historyList"):
+            videosBox = self.Parent.historyList
         else:
             videosBox = self.Parent.favList
 
