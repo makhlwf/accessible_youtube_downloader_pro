@@ -215,11 +215,9 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 
-# do not include my gemini.md file becaws it has personal info
-GEMINI.md
-
 # files that i don't want to include but i like to use git add . so i will put them here
 source/yt-dlp.exe
 source/cookies.txt
 source/deno.exe
 HexPlayer/
+*YouTube.js/
