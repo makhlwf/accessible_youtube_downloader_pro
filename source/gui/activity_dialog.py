@@ -23,7 +23,7 @@ class LoadingDialog(wx.Dialog):
         sizer.Add(indicator, 1, wx.EXPAND)
         sizer.AddStretchSpacer()
         p.SetSizer(sizer)
-        self.Bind(wx.EVT_CLOSE, lambda e: wx.Exit())
+        self.Bind(wx.EVT_CLOSE, self.onClose)
         self.Bind(wx.EVT_CHAR_HOOK, self.onHook)
         Thread(target=self.run).start()
         self.ShowModal()
@@ -46,3 +46,6 @@ class LoadingDialog(wx.Dialog):
             self.message.SetFocus()
             return
         event.Skip()
+
+    def onClose(self, event):
+        self.Destroy()

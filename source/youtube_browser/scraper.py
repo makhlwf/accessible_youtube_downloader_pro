@@ -9,6 +9,7 @@ class Scraper:
     def __init__(self, num_workers=5):
         self.queue = queue.PriorityQueue()
         self.results = None
+        self.audio_mode = False
         self.queued_indices = set()
         self.lock = threading.Lock()
         self.workers = []
@@ -52,17 +53,21 @@ class Scraper:
             try:
                 priority, index = self.queue.get(timeout=1)
                 results = self.results
-                if results and index < results.count:
-                    # Check if still needed
-                    if results.get_type(index) == "video" and results.get_stream(index) is None:
-                        url = results.get_url(index)
-                        try:
-                            # Direct stream scraping
-                            stream = get_playable_stream(url)
-                            if stream and results == self.results:
-                                results.set_stream(index, stream)
-                        except Exception as e:
-                            logger.debug(f"Scraper failed for {url}: {e}")
+                if results:
+                    try:
+                        if index < results.count:
+                            # Check if still needed
+                            if (
+                                results.get_type(index) == "video"
+                                and results.get_stream(index) is None
+                            ):
+                                url = results.get_url(index)
+                                # Direct stream scraping
+                                stream = get_playable_stream(url, audio_mode=self.audio_mode)
+                                if stream and results == self.results:
+                                    results.set_stream(index, stream)
+                    except Exception as e:
+                        logger.debug(f"Scraper task failed for index {index}: {e}")
 
                 self.queue.task_done()
             except queue.Empty:
