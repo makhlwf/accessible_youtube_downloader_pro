@@ -101,7 +101,7 @@ AUDIO_QUALITIES = [64, 128, 256]
 
 
 def download_yt_dlp():
-    url = "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt_dlp.py"
+    url = "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp"
     UpdateDialog(
         wx.GetApp().GetTopWindow(),
         url,
