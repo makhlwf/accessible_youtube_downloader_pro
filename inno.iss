@@ -35,9 +35,6 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "arabic"; MessagesFile: "compiler:Languages\Arabic.isl"
 
 [CustomMessages]
-english.DownloadYtDlp=Download yt-dlp (recommended)
-arabic.DownloadYtDlp=تحميل yt-dlp (موصى به)
-
 english.DownloadDeno=Download Deno (recommended for YouTube)
 arabic.DownloadDeno=تحميل Deno (موصى به لليوتيوب)
 
@@ -55,7 +52,6 @@ arabic.DownloadFailed=فشل تحميل بعض المكونات.%n%nيمكنك �
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
-Name: "download_ytdlp"; Description: "{cm:DownloadYtDlp}"; Flags: unchecked
 Name: "download_deno"; Description: "{cm:DownloadDeno}"; Flags: unchecked
 
 [Files]
@@ -71,7 +67,6 @@ Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChang
 
 [Code]
 const
-  YtDlpUrl = 'https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe';
   DenoUrl = 'https://github.com/denoland/deno/releases/latest/download/deno-x86_64-pc-windows-msvc.zip';
 
 var
@@ -94,23 +89,19 @@ end;
 
 procedure DownloadComponents;
 var
-  YtDlpTargetFile: string;
   DenoTargetFile: string;
   DenoZipFile: string;
   TargetDir: string;
-  DownloadYtDlp: Boolean;
   DownloadDeno: Boolean;
   ResultCode: Integer;
 begin
-  YtDlpTargetFile := ExpandConstant('{app}\yt-dlp.exe');
   DenoTargetFile := ExpandConstant('{app}\deno.exe');
   DenoZipFile := ExpandConstant('{tmp}\deno.zip');
   TargetDir := ExpandConstant('{app}');
 
-  DownloadYtDlp := WizardIsTaskSelected('download_ytdlp') and not FileExists(YtDlpTargetFile);
   DownloadDeno := WizardIsTaskSelected('download_deno') and not FileExists(DenoTargetFile);
 
-  if not (DownloadYtDlp or DownloadDeno) then
+  if not DownloadDeno then
     Exit;
 
   if not IsOnline then
@@ -128,22 +119,14 @@ begin
     nil
   );
   DownloadPage.Clear;
-  if DownloadYtDlp then
-    DownloadPage.Add(YtDlpUrl, 'yt-dlp.exe', '');
   if DownloadDeno then
     DownloadPage.Add(DenoUrl, 'deno.zip', '');
-  
+
   DownloadPage.Show;
 
   try
     try
       DownloadPage.Download;
-      
-      if DownloadYtDlp then
-      begin
-        if not FileCopy(ExpandConstant('{tmp}\yt-dlp.exe'), YtDlpTargetFile, False) then
-          MsgBox(ExpandConstant('{cm:DownloadFailed}'), mbError, MB_OK);
-      end;
 
       if DownloadDeno then
       begin
@@ -158,7 +141,7 @@ begin
         else
           MsgBox(ExpandConstant('{cm:DownloadFailed}'), mbError, MB_OK);
       end;
-      
+
     except
       if not DownloadPage.AbortedByUser then
         MsgBox(ExpandConstant('{cm:DownloadFailed}'), mbError, MB_OK);

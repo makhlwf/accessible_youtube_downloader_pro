@@ -39,10 +39,39 @@ class InfoCache:
 
 _info_cache = InfoCache()
 
-try:
-    from yt_dlp import YoutubeDL
-except ImportError:
-    YoutubeDL = None
+import importlib.util
+import sys
+
+yt_dlp_module = None
+YoutubeDL = None
+
+
+def load_yt_dlp():
+    global YoutubeDL, yt_dlp_module
+    if os.path.exists(paths.yt_dlp_path):
+        try:
+            spec = importlib.util.spec_from_file_location("yt_dlp", paths.yt_dlp_path)
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+            yt_dlp_module = module
+            YoutubeDL = module.YoutubeDL
+            sys.modules["yt_dlp"] = module
+            return True
+        except Exception as e:
+            logger.error(f"Failed to load yt-dlp from {paths.yt_dlp_path}: {e}")
+
+    try:
+        import yt_dlp
+
+        yt_dlp_module = yt_dlp
+        YoutubeDL = yt_dlp.YoutubeDL
+        return True
+    except ImportError:
+        pass
+    return False
+
+
+load_yt_dlp()
 
 PLAYER_OPTS = {
     "quiet": True,
@@ -80,13 +109,14 @@ AUDIO_QUALITIES = [64, 128, 256]
 
 
 def download_yt_dlp():
-    url = "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe"
+    url = "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt_dlp.py"
     UpdateDialog(
         wx.GetApp().GetTopWindow(),
         url,
         paths.yt_dlp_path,
         _("جاري تنزيل yt-dlp"),
     )
+    load_yt_dlp()
 
 
 def get_latest_github_release(repo):
@@ -101,20 +131,13 @@ def get_latest_github_release(repo):
 
 
 def get_yt_dlp_version():
-    if not os.path.exists(paths.yt_dlp_path):
-        return None
-    try:
-        result = subprocess.run(
-            [paths.yt_dlp_path, "--version"],
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            creationflags=subprocess.CREATE_NO_WINDOW,
-        )
-        if result.returncode == 0:
-            return result.stdout.strip()
-    except Exception:
-        pass
+    if yt_dlp_module:
+        try:
+            if hasattr(yt_dlp_module, "version"):
+                return getattr(yt_dlp_module.version, "__version__", None)
+            return getattr(yt_dlp_module, "__version__", None)
+        except Exception:
+            pass
     return None
 
 
@@ -214,16 +237,16 @@ def update_deno():
 
 
 def check_yt_dlp(parent=None):
-    if not os.path.exists(paths.yt_dlp_path):
+    if not YoutubeDL:
         msg = wx.MessageBox(
-            _("لم يتم العثور على أداة yt-dlp.exe, هل تريد تنزيله الآن؟"),
+            _("لم يتم العثور على مكتبة yt-dlp, هل تريد تنزيلها الآن؟"),
             _("تنبيه"),
             style=wx.YES_NO | wx.ICON_INFORMATION,
             parent=parent or wx.GetApp().GetTopWindow(),
         )
         if msg == wx.YES:
             download_yt_dlp()
-            return os.path.exists(paths.yt_dlp_path)
+            return YoutubeDL is not None
         return False
     return True
 
@@ -479,43 +502,6 @@ def get_media_info(url):
         return cached
 
     if not YoutubeDL:
-        if not os.path.exists(paths.yt_dlp_path):
-            return None
-        clients_to_try = ["tv", "web_embedded", "android", "web", "ios", "mweb"]
-        last_err = ""
-        for client in clients_to_try:
-            try:
-                env = os.environ.copy()
-                env["PATH"] = paths.main_path + os.pathsep + env.get("PATH", "")
-                command = [
-                    paths.yt_dlp_path,
-                    "-j",
-                    url,
-                    "--js-runtime",
-                    "deno",
-                    "--extractor-args",
-                    f"youtube:player_client={client};js_variant=tv",
-                ]
-                cookies_path = config_get("cookiespath")
-                if cookies_path and os.path.exists(cookies_path):
-                    command.extend(["--cookies", cookies_path])
-                result = subprocess.run(
-                    command,
-                    capture_output=True,
-                    text=True,
-                    encoding="utf-8",
-                    creationflags=subprocess.CREATE_NO_WINDOW,
-                    env=env,
-                )
-                if result.returncode != 0:
-                    last_err = result.stderr
-                    continue
-                info = json.loads(result.stdout)
-                _info_cache.set(url, info)
-                return info
-            except Exception as e:
-                last_err = str(e)
-                continue
         return None
 
     clients_to_try = [["tv"], ["web_embedded"], ["android"], ["web"], ["ios"], ["mweb"]]

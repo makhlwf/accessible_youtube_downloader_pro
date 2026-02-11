@@ -1,12 +1,15 @@
-import subprocess
 import os
+import sys
 import wx
+import logging
 from settings_handler import config_get
 import paths
-import re
+import utils
 from wx.lib.newevent import NewEvent
 from threading import Thread
 from language_handler import _
+
+logger = logging.getLogger(__name__)
 
 ProgressChangedEvent, EVT_PROGRESS_CHANGED = NewEvent()
 
@@ -30,47 +33,42 @@ class Downloader:
         self.status_label = status_label
         self.convert = convert
         self.folder = folder
-        self.process = None
 
     def get_quality(self):
         qualities = {0: "96", 1: "128", 2: "192"}
         return qualities[int(config_get("conversion"))]
 
-    def progress_parser(self, line):
+    def _progress_hook(self, d):
         if not self.monitor:
             return
 
-        match = re.search(
-            r"\[download\]\s+([0-9\.]+)% of\s+(.*?)\s+at\s+(.*?)\s+ETA\s+(.*)", line
-        )
-        if match:
-            percent = float(match.group(1))
-            total = match.group(2).strip()
-            speed = match.group(3).strip()
-            eta = match.group(4).strip()
+        if d["status"] == "downloading":
+            percent_str = d.get("_percent_str", "0%").replace("%", "").strip()
+            try:
+                percent = float(percent_str)
+            except ValueError:
+                percent = 0.0
+
+            total = d.get("_total_bytes_str") or d.get("_total_bytes_estimate_str", "")
+            speed = d.get("_speed_str", "")
+            eta = d.get("_eta_str", "")
+
             wx.PostEvent(
                 self.monitor,
                 ProgressChangedEvent(
                     value=int(percent), total=total, speed=speed, eta=eta
                 ),
             )
-        else:
-            match = re.search(r"\[download\]\s+([0-9\.]+)%", line)
-            if match:
-                percent = float(match.group(1))
-                wx.PostEvent(
-                    self.monitor,
-                    ProgressChangedEvent(
-                        value=int(percent), total="", speed="", eta=""
-                    ),
-                )
 
     def download(self):
-        env = os.environ.copy()
+        if not utils.YoutubeDL:
+            logger.error("YoutubeDL library not loaded")
+            return 1
+
         abs_ffmpeg_dir = os.path.abspath(paths.ffmpeg_dir)
         abs_ffmpeg_dir = os.path.normpath(abs_ffmpeg_dir).replace("\\", "/")
 
-        # Add the local directory to PATH so the DLLs can be found by the EXE
+        env = os.environ.copy()
         env["PATH"] = (
             abs_ffmpeg_dir
             + os.pathsep
@@ -79,46 +77,39 @@ class Downloader:
             + env.get("PATH", "")
         )
 
-        command = [
-            paths.yt_dlp_path,
-            "--no-check-certificate",
-            "-o",
-            f"{self.path}\\%(title)s.%(ext)s",
-            "-f",
-            self.downloading_format,
-            "--progress",
-            "--ffmpeg-location",
-            abs_ffmpeg_dir,
-            "--no-cache-dir",
-            "--js-runtime",
-            "deno",
-        ]
+        ydl_opts = {
+            "nocheckcertificate": True,
+            "outtmpl": os.path.join(self.path, "%(title)s.%(ext)s"),
+            "format": self.downloading_format,
+            "progress_hooks": [self._progress_hook],
+            "ffmpeg_location": abs_ffmpeg_dir,
+            "nocacheconfig": True,
+            "extractor_args": {"youtube": {"player_client": ["tv"], "js_variant": "tv"}},
+            "js_runtimes": {"deno": {}},
+            "quiet": True,
+            "no_warnings": True,
+        }
 
         cookies_path = config_get("cookiespath")
         if cookies_path and os.path.exists(cookies_path):
-            command.extend(["--cookies", cookies_path])
+            ydl_opts["cookiefile"] = cookies_path
 
         if self.convert:
-            command.extend(
-                ["-x", "--audio-format", "mp3", "--audio-quality", self.get_quality()]
-            )
+            ydl_opts["postprocessors"] = [
+                {
+                    "key": "FFmpegExtractAudio",
+                    "preferredcodec": "mp3",
+                    "preferredquality": self.get_quality(),
+                }
+            ]
 
-        command.append(self.url)
-
-        self.process = subprocess.Popen(
-            command,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            universal_newlines=True,
-            encoding="utf-8",
-            creationflags=subprocess.CREATE_NO_WINDOW,
-            env=env,
-        )
-
-        for line in self.process.stdout:
-            self.progress_parser(line)
-
-        return self.process.wait()
+        try:
+            with utils.YoutubeDL(ydl_opts) as ydl:
+                ydl.download([self.url])
+            return 0
+        except Exception as e:
+            logger.error(f"Download failed: {e}")
+            return 1
 
 
 def downloadAction(
