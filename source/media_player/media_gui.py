@@ -47,6 +47,8 @@ class MediaGui(wx.Frame):
         self.seek = int(config_get("seek"))
         self.results = results
         self.audio_mode = audio_mode
+        if hasattr(self.results, "scraper") and self.results.scraper:
+            self.results.scraper.audio_mode = self.audio_mode
         self.current_quality = getattr(stream, "quality", None)
         self.path = config_get("path")
         self.Centre()
@@ -54,6 +56,7 @@ class MediaGui(wx.Frame):
         self.Maximize(True)
         self.SetBackgroundColour(wx.BLACK)
         self.player = None
+        self.extracting_description = False
         self.url = url
         previousButton = CustomButton(self, -1, _("المقطع السابق"), name="controls")
         previousButton.Show() if self.results is not None else previousButton.Hide()
@@ -496,7 +499,24 @@ class MediaGui(wx.Frame):
             )
             if stream is None:
                 stream = get_playable_stream(url, audio_mode=self.audio_mode)
-        except Exception:
+        except Exception as e:
+            wx.CallAfter(
+                wx.MessageBox,
+                _("حدث خطأ أثناء محاولة جلب رابط التشغيل: {}").format(e),
+                _("خطأ"),
+                style=wx.ICON_ERROR,
+                parent=self,
+            )
+            return
+
+        if stream is None:
+            wx.CallAfter(
+                wx.MessageBox,
+                _("تعذر جلب رابط التشغيل لهذا المقطع"),
+                _("خطأ"),
+                style=wx.ICON_ERROR,
+                parent=self,
+            )
             return
 
         options = []
@@ -623,19 +643,32 @@ class MediaGui(wx.Frame):
                 speak(_("يتم الآن جلب وصف الفيديو"))
                 # Use run_in_async_loop for the async call
                 info = run_in_async_loop(Video.getInfo(self.url))
+                if info and "description" in info:
+                    self.description = info["description"]
+                    wx.CallAfter(DescriptionDialog, self, self.description)
+                else:
+                    speak(_("تعذر جلب وصف الفيديو"))
             except Exception as e:
-                print(e)
+                import logging
+                logging.getLogger(__name__).error(f"Manual description extraction failed: {e}")
                 speak(_("هناك خطأ ما أدى إلى منع جلب وصف الفيديو"))
-                return
-            self.description = info["description"]
-            wx.CallAfter(DescriptionDialog, self, self.description)
 
         Thread(target=extract_description_sync).start()
 
     def extract_description(self):
+        if self.extracting_description or hasattr(self, "description"):
+            return
+        self.extracting_description = True
         try:
             # Use run_in_async_loop for the async call
             info = run_in_async_loop(Video.get(self.url))
-        except Exception:
-            return
-        self.description = info["description"]
+            if info and "description" in info:
+                self.description = info["description"]
+        except Exception as e:
+            import logging
+
+            logging.getLogger(__name__).debug(
+                f"Background description extraction failed: {e}"
+            )
+        finally:
+            self.extracting_description = False

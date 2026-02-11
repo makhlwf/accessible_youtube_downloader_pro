@@ -8,10 +8,36 @@ import subprocess
 import json
 import os
 import logging
+import time
+import threading
 from settings_handler import config_get
 from language_handler import _
 
 logger = logging.getLogger(__name__)
+
+
+class InfoCache:
+    def __init__(self, ttl=300):
+        self.cache = {}
+        self.ttl = ttl
+        self.lock = threading.Lock()
+
+    def get(self, url):
+        with self.lock:
+            if url in self.cache:
+                info, timestamp = self.cache[url]
+                if time.time() - timestamp < self.ttl:
+                    return info
+                else:
+                    del self.cache[url]
+        return None
+
+    def set(self, url, info):
+        with self.lock:
+            self.cache[url] = (info, time.time())
+
+
+_info_cache = InfoCache()
 
 try:
     from yt_dlp import YoutubeDL
@@ -24,7 +50,30 @@ PLAYER_OPTS = {
     "noplaylist": True,
     "extractor_args": {"youtube": {"player_client": ["tv"], "js_variant": "tv"}},
     "js_runtimes": {"deno": {}},
+    "allowed_extractors": ["youtube", "youtube:.*"],
+    "no_check_certificate": True,
 }
+
+_ydl_instances = {}
+_ydl_lock = threading.Lock()
+
+
+def get_ydl_instance(client, cookies_path=None):
+    if not YoutubeDL:
+        return None
+    client_tuple = tuple(client)
+    key = (client_tuple, cookies_path)
+    with _ydl_lock:
+        if key not in _ydl_instances:
+            opts = PLAYER_OPTS.copy()
+            opts["extractor_args"] = {
+                "youtube": {"player_client": client, "js_variant": "tv"}
+            }
+            if cookies_path and os.path.exists(cookies_path):
+                opts["cookiefile"] = cookies_path
+            _ydl_instances[key] = YoutubeDL(opts)
+        return _ydl_instances[key]
+
 
 VIDEO_QUALITIES = [144, 240, 360, 480, 720, 1080, 1440, 2160]
 AUDIO_QUALITIES = [64, 128, 256]
@@ -361,20 +410,14 @@ def get_playable_stream(url, audio_mode=False):
         os.environ["PATH"] = paths.main_path + os.pathsep + os.environ.get("PATH", "")
 
     last_exception = None
+    cookies_path = config_get("cookiespath")
     for client in clients_to_try:
         try:
-            opts = PLAYER_OPTS.copy()
-            opts["extractor_args"] = {
-                "youtube": {"player_client": client, "js_variant": "tv"}
-            }
-            cookies_path = config_get("cookiespath")
-            if cookies_path and os.path.exists(cookies_path):
-                opts["cookiefile"] = cookies_path
+            ydl = get_ydl_instance(client, cookies_path)
+            if "youtube.com" not in url and "youtu.be" not in url:
+                url = f"https://www.youtube.com/watch?v={url}"
 
-            with YoutubeDL(opts) as ydl:
-                if "youtube.com" not in url and "youtu.be" not in url:
-                    url = f"https://www.youtube.com/watch?v={url}"
-
+            with _ydl_lock:
                 try:
                     entry = ydl.extract_info(url, download=False)
                 except Exception as e:
@@ -390,34 +433,34 @@ def get_playable_stream(url, audio_mode=False):
                     else:
                         raise e
 
-                formats = entry.get("formats", [])
-                if audio_mode:
-                    preferred_audio = int(config_get("defaultaudioquality"))
-                    fmt, audio_fmt, quality = pick_best_format(
-                        formats, preferred_audio, is_video=False
-                    )
-                else:
-                    preferred_video = int(config_get("defaultvideoquality"))
-                    fmt, audio_fmt, quality = pick_best_format(
-                        formats, preferred_video, is_video=True
-                    )
+            formats = entry.get("formats", [])
+            if audio_mode:
+                preferred_audio = int(config_get("defaultaudioquality"))
+                fmt, audio_fmt, quality = pick_best_format(
+                    formats, preferred_audio, is_video=False
+                )
+            else:
+                preferred_video = int(config_get("defaultvideoquality"))
+                fmt, audio_fmt, quality = pick_best_format(
+                    formats, preferred_video, is_video=True
+                )
 
-                if not fmt:
-                    fmt = entry
+            if not fmt:
+                fmt = entry
 
-                title = entry.get("title")
-                url_to_play = fmt.get("url")
+            title = entry.get("title")
+            url_to_play = fmt.get("url")
 
-                if not url_to_play:
-                    continue
+            if not url_to_play:
+                continue
 
-                headers = {}
-                headers.update(entry.get("http_headers", {}) or {})
-                headers.update(fmt.get("http_headers", {}) or {})
-                headers.setdefault("User-Agent", "libmpv")
+            headers = {}
+            headers.update(entry.get("http_headers", {}) or {})
+            headers.update(fmt.get("http_headers", {}) or {})
+            headers.setdefault("User-Agent", "libmpv")
 
-                audio_url = audio_fmt.get("url") if audio_fmt else None
-                return Stream(title, url_to_play, headers, audio_url, quality=quality)
+            audio_url = audio_fmt.get("url") if audio_fmt else None
+            return Stream(title, url_to_play, headers, audio_url, quality=quality)
         except Exception as e:
             last_exception = e
             logger.warning(f"Failed to get stream with client {client}: {e}")
@@ -431,42 +474,63 @@ def get_playable_stream(url, audio_mode=False):
 
 
 def get_media_info(url):
-    if not os.path.exists(paths.yt_dlp_path):
+    cached = _info_cache.get(url)
+    if cached:
+        return cached
+
+    if not YoutubeDL:
+        if not os.path.exists(paths.yt_dlp_path):
+            return None
+        clients_to_try = ["tv", "web_embedded", "android", "web", "ios", "mweb"]
+        last_err = ""
+        for client in clients_to_try:
+            try:
+                env = os.environ.copy()
+                env["PATH"] = paths.main_path + os.pathsep + env.get("PATH", "")
+                command = [
+                    paths.yt_dlp_path,
+                    "-j",
+                    url,
+                    "--js-runtime",
+                    "deno",
+                    "--extractor-args",
+                    f"youtube:player_client={client};js_variant=tv",
+                ]
+                cookies_path = config_get("cookiespath")
+                if cookies_path and os.path.exists(cookies_path):
+                    command.extend(["--cookies", cookies_path])
+                result = subprocess.run(
+                    command,
+                    capture_output=True,
+                    text=True,
+                    encoding="utf-8",
+                    creationflags=subprocess.CREATE_NO_WINDOW,
+                    env=env,
+                )
+                if result.returncode != 0:
+                    last_err = result.stderr
+                    continue
+                info = json.loads(result.stdout)
+                _info_cache.set(url, info)
+                return info
+            except Exception as e:
+                last_err = str(e)
+                continue
         return None
 
-    clients_to_try = ["tv", "web_embedded", "android", "web", "ios", "mweb"]
-    last_err = ""
+    clients_to_try = [["tv"], ["web_embedded"], ["android"], ["web"], ["ios"], ["mweb"]]
+    last_err = None
+    cookies_path = config_get("cookiespath")
 
     for client in clients_to_try:
         try:
-            env = os.environ.copy()
-            env["PATH"] = paths.main_path + os.pathsep + env.get("PATH", "")
-            command = [
-                paths.yt_dlp_path,
-                "-j",
-                url,
-                "--js-runtime",
-                "deno",
-                "--extractor-args",
-                f"youtube:player_client={client};js_variant=tv",
-            ]
-            cookies_path = config_get("cookiespath")
-            if cookies_path and os.path.exists(cookies_path):
-                command.extend(["--cookies", cookies_path])
-            result = subprocess.run(
-                command,
-                capture_output=True,
-                text=True,
-                encoding="utf-8",
-                creationflags=subprocess.CREATE_NO_WINDOW,
-                env=env,
-            )
-            if result.returncode != 0:
-                last_err = result.stderr
-                continue
-            return json.loads(result.stdout)
-        except (subprocess.SubprocessError, json.JSONDecodeError, Exception) as e:
-            last_err = str(e)
+            ydl = get_ydl_instance(client, cookies_path)
+            with _ydl_lock:
+                info = ydl.extract_info(url, download=False)
+            _info_cache.set(url, info)
+            return info
+        except Exception as e:
+            last_err = e
             continue
 
     if last_err:
