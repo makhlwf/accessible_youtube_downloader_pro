@@ -1,0 +1,133 @@
+name: Build and Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version Number (e.g., 1.9.1)'
+        required: true
+        type: string
+      release_type:
+        description: 'Release Type'
+        required: true
+        type: choice
+        options:
+          - stable
+          - beta
+      release_message:
+        description: 'GitHub Release Message'
+        required: true
+        type: string
+      whats_new:
+        description: "What's New Message (for app users)"
+        required: true
+        type: string
+
+jobs:
+  build-and-release:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Update version files (Stable only)
+        if: ${{ github.event.inputs.release_type == 'stable' }}
+        shell: pwsh
+        run: |
+          $version = "${{ github.event.inputs.version }}"
+          # Update source/application.py
+          (Get-Content "source/application.py") -replace 'version = ".*"', "version = `"$version`"" | Set-Content "source/application.py"
+          # Update inno.iss
+          (Get-Content "inno.iss") -replace '#define MyAppVersion ".*"', "#define MyAppVersion `"$version`"" | Set-Content "inno.iss"
+
+      - name: Build Application
+        run: python build.py
+
+      - name: Update Inno Setup script for CI
+        shell: pwsh
+        run: |
+          # Read the Inno Setup script
+          $innoContent = Get-Content "inno.iss" -Raw
+
+          # Replace absolute paths with relative paths valid in CI
+          $innoContent = $innoContent -replace 'Source: ".*\\dist\\HexPlayer.exe"', 'Source: "dist\HexPlayer\HexPlayer.exe"'
+          $innoContent = $innoContent -replace 'Source: ".*\\dist\\_internal\\\*"', 'Source: "dist\HexPlayer\_internal\*"'
+
+          # Save the modified script
+          $innoContent | Set-Content "inno_ci.iss"
+
+      - name: Install Inno Setup
+        run: choco install innosetup -y
+
+      - name: Compile Installer
+        run: iscc "inno_ci.iss"
+
+      - name: Handle Beta Release
+        if: ${{ github.event.inputs.release_type == 'beta' }}
+        shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Delete existing beta release and tag
+          gh release delete beta --cleanup-tag -y 2>$null || Write-Host "No existing beta release to delete."
+
+          $installerPath = "HexPlayer\HexPlayer.exe"
+          gh release create beta $installerPath `
+            --title "Beta: ${{ github.event.inputs.version }}" `
+            --notes "${{ github.event.inputs.release_message }}" `
+            --prerelease `
+            --target "${{ github.sha }}"
+
+      - name: Handle Stable Release
+        if: ${{ github.event.inputs.release_type == 'stable' }}
+        shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $tag = "v${{ github.event.inputs.version }}"
+          $installerPath = "HexPlayer\HexPlayer.exe"
+
+          # Create GitHub Release
+          gh release create $tag $installerPath `
+            --title "Version ${{ github.event.inputs.version }}" `
+            --notes "${{ github.event.inputs.release_message }}"
+
+          # Direct download link
+          $downloadUrl = "https://github.com/${{ github.repository }}/releases/download/$tag/HexPlayer.exe"
+
+          # Update update.json
+          $updateJson = @{
+            version = "${{ github.event.inputs.version }}"
+            url = $downloadUrl
+            whats_new = "${{ github.event.inputs.whats_new }}"
+          } | ConvertTo-Json -Compress
+          $updateJson | Set-Content "update.json"
+
+          # Update update_info.json (legacy)
+          $updateInfoJson = @{
+            version = "${{ github.event.inputs.version }}"
+            url = $downloadUrl
+          } | ConvertTo-Json -Compress
+          $updateInfoJson | Set-Content "update_info.json"
+
+          # Commit changes
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add source/application.py inno.iss update.json update_info.json
+          git commit -m "Release version ${{ github.event.inputs.version }}"
+          git push origin HEAD:${{ github.ref }}

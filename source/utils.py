@@ -811,33 +811,39 @@ def youtube_regexp(string):
 
 
 def check_for_updates(quiet=False):
-    url = "https://raw.githubusercontent.com/makhlwf/accessible_youtube_downloader_pro/refs/heads/master/update_info.json"
+    new_url = "https://raw.githubusercontent.com/makhlwf/accessible_youtube_downloader_pro/refs/heads/master/update.json"
+    old_url = "https://raw.githubusercontent.com/makhlwf/accessible_youtube_downloader_pro/refs/heads/master/update_info.json"
     try:
-        r = requests.get(url, timeout=10)
-        if r.status_code != 200:
-            if not quiet:
-                wx.MessageBox(
-                    _(
-                        "حدث خطأ ما أثناء الاتصال بخدمة العثور على التحديثات. تأكد من وجود اتصال مستقر بالإنترنت ثم عاود المحاولة"
-                    ),
-                    _("خطأ"),
-                    parent=wx.GetApp().GetTopWindow(),
-                    style=wx.ICON_ERROR,
-                )
-            return
-        info = r.json()
+        r = requests.get(new_url, timeout=10)
+        if r.status_code == 200:
+            info = r.json()
+        else:
+            r = requests.get(old_url, timeout=10)
+            if r.status_code == 200:
+                info = r.json()
+            else:
+                if not quiet:
+                    wx.MessageBox(
+                        _(
+                            "حدث خطأ ما أثناء الاتصال بخدمة العثور على التحديثات. تأكد من وجود اتصال مستقر بالإنترنت ثم عاود المحاولة"
+                        ),
+                        _("خطأ"),
+                        parent=wx.GetApp().GetTopWindow(),
+                        style=wx.ICON_ERROR,
+                    )
+                return
         if application.version != info["version"]:
-            message = wx.MessageBox(
-                _("هناك تحديث جديد متوفر. هل ترغب في تنزيله الآن؟"),
-                _("تحديث جديد"),
-                parent=wx.GetApp().GetTopWindow(),
-                style=wx.YES_NO,
-            )
+            from gui.update_check_dialog import UpdateCheckDialog
+
+            new_version = info["version"]
+            whats_new = info.get("whats_new", _("لا توجد معلومات حول هذا التحديث"))
             url = info["url"]
-            if message == wx.YES:
+            dlg = UpdateCheckDialog(wx.GetApp().GetTopWindow(), new_version, whats_new)
+            if dlg.ShowModal() == wx.ID_OK:
                 from gui.update_dialog import UpdateDialog
 
                 wx.CallAfter(UpdateDialog, wx.GetApp().GetTopWindow(), url)
+            dlg.Destroy()
             return
         if not quiet:
             wx.MessageBox(
