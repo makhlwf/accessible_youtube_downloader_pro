@@ -50,12 +50,14 @@ def load_yt_dlp():
     global YoutubeDL, yt_dlp_module
     if os.path.exists(paths.yt_dlp_path):
         try:
-            spec = importlib.util.spec_from_file_location("yt_dlp", paths.yt_dlp_path)
-            module = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(module)
-            yt_dlp_module = module
-            YoutubeDL = module.YoutubeDL
-            sys.modules["yt_dlp"] = module
+            if paths.yt_dlp_path not in sys.path:
+                sys.path.insert(0, paths.yt_dlp_path)
+            if "yt_dlp" in sys.modules:
+                del sys.modules["yt_dlp"]
+            import yt_dlp
+
+            yt_dlp_module = yt_dlp
+            YoutubeDL = yt_dlp.YoutubeDL
             return True
         except Exception as e:
             logger.error(f"Failed to load yt-dlp from {paths.yt_dlp_path}: {e}")

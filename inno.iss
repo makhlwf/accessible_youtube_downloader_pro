@@ -102,7 +102,7 @@ var
   DownloadDeno: Boolean;
   ResultCode: Integer;
 begin
-  YtDlpTargetFile := ExpandConstant('{userappdata}\HexPlayer\HexPlayer\yt_dlp.py');
+  YtDlpTargetFile := ExpandConstant('{userappdata}\HexPlayer\HexPlayer\yt_dlp.zip');
   DenoTargetFile := ExpandConstant('{app}\deno.exe');
   DenoZipFile := ExpandConstant('{tmp}\deno.zip');
   TargetDir := ExpandConstant('{app}');
@@ -132,7 +132,7 @@ begin
   );
   DownloadPage.Clear;
   if DownloadYtDlp then
-    DownloadPage.Add(YtDlpUrl, 'yt_dlp.py', '');
+    DownloadPage.Add(YtDlpUrl, 'yt_dlp.zip', '');
   if DownloadDeno then
     DownloadPage.Add(DenoUrl, 'deno.zip', '');
 
@@ -144,7 +144,7 @@ begin
 
       if DownloadYtDlp then
       begin
-        if not FileCopy(ExpandConstant('{tmp}\yt_dlp.py'), YtDlpTargetFile, False) then
+        if not FileCopy(ExpandConstant('{tmp}\yt_dlp.zip'), YtDlpTargetFile, False) then
           MsgBox(ExpandConstant('{cm:DownloadFailed}'), mbError, MB_OK);
       end;
 
