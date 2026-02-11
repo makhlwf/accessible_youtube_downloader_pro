@@ -35,8 +35,8 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "arabic"; MessagesFile: "compiler:Languages\Arabic.isl"
 
 [CustomMessages]
-english.DownloadYtDlp=Download yt-dlp (recommended)
-arabic.DownloadYtDlp=تحميل yt-dlp (موصى به)
+english.DownloadYtDlp=Download latest yt-dlp library (recommended)
+arabic.DownloadYtDlp=تحميل أحدث إصدار من مكتبة yt-dlp (موصى به)
 
 english.DownloadDeno=Download Deno (recommended for YouTube)
 arabic.DownloadDeno=تحميل Deno (موصى به لليوتيوب)
@@ -71,7 +71,7 @@ Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChang
 
 [Code]
 const
-  YtDlpUrl = 'https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe';
+  YtDlpUrl = 'https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp';
   DenoUrl = 'https://github.com/denoland/deno/releases/latest/download/deno-x86_64-pc-windows-msvc.zip';
 
 var
@@ -102,7 +102,7 @@ var
   DownloadDeno: Boolean;
   ResultCode: Integer;
 begin
-  YtDlpTargetFile := ExpandConstant('{app}\yt-dlp.exe');
+  YtDlpTargetFile := ExpandConstant('{userappdata}\HexPlayer\HexPlayer\yt_dlp.zip');
   DenoTargetFile := ExpandConstant('{app}\deno.exe');
   DenoZipFile := ExpandConstant('{tmp}\deno.zip');
   TargetDir := ExpandConstant('{app}');
@@ -122,6 +122,9 @@ begin
   if not DirExists(TargetDir) then
     ForceDirectories(TargetDir);
 
+  if DownloadYtDlp then
+    ForceDirectories(ExtractFilePath(YtDlpTargetFile));
+
   DownloadPage := CreateDownloadPage(
     ExpandConstant('{cm:DownloadTitle}'),
     ExpandConstant('{cm:DownloadDesc}'),
@@ -129,19 +132,19 @@ begin
   );
   DownloadPage.Clear;
   if DownloadYtDlp then
-    DownloadPage.Add(YtDlpUrl, 'yt-dlp.exe', '');
+    DownloadPage.Add(YtDlpUrl, 'yt_dlp.zip', '');
   if DownloadDeno then
     DownloadPage.Add(DenoUrl, 'deno.zip', '');
-  
+
   DownloadPage.Show;
 
   try
     try
       DownloadPage.Download;
-      
+
       if DownloadYtDlp then
       begin
-        if not FileCopy(ExpandConstant('{tmp}\yt-dlp.exe'), YtDlpTargetFile, False) then
+        if not FileCopy(ExpandConstant('{tmp}\yt_dlp.zip'), YtDlpTargetFile, False) then
           MsgBox(ExpandConstant('{cm:DownloadFailed}'), mbError, MB_OK);
       end;
 
@@ -158,7 +161,7 @@ begin
         else
           MsgBox(ExpandConstant('{cm:DownloadFailed}'), mbError, MB_OK);
       end;
-      
+
     except
       if not DownloadPage.AbortedByUser then
         MsgBox(ExpandConstant('{cm:DownloadFailed}'), mbError, MB_OK);

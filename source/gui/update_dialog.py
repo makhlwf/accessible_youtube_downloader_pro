@@ -54,12 +54,11 @@ class UpdateDialog(wx.Dialog):
                 if r.status_code != 200:
                     self.errorAction()
                     return
-                size = r.headers.get("content-length")
+                size_str = r.headers.get("content-length")
                 try:
-                    size = int(size)
-                except TypeError:
-                    self.errorAction()
-                    return
+                    size = int(size_str) if size_str else None
+                except (ValueError, TypeError):
+                    size = None
                 recieved = 0
                 progress = 0
                 with open(name, "wb") as file:
@@ -75,10 +74,11 @@ class UpdateDialog(wx.Dialog):
                             return
 
                         recieved += len(part)
-                        progress = int((recieved / size) * 100)
-                        wx.PostEvent(
-                            self.progress, ProgressChangedEvent(value=progress)
-                        )
+                        if size:
+                            progress = int((recieved / size) * 100)
+                            wx.PostEvent(
+                                self.progress, ProgressChangedEvent(value=progress)
+                            )
             wx.PostEvent(self, DownloadFinishedEvent(path=name))
         except requests.ConnectionError:
             self.errorAction()

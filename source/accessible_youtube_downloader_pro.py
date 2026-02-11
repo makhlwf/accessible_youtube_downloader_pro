@@ -218,7 +218,7 @@ class HomeScreen(wx.Frame):
         version = utils.get_yt_dlp_version()
         if not version:
             wx.MessageBox(
-                _("لم يتم العثور على أداة yt-dlp.exe أو تعذر الحصول على إصدارها"),
+                _("لم يتم العثور على مكتبة yt-dlp أو تعذر الحصول على إصدارها"),
                 _("خطأ"),
                 style=wx.ICON_ERROR, parent=self
             )
