@@ -399,8 +399,9 @@ class HomeScreen(wx.Frame):
         event.Skip()
 
     def startup_checks(self):
-        if utils.check_deno(self):
-            utils.ensure_js_dependencies()
+        if utils.check_yt_dlp(self):
+            if utils.check_deno(self):
+                utils.ensure_js_dependencies()
 
     def onGuide(self, event):
         content = documentation_get()

@@ -60,14 +60,6 @@ def load_yt_dlp():
         except Exception as e:
             logger.error(f"Failed to load yt-dlp from {paths.yt_dlp_path}: {e}")
 
-    try:
-        import yt_dlp
-
-        yt_dlp_module = yt_dlp
-        YoutubeDL = yt_dlp.YoutubeDL
-        return True
-    except ImportError:
-        pass
     return False
 
 
