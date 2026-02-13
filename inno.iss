@@ -102,7 +102,7 @@ var
   DownloadDeno: Boolean;
   ResultCode: Integer;
 begin
-  YtDlpTargetFile := ExpandConstant('{userappdata}\HexPlayer\HexPlayer\yt_dlp.zip');
+  YtDlpTargetFile := ExpandConstant('{userappdata}\HexPlayer\yt_dlp.zip');
   DenoTargetFile := ExpandConstant('{app}\deno.exe');
   DenoZipFile := ExpandConstant('{tmp}\deno.zip');
   TargetDir := ExpandConstant('{app}');
