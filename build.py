@@ -50,16 +50,166 @@ data_to_add = [
     "plugins",
 ]
 
+# ------------------------------------------------------------------
+# THE NUCLEAR LIST: Forces PyInstaller to include the full StdLib
+# required for dynamic loading of complex packages like yt-dlp
+# ------------------------------------------------------------------
+stdlib_hidden_imports = [
+    # The specific ones you already hit
+    "optparse",
+    "getpass",
+    "netrc",
+    "uuid",
+    "fileinput",
+    "shlex",
+    # Core Utilities
+    "argparse",
+    "platform",
+    "subprocess",
+    "ctypes",
+    "ctypes.util",
+    "struct",
+    "hashlib",
+    "hmac",
+    "secrets",
+    "random",
+    "base64",
+    "calendar",
+    "datetime",
+    "time",
+    "shutil",
+    "tempfile",
+    "glob",
+    "fnmatch",
+    "linecache",
+    "traceback",
+    "tokenize",
+    "token",
+    "dis",
+    "inspect",
+    "weakref",
+    "bisect",
+    "heapq",
+    "collections",
+    "copy",
+    "pprint",
+    "types",
+    "functools",
+    "operator",
+    "contextlib",
+    "typing",
+    "dataclasses",
+    "enum",
+    "pathlib",
+    "pickle",
+    "shelve",
+    "dbm",
+    # Text & Encoding
+    "string",
+    "textwrap",
+    "unicodedata",
+    "codecs",
+    "encodings",
+    "locale",
+    "json",
+    "csv",
+    "plistlib",
+    # Compression
+    "gzip",
+    "bz2",
+    "lzma",
+    "zipfile",
+    "tarfile",
+    "zlib",
+    # Networking & Internet (CRITICAL for yt-dlp)
+    "socket",
+    "ssl",
+    "select",
+    "selectors",
+    "asyncio",
+    "signal",
+    "http",
+    "http.client",
+    "http.server",
+    "http.cookiejar",
+    "http.cookies",
+    "email",
+    "email.utils",
+    "email.message",
+    "email.parser",
+    "email.header",
+    "urllib",
+    "urllib.request",
+    "urllib.parse",
+    "urllib.error",
+    "urllib.robotparser",
+    "xml",
+    "xml.etree",
+    "xml.etree.ElementTree",
+    "xml.sax",
+    "xml.dom",
+    "html",
+    "html.parser",
+    "html.entities",
+    "cgi",
+    "mimetypes",
+    "webbrowser",
+    # System & Threading
+    "threading",
+    "multiprocessing",
+    "queue",
+    "concurrent",
+    "concurrent.futures",
+    "logging",
+    "logging.handlers",
+    "sqlite3",
+    # Math
+    "math",
+    "cmath",
+    "numbers",
+    "decimal",
+    "fractions",
+    "statistics",
+    # obscure modules yt-dlp sometimes touches via 'compat'
+    "colorsys",
+    "curses",
+    "pty",
+    "tty",
+    "difflib",
+    "doctest",
+    "pydoc",
+]
+
 # Construct the pyinstaller command
 command = [
     "pyinstaller",
     "--noconfirm",
-    "--windowed",
     "--name",
     app_name,
+    "--noconsole",
+    # Clean build
+    "--clean",
 ]
 
-# Add data files to the command
+# Add all the hidden imports
+for mod in stdlib_hidden_imports:
+    command.extend(["--hidden-import", mod])
+
+# Add the Collect Submodules (More efficient for packages)
+# This forces the WHOLE package, not just the top file
+command.extend(["--collect-submodules", "xml"])
+command.extend(["--collect-submodules", "http"])
+command.extend(["--collect-submodules", "email"])
+command.extend(["--collect-submodules", "urllib"])
+command.extend(["--collect-submodules", "html"])
+command.extend(["--collect-submodules", "encodings"])
+command.extend(["--collect-submodules", "logging"])
+command.extend(["--collect-submodules", "ctypes"])
+command.extend(
+    ["--collect-submodules", "curses"]
+)  # Windows sometimes needs this for progress bars
+
+# Add data files
 for item in data_to_add:
     source_path = os.path.join("source", item)
     if os.path.isdir(source_path):
