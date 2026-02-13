@@ -139,11 +139,8 @@ def update_yt_dlp():
     current = get_yt_dlp_version()
     latest = get_latest_github_release("yt-dlp/yt-dlp")
     if not latest:
-        wx.MessageBox(
+        show_error(
             _("تعذر الحصول على معلومات التحديث من GitHub"),
-            _("خطأ"),
-            style=wx.ICON_ERROR,
-            parent=wx.GetApp().GetTopWindow(),
         )
         return
 
@@ -203,11 +200,8 @@ def update_deno():
     current = get_deno_version()
     latest = get_latest_github_release("denoland/deno")
     if not latest:
-        wx.MessageBox(
+        show_error(
             _("تعذر الحصول على معلومات التحديث من GitHub"),
-            _("خطأ"),
-            style=wx.ICON_ERROR,
-            parent=wx.GetApp().GetTopWindow(),
         )
         return
 
@@ -823,13 +817,10 @@ def check_for_updates(quiet=False):
                 info = r.json()
             else:
                 if not quiet:
-                    wx.MessageBox(
+                    show_error(
                         _(
                             "حدث خطأ ما أثناء الاتصال بخدمة العثور على التحديثات. تأكد من وجود اتصال مستقر بالإنترنت ثم عاود المحاولة"
                         ),
-                        _("خطأ"),
-                        parent=wx.GetApp().GetTopWindow(),
-                        style=wx.ICON_ERROR,
                     )
                 return
         if application.version != info["version"]:
@@ -854,11 +845,19 @@ def check_for_updates(quiet=False):
     except Exception as e:
         logger.error(f"Update check failed: {e}")
         if not quiet:
-            wx.MessageBox(
+            show_error(
                 _(
                     "حدث خطأ ما أثناء الاتصال بخدمة العثور على التحديثات. تأكد من وجود اتصال مستقر بالإنترنت ثم عاود المحاولة"
                 ),
-                _("خطأ"),
-                parent=wx.GetApp().GetTopWindow(),
-                style=wx.ICON_ERROR,
+                e,
             )
+
+def show_error(message, exception=None, parent=None):
+    if config_get("debug") and exception:
+        message = f"{message}\n\nDebug Info:\n{str(exception)}"
+    wx.MessageBox(
+        message,
+        _("خطأ"),
+        style=wx.ICON_ERROR,
+        parent=parent or wx.GetApp().GetTopWindow(),
+    )

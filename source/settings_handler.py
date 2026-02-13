@@ -22,6 +22,7 @@ defaults = {
     "cookiespath": "",
     "defaultvideoquality": 4,
     "defaultaudioquality": 2,
+    "debug": False,
 }
 
 _cache = {}

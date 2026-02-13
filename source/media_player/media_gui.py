@@ -134,8 +134,8 @@ class MediaGui(wx.Frame):
         self.Bind(wx.EVT_CLOSE, lambda event: self.closeAction())
         self.Show()
         if stream is None:
-            wx.MessageBox(
-                _("لا يمكن تشغيل الرابط"), _("خطأ"), style=wx.ICON_ERROR, parent=self
+            utils.show_error(
+                _("لا يمكن تشغيل الرابط"), parent=self
             )
             self.closeAction()
             return
@@ -501,20 +501,17 @@ class MediaGui(wx.Frame):
                 stream = get_playable_stream(url, audio_mode=self.audio_mode)
         except Exception as e:
             wx.CallAfter(
-                wx.MessageBox,
-                _("حدث خطأ أثناء محاولة جلب رابط التشغيل: {}").format(e),
-                _("خطأ"),
-                style=wx.ICON_ERROR,
-                parent=self,
+                utils.show_error,
+                _("حدث خطأ أثناء محاولة جلب رابط التشغيل"),
+                e,
+                self,
             )
             return
 
         if stream is None:
             wx.CallAfter(
-                wx.MessageBox,
+                utils.show_error,
                 _("تعذر جلب رابط التشغيل لهذا المقطع"),
-                _("خطأ"),
-                style=wx.ICON_ERROR,
                 parent=self,
             )
             return
