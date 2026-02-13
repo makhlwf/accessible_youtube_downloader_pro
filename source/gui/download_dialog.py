@@ -4,7 +4,7 @@ import os
 from download_handler.downloader import downloadAction
 from settings_handler import config_get, config_set
 from .download_progress import DownloadProgress
-from utils import youtube_regexp
+import utils
 from language_handler import _
 
 
@@ -97,9 +97,9 @@ class DownloadDialog(wx.Frame):
 
     def onDownload(self, event):
         url = self.videoLink.GetValue()
-        if url == "" or youtube_regexp(url) is None:
-            wx.MessageBox(
-                _("يرجى إدخال رابطًا صحيحًا."), _("خطأ"), style=wx.ICON_ERROR, parent=self
+        if url == "" or utils.youtube_regexp(url) is None:
+            utils.show_error(
+                _("يرجى إدخال رابطًا صحيحًا."), parent=self
             )
             wx.CallAfter(self.videoLink.SetFocus)
             return

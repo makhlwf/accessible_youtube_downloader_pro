@@ -155,8 +155,8 @@ class HistoryDialog(wx.Frame):
             ).res
 
         if stream is None:
-            wx.MessageBox(
-                _("لا يمكن تشغيل الرابط"), _("خطأ"), style=wx.ICON_ERROR, parent=self
+            utils.show_error(
+                _("لا يمكن تشغيل الرابط"), parent=self
             )
             return
 

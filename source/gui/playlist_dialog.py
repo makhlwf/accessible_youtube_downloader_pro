@@ -1,4 +1,5 @@
 import wx
+import utils
 from language_handler import _
 from youtube_browser.search_handler import PlaylistResult
 from youtube_browser.scraper import Scraper
@@ -76,13 +77,10 @@ class PlaylistDialog(wx.Dialog):
                 self.scraper.add_item(i, priority=10)
         except Exception as e:  # Catch a broader exception here
             print(e)  # Added for debugging
-            wx.MessageBox(
-                _("حدث خطأ ما أثناء محاولة فتح قائمة التشغيل: {}").format(
-                    e
-                ),  # Show the error
-                _("خطأ"),
-                style=wx.ICON_ERROR,
-                parent=self,
+            utils.show_error(
+                _("حدث خطأ ما أثناء محاولة فتح قائمة التشغيل"),
+                e,
+                self,
             )
             self.Destroy()
             return

@@ -234,12 +234,11 @@ class YoutubeBrowser(wx.Frame):
             except Exception as e:
                 logger.error(f"Search failed: {e}")
                 wx.CallAfter(
-                    wx.MessageBox,
+                    utils.show_error,
                     _(
-                        "تعذر إجراء عملية البحث بسبب وجود خلل ما في الاتصال بالشبكة.\nالتفاصيل: {}"
-                    ).format(e),
-                    _("خطأ"),
-                    style=wx.ICON_ERROR,
+                        "تعذر إجراء عملية البحث بسبب وجود خلل ما في الاتصال بالشبكة."
+                    ),
+                    e,
                 )
 
         Thread(target=search_thread, daemon=True).start()
@@ -414,12 +413,11 @@ class YoutubeBrowser(wx.Frame):
             except Exception as e:
                 logger.error(f"Load more failed: {e}")
                 wx.CallAfter(
-                    wx.MessageBox,
+                    utils.show_error,
                     _(
-                        "لم يتمكن البرنامج من تحميل المزيد من النتائج.\nالتفاصيل: {}"
-                    ).format(e),
-                    _("خطأ"),
-                    style=wx.ICON_ERROR,
+                        "لم يتمكن البرنامج من تحميل المزيد من النتائج."
+                    ),
+                    e,
                 )
                 speak(_("لم يتمكن البرنامج من تحميل المزيد من النتائج"))
 

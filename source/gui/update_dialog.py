@@ -1,5 +1,6 @@
 import requests
 import wx
+import utils
 from language_handler import _
 from wx.lib.newevent import NewEvent
 import os
@@ -84,10 +85,8 @@ class UpdateDialog(wx.Dialog):
             self.errorAction()
 
     def errorAction(self):
-        wx.MessageBox(
+        utils.show_error(
             _("لا يمكن اكمال التنزيل في الوقت الحالي"),
-            _("خطأ"),
-            style=wx.ICON_ERROR,
             parent=self,
         )
         if self.dest is None:
@@ -108,11 +107,10 @@ class UpdateDialog(wx.Dialog):
                         zip_ref.extractall(os.path.dirname(event.path))
                     os.remove(event.path)
                 except Exception as e:
-                    wx.MessageBox(
-                        _("حدث خطأ أثناء استخراج الملف: {}").format(str(e)),
-                        _("خطأ"),
-                        style=wx.ICON_ERROR,
-                        parent=self,
+                    utils.show_error(
+                        _("حدث خطأ أثناء استخراج الملف"),
+                        e,
+                        self,
                     )
                     self.EndModal(wx.ID_ERROR)
                     return
@@ -131,14 +129,13 @@ class UpdateDialog(wx.Dialog):
             self.status.Value = _("جاري تثبيت التحديث")
             path = os.path.join(update_path, event.path)
             subprocess.Popen('"{}" /silent'.format(path), shell=True)
-        except Exception:
-            wx.MessageBox(
+        except Exception as e:
+            utils.show_error(
                 _(
                     "حدث خطأ ما عند محاولة فتح ملف التثبيت. فضلًا أعد محاولة التحديث مجددًا, أو تواصل مع المطور للإبلاغ بالمشكلة"
                 ),
-                _("خطأ"),
-                style=wx.ICON_ERROR,
-                parent=self,
+                e,
+                self,
             )
             self.EndModal(wx.ID_ERROR)
             return

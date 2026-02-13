@@ -217,10 +217,9 @@ class HomeScreen(wx.Frame):
     def on_show_yt_dlp_version(self, event):
         version = utils.get_yt_dlp_version()
         if not version:
-            wx.MessageBox(
+            utils.show_error(
                 _("لم يتم العثور على مكتبة yt-dlp أو تعذر الحصول على إصدارها"),
-                _("خطأ"),
-                style=wx.ICON_ERROR, parent=self
+                parent=self
             )
             return
         wx.MessageBox(version, _("إصدار yt-dlp"), parent=self)
@@ -228,10 +227,9 @@ class HomeScreen(wx.Frame):
     def on_show_deno_version(self, event):
         version = utils.get_deno_version()
         if not version:
-            wx.MessageBox(
+            utils.show_error(
                 _("لم يتم العثور على أداة deno.exe أو تعذر الحصول على إصدارها"),
-                _("خطأ"),
-                style=wx.ICON_ERROR, parent=self
+                parent=self
             )
             return
         wx.MessageBox(version, _("إصدار Deno.js"), parent=self)
@@ -297,8 +295,8 @@ class HomeScreen(wx.Frame):
                 self, _("جاري التشغيل"), utils.get_playable_stream, url, audio_mode
             ).res
         if stream is None:
-            wx.MessageBox(
-                _("لا يمكن تشغيل الرابط"), _("خطأ"), style=wx.ICON_ERROR, parent=self
+            utils.show_error(
+                _("لا يمكن تشغيل الرابط"), parent=self
             )
             return
         MediaGui(
@@ -340,7 +338,7 @@ class HomeScreen(wx.Frame):
         audio_mode = data["audio"]
         stream = LoadingDialog(self, _("جاري التشغيل"), utils.get_playable_stream, url, audio_mode).res
         if stream is None:
-            wx.MessageBox(_("لا يمكن تشغيل الرابط"), _("خطأ"), style=wx.ICON_ERROR, parent=self)
+            utils.show_error(_("لا يمكن تشغيل الرابط"), parent=self)
             return
         MediaGui(self, stream.title, stream, url, audio_mode=audio_mode)
         self.Hide()

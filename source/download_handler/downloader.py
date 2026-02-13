@@ -109,7 +109,7 @@ class Downloader:
             return 0
         except Exception as e:
             logger.error(f"Download failed: {e}")
-            return 1
+            return e
 
 
 def downloadAction(
@@ -156,10 +156,9 @@ def downloadAction(
         if result == 0:
             wx.MessageBox(_("اكتمل التنزيل بنجاح"), _("نجاح"), parent=dlg)
         else:
-            wx.MessageBox(
+            utils.show_error(
                 _("حدث خطأ أثناء التنزيل. يرجى التحقق من الرابط أو اتصالك بالإنترنت."),
-                _("خطأ"),
-                style=wx.ICON_ERROR,
+                result if isinstance(result, Exception) else None,
                 parent=dlg,
             )
         wx.CallAfter(dlg.Destroy)

@@ -1048,3 +1048,6 @@ msgstr "Live"
 
 #~ msgid "تحديث"
 #~ msgstr "Update"
+
+msgid "تفعيل رسائل تصحيح الأخطاء للمطورين فقط"
+msgstr "Enable debug messages for developers only"
