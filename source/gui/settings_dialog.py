@@ -69,7 +69,7 @@ class SettingsDialog(wx.Dialog):
         self.debugMode = wx.CheckBox(
             preferencesBox,
             -1,
-            _("Enable debug messages for developers only"),
+            _("تفعيل رسائل تصحيح الأخطاء للمطورين فقط"),
             name="debug",
         )
         self.autoCheckForUpdates.SetValue(config_get("checkupdates"))
