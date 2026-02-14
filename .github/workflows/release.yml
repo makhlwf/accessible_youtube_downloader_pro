@@ -13,7 +13,7 @@ on:
           - beta
       version:
         description: 'Version Number (Required for Stable)'
-        required: false # Changed to false so you can skip it for Beta
+        required: false
         type: string
       release_message:
         description: 'Release Message (Optional for Beta)'
@@ -32,7 +32,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4 # Reverted to v4 (v6 does not exist yet)
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -55,9 +55,9 @@ jobs:
           }
 
       - name: Set up Python
-        uses: actions/setup-python@v5 # Reverted to v5 (Standard stable)
+        uses: actions/setup-python@v6
         with:
-          python-version: '3.12' # 3.14 is not fully stable in all runners yet, adjusted to 3.12 or use your preferred
+          python-version: '3.14'
 
       - name: Install dependencies
         run: |
