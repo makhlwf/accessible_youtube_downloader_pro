@@ -1,4 +1,5 @@
 import os
+import sys
 import subprocess
 import shutil
 
@@ -182,7 +183,9 @@ stdlib_hidden_imports = [
 
 # Construct the pyinstaller command
 command = [
-    "pyinstaller",
+    sys.executable,
+    "-m",
+    "PyInstaller",
     "--noconfirm",
     "--name",
     app_name,
