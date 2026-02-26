@@ -491,31 +491,38 @@ class MediaGui(wx.Frame):
         self.player.media.stop()
         if hasattr(self, "description"):
             del self.description
-        try:
-            stream = (
-                self.results.get_stream(index)
-                if hasattr(self.results, "get_stream")
-                else None
-            )
-            if stream is None:
-                stream = get_playable_stream(url, audio_mode=self.audio_mode)
-        except Exception as e:
-            wx.CallAfter(
-                utils.show_error,
-                _("حدث خطأ أثناء محاولة جلب رابط التشغيل"),
-                e,
-                self,
-            )
-            return
 
-        if stream is None:
-            wx.CallAfter(
-                utils.show_error,
-                _("تعذر جلب رابط التشغيل لهذا المقطع"),
-                parent=self,
-            )
-            return
+        speak(_("جاري تشغيل {}").format(title))
 
+        def _task():
+            try:
+                stream = (
+                    self.results.get_stream(index)
+                    if hasattr(self.results, "get_stream")
+                    else None
+                )
+                if stream is None:
+                    stream = get_playable_stream(url, audio_mode=self.audio_mode)
+
+                if stream:
+                    wx.CallAfter(self._perform_track_change, stream, url, title)
+                else:
+                    wx.CallAfter(
+                        utils.show_error,
+                        _("تعذر جلب رابط التشغيل لهذا المقطع"),
+                        parent=self,
+                    )
+            except Exception as e:
+                wx.CallAfter(
+                    utils.show_error,
+                    _("حدث خطأ أثناء محاولة جلب رابط التشغيل"),
+                    e,
+                    self,
+                )
+
+        Thread(target=_task, daemon=True).start()
+
+    def _perform_track_change(self, stream, url, title):
         options = []
         if hasattr(stream, "headers") and stream.headers:
             ua = stream.headers.get("User-Agent")
@@ -529,7 +536,7 @@ class MediaGui(wx.Frame):
         self.player.set_media(stream.url, options=options)
         self.url = url
         self.title = title
-        wx.CallAfter(self.SetTitle, f"{title} - {application.name}")
+        self.SetTitle(f"{title} - {application.name}")
         self.player.media.play()
         self.player.media.audio_set_volume(self.player.volume)
         Thread(target=self.extract_description).start()

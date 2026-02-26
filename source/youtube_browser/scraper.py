@@ -6,11 +6,12 @@ from utils import get_playable_stream
 logger = logging.getLogger(__name__)
 
 class Scraper:
-    def __init__(self, num_workers=5):
+    def __init__(self, num_workers=10):
         self.queue = queue.PriorityQueue()
         self.results = None
         self.audio_mode = False
         self.queued_indices = set()
+        self.processing_indices = set()
         self.lock = threading.Lock()
         self.workers = []
         for _ in range(num_workers):
@@ -22,6 +23,7 @@ class Scraper:
         with self.lock:
             self.results = results
             self.queued_indices.clear()
+            self.processing_indices.clear()
             # Clear the queue
             while not self.queue.empty():
                 try:
@@ -52,24 +54,35 @@ class Scraper:
         while True:
             try:
                 priority, index = self.queue.get(timeout=1)
-                results = self.results
-                if results:
-                    try:
-                        if index < results.count:
-                            # Check if still needed
-                            if (
-                                results.get_type(index) == "video"
-                                and results.get_stream(index) is None
-                            ):
-                                url = results.get_url(index)
-                                # Direct stream scraping
-                                stream = get_playable_stream(url, audio_mode=self.audio_mode)
-                                if stream and results == self.results:
-                                    results.set_stream(index, stream)
-                    except Exception as e:
-                        logger.debug(f"Scraper task failed for index {index}: {e}")
+                with self.lock:
+                    if index in self.processing_indices:
+                        self.queue.task_done()
+                        continue
+                    self.processing_indices.add(index)
 
-                self.queue.task_done()
+                results = self.results
+                try:
+                    if results:
+                        try:
+                            if index < results.count:
+                                # Check if still needed
+                                if (
+                                    results.get_type(index) == "video"
+                                    and results.get_stream(index) is None
+                                ):
+                                    url = results.get_url(index)
+                                    # Direct stream scraping
+                                    stream = get_playable_stream(url, audio_mode=self.audio_mode)
+                                    if stream and results == self.results:
+                                        results.set_stream(index, stream)
+                        except Exception as e:
+                            logger.debug(f"Scraper task failed for index {index}: {e}")
+                finally:
+                    with self.lock:
+                        self.processing_indices.discard(index)
+                        if index in self.queued_indices:
+                            self.queued_indices.discard(index)
+                    self.queue.task_done()
             except queue.Empty:
                 continue
             except Exception as e:

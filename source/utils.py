@@ -10,6 +10,7 @@ import os
 import logging
 import time
 import threading
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from settings_handler import config_get
 from language_handler import _
 
@@ -17,16 +18,18 @@ logger = logging.getLogger(__name__)
 
 
 class InfoCache:
-    def __init__(self, ttl=300):
+    def __init__(self, default_ttl=300):
         self.cache = {}
-        self.ttl = ttl
+        self.default_ttl = default_ttl
         self.lock = threading.Lock()
 
-    def get(self, url):
+    def get(self, url, ttl=None):
+        if ttl is None:
+            ttl = self.default_ttl
         with self.lock:
             if url in self.cache:
                 info, timestamp = self.cache[url]
-                if time.time() - timestamp < self.ttl:
+                if time.time() - timestamp < ttl:
                     return info
                 else:
                     del self.cache[url]
@@ -38,6 +41,8 @@ class InfoCache:
 
 
 _info_cache = InfoCache()
+_stream_cache = InfoCache()
+_extraction_executor = ThreadPoolExecutor(max_workers=20)
 
 import importlib.util
 import sys
@@ -75,27 +80,20 @@ PLAYER_OPTS = {
     "js_runtimes": {"deno": {}},
     "allowed_extractors": ["youtube", "youtube:.*"],
     "no_check_certificate": True,
+    "socket_timeout": 5,
 }
 
-_ydl_instances = {}
-_ydl_lock = threading.Lock()
-
-
 def get_ydl_instance(client, cookies_path=None):
+    """Returns a fresh YoutubeDL instance for thread-safe extraction."""
     if not YoutubeDL:
         return None
-    client_tuple = tuple(client)
-    key = (client_tuple, cookies_path)
-    with _ydl_lock:
-        if key not in _ydl_instances:
-            opts = PLAYER_OPTS.copy()
-            opts["extractor_args"] = {
-                "youtube": {"player_client": client, "js_variant": "tv"}
-            }
-            if cookies_path and os.path.exists(cookies_path):
-                opts["cookiefile"] = cookies_path
-            _ydl_instances[key] = YoutubeDL(opts)
-        return _ydl_instances[key]
+    opts = PLAYER_OPTS.copy()
+    opts["extractor_args"] = {
+        "youtube": {"player_client": client, "js_variant": "tv"}
+    }
+    if cookies_path and os.path.exists(cookies_path):
+        opts["cookiefile"] = cookies_path
+    return YoutubeDL(opts)
 
 
 VIDEO_QUALITIES = [144, 240, 360, 480, 720, 1080, 1440, 2160]
@@ -398,7 +396,18 @@ class Stream:
         self.quality = quality
 
 
+
 def get_playable_stream(url, audio_mode=False):
+    if "youtube.com" not in url and "youtu.be" not in url:
+        url_full = f"https://www.youtube.com/watch?v={url}"
+    else:
+        url_full = url
+
+    cache_key = f"{url_full}_{'audio' if audio_mode else 'video'}"
+    cached = _stream_cache.get(cache_key, ttl=1200)
+    if cached:
+        return cached
+
     if not YoutubeDL:
         logger.error("yt-dlp is not installed")
         if audio_mode:
@@ -406,29 +415,26 @@ def get_playable_stream(url, audio_mode=False):
         return get_video_stream(url)
 
     if audio_mode:
-        clients_to_try = [["android"], ["web"], ["ios"], ["mweb"]]
+        clients_to_try = [["android"], ["ios"], ["web"], ["mweb"]]
     else:
         clients_to_try = [
             ["tv"],
-            ["web_embedded"],
-            ["android"],
-            ["web"],
             ["ios"],
+            ["android"],
+            ["web_embedded"],
+            ["web"],
             ["mweb"],
         ]
 
     if paths.main_path not in os.environ.get("PATH", ""):
         os.environ["PATH"] = paths.main_path + os.pathsep + os.environ.get("PATH", "")
 
-    last_exception = None
+    url = url_full
     cookies_path = config_get("cookiespath")
-    for client in clients_to_try:
-        try:
-            ydl = get_ydl_instance(client, cookies_path)
-            if "youtube.com" not in url and "youtu.be" not in url:
-                url = f"https://www.youtube.com/watch?v={url}"
 
-            with _ydl_lock:
+    def _extract_task(client):
+        try:
+            with get_ydl_instance(client, cookies_path) as ydl:
                 try:
                     entry = ydl.extract_info(url, download=False)
                 except Exception as e:
@@ -438,6 +444,7 @@ def get_playable_stream(url, audio_mode=False):
                                 "quiet": True,
                                 "no_warnings": True,
                                 "js_runtimes": {"deno": {}},
+                                "socket_timeout": 5,
                             }
                         ) as ydl_retry:
                             entry = ydl_retry.extract_info(url, download=False)
@@ -463,7 +470,7 @@ def get_playable_stream(url, audio_mode=False):
             url_to_play = fmt.get("url")
 
             if not url_to_play:
-                continue
+                return None
 
             headers = {}
             headers.update(entry.get("http_headers", {}) or {})
@@ -473,42 +480,59 @@ def get_playable_stream(url, audio_mode=False):
             audio_url = audio_fmt.get("url") if audio_fmt else None
             return Stream(title, url_to_play, headers, audio_url, quality=quality)
         except Exception as e:
-            last_exception = e
-            logger.warning(f"Failed to get stream with client {client}: {e}")
-            if "restricted" in str(e).lower() or "sign in" in str(e).lower():
-                continue
-            else:
-                break
+            logger.debug(f"Extraction failed for client {client}: {e}")
+            return None
 
-    logger.error(f"Error in get_playable_stream: {last_exception}")
+    # Try top clients in parallel
+    futures = [
+        _extraction_executor.submit(_extract_task, client) for client in clients_to_try
+    ]
+    for future in as_completed(futures):
+        try:
+            result = future.result()
+            if result:
+                # Return the first successful extraction
+                _stream_cache.set(cache_key, result)
+                return result
+        except Exception:
+            continue
+
+    logger.error(f"All clients failed to extract stream for {url}")
     return None
 
 
 def get_media_info(url):
-    cached = _info_cache.get(url)
+    cached = _info_cache.get(url, ttl=3600)
     if cached:
         return cached
 
     if not YoutubeDL:
         return None
 
-    clients_to_try = [["tv"], ["web_embedded"], ["android"], ["web"], ["ios"], ["mweb"]]
-    last_err = None
+    clients_to_try = [["tv"], ["ios"], ["android"], ["web_embedded"], ["web"], ["mweb"]]
     cookies_path = config_get("cookiespath")
 
-    for client in clients_to_try:
+    def _extract_info_task(client):
         try:
-            ydl = get_ydl_instance(client, cookies_path)
-            with _ydl_lock:
-                info = ydl.extract_info(url, download=False)
-            _info_cache.set(url, info)
-            return info
-        except Exception as e:
-            last_err = e
+            with get_ydl_instance(client, cookies_path) as ydl:
+                return ydl.extract_info(url, download=False)
+        except Exception:
+            return None
+
+    futures = [
+        _extraction_executor.submit(_extract_info_task, client)
+        for client in clients_to_try
+    ]
+    for future in as_completed(futures):
+        try:
+            info = future.result()
+            if info:
+                _info_cache.set(url, info)
+                return info
+        except Exception:
             continue
 
-    if last_err:
-        logger.error(f"get_media_info failed for all clients. Last error: {last_err}")
+    logger.error(f"get_media_info failed for all clients for {url}")
     return None
 
 
