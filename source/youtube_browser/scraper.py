@@ -5,6 +5,7 @@ from utils import get_playable_stream
 
 logger = logging.getLogger(__name__)
 
+
 class Scraper:
     def __init__(self, num_workers=10):
         self.queue = queue.PriorityQueue()
@@ -72,7 +73,9 @@ class Scraper:
                                 ):
                                     url = results.get_url(index)
                                     # Direct stream scraping
-                                    stream = get_playable_stream(url, audio_mode=self.audio_mode)
+                                    stream = get_playable_stream(
+                                        url, audio_mode=self.audio_mode
+                                    )
                                     if stream and results == self.results:
                                         results.set_stream(index, stream)
                         except Exception as e:

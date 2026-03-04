@@ -17,9 +17,13 @@ def get_bundled_data_path():
     return main_path
 
 
-settings_path = os.path.join(os.getenv("appdata") or os.path.expanduser("~/.HexPlayer"), "HexPlayer")
+settings_path = os.path.join(
+    os.getenv("appdata") or os.path.expanduser("~/.HexPlayer"), "HexPlayer"
+)
 update_path = os.path.join(settings_path, "updates")
 db_path = os.path.join(settings_path, "aHexPlayer.db")
+
+
 def _get_yt_dlp_path():
     # Check multiple locations for yt_dlp.zip
     # 1. Check settings path (AppData) - preferred if updated by app

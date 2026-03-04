@@ -155,9 +155,7 @@ class HistoryDialog(wx.Frame):
             ).res
 
         if stream is None:
-            utils.show_error(
-                _("لا يمكن تشغيل الرابط"), parent=self
-            )
+            utils.show_error(_("لا يمكن تشغيل الرابط"), parent=self)
             return
 
         MediaGui(
@@ -333,9 +331,11 @@ class HistoryDialog(wx.Frame):
             favorites = self.favorites.get_all()
             fav_urls = {f["url"] for f in favorites}
             found = target_url in fav_urls
+
             def update():
                 if self:
                     self.favCheck.SetValue(found)
+
             wx.CallAfter(update)
 
         Thread(target=check_url, args=[url], daemon=True).start()

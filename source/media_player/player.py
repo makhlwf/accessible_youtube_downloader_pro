@@ -4,6 +4,7 @@ from utils import time_formatting
 from threading import Thread
 from settings_handler import config_get
 
+
 class Player:
     def __init__(self, filename, hwnd, window=None, options=None):
         self.instance = vlc.Instance()

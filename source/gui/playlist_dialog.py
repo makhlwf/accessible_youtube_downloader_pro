@@ -208,7 +208,11 @@ class PlaylistDialog(wx.Dialog):
         title = self.result.get_title(n)
         dlg = DownloadProgress(self.Parent, title)
         self._download_media(
-            0, url, dlg, "video", os.path.join(config_get("path"), utils.sanitize_filename(self.title))
+            0,
+            url,
+            dlg,
+            "video",
+            os.path.join(config_get("path"), utils.sanitize_filename(self.title)),
         )
 
     def directDownload(self):
@@ -232,7 +236,11 @@ class PlaylistDialog(wx.Dialog):
         title = self.result.get_title(n)
         dlg = DownloadProgress(wx.GetApp().GetTopWindow(), title)
         self._download_media(
-            1, url, dlg, "video", os.path.join(config_get("path"), utils.sanitize_filename(self.title))
+            1,
+            url,
+            dlg,
+            "video",
+            os.path.join(config_get("path"), utils.sanitize_filename(self.title)),
         )
 
     def onMp3Download(self, event):
@@ -242,7 +250,11 @@ class PlaylistDialog(wx.Dialog):
         title = self.result.get_title(n)
         dlg = DownloadProgress(wx.GetApp().GetTopWindow(), title)
         self._download_media(
-            2, url, dlg, "video", os.path.join(config_get("path"), utils.sanitize_filename(self.title))
+            2,
+            url,
+            dlg,
+            "video",
+            os.path.join(config_get("path"), utils.sanitize_filename(self.title)),
         )
 
     def onListBox(self, event):

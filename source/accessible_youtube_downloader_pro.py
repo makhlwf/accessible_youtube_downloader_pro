@@ -6,15 +6,8 @@ import webbrowser
 import subprocess
 import logging
 from threading import Thread
-
-# Setup DLL directory for VLC etc.
-os.chdir(os.path.abspath(os.path.dirname(__file__)))
-if hasattr(os, "add_dll_directory"):
-    os.add_dll_directory(os.getcwd())
-
 import wx
 import pyperclip
-
 import settings_handler
 from language_handler import init_translation, codes, _
 import application
@@ -35,6 +28,11 @@ from media_player.media_gui import MediaGui
 from youtube_browser.browser import YoutubeBrowser
 from youtube_browser.scraper import Scraper
 from youtube_browser.search_handler import SimpleResult
+
+# Setup DLL directory for VLC etc.
+os.chdir(os.path.abspath(os.path.dirname(__file__)))
+if hasattr(os, "add_dll_directory"):
+    os.add_dll_directory(os.getcwd())
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -83,7 +81,9 @@ class HomeScreen(wx.Frame):
         self.playBtn = wx.Button(
             panel, -1, _("تشغيل فيديو youtube من خلال الرابط\tctrl+y"), name="tab"
         )
-        self.favBtn = wx.Button(panel, -1, _("الفيديوهات المفضلة	ctrl+shift+f"), name="tab")
+        self.favBtn = wx.Button(
+            panel, -1, _("الفيديوهات المفضلة	ctrl+shift+f"), name="tab"
+        )
         self.historyBtn = wx.Button(panel, -1, _("سجل المشاهدة\tctrl+h"), name="tab")
         self.historyBtn.Hide()
 
@@ -118,7 +118,9 @@ class HomeScreen(wx.Frame):
         mainMenu = wx.Menu()
         self.searchItem = mainMenu.Append(-1, _("البحث في youtube\tctrl+f"))
         self.downloadItem = mainMenu.Append(-1, _("التنزيل من خلال رابط\tctrl+d"))
-        self.playItem = mainMenu.Append(-1, _("تشغيل فيديو youtube من خلال الرابط\tctrl+y"))
+        self.playItem = mainMenu.Append(
+            -1, _("تشغيل فيديو youtube من خلال الرابط\tctrl+y")
+        )
         self.favItem = mainMenu.Append(-1, _("الفيديوهات المفضلة	ctrl+shift+f"))
         self.historyItem = mainMenu.Append(-1, _("سجل المشاهدة\tctrl+h"))
         self.historyItem.Enable(False)
@@ -151,16 +153,18 @@ class HomeScreen(wx.Frame):
         self.SetMenuBar(menuBar)
 
         # Accelerator Table
-        accel = wx.AcceleratorTable([
-            (wx.ACCEL_CTRL, ord("F"), self.searchItem.GetId()),
-            (wx.ACCEL_CTRL, ord("D"), self.downloadItem.GetId()),
-            (wx.ACCEL_CTRL, ord("Y"), self.playItem.GetId()),
-            (wx.ACCEL_CTRL | wx.ACCEL_SHIFT, ord("F"), self.favItem.GetId()),
-            (wx.ACCEL_CTRL, ord("H"), self.historyItem.GetId()),
-            (wx.ACCEL_CTRL, ord("P"), self.openPathItem.GetId()),
-            (wx.ACCEL_ALT, ord("S"), self.settingsItem.GetId()),
-            (wx.ACCEL_CTRL, ord("W"), self.exitItem.GetId()),
-        ])
+        accel = wx.AcceleratorTable(
+            [
+                (wx.ACCEL_CTRL, ord("F"), self.searchItem.GetId()),
+                (wx.ACCEL_CTRL, ord("D"), self.downloadItem.GetId()),
+                (wx.ACCEL_CTRL, ord("Y"), self.playItem.GetId()),
+                (wx.ACCEL_CTRL | wx.ACCEL_SHIFT, ord("F"), self.favItem.GetId()),
+                (wx.ACCEL_CTRL, ord("H"), self.historyItem.GetId()),
+                (wx.ACCEL_CTRL, ord("P"), self.openPathItem.GetId()),
+                (wx.ACCEL_ALT, ord("S"), self.settingsItem.GetId()),
+                (wx.ACCEL_CTRL, ord("W"), self.exitItem.GetId()),
+            ]
+        )
         self.SetAcceleratorTable(accel)
 
     def _bind_events(self):
@@ -182,8 +186,16 @@ class HomeScreen(wx.Frame):
         self.Bind(wx.EVT_MENU, self.onGuide, self.guideItem)
         self.Bind(wx.EVT_MENU, self.onCheckForUpdates, self.checkUpdatesItem)
         self.Bind(wx.EVT_MENU, self.onAbout, self.aboutItem)
-        self.Bind(wx.EVT_MENU, lambda e: webbrowser.open("mailto:altrhwnyashrf1@gmail.com"), self.emailItem)
-        self.Bind(wx.EVT_MENU, lambda e: webbrowser.open("https://t.me/makhlwf"), self.telegramItem)
+        self.Bind(
+            wx.EVT_MENU,
+            lambda e: webbrowser.open("mailto:altrhwnyashrf1@gmail.com"),
+            self.emailItem,
+        )
+        self.Bind(
+            wx.EVT_MENU,
+            lambda e: webbrowser.open("https://t.me/makhlwf"),
+            self.telegramItem,
+        )
 
         # Buttons
         self.searchBtn.Bind(wx.EVT_BUTTON, self.onSearch)
@@ -191,11 +203,16 @@ class HomeScreen(wx.Frame):
         self.playBtn.Bind(wx.EVT_BUTTON, self.onPlay)
         self.favBtn.Bind(wx.EVT_BUTTON, self.onFavorite)
         self.historyBtn.Bind(wx.EVT_BUTTON, self.onHistory)
-        self.load_more_home_button.Bind(wx.EVT_BUTTON, lambda e: self.load_home_feed(True))
+        self.load_more_home_button.Bind(
+            wx.EVT_BUTTON, lambda e: self.load_home_feed(True)
+        )
 
         # List box
         self.home_feed_list.Bind(wx.EVT_LISTBOX, self.on_home_feed_list_box)
-        self.home_feed_list.Bind(wx.EVT_LISTBOX_DCLICK, lambda e: self.on_home_feed_play(None, audio_mode=True))
+        self.home_feed_list.Bind(
+            wx.EVT_LISTBOX_DCLICK,
+            lambda e: self.on_home_feed_play(None, audio_mode=True),
+        )
         self.home_feed_list.Bind(wx.EVT_CHAR_HOOK, self.on_home_feed_hook)
 
         # Frame events
@@ -219,7 +236,7 @@ class HomeScreen(wx.Frame):
         if not version:
             utils.show_error(
                 _("لم يتم العثور على مكتبة yt-dlp أو تعذر الحصول على إصدارها"),
-                parent=self
+                parent=self,
             )
             return
         wx.MessageBox(version, _("إصدار yt-dlp"), parent=self)
@@ -229,7 +246,7 @@ class HomeScreen(wx.Frame):
         if not version:
             utils.show_error(
                 _("لم يتم العثور على أداة deno.exe أو تعذر الحصول على إصدارها"),
-                parent=self
+                parent=self,
             )
             return
         wx.MessageBox(version, _("إصدار Deno.js"), parent=self)
@@ -295,9 +312,7 @@ class HomeScreen(wx.Frame):
                 self, _("جاري التشغيل"), utils.get_playable_stream, url, audio_mode
             ).res
         if stream is None:
-            utils.show_error(
-                _("لا يمكن تشغيل الرابط"), parent=self
-            )
+            utils.show_error(_("لا يمكن تشغيل الرابط"), parent=self)
             return
         MediaGui(
             self,
@@ -336,7 +351,9 @@ class HomeScreen(wx.Frame):
             return
         url = data["link"]
         audio_mode = data["audio"]
-        stream = LoadingDialog(self, _("جاري التشغيل"), utils.get_playable_stream, url, audio_mode).res
+        stream = LoadingDialog(
+            self, _("جاري التشغيل"), utils.get_playable_stream, url, audio_mode
+        ).res
         if stream is None:
             utils.show_error(_("لا يمكن تشغيل الرابط"), parent=self)
             return
@@ -407,7 +424,9 @@ class HomeScreen(wx.Frame):
             Viewer(self, _("دليل استخدام برنامج HexPlayer"), content).ShowModal()
 
     def onCheckForUpdates(self, event):
-        LoadingDialog(self, _("جاري البحث عن التحديثات. يرجى الانتظار"), utils.check_for_updates)
+        LoadingDialog(
+            self, _("جاري البحث عن التحديثات. يرجى الانتظار"), utils.check_for_updates
+        )
         self.instruction.SetFocus()
 
     def onAbout(self, event):

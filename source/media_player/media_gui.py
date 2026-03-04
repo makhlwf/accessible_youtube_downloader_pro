@@ -134,9 +134,7 @@ class MediaGui(wx.Frame):
         self.Bind(wx.EVT_CLOSE, lambda event: self.closeAction())
         self.Show()
         if stream is None:
-            utils.show_error(
-                _("لا يمكن تشغيل الرابط"), parent=self
-            )
+            utils.show_error(_("لا يمكن تشغيل الرابط"), parent=self)
             self.closeAction()
             return
         options = []
@@ -362,9 +360,13 @@ class MediaGui(wx.Frame):
             self.beginingAction()
         elif event.GetKeyCode() in range(49, 58):
             self.set_position(event.GetKeyCode())
-        elif event.ControlDown() and event.ShiftDown() and event.GetKeyCode() == ord("L"):
+        elif (
+            event.ControlDown() and event.ShiftDown() and event.GetKeyCode() == ord("L")
+        ):
             self.get_duration()
-        elif event.ControlDown() and event.ShiftDown() and event.GetKeyCode() == ord("T"):
+        elif (
+            event.ControlDown() and event.ShiftDown() and event.GetKeyCode() == ord("T")
+        ):
             if self.player is not None:
                 speak(_("الوقت المنقضي: {}").format(self.player.get_elapsed()))
         elif event.GetKeyCode() == ord("S"):
@@ -577,8 +579,11 @@ class MediaGui(wx.Frame):
         self.changeTrack(index)
 
         # Trigger load more if near end
-        count = self.results.count if hasattr(self.results, "count") else len(self.results)
+        count = (
+            self.results.count if hasattr(self.results, "count") else len(self.results)
+        )
         if index >= count - 2:
+
             def load_more():
                 if hasattr(self.Parent, "searchResults"):
                     if self.results.load_more():
@@ -591,6 +596,7 @@ class MediaGui(wx.Frame):
                         wx.CallAfter(
                             self.Parent.videosBox.Append, self.results.get_new_titles()
                         )
+
             Thread(target=load_more, daemon=True).start()
 
     def previous(self):
@@ -661,7 +667,10 @@ class MediaGui(wx.Frame):
                     speak(_("تعذر جلب وصف الفيديو"))
             except Exception as e:
                 import logging
-                logging.getLogger(__name__).error(f"Manual description extraction failed: {e}")
+
+                logging.getLogger(__name__).error(
+                    f"Manual description extraction failed: {e}"
+                )
                 speak(_("هناك خطأ ما أدى إلى منع جلب وصف الفيديو"))
 
         Thread(target=extract_description_sync, daemon=True).start()

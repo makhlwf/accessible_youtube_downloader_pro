@@ -2,6 +2,7 @@ import wx
 from language_handler import _
 import application
 
+
 class UpdateCheckDialog(wx.Dialog):
     def __init__(self, parent, new_version, whats_new):
         super().__init__(parent, title=_("تحديث جديد متوفر"))
