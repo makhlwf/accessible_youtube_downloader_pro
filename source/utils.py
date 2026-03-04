@@ -1,3 +1,4 @@
+import sys
 import re
 import requests
 import wx
@@ -44,8 +45,6 @@ _info_cache = InfoCache()
 _stream_cache = InfoCache()
 _extraction_executor = ThreadPoolExecutor(max_workers=20)
 
-import importlib.util
-import sys
 
 yt_dlp_module = None
 YoutubeDL = None
@@ -83,14 +82,13 @@ PLAYER_OPTS = {
     "socket_timeout": 5,
 }
 
+
 def get_ydl_instance(client, cookies_path=None):
     """Returns a fresh YoutubeDL instance for thread-safe extraction."""
     if not YoutubeDL:
         return None
     opts = PLAYER_OPTS.copy()
-    opts["extractor_args"] = {
-        "youtube": {"player_client": client, "js_variant": "tv"}
-    }
+    opts["extractor_args"] = {"youtube": {"player_client": client, "js_variant": "tv"}}
     if cookies_path and os.path.exists(cookies_path):
         opts["cookiefile"] = cookies_path
     return YoutubeDL(opts)
@@ -392,7 +390,6 @@ class Stream:
         self.quality = quality
 
 
-
 def get_playable_stream(url, audio_mode=False):
     if "youtube.com" not in url and "youtu.be" not in url:
         url_full = f"https://www.youtube.com/watch?v={url}"
@@ -539,9 +536,7 @@ def get_audio_stream(url):
     title = info.get("title")
     formats = info.get("formats", [])
     preferred = int(config_get("defaultaudioquality"))
-    stream, audio_stream, quality = pick_best_format(
-        formats, preferred, is_video=False
-    )
+    stream, audio_stream, quality = pick_best_format(formats, preferred, is_video=False)
     if stream:
         return Stream(title, stream["url"], quality=quality)
     return None
@@ -577,7 +572,9 @@ def get_available_qualities(url, audio_mode=False):
         available = [
             f.get("abr")
             for f in formats
-            if f.get("acodec") != "none" and f.get("vcodec") == "none" and f.get("abr") is not None
+            if f.get("acodec") != "none"
+            and f.get("vcodec") == "none"
+            and f.get("abr") is not None
         ]
     return sorted(list(set(available)))
 
@@ -589,7 +586,10 @@ def get_specific_quality_stream(url, height, audio_mode=False):
     title = info.get("title")
     formats = info.get("formats", [])
     stream, audio_stream, quality = pick_best_format(
-        formats, 0, is_video=not audio_mode, target_height=height if not audio_mode else None
+        formats,
+        0,
+        is_video=not audio_mode,
+        target_height=height if not audio_mode else None,
     )
     if audio_mode:
         # For audio, target_height is not really height but we might want to handle it
@@ -598,7 +598,11 @@ def get_specific_quality_stream(url, height, audio_mode=False):
         # Let's just find the closest abr if audio_mode
         if isinstance(height, int):
             for f in formats:
-                if f.get("acodec") != "none" and f.get("vcodec") == "none" and f.get("abr") == height:
+                if (
+                    f.get("acodec") != "none"
+                    and f.get("vcodec") == "none"
+                    and f.get("abr") == height
+                ):
                     stream = f
                     quality = f.get("abr")
                     break
@@ -877,6 +881,7 @@ def check_for_updates(quiet=False):
                 ),
                 e,
             )
+
 
 def show_error(message, exception=None, parent=None):
     if config_get("debug") and exception:

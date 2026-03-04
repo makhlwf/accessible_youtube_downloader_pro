@@ -3,7 +3,7 @@ from py_yt import (
     VideosSearch,
     PlaylistsSearch,
 )
-from utils import time_formatting, time_to_seconds, format_duration
+from utils import time_to_seconds, format_duration
 from language_handler import _
 
 

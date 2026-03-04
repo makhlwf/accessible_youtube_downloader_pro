@@ -1,8 +1,7 @@
+from source import utils
 import webbrowser
 from threading import Thread
 import os
-import re
-import queue
 import logging
 
 import pyperclip
@@ -131,10 +130,10 @@ class YoutubeBrowser(wx.Frame):
             -1, _("التنزيل المباشر...\tctrl+d")
         ).GetId()
 
-        self.openChannelId = self.contextMenu.Append(-1, _("الانتقال إلى القناة")).GetId()
-        self.downloadChannelId = self.contextMenu.Append(
-            -1, _("تنزيل القناة")
+        self.openChannelId = self.contextMenu.Append(
+            -1, _("الانتقال إلى القناة")
         ).GetId()
+        self.downloadChannelId = self.contextMenu.Append(-1, _("تنزيل القناة")).GetId()
         self.copyItemId = self.contextMenu.Append(-1, _("نسخ رابط المقطع")).GetId()
         self.browserItemId = self.contextMenu.Append(
             -1, _("الفتح من خلال متصفح الإنترنت")
@@ -147,7 +146,9 @@ class YoutubeBrowser(wx.Frame):
         self.downloadButton.Bind(wx.EVT_BUTTON, self.onDownload)
         self.favCheck.Bind(wx.EVT_CHECKBOX, self.onFavorite)
         self.searchButton.Bind(wx.EVT_BUTTON, self.onSearch)
-        self.Bind(wx.EVT_BUTTON, self.backAction)  # Assuming backButton is focused correctly
+        self.Bind(
+            wx.EVT_BUTTON, self.backAction
+        )  # Assuming backButton is focused correctly
 
         self.searchResults.Bind(wx.EVT_LISTBOX_DCLICK, lambda e: self.playAudio())
         self.searchResults.Bind(wx.EVT_LISTBOX, self.onListBox)
@@ -162,7 +163,9 @@ class YoutubeBrowser(wx.Frame):
         self.Bind(wx.EVT_MENU, self.onM4aDownload, id=self.m4aDownloadId)
         self.Bind(wx.EVT_MENU, self.onMp3Download, id=self.mp3DownloadId)
         self.Bind(wx.EVT_MENU, lambda e: self.directDownload(), id=1003)
-        self.Bind(wx.EVT_MENU, lambda e: self.directDownload(), id=self.directDownloadId)
+        self.Bind(
+            wx.EVT_MENU, lambda e: self.directDownload(), id=self.directDownloadId
+        )
         self.Bind(wx.EVT_MENU, self.onCopy, id=1004)
         self.Bind(wx.EVT_MENU, self.onCopy, id=self.copyItemId)
 
@@ -232,9 +235,7 @@ class YoutubeBrowser(wx.Frame):
                 logger.error(f"Search failed: {e}")
                 wx.CallAfter(
                     utils.show_error,
-                    _(
-                        "تعذر إجراء عملية البحث بسبب وجود خلل ما في الاتصال بالشبكة."
-                    ),
+                    _("تعذر إجراء عملية البحث بسبب وجود خلل ما في الاتصال بالشبكة."),
                     e,
                 )
 
@@ -411,9 +412,7 @@ class YoutubeBrowser(wx.Frame):
                 logger.error(f"Load more failed: {e}")
                 wx.CallAfter(
                     utils.show_error,
-                    _(
-                        "لم يتمكن البرنامج من تحميل المزيد من النتائج."
-                    ),
+                    _("لم يتمكن البرنامج من تحميل المزيد من النتائج."),
                     e,
                 )
                 speak(_("لم يتمكن البرنامج من تحميل المزيد من النتائج"))
@@ -468,7 +467,9 @@ class YoutubeBrowser(wx.Frame):
         n = self.searchResults.Selection
         if n == wx.NOT_FOUND:
             return
-        is_live = self.search.get_views(n) is None and self.search.get_type(n) == "video"
+        is_live = (
+            self.search.get_views(n) is None and self.search.get_type(n) == "video"
+        )
         enable = not is_live
         self.contextMenu.Enable(self.downloadId, enable)
         self.contextMenu.Enable(self.directDownloadId, enable)
@@ -515,13 +516,16 @@ class YoutubeBrowser(wx.Frame):
             return
 
         url = self.search.get_url(n)
+
         def check_url(target_url):
             favorites = self.favorites.get_all()
             fav_urls = {f["url"] for f in favorites}
             found = target_url in fav_urls
+
             def update():
                 if self:
                     self.favCheck.SetValue(found)
+
             wx.CallAfter(update)
 
         Thread(target=check_url, args=[url], daemon=True).start()
@@ -539,7 +543,6 @@ class YoutubeBrowser(wx.Frame):
         self._download_media(
             int(config_get("defaultformat")), url, dlg, download_type, title=title
         )
-
 
     def onShow(self, event):
         self.searchResults.SetFocus()

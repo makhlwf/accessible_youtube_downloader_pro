@@ -1,5 +1,4 @@
 import os
-import sys
 import wx
 import logging
 from settings_handler import config_get
@@ -84,7 +83,9 @@ class Downloader:
             "progress_hooks": [self._progress_hook],
             "ffmpeg_location": abs_ffmpeg_dir,
             "nocacheconfig": True,
-            "extractor_args": {"youtube": {"player_client": ["tv"], "js_variant": "tv"}},
+            "extractor_args": {
+                "youtube": {"player_client": ["tv"], "js_variant": "tv"}
+            },
             "js_runtimes": {"deno": {}},
             "quiet": True,
             "no_warnings": True,
