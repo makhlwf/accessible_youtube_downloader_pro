@@ -43,7 +43,7 @@ class MediaGui(wx.Frame):
     ):
         wx.Frame.__init__(self, parent, title=f"{title} - {application.name}")
         self.title = title
-        self.stream = not can_download
+        self.is_live = not can_download
         self.seek = int(config_get("seek"))
         self.results = results
         self.audio_mode = audio_mode
@@ -160,7 +160,7 @@ class MediaGui(wx.Frame):
             Thread(target=self.fetch_qualities, daemon=True).start()
         if self.url in Continue.get_all() and config_get("continue"):
             self.player.media.set_position(Continue.get_all()[url])
-        Thread(target=self.extract_description).start()
+        Thread(target=self.extract_description, daemon=True).start()
         self.history_timer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.on_history_timer, self.history_timer)
         self.history_timer.Start(10000)  # 10 seconds
@@ -271,12 +271,10 @@ class MediaGui(wx.Frame):
         if state in (State.NothingSpecial, State.Stopped):
             self.player.media.play()
         elif state in (State.Playing, State.Paused):
-            if not self.stream:
+            if not self.is_live:
                 self.player.media.pause()
             else:
                 self.player.media.stop()
-
-    has_player
 
     @has_player
     def forwardAction(self):
@@ -352,9 +350,9 @@ class MediaGui(wx.Frame):
             self.forwardAction()
         elif event.GetKeyCode() == wx.WXK_LEFT and not event.HasAnyModifiers():
             self.rewindAction()
-        elif event.controlDown and event.KeyCode == wx.WXK_RIGHT:
+        elif event.ControlDown() and event.GetKeyCode() == wx.WXK_RIGHT:
             self.next()
-        elif event.controlDown and event.KeyCode == wx.WXK_LEFT:
+        elif event.ControlDown() and event.GetKeyCode() == wx.WXK_LEFT:
             self.previous()
         elif event.GetKeyCode() == wx.WXK_UP:
             self.increase_volume()
@@ -362,25 +360,25 @@ class MediaGui(wx.Frame):
             self.decrease_volume()
         elif event.GetKeyCode() == wx.WXK_HOME:
             self.beginingAction()
-        elif event.KeyCode in range(49, 58):
-            self.set_position(event.KeyCode)
-        elif event.controlDown and event.shiftDown and event.KeyCode == ord("L"):
+        elif event.GetKeyCode() in range(49, 58):
+            self.set_position(event.GetKeyCode())
+        elif event.ControlDown() and event.ShiftDown() and event.GetKeyCode() == ord("L"):
             self.get_duration()
-        elif event.controlDown and event.shiftDown and event.KeyCode == ord("T"):
+        elif event.ControlDown() and event.ShiftDown() and event.GetKeyCode() == ord("T"):
             if self.player is not None:
                 speak(_("الوقت المنقضي: {}").format(self.player.get_elapsed()))
-        elif event.KeyCode == ord("S"):
+        elif event.GetKeyCode() == ord("S"):
             if self.player is not None:
                 self.player.media.set_rate(1.4)
                 speak(_("سريع"))
 
-        elif event.KeyCode == ord("D"):
+        elif event.GetKeyCode() == ord("D"):
             if self.player is not None:
                 self.player.media.set_rate(1.0)
 
                 speak(_("معتدل"))
 
-        elif event.KeyCode == ord("F"):
+        elif event.GetKeyCode() == ord("F"):
             if self.player is not None:
                 self.player.media.set_rate(0.6)
 
@@ -406,7 +404,7 @@ class MediaGui(wx.Frame):
 
             config_set("seek", self.seek)
 
-        elif event.KeyCode == ord("R") and event.controlDown:
+        elif event.GetKeyCode() == ord("R") and event.ControlDown():
             if config_get("repeatTracks"):
                 config_set("repeatTracks", False)
 
@@ -417,23 +415,23 @@ class MediaGui(wx.Frame):
                 speak(_("التكرار مفعل"))
                 config_set("autonext", False)
 
-        elif event.KeyCode == ord("R"):
+        elif event.GetKeyCode() == ord("R"):
             if self.player is not None:
                 speak(_("المتبقي: {}").format(self.player.get_remaining()))
 
-        elif event.KeyCode == ord("E"):
+        elif event.GetKeyCode() == ord("E"):
             if self.player is not None:
                 speak(_("المنقضي: {}").format(self.player.get_elapsed()))
 
-        elif event.KeyCode == ord("T"):
+        elif event.GetKeyCode() == ord("T"):
             if self.player is not None:
                 speak(_("الإجمالي: {}").format(self.player.get_duration()))
 
-        elif event.KeyCode == ord("P"):
+        elif event.GetKeyCode() == ord("P"):
             if self.player is not None:
                 speak(_("{} بالمائة").format(self.player.get_position_percentage()))
 
-        elif event.KeyCode == ord("N"):
+        elif event.GetKeyCode() == ord("N"):
             if config_get("autonext"):
                 config_set("autonext", False)
 
@@ -539,7 +537,7 @@ class MediaGui(wx.Frame):
         self.SetTitle(f"{title} - {application.name}")
         self.player.media.play()
         self.player.media.audio_set_volume(self.player.volume)
-        Thread(target=self.extract_description).start()
+        Thread(target=self.extract_description, daemon=True).start()
         if not self.audio_mode:
             for item in self.qualityMenu.GetMenuItems():
                 self.qualityMenu.DestroyItem(item)
@@ -557,26 +555,30 @@ class MediaGui(wx.Frame):
         if self.results is None:
             return
         if hasattr(self.Parent, "searchResults"):
-            self.Parent.searchResults.Selection += 1
-            index = self.Parent.searchResults.Selection
+            box = self.Parent.searchResults
         elif hasattr(self.Parent, "videosBox"):
-            self.Parent.videosBox.Selection += 1
-            index = self.Parent.videosBox.Selection
+            box = self.Parent.videosBox
         elif hasattr(self.Parent, "home_feed_list"):
-            self.Parent.home_feed_list.Selection += 1
-            index = self.Parent.home_feed_list.Selection
+            box = self.Parent.home_feed_list
         elif hasattr(self.Parent, "historyList"):
-            self.Parent.historyList.Selection += 1
-            index = self.Parent.historyList.Selection
+            box = self.Parent.historyList
+        elif hasattr(self.Parent, "favList"):
+            box = self.Parent.favList
         else:
-            self.Parent.favList.Selection += 1
-            index = self.Parent.favList.Selection
-            if index < len(self.results):
-                self.changeTrack(index)
             return
-        self.changeTrack(index)
-        if index >= self.results.count - 2:
 
+        index = box.Selection
+        if index == wx.NOT_FOUND or index >= box.GetCount() - 1:
+            speak(_("نهاية القائمة"))
+            return
+
+        index += 1
+        box.Selection = index
+        self.changeTrack(index)
+
+        # Trigger load more if near end
+        count = self.results.count if hasattr(self.results, "count") else len(self.results)
+        if index >= count - 2:
             def load_more():
                 if hasattr(self.Parent, "searchResults"):
                     if self.results.load_more():
@@ -584,32 +586,37 @@ class MediaGui(wx.Frame):
                             self.Parent.searchResults.Append,
                             self.results.get_last_titles(),
                         )
-                else:
+                elif hasattr(self.Parent, "videosBox"):
                     if self.results.next():
                         wx.CallAfter(
                             self.Parent.videosBox.Append, self.results.get_new_titles()
                         )
-
-            Thread(target=load_more).start()
+            Thread(target=load_more, daemon=True).start()
 
     def previous(self):
         if self.results is None:
             return
         if hasattr(self.Parent, "searchResults"):
-            videosBox = self.Parent.searchResults
+            box = self.Parent.searchResults
         elif hasattr(self.Parent, "videosBox"):
-            videosBox = self.Parent.videosBox
+            box = self.Parent.videosBox
         elif hasattr(self.Parent, "home_feed_list"):
-            videosBox = self.Parent.home_feed_list
+            box = self.Parent.home_feed_list
         elif hasattr(self.Parent, "historyList"):
-            videosBox = self.Parent.historyList
+            box = self.Parent.historyList
+        elif hasattr(self.Parent, "favList"):
+            box = self.Parent.favList
         else:
-            videosBox = self.Parent.favList
+            return
 
-        if not videosBox.Selection == 0:
-            videosBox.Selection -= 1
-            index = videosBox.Selection
-            self.changeTrack(index)
+        index = box.Selection
+        if index == wx.NOT_FOUND or index <= 0:
+            speak(_("بداية القائمة"))
+            return
+
+        index -= 1
+        box.Selection = index
+        self.changeTrack(index)
 
     def onCopy(self, event):
         pyperclip.copy(self.url)
@@ -657,7 +664,7 @@ class MediaGui(wx.Frame):
                 logging.getLogger(__name__).error(f"Manual description extraction failed: {e}")
                 speak(_("هناك خطأ ما أدى إلى منع جلب وصف الفيديو"))
 
-        Thread(target=extract_description_sync).start()
+        Thread(target=extract_description_sync, daemon=True).start()
 
     def extract_description(self):
         if self.extracting_description or hasattr(self, "description"):

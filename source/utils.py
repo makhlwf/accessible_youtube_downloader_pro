@@ -377,12 +377,8 @@ def pick_best_format(formats, preferred_index, is_video=True, target_height=None
         available.sort(key=lambda x: x.get("abr") or 0)
         target_abr = AUDIO_QUALITIES[preferred_index]
 
-        fmt = available[0]
-        for f in reversed(available):
-            abr = f.get("abr") or 0
-            if abr <= target_abr:
-                fmt = f
-                break
+        # Find the format with abr closest to target_abr
+        fmt = min(available, key=lambda x: abs((x.get("abr") or 0) - target_abr))
 
         return fmt, None, fmt.get("abr")
 
@@ -784,7 +780,7 @@ def time_formatting(total_seconds):
         else:
             parts.append(_("{} ثانية").format(seconds))
 
-    if not parts and total_seconds == 0:
+    if not parts:
         return _("0 ثانية")
 
     return _(" و").join(parts)
@@ -819,6 +815,12 @@ def time_to_seconds(time_str):
     except ValueError:
         return None
     return total_seconds
+
+
+def sanitize_filename(filename):
+    if not filename:
+        return "unnamed"
+    return re.sub(r'[<>:"/\\|?*]', "_", filename).strip()
 
 
 def youtube_regexp(string):

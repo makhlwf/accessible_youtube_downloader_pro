@@ -181,9 +181,6 @@ class YoutubeBrowser(wx.Frame):
         if self.searchResults.GetCount() > 0:
             self.searchResults.PopupMenu(self.contextMenu)
 
-    def sanitize_filename(self, filename):
-        return re.sub(r'[<>:"/\\|?*]', "_", filename)
-
     def _download_media(
         self,
         option,
@@ -200,7 +197,7 @@ class YoutubeBrowser(wx.Frame):
         convert = True if option == 2 else False
         folder = False if download_type == "video" else True
         if download_type == "playlist" and title:
-            path = os.path.join(path, self.sanitize_filename(title))
+            path = os.path.join(path, utils.sanitize_filename(title))
         downloadAction(
             url,
             path,
@@ -520,8 +517,12 @@ class YoutubeBrowser(wx.Frame):
         url = self.search.get_url(n)
         def check_url(target_url):
             favorites = self.favorites.get_all()
-            found = any(f["url"] == target_url for f in favorites)
-            wx.CallAfter(self.favCheck.SetValue, found)
+            fav_urls = {f["url"] for f in favorites}
+            found = target_url in fav_urls
+            def update():
+                if self:
+                    self.favCheck.SetValue(found)
+            wx.CallAfter(update)
 
         Thread(target=check_url, args=[url], daemon=True).start()
 

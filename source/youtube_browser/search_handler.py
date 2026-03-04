@@ -91,6 +91,9 @@ class SimpleResult:
         self.count = len(data_list)
         self.scraper = None
 
+    def __len__(self):
+        return self.count
+
     def get_url(self, n):
         return self.data_list[n]["url"]
 
