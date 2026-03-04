@@ -414,7 +414,7 @@ class HomeScreen(wx.Frame):
         about = f"""{_("اسم البرنامج")}: {application.name}.
 {_("الإصدار")}: {application.version}.
 {_("طُوِر بواسطة")}: {application.author}.
-{_("الوصف: ")}{_(application.describtion)}."""
+{_("الوصف: ")}{_(application.description)}."""
         wx.MessageBox(about, _("حول"), parent=self)
 
     def onClose(self, event):

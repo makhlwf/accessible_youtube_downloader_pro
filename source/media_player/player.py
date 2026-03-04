@@ -1,20 +1,17 @@
 import vlc
+import wx
 from utils import time_formatting
 from threading import Thread
 from settings_handler import config_get
 
-instance = vlc.Instance()
-
-media_player = instance.media_player_new()
-
-
 class Player:
     def __init__(self, filename, hwnd, window=None, options=None):
+        self.instance = vlc.Instance()
+        self.media = self.instance.media_player_new()
         self.do_reset = False
         self.window = window
         self.filename = filename
         self.hwnd = hwnd
-        self.media = media_player
         self.set_media(self.filename, options)
         self.media.set_hwnd(self.hwnd or 0)
         self.manager = self.media.event_manager()
@@ -66,10 +63,11 @@ class Player:
         if config_get("repeatTracks") and not config_get("autonext"):
             self.media.play()
         elif config_get("autonext") and not config_get("repeatTracks"):
-            self.window.next()
+            if self.window:
+                wx.CallAfter(self.window.next)
 
     def set_media(self, m, options=None):
-        media = instance.media_new(m)
+        media = self.instance.media_new(m)
         if options:
             for opt in options:
                 media.add_option(opt)

@@ -188,7 +188,7 @@ class PlaylistDialog(wx.Dialog):
         title = self.result.get_title(n)
         stream = LoadingDialog(self, _("جاري التشغيل"), get_video_stream, url).res
         gui = MediaGui(self, title, stream, url, True, self.result)
-        gui.path = os.path.join(gui.path, self.title)
+        gui.path = os.path.join(gui.path, utils.sanitize_filename(self.title))
         self.Hide()
 
     def playAudio(self):
@@ -198,7 +198,7 @@ class PlaylistDialog(wx.Dialog):
         title = self.result.get_title(n)
         stream = LoadingDialog(self, _("جاري التشغيل"), get_audio_stream, url).res
         gui = MediaGui(self, title, stream, url, audio_mode=True, results=self.result)
-        gui.path = os.path.join(gui.path, self.title)
+        gui.path = os.path.join(gui.path, utils.sanitize_filename(self.title))
         self.Hide()
 
     def onVideoDownload(self, event):
@@ -208,7 +208,7 @@ class PlaylistDialog(wx.Dialog):
         title = self.result.get_title(n)
         dlg = DownloadProgress(self.Parent, title)
         self._download_media(
-            0, url, dlg, "video", os.path.join(config_get("path"), self.title)
+            0, url, dlg, "video", os.path.join(config_get("path"), utils.sanitize_filename(self.title))
         )
 
     def directDownload(self):
@@ -222,7 +222,7 @@ class PlaylistDialog(wx.Dialog):
             url,
             dlg,
             "video",
-            os.path.join(config_get("path"), self.title),
+            os.path.join(config_get("path"), utils.sanitize_filename(self.title)),
         )
 
     def onM4aDownload(self, event):
@@ -232,7 +232,7 @@ class PlaylistDialog(wx.Dialog):
         title = self.result.get_title(n)
         dlg = DownloadProgress(wx.GetApp().GetTopWindow(), title)
         self._download_media(
-            1, url, dlg, "video", os.path.join(config_get("path"), self.title)
+            1, url, dlg, "video", os.path.join(config_get("path"), utils.sanitize_filename(self.title))
         )
 
     def onMp3Download(self, event):
@@ -242,7 +242,7 @@ class PlaylistDialog(wx.Dialog):
         title = self.result.get_title(n)
         dlg = DownloadProgress(wx.GetApp().GetTopWindow(), title)
         self._download_media(
-            2, url, dlg, "video", os.path.join(config_get("path"), self.title)
+            2, url, dlg, "video", os.path.join(config_get("path"), utils.sanitize_filename(self.title))
         )
 
     def onListBox(self, event):

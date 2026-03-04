@@ -328,10 +328,14 @@ class HistoryDialog(wx.Frame):
             return
         self.favCheck.Enable()
         url = self.history_data[selection]["url"]
-        rows = self.favorites.get_all()
-        for row in rows:
-            if url == row["url"]:
-                self.favCheck.SetValue(True)
-                break
-        else:
-            self.favCheck.SetValue(False)
+
+        def check_url(target_url):
+            favorites = self.favorites.get_all()
+            fav_urls = {f["url"] for f in favorites}
+            found = target_url in fav_urls
+            def update():
+                if self:
+                    self.favCheck.SetValue(found)
+            wx.CallAfter(update)
+
+        Thread(target=check_url, args=[url], daemon=True).start()
