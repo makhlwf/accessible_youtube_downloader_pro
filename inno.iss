@@ -28,7 +28,7 @@ PrivilegesRequiredOverridesAllowed=dialog
 OutputDir=HexPlayer
 OutputBaseFilename=HexPlayer
 SolidCompression=yes
-WizardStyle=modern
+WizardStyle=modern dark polar includetitlebar
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
