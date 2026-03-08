@@ -4,6 +4,7 @@ import time
 import wx
 from language_handler import _
 from gui.download_progress import DownloadProgress
+from gui.activity_dialog import LoadingDialog
 from nvda_client.client import speak
 from settings_handler import config_get, config_set
 import application
@@ -14,6 +15,7 @@ from vlc import State
 from gui.settings_dialog import SettingsDialog
 from gui.description import DescriptionDialog
 from gui.custom_controls import CustomButton
+from gui.quality_selection import QualitySelectionDialog
 from py_yt import Video
 from async_utils import run_in_async_loop
 from threading import Thread
@@ -244,11 +246,14 @@ class MediaGui(wx.Frame):
 
         Thread(target=reload, daemon=True).start()
 
-    def _download_media(self, option, url, dlg, path=None):
+    def _download_media(self, option, url, dlg, path=None, quality=None):
         if path is None:
             path = self.path
         if option == 0:
-            format = "bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4"
+            if quality:
+                format = f"bestvideo[height<={quality}][ext=mp4]+bestaudio[ext=m4a]/best[height<={quality}][ext=mp4]/best"
+            else:
+                format = "bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4"
         else:
             format = "bestaudio[ext=m4a]"
         convert = True if option == 2 else False
@@ -641,8 +646,21 @@ class MediaGui(wx.Frame):
         self._download_media(2, self.url, dlg, path=self.path)
 
     def onVideoDownload(self, event):
+        qualities = LoadingDialog(
+            self,
+            _("Fetching available qualities..."),
+            utils.get_available_qualities,
+            self.url,
+        ).res
+        quality = None
+        if qualities:
+            quality_dlg = QualitySelectionDialog(self, qualities)
+            if quality_dlg.ShowModal() == wx.ID_OK:
+                quality = quality_dlg.get_selected_quality()
+            else:
+                return
         dlg = DownloadProgress(wx.GetApp().GetTopWindow(), self.title)
-        self._download_media(0, self.url, dlg, path=self.path)
+        self._download_media(0, self.url, dlg, path=self.path, quality=quality)
 
     def onDirect(self, event):
         dlg = DownloadProgress(wx.GetApp().GetTopWindow(), self.title)

@@ -12,6 +12,7 @@ from gui.search_dialog import SearchDialog
 from gui.settings_dialog import SettingsDialog
 from gui.playlist_dialog import PlaylistDialog
 from gui.activity_dialog import LoadingDialog
+from gui.quality_selection import QualitySelectionDialog
 
 from media_player.media_gui import MediaGui
 from nvda_client.client import speak
@@ -192,9 +193,13 @@ class YoutubeBrowser(wx.Frame):
         download_type="video",
         path=config_get("path"),
         title=None,
+        quality=None,
     ):
         if option == 0:
-            fmt = "bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4"
+            if quality:
+                fmt = f"bestvideo[height<={quality}][ext=mp4]+bestaudio[ext=m4a]/best[height<={quality}][ext=mp4]/best"
+            else:
+                fmt = "bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4"
         else:
             fmt = "bestaudio[ext=m4a]"
         convert = True if option == 2 else False
@@ -390,8 +395,22 @@ class YoutubeBrowser(wx.Frame):
         url = self.search.get_url(n)
         title = self.search.get_title(n)
         download_type = self.search.get_type(n)
+
+        qualities = LoadingDialog(
+            self,
+            _("Fetching available qualities..."),
+            utils.get_available_qualities,
+            url,
+        ).res
+        quality = None
+        if qualities:
+            quality_dlg = QualitySelectionDialog(self, qualities)
+            if quality_dlg.ShowModal() == wx.ID_OK:
+                quality = quality_dlg.get_selected_quality()
+            else:
+                return
         dlg = DownloadProgress(wx.GetApp().GetTopWindow(), title)
-        self._download_media(0, url, dlg, download_type, title=title)
+        self._download_media(0, url, dlg, download_type, title=title, quality=quality)
 
     def onCopy(self, event):
         n = self.searchResults.Selection
