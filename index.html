@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="HexPlayer - The fully accessible YouTube browser and downloader exclusively for NVDA screen reader users on Windows.">
+    <title>HexPlayer - Accessible YouTube Client for NVDA</title>
+    <style>
+        /* Base styles prioritizing high contrast and readability */
+        :root {
+            --primary-color: #0056b3;
+            --primary-hover: #003d82;
+            --secondary-color: #5c6bc0;
+            --secondary-hover: #3f51b5;
+            --background: #fdfdfd;
+            --text-color: #1a1a1a;
+            --focus-outline: #ffbf47;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--background);
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Semantic Typography */
+        h1, h2, h3 {
+            color: #000;
+            line-height: 1.2;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .tagline {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-top: 0;
+            margin-bottom: 2rem;
+        }
+
+        /* Accessible Lists */
+        ul {
+            padding-left: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+        }
+
+        /* High Visibility Buttons */
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 0.8rem 1.5rem;
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #ffffff;
+            background-color: var(--primary-color);
+            text-decoration: none;
+            border-radius: 6px;
+            border: 2px solid transparent;
+            transition: background-color 0.2s ease;
+        }
+
+        .btn-beta {
+            background-color: var(--secondary-color);
+        }
+
+        /* Crucial: Extremely clear focus states for keyboard navigation */
+        .btn:hover, .btn:focus {
+            background-color: var(--primary-hover);
+            outline: 4px solid var(--focus-outline);
+            outline-offset: 2px;
+        }
+
+        .btn-beta:hover, .btn-beta:focus {
+            background-color: var(--secondary-hover);
+            outline: 4px solid var(--focus-outline);
+            outline-offset: 2px;
+        }
+
+        /* Section Styling */
+        section {
+            margin-bottom: 3rem;
+        }
+
+        .tech-specs {
+            background-color: #f4f4f4;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border-left: 5px solid #333;
+        }
+
+        footer {
+            margin-top: 4rem;
+            padding-top: 1rem;
+            border-top: 1px solid #ccc;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>HexPlayer</h1>
+        <p class="tagline">The ultimate accessible YouTube browser and downloader for NVDA users.</p>
+    </header>
+
+    <main>
+        <section id="about">
+            <h2>About HexPlayer</h2>
+            <p>HexPlayer is a dedicated desktop application designed specifically from the ground up for visually impaired users utilizing the NVDA screen reader. It allows you to seamlessly browse, view, and download YouTube content without dealing with cluttered web interfaces.</p>
+        </section>
+
+        <section id="features">
+            <h2>Key Features</h2>
+            <ul>
+                <li><strong>Comprehensive Downloading:</strong> Download individual videos or entire playlists. Supports all available video and audio formats.</li>
+                <li><strong>Personalized YouTube Feed:</strong> With secure cookie support, you can view your own personalized YouTube feed directly within the app.</li>
+                <li><strong>Favorites System:</strong> Easily save and manage your favorite videos for quick access later.</li>
+                <li><strong>Accessibility First:</strong> Engineered exclusively for the NVDA screen reader to ensure perfectly read menus, progress bars, and navigation.</li>
+                <li><strong>Bilingual Support:</strong> The interface currently fully supports English and Arabic languages.</li>
+            </ul>
+        </section>
+
+        <section id="download">
+            <h2>Download HexPlayer</h2>
+            <p>Choose the version that best suits your needs. HexPlayer requires Windows 10 or Windows 11.</p>
+            
+            <div class="button-group">
+                <a href="https://github.com/makhlwf/accessible_youtube_downloader_pro/releases/download/v1.9.0/HexPlayer.exe" class="btn" aria-label="Download HexPlayer stable version 1.9.0 executable">
+                    Download Stable (v1.9.0)
+                </a>
+                <a href="https://github.com/makhlwf/accessible_youtube_downloader_pro/releases/download/beta/HexPlayer.exe" class="btn btn-beta" aria-label="Download HexPlayer beta version executable">
+                    Download Beta
+                </a>
+            </div>
+        </section>
+
+        <section id="tech-specs" class="tech-specs">
+            <h2>Under the Hood</h2>
+            <p>For those interested in the technical details, HexPlayer is built for performance and accessibility using modern tools:</p>
+            <ul>
+                <li><strong>OS:</strong> Windows 10 and Windows 11</li>
+                <li><strong>Core Engine:</strong> Python 3.14</li>
+                <li><strong>GUI Framework:</strong> wxPython (Ensuring native Windows accessibility APIs are utilized)</li>
+                <li><strong>Download Engine:</strong> yt-dlp</li>
+                <li><strong>YouTube Interactions:</strong> Deno JS</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 HexPlayer. Open source and built for the visually impaired community.</p>
+    </footer>
+
+</body>
+</html>
