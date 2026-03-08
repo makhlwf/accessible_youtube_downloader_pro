@@ -75,7 +75,9 @@ PLAYER_OPTS = {
     "quiet": True,
     "no_warnings": True,
     "noplaylist": True,
-    "extractor_args": {"youtube": {"player_client": ["tv"], "js_variant": "tv"}},
+    "extractor_args": {
+        "youtube": {"player_client": ["ios", "android", "web"], "js_variant": "tv"}
+    },
     "js_runtimes": {"deno": {}},
     "allowed_extractors": ["youtube", "youtube:.*"],
     "no_check_certificate": True,
@@ -493,19 +495,12 @@ def get_playable_stream(url, audio_mode=False):
             logger.debug(f"Extraction failed for client {client}: {e}")
             return None
 
-    # Try top clients in parallel
-    futures = [
-        _extraction_executor.submit(_extract_task, client) for client in clients_to_try
-    ]
-    for future in as_completed(futures):
-        try:
-            result = future.result()
-            if result:
-                # Return the first successful extraction
-                _stream_cache.set(cache_key, result)
-                return result
-        except Exception:
-            continue
+    # Try top clients sequentially to avoid heavy system load and lag
+    for client in clients_to_try:
+        result = _extract_task(client)
+        if result:
+            _stream_cache.set(cache_key, result)
+            return result
 
     logger.error(f"All clients failed to extract stream for {url}")
     return None

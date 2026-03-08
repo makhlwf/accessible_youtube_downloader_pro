@@ -84,7 +84,10 @@ class Downloader:
             "ffmpeg_location": abs_ffmpeg_dir,
             "nocacheconfig": True,
             "extractor_args": {
-                "youtube": {"player_client": ["tv"], "js_variant": "tv"}
+                "youtube": {
+                    "player_client": ["ios", "android", "web"],
+                    "js_variant": "tv",
+                }
             },
             "js_runtimes": {"deno": {}},
             "quiet": True,

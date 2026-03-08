@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 
 
 class Scraper:
-    def __init__(self, num_workers=10):
+    def __init__(self, num_workers=2):
         self.queue = queue.PriorityQueue()
         self.results = None
         self.audio_mode = False

@@ -1,4 +1,4 @@
-from source import utils
+import utils
 import webbrowser
 from threading import Thread
 import os

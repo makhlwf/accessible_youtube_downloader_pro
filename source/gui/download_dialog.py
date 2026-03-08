@@ -110,8 +110,8 @@ class DownloadDialog(wx.Frame):
         else:
             folder = False
         formats = {
-            0: "bestaudio[ext=m4a]",
-            1: "bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4",
+            0: "bestaudio[ext=m4a]/bestaudio/best",
+            1: "bestvideo[ext=mp4]+bestaudio[ext=m4a]/bestvideo+bestaudio/best",
         }
         format = formats[self.downloadingFormat.GetSelection()]
         if (
