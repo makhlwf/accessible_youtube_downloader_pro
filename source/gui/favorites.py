@@ -8,7 +8,8 @@ from media_player.media_gui import MediaGui
 from nvda_client.client import speak
 import pyperclip
 from gui.download_progress import DownloadProgress
-from .activity_dialog import LoadingDialog
+from gui.quality_selection import QualitySelectionDialog
+from gui.activity_dialog import LoadingDialog
 from settings_handler import config_get
 import webbrowser
 
@@ -62,10 +63,19 @@ class Favorites(wx.Frame):
         self.Show()
 
     def _download_media(
-        self, option, url, dlg, download_type="video", path=config_get("path")
+        self,
+        option,
+        url,
+        dlg,
+        download_type="video",
+        path=config_get("path"),
+        quality=None,
     ):
         if option == 0:
-            format = "bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4"
+            if quality:
+                format = f"bestvideo[height<={quality}][ext=mp4]+bestaudio[ext=m4a]/best[height<={quality}][ext=mp4]/best"
+            else:
+                format = "bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4"
         else:
             format = "bestaudio[ext=m4a]"
         convert = True if option == 2 else False
@@ -220,8 +230,19 @@ class Favorites(wx.Frame):
         n = self.favList.Selection
         url = self.rows[n]["url"]
         title = self.rows[n]["title"]
+
+        qualities = LoadingDialog(
+            self, _("Fetching available qualities..."), utils.get_available_qualities, url
+        ).res
+        quality = None
+        if qualities:
+            quality_dlg = QualitySelectionDialog(self, qualities)
+            if quality_dlg.ShowModal() == wx.ID_OK:
+                quality = quality_dlg.get_selected_quality()
+            else:
+                return
         dlg = DownloadProgress(wx.GetApp().GetTopWindow(), title)
-        self._download_media(0, url, dlg, "video")
+        self._download_media(0, url, dlg, "video", quality=quality)
 
     def onDownload(self, event):
         downloadMenu = wx.Menu()

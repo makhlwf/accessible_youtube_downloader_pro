@@ -97,6 +97,23 @@ def get_ydl_instance(client, cookies_path=None):
 VIDEO_QUALITIES = [144, 240, 360, 480, 720, 1080, 1440, 2160]
 AUDIO_QUALITIES = [64, 128, 256]
 
+VIDEO_QUALITY_DESCRIPTIONS = {
+    144: _("144p (Very Low Quality)"),
+    240: _("240p (Low Quality)"),
+    360: _("360p (Medium Quality)"),
+    480: _("480p (Medium Quality)"),
+    720: _("720p (High Quality HD)"),
+    1080: _("1080p (Very High Quality Full HD)"),
+    1440: _("1440p (Super Quality 2K)"),
+    2160: _("2160p (Super Quality 4K)"),
+}
+
+
+def get_quality_description(height):
+    return VIDEO_QUALITY_DESCRIPTIONS.get(
+        height, _("{}p (Unknown Quality)").format(height)
+    )
+
 
 def download_yt_dlp():
     url = "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp"

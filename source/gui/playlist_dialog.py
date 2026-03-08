@@ -8,10 +8,11 @@ from download_handler.downloader import downloadAction
 from media_player.media_gui import MediaGui
 import pyperclip
 from gui.download_progress import DownloadProgress
+from gui.quality_selection import QualitySelectionDialog
 from settings_handler import config_get
 import webbrowser
 import os
-from .activity_dialog import LoadingDialog
+from gui.activity_dialog import LoadingDialog
 import application
 
 
@@ -89,10 +90,19 @@ class PlaylistDialog(wx.Dialog):
         self.videosBox.Selection = 0
 
     def _download_media(
-        self, option, url, dlg, download_type="video", path=config_get("path")
+        self,
+        option,
+        url,
+        dlg,
+        download_type="video",
+        path=config_get("path"),
+        quality=None,
     ):
         if option == 0:
-            format = "bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4"
+            if quality:
+                format = f"bestvideo[height<={quality}][ext=mp4]+bestaudio[ext=m4a]/best[height<={quality}][ext=mp4]/best"
+            else:
+                format = "bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4"
         else:
             format = "bestaudio[ext=m4a]"
         convert = True if option == 2 else False
@@ -206,6 +216,17 @@ class PlaylistDialog(wx.Dialog):
         video_id = self.result.get_id(n)
         url = f"https://www.youtube.com/watch?v={video_id}"
         title = self.result.get_title(n)
+
+        qualities = LoadingDialog(
+            self, _("Fetching available qualities..."), utils.get_available_qualities, url
+        ).res
+        quality = None
+        if qualities:
+            quality_dlg = QualitySelectionDialog(self, qualities)
+            if quality_dlg.ShowModal() == wx.ID_OK:
+                quality = quality_dlg.get_selected_quality()
+            else:
+                return
         dlg = DownloadProgress(self.Parent, title)
         self._download_media(
             0,
@@ -213,6 +234,7 @@ class PlaylistDialog(wx.Dialog):
             dlg,
             "video",
             os.path.join(config_get("path"), utils.sanitize_filename(self.title)),
+            quality=quality,
         )
 
     def directDownload(self):

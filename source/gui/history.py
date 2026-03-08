@@ -6,6 +6,7 @@ import wx
 from language_handler import _
 from gui.download_progress import DownloadProgress
 from gui.activity_dialog import LoadingDialog
+from gui.quality_selection import QualitySelectionDialog
 
 from media_player.media_gui import MediaGui
 from nvda_client.client import speak
@@ -244,9 +245,12 @@ class HistoryDialog(wx.Frame):
         self.Bind(wx.EVT_MENU, self.onMp3Download, mp3Item)
         self.PopupMenu(downloadMenu)
 
-    def _download_media(self, option, url, dlg, title):
+    def _download_media(self, option, url, dlg, title, quality=None):
         if option == 0:
-            format = "bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4"
+            if quality:
+                format = f"bestvideo[height<={quality}][ext=mp4]+bestaudio[ext=m4a]/best[height<={quality}][ext=mp4]/best"
+            else:
+                format = "bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4"
         else:
             format = "bestaudio[ext=m4a]"
         convert = True if option == 2 else False
@@ -285,8 +289,19 @@ class HistoryDialog(wx.Frame):
             return
         url = self.history_data[selection]["url"]
         title = self.history_data[selection]["title"]
+
+        qualities = LoadingDialog(
+            self, _("Fetching available qualities..."), utils.get_available_qualities, url
+        ).res
+        quality = None
+        if qualities:
+            quality_dlg = QualitySelectionDialog(self, qualities)
+            if quality_dlg.ShowModal() == wx.ID_OK:
+                quality = quality_dlg.get_selected_quality()
+            else:
+                return
         dlg = DownloadProgress(self, title)
-        self._download_media(0, url, dlg, title)
+        self._download_media(0, url, dlg, title, quality=quality)
 
     def onCopy(self, event):
         selection = self.historyList.GetSelection()
