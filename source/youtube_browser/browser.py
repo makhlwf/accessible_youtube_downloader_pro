@@ -397,7 +397,10 @@ class YoutubeBrowser(wx.Frame):
         download_type = self.search.get_type(n)
 
         qualities = LoadingDialog(
-            self, _("Fetching available qualities..."), utils.get_available_qualities, url
+            self,
+            _("Fetching available qualities..."),
+            utils.get_available_qualities,
+            url,
         ).res
         quality = None
         if qualities:

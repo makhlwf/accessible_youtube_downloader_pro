@@ -291,7 +291,10 @@ class HistoryDialog(wx.Frame):
         title = self.history_data[selection]["title"]
 
         qualities = LoadingDialog(
-            self, _("Fetching available qualities..."), utils.get_available_qualities, url
+            self,
+            _("Fetching available qualities..."),
+            utils.get_available_qualities,
+            url,
         ).res
         quality = None
         if qualities:

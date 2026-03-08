@@ -2,6 +2,7 @@ import wx
 from language_handler import _
 import utils
 
+
 class QualitySelectionDialog(wx.SingleChoiceDialog):
     def __init__(self, parent, qualities, audio_mode=False):
         if not audio_mode:

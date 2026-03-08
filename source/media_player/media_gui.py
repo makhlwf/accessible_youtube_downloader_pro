@@ -647,7 +647,10 @@ class MediaGui(wx.Frame):
 
     def onVideoDownload(self, event):
         qualities = LoadingDialog(
-            self, _("Fetching available qualities..."), utils.get_available_qualities, self.url
+            self,
+            _("Fetching available qualities..."),
+            utils.get_available_qualities,
+            self.url,
         ).res
         quality = None
         if qualities:

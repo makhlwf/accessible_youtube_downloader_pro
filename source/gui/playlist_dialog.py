@@ -218,7 +218,10 @@ class PlaylistDialog(wx.Dialog):
         title = self.result.get_title(n)
 
         qualities = LoadingDialog(
-            self, _("Fetching available qualities..."), utils.get_available_qualities, url
+            self,
+            _("Fetching available qualities..."),
+            utils.get_available_qualities,
+            url,
         ).res
         quality = None
         if qualities:
