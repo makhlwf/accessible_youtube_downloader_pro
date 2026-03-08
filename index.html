@@ -145,7 +145,7 @@
             <p>Choose the version that best suits your needs. HexPlayer requires Windows 10 or Windows 11. (64bit Windows is recommended)</p>
             
             <div class="button-group">
-                <a href="https://github.com/makhlwf/accessible_youtube_downloader_pro/releases/download/v1.9.0/HexPlayer.exe" class="btn" aria-label="Download HexPlayer stable version 1.9.0 executable">
+                <a id="stable-download" href="https://github.com/makhlwf/accessible_youtube_downloader_pro/releases/latest/download/HexPlayer.exe" class="btn" aria-label="Download HexPlayer stable version 1.9.0 executable">
                     Download Stable (v1.9.0)
                 </a>
                 <a href="https://github.com/makhlwf/accessible_youtube_downloader_pro/releases/download/beta/HexPlayer.exe" class="btn btn-beta" aria-label="Download HexPlayer beta version executable">
@@ -170,6 +170,22 @@
     <footer>
         <p>&copy; 2026 HexPlayer. Open source and built for the visually impaired community.</p>
     </footer>
+
+    <script>
+        // Dynamically update version from update.json
+        fetch('update.json')
+            .then(response => response.json())
+            .then(data => {
+                if (data && data.version) {
+                    const stableBtn = document.getElementById('stable-download');
+                    if (stableBtn) {
+                        stableBtn.textContent = `Download Stable (v${data.version})`;
+                        stableBtn.setAttribute('aria-label', `Download HexPlayer stable version ${data.version} executable`);
+                    }
+                }
+            })
+            .catch(error => console.warn('Could not fetch version from update.json:', error));
+    </script>
 
 </body>
 </html>
