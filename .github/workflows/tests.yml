@@ -1,0 +1,23 @@
+name: Run Unit Tests
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pytest pytest-asyncio
+        # Exclude wxpython as it's mocked and hard to install on headless Linux CI
+        grep -v "wxpython" requirements.txt > requirements_test.txt
+        pip install -r requirements_test.txt
+    - name: Run tests
+      run: |
+        pytest tests/
