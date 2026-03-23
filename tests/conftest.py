@@ -3,7 +3,9 @@ import os
 from unittest.mock import MagicMock
 
 # Add source to sys.path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "source")))
+sys.path.insert(
+    0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "source"))
+)
 
 # Mock wx module
 mock_wx = MagicMock()
@@ -40,18 +42,29 @@ sys.modules["wx.lib.newevent"] = mock_newevent
 
 # Mock ctypes for non-Windows environments
 import ctypes
+
 if not hasattr(ctypes, "windll"):
     mock_ctypes = MagicMock()
     sys.modules["ctypes"] = mock_ctypes
+
 
 # Mock other problematic modules if necessary
 class MockType(type):
     def __instancecheck__(cls, instance):
         return True
 
-class Playlist(metaclass=MockType): pass
-class VideosSearch(metaclass=MockType): pass
-class PlaylistsSearch(metaclass=MockType): pass
+
+class Playlist(metaclass=MockType):
+    pass
+
+
+class VideosSearch(metaclass=MockType):
+    pass
+
+
+class PlaylistsSearch(metaclass=MockType):
+    pass
+
 
 mock_py_yt = MagicMock()
 mock_py_yt.Playlist = Playlist
@@ -63,4 +76,5 @@ sys.modules["pyperclip"] = MagicMock()
 
 # Mock builtins._ for translation
 import builtins
+
 builtins._ = lambda x: x

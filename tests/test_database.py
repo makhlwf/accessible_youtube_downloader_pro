@@ -3,6 +3,7 @@ import sqlite3
 from unittest.mock import patch
 import database
 
+
 @pytest.fixture
 def test_db():
     # Setup an in-memory database for testing
@@ -14,6 +15,7 @@ def test_db():
         yield conn
     conn.close()
 
+
 def test_favorite_operations(test_db):
     fav = database.Favorite()
     data = {
@@ -22,7 +24,7 @@ def test_favorite_operations(test_db):
         "url": "https://youtube.com/watch?v=123",
         "live": 0,
         "channel_name": "Test Channel",
-        "channel_url": "https://youtube.com/channel/123"
+        "channel_url": "https://youtube.com/channel/123",
     }
 
     with patch("database.con", test_db):
@@ -35,6 +37,7 @@ def test_favorite_operations(test_db):
         fav.remove_favorite(data["url"])
         favorites = fav.get_all()
         assert len(favorites) == 0
+
 
 def test_continue_operations(test_db):
     cont = database.Continue()

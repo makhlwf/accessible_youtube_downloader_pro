@@ -1,7 +1,7 @@
-import pytest
 import os
 from unittest.mock import patch, mock_open
 import settings_handler
+
 
 def test_string_to_bool():
     assert settings_handler.string_to_bool("True") is True
@@ -9,6 +9,7 @@ def test_string_to_bool():
     assert settings_handler.string_to_bool("123") == 123
     assert settings_handler.string_to_bool("1.5") == 1.5
     assert settings_handler.string_to_bool("hello") == "hello"
+
 
 def test_config_get_default():
     # Test getting a default value when not in cache
@@ -18,6 +19,7 @@ def test_config_get_default():
             val = settings_handler.config_get("seek")
             assert val == 5
 
+
 def test_config_set_and_get():
     # Test setting and then getting a value
     mock_conf = "[settings]\nseek = 10\n"
@@ -26,4 +28,8 @@ def test_config_set_and_get():
             settings_handler.config_set("seek", 10)
             assert settings_handler.config_get("seek") == 10
             # Verify file was written
-            m.assert_called_with(os.path.join(settings_handler.settings_path, "settings.ini"), "w", encoding="utf-8")
+            m.assert_called_with(
+                os.path.join(settings_handler.settings_path, "settings.ini"),
+                "w",
+                encoding="utf-8",
+            )

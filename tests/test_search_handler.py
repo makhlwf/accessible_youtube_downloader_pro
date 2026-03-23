@@ -1,6 +1,7 @@
 import pytest
-from unittest.mock import AsyncMock, patch, MagicMock
+from unittest.mock import AsyncMock, patch
 from youtube_browser.search_handler import PlaylistResult, SimpleResult, Search
+
 
 @pytest.mark.asyncio
 async def test_playlist_result_init_async():
@@ -13,9 +14,12 @@ async def test_playlist_result_init_async():
                 "title": "Video 1",
                 "link": "https://youtube.com/watch?v=vid1",
                 "duration": "01:00",
-                "channel": {"name": "Channel 1", "link": "https://youtube.com/channel/c1"}
+                "channel": {
+                    "name": "Channel 1",
+                    "link": "https://youtube.com/channel/c1",
+                },
             }
-        ]
+        ],
     }
 
     with patch("youtube_browser.search_handler.Playlist") as MockPlaylist:
@@ -29,6 +33,7 @@ async def test_playlist_result_init_async():
         assert res.videos[0]["title"] == "Video 1"
         assert res.get_url(0) == "https://youtube.com/watch?v=vid1"
 
+
 def test_simple_result():
     data = [{"url": "url1", "title": "Title 1", "type": "video"}]
     res = SimpleResult(data)
@@ -36,6 +41,7 @@ def test_simple_result():
     assert res.get_url(0) == "url1"
     assert res.get_title(0) == "Title 1"
     assert res.get_type(0) == "video"
+
 
 @pytest.mark.asyncio
 async def test_search_init_async():
@@ -47,7 +53,10 @@ async def test_search_init_async():
                 "link": "https://youtube.com/watch?v=sr1",
                 "duration": 120,
                 "viewCount": {"short": "100 views"},
-                "channel": {"name": "Channel 1", "link": "https://youtube.com/channel/c1"}
+                "channel": {
+                    "name": "Channel 1",
+                    "link": "https://youtube.com/channel/c1",
+                },
             }
         ]
     }
