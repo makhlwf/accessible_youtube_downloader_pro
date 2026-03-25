@@ -72,10 +72,17 @@ class SettingsDialog(wx.Dialog):
             _("تفعيل رسائل تصحيح الأخطاء للمطورين فقط"),
             name="debug",
         )
+        self.backgroundMonitoring = wx.CheckBox(
+            preferencesBox,
+            -1,
+            _("التشغيل في الخلفية ومراقبة الحافظة عند بدء تشغيل النظام"),
+            name="background_monitoring",
+        )
         self.autoCheckForUpdates.SetValue(config_get("checkupdates"))
         self.autoDetectItem.SetValue(config_get("autodetect"))
         self.autoLoadItem.SetValue(config_get("autoload"))
         self.debugMode.SetValue(config_get("debug"))
+        self.backgroundMonitoring.SetValue(config_get("background_monitoring"))
         downloadPreferencesBox = wx.StaticBox(panel, -1, _("إعدادات التنزيل"))
         lbl2 = wx.StaticText(downloadPreferencesBox, -1, _("صيغة التحميل المباشر: "))
         self.formats = wx.Choice(
@@ -191,6 +198,7 @@ class SettingsDialog(wx.Dialog):
         self.autoLoadItem.Bind(wx.EVT_CHECKBOX, self.onCheck)
         self.autoCheckForUpdates.Bind(wx.EVT_CHECKBOX, self.onCheck)
         self.debugMode.Bind(wx.EVT_CHECKBOX, self.onCheck)
+        self.backgroundMonitoring.Bind(wx.EVT_CHECKBOX, self.onCheck)
         self.repeateTracks.Bind(wx.EVT_CHECKBOX, self.onCheck)
         self.autoPlayNext.Bind(wx.EVT_CHECKBOX, self.onCheck)
         self.continueWatching.Bind(wx.EVT_CHECKBOX, self.onCheck)
