@@ -25,6 +25,7 @@ from gui.favorites import Favorites
 from gui.history import HistoryDialog
 from doc_handler import documentation_get
 from media_player.media_gui import MediaGui
+from gui.tray_icon import TaskBarIcon
 from youtube_browser.browser import YoutubeBrowser
 from youtube_browser.scraper import Scraper
 from youtube_browser.search_handler import SimpleResult
@@ -39,7 +40,7 @@ logger = logging.getLogger(__name__)
 
 
 class HomeScreen(wx.Frame):
-    def __init__(self):
+    def __init__(self, start_hidden=False):
         wx.Frame.__init__(self, parent=None, title=application.name)
         settings_handler.config_initialization()
         init_translation("HexPlayer")
@@ -49,12 +50,15 @@ class HomeScreen(wx.Frame):
         self.home_feed_results = None
         self.scraper = Scraper()
         self.home_feed_continuation = None
+        self.last_clip_content = ""
+        self.tray_icon = TaskBarIcon(self)
 
         self._init_ui()
         self._setup_menus()
         self._bind_events()
 
-        self.Show()
+        if not start_hidden:
+            self.Show()
         self._startup_logic()
 
     def _init_ui(self):
@@ -168,6 +172,8 @@ class HomeScreen(wx.Frame):
         self.SetAcceleratorTable(accel)
 
     def _bind_events(self):
+        self.clip_timer = wx.Timer(self)
+        self.Bind(wx.EVT_TIMER, self.on_clip_timer, self.clip_timer)
         # Menu items
         self.Bind(wx.EVT_MENU, self.onSearch, self.searchItem)
         self.Bind(wx.EVT_MENU, self.onDownload, self.downloadItem)
@@ -227,9 +233,26 @@ class HomeScreen(wx.Frame):
             self.historyItem.Enable(True)
             self.load_home_feed()
 
-        self.detectFromClipboard(settings_handler.config_get("autodetect"))
+        if settings_handler.config_get("background_monitoring"):
+            utils.set_startup(True)
+            self.clip_timer.Start(1500)
+        else:
+            utils.set_startup(False)
+            self.detectFromClipboard(settings_handler.config_get("autodetect"))
+
         if settings_handler.config_get("checkupdates"):
             Thread(target=utils.check_for_updates, args=[True], daemon=True).start()
+
+    def on_clip_timer(self, event):
+        try:
+            clip_content = pyperclip.paste()
+        except Exception:
+            return
+        if clip_content != self.last_clip_content:
+            self.last_clip_content = clip_content
+            if utils.youtube_regexp(clip_content):
+                dlg = AutoDetectDialog(self, clip_content)
+                utils.ensure_focus(dlg)
 
     def on_show_yt_dlp_version(self, event):
         version = utils.get_yt_dlp_version()
@@ -378,6 +401,15 @@ class HomeScreen(wx.Frame):
 
     def onSettings(self, event):
         SettingsDialog(self)
+        if settings_handler.config_get("background_monitoring"):
+            utils.set_startup(True)
+            if not self.clip_timer.IsRunning():
+                self.clip_timer.Start(1500)
+        else:
+            utils.set_startup(False)
+            if self.clip_timer.IsRunning():
+                self.clip_timer.Stop()
+
         cookies_path = settings_handler.config_get("cookiespath")
         if cookies_path and os.path.exists(cookies_path):
             if not self.home_feed_list.IsShown() or not self.home_feed_data:
@@ -437,6 +469,8 @@ class HomeScreen(wx.Frame):
         wx.MessageBox(about, _("حول"), parent=self)
 
     def onClose(self, event):
+        self.clip_timer.Stop()
+        self.tray_icon.Destroy()
         database.disconnect()
         stop_async_loop()
         self.Destroy()
@@ -444,11 +478,26 @@ class HomeScreen(wx.Frame):
 
 
 if __name__ == "__main__":
+    app = wx.App()
+
+    # Single Instance Checker
+    name = f"{application.name}-{wx.GetUserId()}"
+    checker = wx.SingleInstanceChecker(name)
+    if checker.IsAnotherRunning():
+        if "--background" not in sys.argv:
+            wx.MessageBox(
+                _("البرنامج قيد التشغيل بالفعل."),
+                _("تنبيه"),
+                style=wx.ICON_INFORMATION,
+            )
+        sys.exit()
+
     _async_thread = threading.Thread(target=start_async_loop, daemon=True)
     _async_thread.start()
 
-    app = wx.App()
     lang_id = codes.get(settings_handler.config_get("lang"), wx.LANGUAGE_ARABIC)
     locale = wx.Locale(lang_id)
-    HomeScreen()
+
+    start_hidden = "--background" in sys.argv
+    HomeScreen(start_hidden=start_hidden)
     app.MainLoop()

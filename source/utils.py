@@ -904,3 +904,47 @@ def show_error(message, exception=None, parent=None):
         style=wx.ICON_ERROR,
         parent=parent or wx.GetApp().GetTopWindow(),
     )
+
+
+def set_startup(enable: bool):
+    if sys.platform != "win32":
+        return
+    import winreg
+
+    key_path = r"Software\Microsoft\Windows\CurrentVersion\Run"
+    app_name = application.name
+    if getattr(sys, "frozen", False):
+        exe_path = f'"{sys.executable}" --background'
+    else:
+        # For development environments
+        script_path = os.path.abspath(sys.modules["__main__"].__file__)
+        exe_path = f'"{sys.executable}" "{script_path}" --background'
+
+    try:
+        key = winreg.OpenKey(
+            winreg.HKEY_CURRENT_USER, key_path, 0, winreg.KEY_SET_VALUE
+        )
+        if enable:
+            winreg.SetValueEx(key, app_name, 0, winreg.REG_SZ, exe_path)
+        else:
+            try:
+                winreg.DeleteValue(key, app_name)
+            except FileNotFoundError:
+                pass
+        winreg.CloseKey(key)
+    except Exception as e:
+        logger.error(f"Failed to update startup registry: {e}")
+
+
+def ensure_focus(window):
+    if not window:
+        return
+    window.Raise()
+    window.SetFocus()
+    if sys.platform == "win32":
+        import ctypes
+
+        try:
+            ctypes.windll.user32.SetForegroundWindow(window.GetHandle())
+        except Exception as e:
+            logger.error(f"Failed to SetForegroundWindow: {e}")

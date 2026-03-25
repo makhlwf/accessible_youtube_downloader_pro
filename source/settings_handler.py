@@ -23,6 +23,7 @@ defaults = {
     "defaultvideoquality": 4,
     "defaultaudioquality": 2,
     "debug": False,
+    "background_monitoring": False,
 }
 
 _cache = {}
