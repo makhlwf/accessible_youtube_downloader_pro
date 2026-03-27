@@ -100,20 +100,20 @@ VIDEO_QUALITIES = [144, 240, 360, 480, 720, 1080, 1440, 2160]
 AUDIO_QUALITIES = [64, 128, 256]
 
 VIDEO_QUALITY_DESCRIPTIONS = {
-    144: _("144p (جودة منخفضة جدًا)"),
-    240: _("240p (جودة منخفضة)"),
-    360: _("360p (جودة متوسطة)"),
-    480: _("480p (جودة متوسطة)"),
-    720: _("720p (جودة عالية HD)"),
-    1080: _("1080p (جودة عالية جدًا Full HD)"),
-    1440: _("1440p (جودة فائقة 2K)"),
-    2160: _("2160p (جودة فائقة 4K)"),
+    144: _("144ب (جودة منخفضة جدًا)"),
+    240: _("240ب (جودة منخفضة)"),
+    360: _("360ب (جودة متوسطة)"),
+    480: _("480ب (جودة متوسطة)"),
+    720: _("720ب (جودة عالية عالية الدقة)"),
+    1080: _("1080ب (جودة عالية جدًا عالية الدقة الكاملة)"),
+    1440: _("1440ب (جودة فائقة 2 كي)"),
+    2160: _("2160ب (جودة فائقة 4 كي)"),
 }
 
 
 def get_quality_description(height):
     return VIDEO_QUALITY_DESCRIPTIONS.get(
-        height, _("{}p (جودة غير معروفة)").format(height)
+        height, _("{}ب (جودة غير معروفة)").format(height)
     )
 
 
@@ -123,7 +123,7 @@ def download_yt_dlp():
         wx.GetApp().GetTopWindow(),
         url,
         paths.yt_dlp_path,
-        _("جاري تنزيل yt-dlp"),
+        _("جاري تنزيل واي تي دي إل بي"),
     )
     load_yt_dlp()
 
@@ -155,20 +155,20 @@ def update_yt_dlp():
     latest = get_latest_github_release("yt-dlp/yt-dlp")
     if not latest:
         show_error(
-            _("تعذر الحصول على معلومات التحديث من GitHub"),
+            _("تعذر الحصول على معلومات التحديث من غيت هاب"),
         )
         return
 
     if current == latest:
         wx.MessageBox(
-            _("أنت تستخدم بالفعل أحدث إصدار من yt-dlp ({})").format(current),
+            _("أنت تستخدم بالفعل أحدث إصدار من واي تي دي إل بي ({})").format(current),
             _("لا يوجد تحديث"),
             parent=wx.GetApp().GetTopWindow(),
         )
     else:
         msg = wx.MessageBox(
             _(
-                "هناك إصدار جديد متوفر من yt-dlp\nالإصدار الحالي: {}\nالإصدار الأحدث: {}\nهل تريد التحديث الآن؟"
+                "هناك إصدار جديد متوفر من واي تي دي إل بي\nالإصدار الحالي: {}\nالإصدار الأحدث: {}\nهل تريد التحديث الآن؟"
             ).format(current or _("غير معروف"), latest),
             _("تحديث متوفر"),
             style=wx.YES_NO | wx.ICON_INFORMATION,
@@ -184,7 +184,7 @@ def download_deno():
         wx.GetApp().GetTopWindow(),
         url,
         os.path.join(paths.main_path, "deno.zip"),
-        _("جاري تنزيل Deno"),
+        _("جاري تنزيل دينو"),
         is_zip=True,
     )
 
@@ -216,20 +216,20 @@ def update_deno():
     latest = get_latest_github_release("denoland/deno")
     if not latest:
         show_error(
-            _("تعذر الحصول على معلومات التحديث من GitHub"),
+            _("تعذر الحصول على معلومات التحديث من غيت هاب"),
         )
         return
 
     if current == latest:
         wx.MessageBox(
-            _("أنت تستخدم بالفعل أحدث إصدار من Deno ({})").format(current),
+            _("أنت تستخدم بالفعل أحدث إصدار من دينو ({})").format(current),
             _("لا يوجد تحديث"),
             parent=wx.GetApp().GetTopWindow(),
         )
     else:
         msg = wx.MessageBox(
             _(
-                "هناك إصدار جديد متوفر من Deno\nالإصدار الحالي: {}\nالإصدار الأحدث: {}\nهل تريد التحديث الآن؟"
+                "هناك إصدار جديد متوفر من دينو\nالإصدار الحالي: {}\nالإصدار الأحدث: {}\nهل تريد التحديث الآن؟"
             ).format(current or _("غير معروف"), latest),
             _("تحديث متوفر"),
             style=wx.YES_NO | wx.ICON_INFORMATION,
@@ -242,7 +242,7 @@ def update_deno():
 def check_yt_dlp(parent=None):
     if not YoutubeDL:
         msg = wx.MessageBox(
-            _("لم يتم العثور على مكتبة yt-dlp, هل تريد تنزيلها الآن؟"),
+            _("لم يتم العثور على مكتبة واي تي دي إل بي, هل تريد تنزيلها الآن؟"),
             _("تنبيه"),
             style=wx.YES_NO | wx.ICON_INFORMATION,
             parent=parent or wx.GetApp().GetTopWindow(),
@@ -876,10 +876,7 @@ def check_for_updates(quiet=False):
                 from gui.update_dialog import UpdateDialog
 
                 wx.CallAfter(
-                    UpdateDialog,
-                    wx.GetApp().GetTopWindow(),
-                    url,
-                    _("جاري تنزيل التحديث"),
+                    UpdateDialog, wx.GetApp().GetTopWindow(), url, _("جاري تنزيل التحديث")
                 )
             dlg.Destroy()
             return

@@ -189,66 +189,85 @@ msgid "تنبيه"
 msgstr "Warning"
 
 #: source/utils.py:103
-msgid "144p (جودة منخفضة جدًا)"
+msgid "144ب"
+msgstr "144p"
+
+#: source/utils.py:103
+msgid "144ب (جودة منخفضة جدًا)"
 msgstr "144p (Very Low Quality)"
 
 #: source/utils.py:104
-msgid "240p (جودة منخفضة)"
+msgid "240ب"
+msgstr "240p"
+
+#: source/utils.py:104
+msgid "240ب (جودة منخفضة)"
 msgstr "240p (Low Quality)"
 
 #: source/utils.py:105
-msgid "360p (جودة متوسطة)"
+msgid "360ب"
+msgstr "360p"
+
+#: source/utils.py:105
+msgid "360ب (جودة متوسطة)"
 msgstr "360p (Medium Quality)"
 
 #: source/utils.py:106
-msgid "480p (جودة متوسطة)"
+msgid "480ب"
+msgstr "480p"
+
+#: source/utils.py:106
+msgid "480ب (جودة متوسطة)"
 msgstr "480p (Medium Quality)"
 
 #: source/utils.py:107
-msgid "720p (جودة عالية HD)"
+msgid "720ب"
+msgstr "720p"
+
+#: source/utils.py:107
+msgid "720ب (جودة عالية عالية الدقة)"
 msgstr "720p (High Quality HD)"
 
 #: source/utils.py:108
-msgid "1080p (جودة عالية جدًا Full HD)"
+msgid "1080ب"
+msgstr "1080p"
+
+#: source/utils.py:108
+msgid "1080ب (جودة عالية جدًا عالية الدقة الكاملة)"
 msgstr "1080p (Very High Quality Full HD)"
 
 #: source/utils.py:109
-msgid "1440p (جودة فائقة 2K)"
+msgid "1440ب"
+msgstr "1440p"
+
+#: source/utils.py:109
+msgid "1440ب (جودة فائقة 2 كي)"
 msgstr "1440p (Super Quality 2K)"
 
 #: source/utils.py:110
-msgid "2160p (جودة فائقة 4K)"
+msgid "2160ب"
+msgstr "2160p"
+
+#: source/utils.py:110
+msgid "2160ب (جودة فائقة 4 كي)"
 msgstr "2160p (Super Quality 4K)"
 
 #: source/utils.py:116
 #, python-brace-format
-msgid "{}p (جودة غير معروفة)"
+msgid "{}ب (جودة غير معروفة)"
 msgstr "{}p (Unknown Quality)"
 
 #: source/utils.py:126
 msgid "جاري تنزيل واي تي دي إل بي"
 msgstr "Downloading YT-DLP..."
 
-#: source/utils.py:126
-msgid "جاري تنزيل yt-dlp"
-msgstr "Downloading yt-dlp..."
-
 #: source/utils.py:158 source/utils.py:219
 msgid "تعذر الحصول على معلومات التحديث من غيت هاب"
-msgstr "Could not get update information from GitHub"
-
-#: source/utils.py:158 source/utils.py:219
-msgid "تعذر الحصول على معلومات التحديث من GitHub"
 msgstr "Could not get update information from GitHub"
 
 #: source/utils.py:164
 #, python-brace-format
 msgid "أنت تستخدم بالفعل أحدث إصدار من واي تي دي إل بي ({})"
-msgstr "You are using the latest version of YT-DLP ({})"
-
-#: source/utils.py:164
-#, python-brace-format
-msgid "أنت تستخدم بالفعل أحدث إصدار من yt-dlp ({})"
 msgstr "You are using the latest version of YT-DLP ({})"
 
 #: source/utils.py:165 source/utils.py:226 source/utils.py:884
@@ -268,19 +287,6 @@ msgstr ""
 "Last version: {}\n"
 "Do you want to update now?"
 
-#: source/utils.py:171
-#, python-brace-format
-msgid ""
-"هناك إصدار جديد متوفر من yt-dlp\n"
-"الإصدار الحالي: {}\n"
-"الإصدار الأحدث: {}\n"
-"هل تريد التحديث الآن؟"
-msgstr ""
-"There is a new update for YT-DLP\n"
-"Current version: {}\n"
-"Last version: {}\n"
-"Do you want to update now?"
-
 #: source/utils.py:172 source/utils.py:233 source/utils.py:813
 msgid "غير معروف"
 msgstr "Unknown"
@@ -290,17 +296,12 @@ msgid "تحديث متوفر"
 msgstr "Update available"
 
 #: source/utils.py:187
-msgid "جاري تنزيل Deno"
+msgid "جاري تنزيل دينو"
 msgstr "Downloading Deno..."
 
 #: source/utils.py:225
 #, python-brace-format
 msgid "أنت تستخدم بالفعل أحدث إصدار من دينو ({})"
-msgstr "You are using the latest version of Deno ({})"
-
-#: source/utils.py:225
-#, python-brace-format
-msgid "أنت تستخدم بالفعل أحدث إصدار من Deno ({})"
 msgstr "You are using the latest version of Deno ({})"
 
 #: source/utils.py:232
@@ -316,25 +317,8 @@ msgstr ""
 "Last version: {}\n"
 "Do you want to update now?"
 
-#: source/utils.py:232
-#, python-brace-format
-msgid ""
-"هناك إصدار جديد متوفر من Deno\n"
-"الإصدار الحالي: {}\n"
-"الإصدار الأحدث: {}\n"
-"هل تريد التحديث الآن؟"
-msgstr ""
-"There is a new update for Deno\n"
-"Current version: {}\n"
-"Last version: {}\n"
-"Do you want to update now?"
-
 #: source/utils.py:245
 msgid "لم يتم العثور على مكتبة واي تي دي إل بي, هل تريد تنزيلها الآن؟"
-msgstr "YT-DLP library was not found. Would you like to download it now?"
-
-#: source/utils.py:245
-msgid "لم يتم العثور على مكتبة yt-dlp, هل تريد تنزيلها الآن؟"
 msgstr "YT-DLP library was not found. Would you like to download it now?"
 
 #: source/utils.py:261
@@ -428,7 +412,7 @@ msgstr ""
 msgid "لا توجد معلومات حول هذا التحديث"
 msgstr "No information available about this update"
 
-#: source/utils.py:878 source/utils.py:881
+#: source/utils.py:878
 msgid "جاري تنزيل التحديث"
 msgstr "Downloading update"
 
@@ -791,6 +775,11 @@ msgstr "Audio Quality"
 msgid "ك.ب/ث"
 msgstr "kbps"
 
+#: source/gui/quality_selection.py:17 source/media_player/media_gui.py:208
+#: source/media_player/media_gui.py:216
+msgid "ب"
+msgstr "p"
+
 #: source/gui/search_dialog.py:7
 msgid "بحث"
 msgstr "Search"
@@ -915,8 +904,10 @@ msgstr "Player Settings"
 msgid "جودة الفيديو الافتراضية: "
 msgstr "Default video quality: "
 
-#: source/gui/settings_dialog.py:110 source/media_player/media_gui.py:208
-#: source/media_player/media_gui.py:216
+#: source/gui/settings_dialog.py:110 source/gui/settings_dialog.py:111
+#: source/gui/settings_dialog.py:112 source/gui/settings_dialog.py:113
+#: source/gui/settings_dialog.py:114 source/gui/settings_dialog.py:115
+#: source/gui/settings_dialog.py:116 source/gui/settings_dialog.py:117
 msgid "ب"
 msgstr "p"
 
@@ -1004,10 +995,6 @@ msgstr "HexPlayer"
 #: source/gui/tray_icon.py:17
 msgid "عرض البرنامج"
 msgstr "Show Program"
-
-#: source/gui/tray_icon.py:18
-msgid "خروج"
-msgstr "Exit"
 
 #: source/gui/tray_icon.py:18
 msgid "خروج"
