@@ -137,7 +137,9 @@ class HomeScreen(wx.Frame):
         # Tools Menu
         toolsMenu = wx.Menu()
         self.showYtdlpVer = toolsMenu.Append(-1, _("عرض إصدار واي تي دي إل بي"))
-        self.updateYtdlp = toolsMenu.Append(-1, _("التحقق من وجود تحديث لـ واي تي دي إل بي"))
+        self.updateYtdlp = toolsMenu.Append(
+            -1, _("التحقق من وجود تحديث لـ واي تي دي إل بي")
+        )
         self.showDenoVer = toolsMenu.Append(-1, _("عرض إصدار دينو"))
         self.updateDeno = toolsMenu.Append(-1, _("التحقق من وجود تحديث لـ دينو"))
         menuBar.Append(toolsMenu, _("قائمة الأدوات الخارجية"))

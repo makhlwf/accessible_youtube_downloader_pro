@@ -876,7 +876,10 @@ def check_for_updates(quiet=False):
                 from gui.update_dialog import UpdateDialog
 
                 wx.CallAfter(
-                    UpdateDialog, wx.GetApp().GetTopWindow(), url, _("جاري تنزيل التحديث")
+                    UpdateDialog,
+                    wx.GetApp().GetTopWindow(),
+                    url,
+                    _("جاري تنزيل التحديث"),
                 )
             dlg.Destroy()
             return
