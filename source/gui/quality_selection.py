@@ -6,13 +6,13 @@ import utils
 class QualitySelectionDialog(wx.SingleChoiceDialog):
     def __init__(self, parent, qualities, audio_mode=False):
         if not audio_mode:
-            message = _("Select the video quality you want to download:")
-            title = _("Video Quality")
+            message = _("اختر جودة الفيديو التي تريد تنزيلها:")
+            title = _("جودة الفيديو")
             choices = [utils.get_quality_description(q) for q in qualities]
         else:
-            message = _("Select the audio quality you want to download:")
-            title = _("Audio Quality")
-            choices = [f"{q}kbps" for q in qualities]
+            message = _("اختر جودة الصوت التي تريد تنزيلها:")
+            title = _("جودة الصوت")
+            choices = [f"{q}{_('ك.ب/ث')}" for q in qualities]
 
         super().__init__(parent, message, title, choices)
         self.qualities = qualities

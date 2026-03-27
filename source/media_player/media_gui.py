@@ -205,14 +205,14 @@ class MediaGui(wx.Frame):
             return
 
         for q in qualities:
-            label = f"{q}kbps" if self.audio_mode else f"{q}p"
+            label = f"{q}{_('ك.ب/ث')}" if self.audio_mode else f"{q}{_('ب')}"
             item = self.qualityMenu.AppendCheckItem(-1, label)
             if q == self.current_quality:
                 item.Check(True)
             self.Bind(wx.EVT_MENU, lambda event, h=q: self.on_change_quality(h), item)
 
     def on_change_quality(self, height):
-        label = f"{height}kbps" if self.audio_mode else f"{height}p"
+        label = f"{height}{_('ك.ب/ث')}" if self.audio_mode else f"{height}{_('ب')}"
         speak(_("جاري تغيير الجودة إلى {}").format(label))
         position = self.player.media.get_position()
 
@@ -648,7 +648,7 @@ class MediaGui(wx.Frame):
     def onVideoDownload(self, event):
         qualities = LoadingDialog(
             self,
-            _("Fetching available qualities..."),
+            _("جاري جلب الجودات المتاحة..."),
             utils.get_available_qualities,
             self.url,
         ).res

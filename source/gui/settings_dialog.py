@@ -95,7 +95,7 @@ class SettingsDialog(wx.Dialog):
         self.mp3Quality = wx.Choice(
             downloadPreferencesBox,
             -1,
-            choices=["96 kbps", "128 kbps", "192 kbps"],
+            choices=[_("96 ك.ب/ث"), _("128 ك.ب/ث"), _("192 ك.ب/ث")],
             name="conversion",
         )
         self.mp3Quality.Selection = int(config_get("conversion"))
@@ -106,7 +106,16 @@ class SettingsDialog(wx.Dialog):
         self.videoQuality = wx.Choice(
             playerOptions,
             -1,
-            choices=["144p", "240p", "360p", "480p", "720p", "1080p", "1440p", "2160p"],
+            choices=[
+                _("144ب"),
+                _("240ب"),
+                _("360ب"),
+                _("480ب"),
+                _("720ب"),
+                _("1080ب"),
+                _("1440ب"),
+                _("2160ب"),
+            ],
         )
         self.videoQuality.Selection = int(config_get("defaultvideoquality"))
         self.audioQualityLabel = wx.StaticText(

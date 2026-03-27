@@ -219,7 +219,7 @@ class PlaylistDialog(wx.Dialog):
 
         qualities = LoadingDialog(
             self,
-            _("Fetching available qualities..."),
+            _("جاري جلب الجودات المتاحة..."),
             utils.get_available_qualities,
             url,
         ).res

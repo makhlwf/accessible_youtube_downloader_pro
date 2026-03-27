@@ -119,13 +119,13 @@ class Search:
         self.new_videos = 0
 
         if self.filter == 0:  # Videos
-            self.search = VideosSearch(self.query, limit=20, language="en", region="US")
+            self.search = VideosSearch(self.query, limit=20, language="ar", region="SA")
         elif self.filter == 4:  # Playlists
             self.search = PlaylistsSearch(
-                self.query, limit=20, language="en", region="US"
+                self.query, limit=20, language="ar", region="SA"
             )
         else:
-            self.search = VideosSearch(self.query, limit=20, language="en", region="US")
+            self.search = VideosSearch(self.query, limit=20, language="ar", region="SA")
 
     async def init_async(self):
         try:
@@ -139,7 +139,7 @@ class Search:
         items = result.get("result", [])
         if isinstance(self.search, PlaylistsSearch):
             for item in items:
-                video_count_str = item.get("videoCount", "0 videos")
+                video_count_str = item.get("videoCount", "0")
                 try:
                     video_count = int(video_count_str.split(" ")[0])
                 except (ValueError, IndexError):

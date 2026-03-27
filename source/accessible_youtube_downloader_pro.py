@@ -78,12 +78,12 @@ class HomeScreen(wx.Frame):
         )
 
         # Quick access buttons
-        self.searchBtn = wx.Button(panel, -1, _("البحث في youtube\tctrl+f"), name="tab")
+        self.searchBtn = wx.Button(panel, -1, _("البحث في يوتيوب\tctrl+f"), name="tab")
         self.downloadBtn = wx.Button(
             panel, -1, _("التنزيل من خلال رابط\tctrl+d"), name="tab"
         )
         self.playBtn = wx.Button(
-            panel, -1, _("تشغيل فيديو youtube من خلال الرابط\tctrl+y"), name="tab"
+            panel, -1, _("تشغيل فيديو يوتيوب من خلال الرابط\tctrl+y"), name="tab"
         )
         self.favBtn = wx.Button(
             panel, -1, _("الفيديوهات المفضلة	ctrl+shift+f"), name="tab"
@@ -120,10 +120,10 @@ class HomeScreen(wx.Frame):
 
         # Main Menu
         mainMenu = wx.Menu()
-        self.searchItem = mainMenu.Append(-1, _("البحث في youtube\tctrl+f"))
+        self.searchItem = mainMenu.Append(-1, _("البحث في يوتيوب\tctrl+f"))
         self.downloadItem = mainMenu.Append(-1, _("التنزيل من خلال رابط\tctrl+d"))
         self.playItem = mainMenu.Append(
-            -1, _("تشغيل فيديو youtube من خلال الرابط\tctrl+y")
+            -1, _("تشغيل فيديو يوتيوب من خلال الرابط\tctrl+y")
         )
         self.favItem = mainMenu.Append(-1, _("الفيديوهات المفضلة	ctrl+shift+f"))
         self.historyItem = mainMenu.Append(-1, _("سجل المشاهدة\tctrl+h"))
@@ -136,10 +136,12 @@ class HomeScreen(wx.Frame):
 
         # Tools Menu
         toolsMenu = wx.Menu()
-        self.showYtdlpVer = toolsMenu.Append(-1, _("عرض إصدار yt-dlp"))
-        self.updateYtdlp = toolsMenu.Append(-1, _("التحقق من وجود تحديث لـ yt-dlp"))
-        self.showDenoVer = toolsMenu.Append(-1, _("عرض إصدار Deno.js"))
-        self.updateDeno = toolsMenu.Append(-1, _("التحقق من وجود تحديث لـ Deno.js"))
+        self.showYtdlpVer = toolsMenu.Append(-1, _("عرض إصدار واي تي دي إل بي"))
+        self.updateYtdlp = toolsMenu.Append(
+            -1, _("التحقق من وجود تحديث لـ واي تي دي إل بي")
+        )
+        self.showDenoVer = toolsMenu.Append(-1, _("عرض إصدار دينو"))
+        self.updateDeno = toolsMenu.Append(-1, _("التحقق من وجود تحديث لـ دينو"))
         menuBar.Append(toolsMenu, _("قائمة الأدوات الخارجية"))
 
         # About Menu
@@ -258,21 +260,21 @@ class HomeScreen(wx.Frame):
         version = utils.get_yt_dlp_version()
         if not version:
             utils.show_error(
-                _("لم يتم العثور على مكتبة yt-dlp أو تعذر الحصول على إصدارها"),
+                _("لم يتم العثور على مكتبة واي تي دي إل بي أو تعذر الحصول على إصدارها"),
                 parent=self,
             )
             return
-        wx.MessageBox(version, _("إصدار yt-dlp"), parent=self)
+        wx.MessageBox(version, _("إصدار واي تي دي إل بي"), parent=self)
 
     def on_show_deno_version(self, event):
         version = utils.get_deno_version()
         if not version:
             utils.show_error(
-                _("لم يتم العثور على أداة deno.exe أو تعذر الحصول على إصدارها"),
+                _("لم يتم العثور على أداة دينو أو تعذر الحصول على إصدارها"),
                 parent=self,
             )
             return
-        wx.MessageBox(version, _("إصدار Deno.js"), parent=self)
+        wx.MessageBox(version, _("إصدار دينو"), parent=self)
 
     def load_home_feed(self, load_more=False):
         if not load_more:
