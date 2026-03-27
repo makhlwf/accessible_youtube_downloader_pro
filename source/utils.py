@@ -100,20 +100,20 @@ VIDEO_QUALITIES = [144, 240, 360, 480, 720, 1080, 1440, 2160]
 AUDIO_QUALITIES = [64, 128, 256]
 
 VIDEO_QUALITY_DESCRIPTIONS = {
-    144: _("144p (Very Low Quality)"),
-    240: _("240p (Low Quality)"),
-    360: _("360p (Medium Quality)"),
-    480: _("480p (Medium Quality)"),
-    720: _("720p (High Quality HD)"),
-    1080: _("1080p (Very High Quality Full HD)"),
-    1440: _("1440p (Super Quality 2K)"),
-    2160: _("2160p (Super Quality 4K)"),
+    144: _("144p (جودة منخفضة جدًا)"),
+    240: _("240p (جودة منخفضة)"),
+    360: _("360p (جودة متوسطة)"),
+    480: _("480p (جودة متوسطة)"),
+    720: _("720p (جودة عالية HD)"),
+    1080: _("1080p (جودة عالية جدًا Full HD)"),
+    1440: _("1440p (جودة فائقة 2K)"),
+    2160: _("2160p (جودة فائقة 4K)"),
 }
 
 
 def get_quality_description(height):
     return VIDEO_QUALITY_DESCRIPTIONS.get(
-        height, _("{}p (Unknown Quality)").format(height)
+        height, _("{}p (جودة غير معروفة)").format(height)
     )
 
 
@@ -875,7 +875,9 @@ def check_for_updates(quiet=False):
             if dlg.ShowModal() == wx.ID_OK:
                 from gui.update_dialog import UpdateDialog
 
-                wx.CallAfter(UpdateDialog, wx.GetApp().GetTopWindow(), url)
+                wx.CallAfter(
+                    UpdateDialog, wx.GetApp().GetTopWindow(), url, _("جاري تنزيل التحديث")
+                )
             dlg.Destroy()
             return
         if not quiet:

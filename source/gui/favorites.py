@@ -233,7 +233,7 @@ class Favorites(wx.Frame):
 
         qualities = LoadingDialog(
             self,
-            _("Fetching available qualities..."),
+            _("جاري جلب الجودات المتاحة..."),
             utils.get_available_qualities,
             url,
         ).res
