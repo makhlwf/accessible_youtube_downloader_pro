@@ -23,4 +23,4 @@ jobs:
         # Ignore the creation date in the comparison
         grep -v "POT-Creation-Date" messages.pot > messages.pot.clean
         grep -v "POT-Creation-Date" messages.pot.tmp > messages.pot.tmp.clean
-        diff messages.pot.clean messages.pot.tmp.clean || (echo "messages.pot is out of date. Please run 'pybabel extract -F babel.cfg -k _ -o messages.pot source/' and commit the changes." && exit 1)
+        diff -B messages.pot.clean messages.pot.tmp.clean || (echo "messages.pot is out of date. Please run 'pybabel extract -F babel.cfg -k _ -o messages.pot source/' and commit the changes." && exit 1)
