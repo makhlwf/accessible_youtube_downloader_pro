@@ -43,6 +43,7 @@ data_to_add = [
     "get_recommendations.js",
     "update_history.js",
     "get_watch_history.js",
+    "../PRIVACY_POLICY.md",
     # Directories
     "assets",
     "docs",

@@ -148,6 +148,7 @@ class HomeScreen(wx.Frame):
         aboutMenu = wx.Menu()
         self.guideItem = aboutMenu.Append(-1, _("دليل المستخدم...\tf1"))
         self.checkUpdatesItem = aboutMenu.Append(-1, _("البحث عن التحديثات"))
+        self.privacyPolicyItem = aboutMenu.Append(-1, _("سياسة الخصوصية"))
         self.aboutItem = aboutMenu.Append(-1, _("عن البرنامج..."))
 
         contactMenu = wx.Menu()
@@ -193,6 +194,7 @@ class HomeScreen(wx.Frame):
 
         self.Bind(wx.EVT_MENU, self.onGuide, self.guideItem)
         self.Bind(wx.EVT_MENU, self.onCheckForUpdates, self.checkUpdatesItem)
+        self.Bind(wx.EVT_MENU, self.onPrivacyPolicy, self.privacyPolicyItem)
         self.Bind(wx.EVT_MENU, self.onAbout, self.aboutItem)
         self.Bind(
             wx.EVT_MENU,
@@ -456,6 +458,21 @@ class HomeScreen(wx.Frame):
         content = documentation_get()
         if content:
             Viewer(self, _("دليل استخدام برنامج HexPlayer"), content).ShowModal()
+
+    def onPrivacyPolicy(self, event):
+        path = os.path.join(
+            os.path.dirname(os.path.dirname(__file__)), "PRIVACY_POLICY.md"
+        )
+        if not os.path.exists(path):
+            # Try same directory as script (for bundled)
+            path = os.path.join(os.path.dirname(__file__), "PRIVACY_POLICY.md")
+
+        if os.path.exists(path):
+            with open(path, "r", encoding="utf-8") as f:
+                content = f.read()
+            Viewer(self, _("سياسة الخصوصية"), content).ShowModal()
+        else:
+            utils.show_error(_("تعذر العثور على ملف سياسة الخصوصية"), parent=self)
 
     def onCheckForUpdates(self, event):
         LoadingDialog(

@@ -45,6 +45,8 @@ Auto-Language Detection: Automatically detects the system language on the first 
 
 Update Checker: Built-in feature to check for program updates.
 
+Privacy Policy: Dedicated section explaining how your data and cookies are handled.
+
 Resume Playback: Option to continue watching from where you last stopped.
 
 Playlist Browsing: Browse the contents of playlists within the application.
@@ -80,6 +82,8 @@ User Guide: The manual you are currently reading (can also be accessed via F1).
 Check for Updates: Check for and download new versions of the application.
 
 About the Program: A brief message with information about the software.
+
+Privacy Policy: View the program's privacy policy.
 
 Contact Me: A sub-menu with various ways to reach the developer.
 

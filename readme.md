@@ -10,6 +10,11 @@
 
 ---
 
+## 🔒 Privacy Policy
+HexPlayer respects your privacy. We do not collect or transmit any of your personal information. Read our full [Privacy Policy](PRIVACY_POLICY.md) for more details.
+
+---
+
 ## ✨ Key Features
 
 - 🔍 **Direct Search:** Search for videos, playlists, and live streams directly within the app.
