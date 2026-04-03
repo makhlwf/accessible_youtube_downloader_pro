@@ -1,0 +1,30 @@
+gui:
+  - changed-files:
+    - any-glob-to-any-file: source/gui/**/*
+
+media-player:
+  - changed-files:
+    - any-glob-to-any-file: source/media_player/**/*
+
+youtube-browser:
+  - changed-files:
+    - any-glob-to-any-file: source/youtube_browser/**/*
+
+downloader:
+  - changed-files:
+    - any-glob-to-any-file: source/download_handler/**/*
+
+translations:
+  - changed-files:
+    - any-glob-to-any-file:
+      - source/languages/**/*
+      - messages.pot
+      - babel.cfg
+
+ci:
+  - changed-files:
+    - any-glob-to-any-file: .github/workflows/**/*
+
+tests:
+  - changed-files:
+    - any-glob-to-any-file: tests/**/*
