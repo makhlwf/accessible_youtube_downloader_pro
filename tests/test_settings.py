@@ -15,7 +15,7 @@ def test_config_get_default():
     # Test getting a default value when not in cache
     with patch("settings_handler._cache", {}):
         # We need to mock config_set or avoid it writing to disk
-        with patch("settings_handler.config_set") as mock_set:
+        with patch("settings_handler.config_set"):
             val = settings_handler.config_get("seek")
             assert val == 5
 

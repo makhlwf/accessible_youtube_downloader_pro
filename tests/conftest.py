@@ -1,5 +1,7 @@
 import sys
 import os
+import ctypes
+import builtins
 from unittest.mock import MagicMock
 
 # Add source to sys.path
@@ -41,8 +43,6 @@ mock_newevent.NewEvent.return_value = (MagicMock(), MagicMock())
 sys.modules["wx.lib.newevent"] = mock_newevent
 
 # Mock ctypes for non-Windows environments
-import ctypes
-
 if not hasattr(ctypes, "windll"):
     mock_ctypes = MagicMock()
     sys.modules["ctypes"] = mock_ctypes
@@ -75,6 +75,4 @@ sys.modules["vlc"] = MagicMock()
 sys.modules["pyperclip"] = MagicMock()
 
 # Mock builtins._ for translation
-import builtins
-
 builtins._ = lambda x: x
