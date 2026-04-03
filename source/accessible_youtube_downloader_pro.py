@@ -460,7 +460,9 @@ class HomeScreen(wx.Frame):
             Viewer(self, _("دليل استخدام برنامج HexPlayer"), content).ShowModal()
 
     def onPrivacyPolicy(self, event):
-        path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "PRIVACY_POLICY.md")
+        path = os.path.join(
+            os.path.dirname(os.path.dirname(__file__)), "PRIVACY_POLICY.md"
+        )
         if not os.path.exists(path):
             # Try same directory as script (for bundled)
             path = os.path.join(os.path.dirname(__file__), "PRIVACY_POLICY.md")
