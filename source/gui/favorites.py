@@ -2,7 +2,7 @@ import wx
 from language_handler import _
 import application
 from database import Favorite
-from utils import get_audio_stream, get_video_stream
+from utils import get_audio_stream, get_video_stream, get_available_qualities
 from download_handler.downloader import downloadAction
 from media_player.media_gui import MediaGui
 from nvda_client.client import speak
@@ -234,7 +234,7 @@ class Favorites(wx.Frame):
         qualities = LoadingDialog(
             self,
             _("جاري جلب الجودات المتاحة..."),
-            utils.get_available_qualities,
+            get_available_qualities,
             url,
         ).res
         quality = None
