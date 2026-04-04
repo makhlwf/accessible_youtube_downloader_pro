@@ -1,4 +1,3 @@
-# the main module
 import os
 import sys
 import threading
@@ -30,10 +29,12 @@ from youtube_browser.browser import YoutubeBrowser
 from youtube_browser.scraper import Scraper
 from youtube_browser.search_handler import SimpleResult
 
-# Setup DLL directory for VLC etc.
-os.chdir(os.path.abspath(os.path.dirname(__file__)))
-if hasattr(os, "add_dll_directory"):
-    os.add_dll_directory(os.getcwd())
+
+# Add local VLC DLL folder
+vlc_path = os.path.join(
+    os.path.dirname(__file__),
+)
+os.add_dll_directory(vlc_path)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
