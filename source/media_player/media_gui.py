@@ -357,10 +357,21 @@ class MediaGui(wx.Frame):
             self.next()
         elif event.ControlDown() and event.GetKeyCode() == wx.WXK_LEFT:
             self.previous()
-        elif event.GetKeyCode() == wx.WXK_UP:
+        elif event.GetKeyCode() == wx.WXK_UP and not event.HasAnyModifiers():
             self.increase_volume()
-        elif event.GetKeyCode() == wx.WXK_DOWN:
+        elif event.GetKeyCode() == wx.WXK_DOWN and not event.HasAnyModifiers():
             self.decrease_volume()
+        elif event.GetKeyCode() == wx.WXK_UP and event.ShiftDown():
+            if self.player is not None:
+                rate = round(self.player.media.get_rate() + config_get("playback_speed_step"), 2)
+                self.player.media.set_rate(rate)
+                speak(f"{rate}x")
+        elif event.GetKeyCode() == wx.WXK_DOWN and event.ShiftDown():
+            if self.player is not None:
+                rate = round(self.player.media.get_rate() - config_get("playback_speed_step"), 2)
+                if rate < 0.1: rate = 0.1
+                self.player.media.set_rate(rate)
+                speak(f"{rate}x")
         elif event.GetKeyCode() == wx.WXK_HOME:
             self.beginingAction()
         elif event.GetKeyCode() in range(49, 58):
@@ -374,23 +385,6 @@ class MediaGui(wx.Frame):
         ):
             if self.player is not None:
                 speak(_("الوقت المنقضي: {}").format(self.player.get_elapsed()))
-        elif event.GetKeyCode() == ord("S"):
-            if self.player is not None:
-                self.player.media.set_rate(1.4)
-                speak(_("سريع"))
-
-        elif event.GetKeyCode() == ord("D"):
-            if self.player is not None:
-                self.player.media.set_rate(1.0)
-
-                speak(_("معتدل"))
-
-        elif event.GetKeyCode() == ord("F"):
-            if self.player is not None:
-                self.player.media.set_rate(0.6)
-
-                speak(_("بطيء"))
-
         elif event.GetKeyCode() in (ord("-"), wx.WXK_NUMPAD_SUBTRACT):
             self.seek -= 1
 

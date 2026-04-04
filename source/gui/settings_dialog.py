@@ -148,6 +148,17 @@ class SettingsDialog(wx.Dialog):
         )
         self.autoPlayNext.Value = config_get("autonext")
         self.repeateTracks.Value = config_get("repeatTracks")
+        self.playbackSpeedStepLabel = wx.StaticText(
+            playerOptions, -1, _("مقدار تغيير سرعة التشغيل: ")
+        )
+        self.playbackSpeedStep = wx.SpinCtrlDouble(
+            playerOptions,
+            -1,
+            value=str(config_get("playback_speed_step")),
+            min=0.01,
+            max=1.0,
+            inc=0.01,
+        )
         okButton = wx.Button(panel, wx.ID_OK, _("مواف&ق"), name="ok_cancel")
         okButton.SetDefault()
         wx.Button(panel, wx.ID_CANCEL, _("إل&غاء"), name="ok_cancel")
@@ -182,12 +193,16 @@ class SettingsDialog(wx.Dialog):
         playerOptionsSizer = wx.BoxSizer(wx.VERTICAL)
         videoQualitySizer = wx.BoxSizer(wx.HORIZONTAL)
         audioQualitySizer = wx.BoxSizer(wx.HORIZONTAL)
+        playbackSpeedStepSizer = wx.BoxSizer(wx.HORIZONTAL)
+        playbackSpeedStepSizer.Add(self.playbackSpeedStepLabel, 1)
+        playbackSpeedStepSizer.Add(self.playbackSpeedStep, 1)
         videoQualitySizer.Add(self.videoQualityLabel, 1)
         videoQualitySizer.Add(self.videoQuality, 1)
         audioQualitySizer.Add(self.audioQualityLabel, 1)
         audioQualitySizer.Add(self.audioQuality, 1)
         playerOptionsSizer.Add(videoQualitySizer, 0, wx.EXPAND | wx.ALL, 5)
         playerOptionsSizer.Add(audioQualitySizer, 0, wx.EXPAND | wx.ALL, 5)
+        playerOptionsSizer.Add(playbackSpeedStepSizer, 0, wx.EXPAND | wx.ALL, 5)
         playerOptionsSizer.Add(self.continueWatching, 0, wx.ALL, 5)
         playerOptionsSizer.Add(self.repeateTracks, 0, wx.ALL, 5)
         playerOptionsSizer.Add(self.autoPlayNext, 0, wx.ALL, 5)
@@ -268,6 +283,7 @@ class SettingsDialog(wx.Dialog):
         ) if not self.formats.Selection == int(config_get("defaultformat")) else None
         config_set("defaultvideoquality", self.videoQuality.Selection)
         config_set("defaultaudioquality", self.audioQuality.Selection)
+        config_set("playback_speed_step", self.playbackSpeedStep.Value)
         lang = {value: key for key, value in languages.items()}
         if not lang[self.languageBox.Selection] == config_get("lang"):
             config_set("lang", lang[self.languageBox.Selection])

@@ -24,6 +24,7 @@ defaults = {
     "defaultaudioquality": 2,
     "debug": False,
     "background_monitoring": False,
+    "playback_speed_step": 0.05,
 }
 
 _cache = {}
