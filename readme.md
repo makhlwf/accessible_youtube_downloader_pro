@@ -1,4 +1,4 @@
-# 🎥 HexPlayer (Accessible YouTube Downloader Pro)
+# 🎥 HexPlayer
 
 [![GitHub release](https://img.shields.io/github/v/release/makhlwf/accessible_youtube_downloader_pro?style=for-the-badge&color=blue)](https://github.com/makhlwf/accessible_youtube_downloader_pro/releases)
 [![Python Version](https://img.shields.io/badge/Python-3.14+-brightgreen?style=for-the-badge&logo=python)](https://www.python.org/)
