@@ -363,9 +363,7 @@ class MediaGui(wx.Frame):
             self.decrease_volume()
         elif event.GetKeyCode() == wx.WXK_UP and event.ShiftDown():
             if self.player is not None:
-                rate = round(
-                    self.player.media.get_rate() + config_get("playback_speed_step"), 2
-                )
+                rate = round(self.player.media.get_rate() + config_get("playback_speed_step"), 2)
                 self.player.media.set_rate(rate)
                 speak(f"{rate}x")
         elif event.GetKeyCode() == wx.WXK_DOWN and event.ShiftDown():
