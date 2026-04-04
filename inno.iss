@@ -107,15 +107,16 @@ begin
   DenoZipFile := ExpandConstant('{tmp}\deno.zip');
   TargetDir := ExpandConstant('{app}');
 
-  DownloadYtDlp := WizardIsTaskSelected('download_ytdlp') and not FileExists(YtDlpTargetFile);
-  DownloadDeno := WizardIsTaskSelected('download_deno') and not FileExists(DenoTargetFile);
+  DownloadYtDlp := (WizardIsTaskSelected('download_ytdlp') or (ExpandConstant('{param:DownloadComponents|0}') = '1')) and not FileExists(YtDlpTargetFile);
+  DownloadDeno := (WizardIsTaskSelected('download_deno') or (ExpandConstant('{param:DownloadComponents|0}') = '1')) and not FileExists(DenoTargetFile);
 
   if not (DownloadYtDlp or DownloadDeno) then
     Exit;
 
   if not IsOnline then
   begin
-    MsgBox(ExpandConstant('{cm:NoInternet}'), mbInformation, MB_OK);
+    if not WizardSilent then
+      MsgBox(ExpandConstant('{cm:NoInternet}'), mbInformation, MB_OK);
     Exit;
   end;
 
@@ -145,7 +146,8 @@ begin
       if DownloadYtDlp then
       begin
         if not FileCopy(ExpandConstant('{tmp}\yt_dlp.zip'), YtDlpTargetFile, False) then
-          MsgBox(ExpandConstant('{cm:DownloadFailed}'), mbError, MB_OK);
+          if not WizardSilent then
+            MsgBox(ExpandConstant('{cm:DownloadFailed}'), mbError, MB_OK);
       end;
 
       if DownloadDeno then
@@ -154,17 +156,20 @@ begin
         if Exec('powershell.exe', ExpandConstant('-NoProfile -Command "Expand-Archive -Path ''{tmp}\deno.zip'' -DestinationPath ''{app}'' -Force"'), '', SW_HIDE, ewWaitUntilTerminated, ResultCode) then
         begin
           if not FileExists(DenoTargetFile) then
-             MsgBox(ExpandConstant('{cm:DownloadFailed}'), mbError, MB_OK);
+             if not WizardSilent then
+               MsgBox(ExpandConstant('{cm:DownloadFailed}'), mbError, MB_OK);
           // Delete the zip file after extraction
           DeleteFile(DenoZipFile);
         end
         else
-          MsgBox(ExpandConstant('{cm:DownloadFailed}'), mbError, MB_OK);
+          if not WizardSilent then
+            MsgBox(ExpandConstant('{cm:DownloadFailed}'), mbError, MB_OK);
       end;
 
     except
       if not DownloadPage.AbortedByUser then
-        MsgBox(ExpandConstant('{cm:DownloadFailed}'), mbError, MB_OK);
+        if not WizardSilent then
+          MsgBox(ExpandConstant('{cm:DownloadFailed}'), mbError, MB_OK);
     end;
   finally
     DownloadPage.Hide;
