@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-04-04 08:07+0200\n"
+"POT-Creation-Date: 2026-04-04 06:48+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,134 +17,134 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
-#: source/accessible_youtube_downloader_pro.py:77
+#: source/accessible_youtube_downloader_pro.py:76
 msgid ""
 "اضغط على مفتاح القوائم alt للوصول إلى خيارات البرنامج, أو تنقل بزر التاب "
 "للوصول سريعًا إلى أهم الخيارات المتاحة."
 msgstr ""
 
-#: source/accessible_youtube_downloader_pro.py:82
-#: source/accessible_youtube_downloader_pro.py:124
+#: source/accessible_youtube_downloader_pro.py:81
+#: source/accessible_youtube_downloader_pro.py:123
 msgid "البحث في يوتيوب\tctrl+f"
 msgstr ""
 
-#: source/accessible_youtube_downloader_pro.py:84
-#: source/accessible_youtube_downloader_pro.py:125
+#: source/accessible_youtube_downloader_pro.py:83
+#: source/accessible_youtube_downloader_pro.py:124
 msgid "التنزيل من خلال رابط\tctrl+d"
 msgstr ""
 
-#: source/accessible_youtube_downloader_pro.py:87
-#: source/accessible_youtube_downloader_pro.py:127
+#: source/accessible_youtube_downloader_pro.py:86
+#: source/accessible_youtube_downloader_pro.py:126
 msgid "تشغيل فيديو يوتيوب من خلال الرابط\tctrl+y"
 msgstr ""
 
-#: source/accessible_youtube_downloader_pro.py:90
-#: source/accessible_youtube_downloader_pro.py:129
+#: source/accessible_youtube_downloader_pro.py:89
+#: source/accessible_youtube_downloader_pro.py:128
 msgid "الفيديوهات المفضلة\tctrl+shift+f"
 msgstr ""
 
-#: source/accessible_youtube_downloader_pro.py:92
-#: source/accessible_youtube_downloader_pro.py:130
+#: source/accessible_youtube_downloader_pro.py:91
+#: source/accessible_youtube_downloader_pro.py:129
 msgid "سجل المشاهدة\tctrl+h"
 msgstr ""
 
-#: source/accessible_youtube_downloader_pro.py:99
+#: source/accessible_youtube_downloader_pro.py:98
 msgid "تحميل المزيد من الفيديوهات المقترحة"
 msgstr ""
 
-#: source/accessible_youtube_downloader_pro.py:132
+#: source/accessible_youtube_downloader_pro.py:131
 msgid "فتح مجلد التنزيل\tctrl+p"
 msgstr ""
 
-#: source/accessible_youtube_downloader_pro.py:133
+#: source/accessible_youtube_downloader_pro.py:132
 #: source/media_player/media_gui.py:100 source/youtube_browser/browser.py:98
 msgid "الإعدادات...\talt+s"
 msgstr ""
 
-#: source/accessible_youtube_downloader_pro.py:134
+#: source/accessible_youtube_downloader_pro.py:133
 msgid "خروج\tctrl+w"
 msgstr ""
 
-#: source/accessible_youtube_downloader_pro.py:136
+#: source/accessible_youtube_downloader_pro.py:135
 msgid "القائمة الرئيسية"
 msgstr ""
 
-#: source/accessible_youtube_downloader_pro.py:140
+#: source/accessible_youtube_downloader_pro.py:139
 msgid "عرض إصدار واي تي دي إل بي"
 msgstr ""
 
-#: source/accessible_youtube_downloader_pro.py:142
+#: source/accessible_youtube_downloader_pro.py:141
 msgid "التحقق من وجود تحديث لـ واي تي دي إل بي"
 msgstr ""
 
-#: source/accessible_youtube_downloader_pro.py:144
+#: source/accessible_youtube_downloader_pro.py:143
 msgid "عرض إصدار دينو"
 msgstr ""
 
-#: source/accessible_youtube_downloader_pro.py:145
+#: source/accessible_youtube_downloader_pro.py:144
 msgid "التحقق من وجود تحديث لـ دينو"
 msgstr ""
 
-#: source/accessible_youtube_downloader_pro.py:146
+#: source/accessible_youtube_downloader_pro.py:145
 msgid "قائمة الأدوات الخارجية"
 msgstr ""
 
-#: source/accessible_youtube_downloader_pro.py:150
+#: source/accessible_youtube_downloader_pro.py:149
 msgid "دليل المستخدم...\tf1"
 msgstr ""
 
-#: source/accessible_youtube_downloader_pro.py:151
+#: source/accessible_youtube_downloader_pro.py:150
 msgid "البحث عن التحديثات"
 msgstr ""
 
-#: source/accessible_youtube_downloader_pro.py:152
-#: source/accessible_youtube_downloader_pro.py:474
+#: source/accessible_youtube_downloader_pro.py:151
+#: source/accessible_youtube_downloader_pro.py:473
 msgid "سياسة الخصوصية"
 msgstr ""
 
-#: source/accessible_youtube_downloader_pro.py:153
+#: source/accessible_youtube_downloader_pro.py:152
 msgid "عن البرنامج..."
 msgstr ""
 
-#: source/accessible_youtube_downloader_pro.py:156
+#: source/accessible_youtube_downloader_pro.py:155
 msgid "البريد الالكتروني..."
 msgstr ""
 
-#: source/accessible_youtube_downloader_pro.py:157
+#: source/accessible_youtube_downloader_pro.py:156
 msgid "تلجرام..."
 msgstr ""
 
-#: source/accessible_youtube_downloader_pro.py:158
+#: source/accessible_youtube_downloader_pro.py:157
 msgid "تواصل معي"
 msgstr ""
 
-#: source/accessible_youtube_downloader_pro.py:160
-#: source/accessible_youtube_downloader_pro.py:489
+#: source/accessible_youtube_downloader_pro.py:159
+#: source/accessible_youtube_downloader_pro.py:488
 msgid "حول"
 msgstr ""
 
-#: source/accessible_youtube_downloader_pro.py:266
+#: source/accessible_youtube_downloader_pro.py:265
 msgid "لم يتم العثور على مكتبة واي تي دي إل بي أو تعذر الحصول على إصدارها"
 msgstr ""
 
-#: source/accessible_youtube_downloader_pro.py:270
+#: source/accessible_youtube_downloader_pro.py:269
 msgid "إصدار واي تي دي إل بي"
 msgstr ""
 
-#: source/accessible_youtube_downloader_pro.py:276
+#: source/accessible_youtube_downloader_pro.py:275
 msgid "لم يتم العثور على أداة دينو أو تعذر الحصول على إصدارها"
 msgstr ""
 
-#: source/accessible_youtube_downloader_pro.py:280
+#: source/accessible_youtube_downloader_pro.py:279
 msgid "إصدار دينو"
 msgstr ""
 
-#: source/accessible_youtube_downloader_pro.py:284
+#: source/accessible_youtube_downloader_pro.py:283
 msgid "جاري تحميل الاقتراحات... يرجى الانتظار"
 msgstr ""
 
-#: source/accessible_youtube_downloader_pro.py:340
-#: source/accessible_youtube_downloader_pro.py:383
+#: source/accessible_youtube_downloader_pro.py:339
+#: source/accessible_youtube_downloader_pro.py:382
 #: source/gui/auto_detect_dialog.py:61 source/gui/favorites.py:114
 #: source/gui/favorites.py:129 source/gui/history.py:152
 #: source/gui/playlist_dialog.py:199 source/gui/playlist_dialog.py:209
@@ -152,45 +152,45 @@ msgstr ""
 msgid "جاري التشغيل"
 msgstr ""
 
-#: source/accessible_youtube_downloader_pro.py:343
-#: source/accessible_youtube_downloader_pro.py:386 source/gui/history.py:159
+#: source/accessible_youtube_downloader_pro.py:342
+#: source/accessible_youtube_downloader_pro.py:385 source/gui/history.py:159
 #: source/media_player/media_gui.py:139
 msgid "لا يمكن تشغيل الرابط"
 msgstr ""
 
-#: source/accessible_youtube_downloader_pro.py:461
+#: source/accessible_youtube_downloader_pro.py:460
 msgid "دليل استخدام برنامج HexPlayer"
 msgstr ""
 
-#: source/accessible_youtube_downloader_pro.py:476
+#: source/accessible_youtube_downloader_pro.py:475
 msgid "تعذر العثور على ملف سياسة الخصوصية"
 msgstr ""
 
-#: source/accessible_youtube_downloader_pro.py:480
+#: source/accessible_youtube_downloader_pro.py:479
 msgid "جاري البحث عن التحديثات. يرجى الانتظار"
 msgstr ""
 
-#: source/accessible_youtube_downloader_pro.py:485
+#: source/accessible_youtube_downloader_pro.py:484
 msgid "اسم البرنامج"
 msgstr ""
 
-#: source/accessible_youtube_downloader_pro.py:486
+#: source/accessible_youtube_downloader_pro.py:485
 msgid "الإصدار"
 msgstr ""
 
-#: source/accessible_youtube_downloader_pro.py:487
+#: source/accessible_youtube_downloader_pro.py:486
 msgid "طُوِر بواسطة"
 msgstr ""
 
-#: source/accessible_youtube_downloader_pro.py:488 source/gui/description.py:19
+#: source/accessible_youtube_downloader_pro.py:487 source/gui/description.py:19
 msgid "الوصف: "
 msgstr ""
 
-#: source/accessible_youtube_downloader_pro.py:509
+#: source/accessible_youtube_downloader_pro.py:508
 msgid "البرنامج قيد التشغيل بالفعل."
 msgstr ""
 
-#: source/accessible_youtube_downloader_pro.py:510
+#: source/accessible_youtube_downloader_pro.py:509
 #: source/gui/settings_dialog.py:278 source/utils.py:246 source/utils.py:263
 msgid "تنبيه"
 msgstr ""
