@@ -43,6 +43,7 @@ HexPlayer is designed to be fully navigable via keyboard.
 | **`F1`** | User Guide |
 | **`Space`** | Play / Pause (Player) |
 | **`Arrows`** | Volume and Seeking (Player) |
+| **`Shift + Up / Down Arrows`** | Playback Speed (Player) |
 
 ---
 
