@@ -53,6 +53,23 @@ HexPlayer is designed to be fully navigable via keyboard.
 2. Run the `HexPlayer.exe` installer.
 3. Follow the on-screen instructions (it will optionally download `yt-dlp` for you).
 
+#### Silent Installation
+For system administrators and automated deployments, the installer supports the following command-line arguments:
+- **`/VERYSILENT`**: Perform a fully silent installation (no UI).
+- **`/SILENT`**: Perform a silent installation with a progress bar.
+- **`/DOWNLOADCOMPONENTS=1`**: Force the download of required components (yt-dlp and Deno) during a silent installation.
+- **`/DIR="C:\Path\To\Install"`**: Specify a custom installation directory.
+
+Example (Fully silent with components):
+```cmd
+HexPlayer.exe /VERYSILENT /NORESTART /DOWNLOADCOMPONENTS=1
+```
+
+Example (Silent with progress):
+```cmd
+HexPlayer.exe /SILENT /NORESTART /DOWNLOADCOMPONENTS=1
+```
+
 ### Running from Source (For Developers)
 1. **Clone the repo:**
    ```bash
