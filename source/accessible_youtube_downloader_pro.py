@@ -1,4 +1,10 @@
+# ruff: noqa: E402
 import os
+
+vlc_path = os.path.dirname(__file__)  # your source folder
+
+os.add_dll_directory(vlc_path)
+os.environ["VLC_PLUGIN_PATH"] = os.path.join(vlc_path, "plugins")
 import sys
 import threading
 import webbrowser
@@ -28,13 +34,6 @@ from gui.tray_icon import TaskBarIcon
 from youtube_browser.browser import YoutubeBrowser
 from youtube_browser.scraper import Scraper
 from youtube_browser.search_handler import SimpleResult
-
-
-# Add local VLC DLL folder
-vlc_path = os.path.join(
-    os.path.dirname(__file__),
-)
-os.add_dll_directory(vlc_path)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
