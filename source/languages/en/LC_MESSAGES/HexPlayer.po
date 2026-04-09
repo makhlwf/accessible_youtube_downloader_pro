@@ -4,7 +4,7 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: HexPlayer 1.9.0\n"
+"Project-Id-Version: HexPlayer 2.0.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-04-09 08:30+0200\n"
 "PO-Revision-Date: 2026-04-09 08:38+0200\n"

@@ -220,4 +220,5 @@ source/yt-dlp.exe
 source/cookies.txt
 source/deno.exe
 HexPlayer/
+manifests/
 *YouTube.js/
