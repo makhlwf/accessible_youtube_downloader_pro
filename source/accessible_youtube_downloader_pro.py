@@ -185,7 +185,7 @@ class HomeScreen(wx.Frame):
         self.Bind(wx.EVT_MENU, self.onHistory, self.historyItem)
         self.Bind(wx.EVT_MENU, self.onOpenPath, self.openPathItem)
         self.Bind(wx.EVT_MENU, self.onSettings, self.settingsItem)
-        self.Bind(wx.EVT_MENU, lambda e: self.Close(), self.exitItem)
+        self.Bind(wx.EVT_MENU, self.onExit, self.exitItem)
 
         self.Bind(wx.EVT_MENU, self.on_show_yt_dlp_version, self.showYtdlpVer)
         self.Bind(wx.EVT_MENU, self.on_update_yt_dlp, self.updateYtdlp)
@@ -257,6 +257,7 @@ class HomeScreen(wx.Frame):
             if utils.youtube_regexp(clip_content):
                 dlg = AutoDetectDialog(self, clip_content)
                 utils.ensure_focus(dlg)
+                dlg.ShowModal()
 
     def on_show_yt_dlp_version(self, event):
         version = utils.get_yt_dlp_version()
@@ -401,7 +402,7 @@ class HomeScreen(wx.Frame):
             return
         clip_content = pyperclip.paste()
         if utils.youtube_regexp(clip_content):
-            AutoDetectDialog(self, clip_content)
+            AutoDetectDialog(self, clip_content).ShowModal()
 
     def onSettings(self, event):
         SettingsDialog(self)
@@ -487,13 +488,20 @@ class HomeScreen(wx.Frame):
 {_("الوصف: ")}{_(application.description)}."""
         wx.MessageBox(about, _("حول"), parent=self)
 
-    def onClose(self, event):
+    def onExit(self, event=None):
         self.clip_timer.Stop()
         self.tray_icon.Destroy()
         database.disconnect()
         stop_async_loop()
         self.Destroy()
         wx.Exit()
+
+    def onClose(self, event):
+        if event.CanVeto() and settings_handler.config_get("background_monitoring"):
+            event.Veto()
+            self.Hide()
+        else:
+            self.onExit()
 
 
 if __name__ == "__main__":

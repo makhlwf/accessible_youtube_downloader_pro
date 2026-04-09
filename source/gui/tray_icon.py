@@ -29,4 +29,4 @@ class TaskBarIcon(wx.adv.TaskBarIcon):
         self.frame.SetFocus()
 
     def on_exit(self, event):
-        self.frame.Close()
+        self.frame.Close(force=True)
