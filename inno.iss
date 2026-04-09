@@ -1,6 +1,6 @@
 #define MyAppName "HexPlayer"
 #define MyAppExeName "HexPlayer.exe"
-#define MyAppVersion "1.9.0"
+#define MyAppVersion "2.0.0"
 #define MyAppPublisher "makhlwf"
 #define MyAppURL "https://github.com/makhlwf/accessible_youtube_downloader_pro"
 
