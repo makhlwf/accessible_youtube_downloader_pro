@@ -866,25 +866,31 @@ def check_for_updates(quiet=False):
                     )
                 return
         if application.version != info["version"]:
-            from gui.update_check_dialog import UpdateCheckDialog
 
-            new_version = info["version"]
-            whats_new = info.get("whats_new", _("لا توجد معلومات حول هذا التحديث"))
-            url = info["url"]
-            dlg = UpdateCheckDialog(wx.GetApp().GetTopWindow(), new_version, whats_new)
-            if dlg.ShowModal() == wx.ID_OK:
-                from gui.update_dialog import UpdateDialog
+            def show_update_dialog():
+                from gui.update_check_dialog import UpdateCheckDialog
 
-                wx.CallAfter(
-                    UpdateDialog,
-                    wx.GetApp().GetTopWindow(),
-                    url,
-                    _("جاري تنزيل التحديث"),
+                new_version = info["version"]
+                whats_new = info.get("whats_new", _("لا توجد معلومات حول هذا التحديث"))
+                url = info["url"]
+                dlg = UpdateCheckDialog(
+                    wx.GetApp().GetTopWindow(), new_version, whats_new
                 )
-            dlg.Destroy()
+                if dlg.ShowModal() == wx.ID_OK:
+                    from gui.update_dialog import UpdateDialog
+
+                    UpdateDialog(
+                        wx.GetApp().GetTopWindow(),
+                        url,
+                        _("جاري تنزيل التحديث"),
+                    )
+                dlg.Destroy()
+
+            wx.CallAfter(show_update_dialog)
             return
         if not quiet:
-            wx.MessageBox(
+            wx.CallAfter(
+                wx.MessageBox,
                 _("أنت تعمل الآن على آخر تحديث متوفر من التطبيق"),
                 _("لا يوجد تحديث"),
                 parent=wx.GetApp().GetTopWindow(),
@@ -901,6 +907,9 @@ def check_for_updates(quiet=False):
 
 
 def show_error(message, exception=None, parent=None):
+    if not wx.IsMainThread():
+        wx.CallAfter(show_error, message, exception, parent)
+        return
     if config_get("debug") and exception:
         message = f"{message}\n\nDebug Info:\n{str(exception)}"
     wx.MessageBox(

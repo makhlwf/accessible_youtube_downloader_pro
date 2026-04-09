@@ -71,7 +71,7 @@ class UpdateDialog(wx.Dialog):
                                 shutil.rmtree(update_path)
                             else:
                                 os.remove(self.dest)
-                            self.EndModal(wx.ID_CANCEL)
+                            wx.CallAfter(self.EndModal, wx.ID_CANCEL)
                             return
 
                         recieved += len(part)
@@ -91,7 +91,7 @@ class UpdateDialog(wx.Dialog):
         )
         if self.dest is None:
             shutil.rmtree(update_path)
-        self.EndModal(wx.ID_ERROR)
+        wx.CallAfter(self.EndModal, wx.ID_ERROR)
 
     def onChanged(self, event):
         self.progress.SetValue(event.value)
