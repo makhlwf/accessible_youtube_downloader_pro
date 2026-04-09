@@ -213,8 +213,12 @@ command.extend(
 # Add data files
 for item in data_to_add:
     source_path = os.path.join("source", item)
+    if not os.path.exists(source_path):
+        # some files might be in the root, like PRIVACY_POLICY.md which is ../PRIVACY_POLICY.md relative to source
+        source_path = os.path.normpath(os.path.join("source", item))
+
     if os.path.isdir(source_path):
-        # For directories, destination is the same as the directory name
+        # For directories, destination is the same as the directory name in the bundle root
         command.extend(["--add-data", f"{source_path}{os.pathsep}{item}"])
     elif os.path.isfile(source_path):
         # For files, destination is the root of the bundle

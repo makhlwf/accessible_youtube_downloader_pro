@@ -40,10 +40,13 @@ def get_default_language():
 
 def init_translation(domain):
     from settings_handler import config_get
+    from paths import get_bundled_data_path
+    import os
 
+    localedir = os.path.join(get_bundled_data_path(), "languages")
     try:
         tr = gettext.translation(
-            domain, localedir="languages", languages=[config_get("lang")]
+            domain, localedir=localedir, languages=[config_get("lang")]
         )
     except Exception:
         tr = gettext.translation(domain, fallback=True)
