@@ -3,5 +3,5 @@ requests==2.33.1
 httpx==0.28.1
 pyperclip==1.11.0
 python-vlc==3.0.21203
-py-yt-search==0.6.1
+py-yt-search==0.6.2
 wxpython==4.2.5
