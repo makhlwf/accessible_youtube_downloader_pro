@@ -50,9 +50,16 @@ HexPlayer is designed to be fully navigable via keyboard.
 ## 🚀 Getting Started
 
 ### Installation
+#### from GitHub releases
 1. Download the latest version from the [Releases Page](https://github.com/makhlwf/accessible_youtube_downloader_pro/releases).
 2. Run the `HexPlayer.exe` installer.
 3. Follow the on-screen instructions (it will optionally download `yt-dlp` for you).
+
+#### Using WinGet
+run your CMD or Powershell and Run
+```
+winget install HexPlayer
+```
 
 #### Silent Installation
 For system administrators and automated deployments, the installer supports the following command-line arguments:
