@@ -16,8 +16,12 @@ class Scraper:
         self.lock = asyncio.Lock()
         self.workers = []
         self.is_throttled = False
-        self._loop = asyncio.get_event_loop()
-        for _ in range(num_workers):
+        # Do not start tasks in __init__, wait until the loop is actually running
+        # We'll need a mechanism to start workers once the loop is running
+        self.workers = []
+
+    def start_workers(self):
+        for _ in range(2):
             task = asyncio.create_task(self._worker())
             self.workers.append(task)
 

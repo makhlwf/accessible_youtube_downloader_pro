@@ -544,11 +544,17 @@ if __name__ == "__main__":
         sys.exit()
 
     # Start the async loop early
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
     threading.Thread(target=start_async_loop, daemon=True).start()
 
     lang_id = codes.get(settings_handler.config_get("lang"), wx.LANGUAGE_ARABIC)
     locale = wx.Locale(lang_id)
 
     start_hidden = "--background" in sys.argv
-    HomeScreen(start_hidden=start_hidden)
+    home_screen = HomeScreen(start_hidden=start_hidden)
+    # Start scraper workers now that loop is active
+    asyncio.run_coroutine_threadsafe(
+        asyncio.to_thread(home_screen.scraper.start_workers), loop
+    )
     app.MainLoop()

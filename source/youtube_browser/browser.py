@@ -1,3 +1,4 @@
+import asyncio
 import utils
 import webbrowser
 from threading import Thread
@@ -261,8 +262,11 @@ class YoutubeBrowser(wx.Frame):
         # Clear queue and add new videos for scraping
         self.scraper.set_results(self.search)
         self.search.scraper = self.scraper
+        loop = asyncio.get_event_loop()
         for i in range(min(10, self.search.count)):
-            self.scraper.add_item(i, priority=10)
+            asyncio.run_coroutine_threadsafe(
+                self.scraper.add_item(i, priority=10), loop
+            )
 
     def onSearch(self, event):
         if self.search:
@@ -454,10 +458,13 @@ class YoutubeBrowser(wx.Frame):
         self.toggleFavorite()
         n = self.searchResults.Selection
         if n != wx.NOT_FOUND:
-            self.scraper.add_item(n, priority=0)
+            loop = asyncio.get_event_loop()
+            asyncio.run_coroutine_threadsafe(self.scraper.add_item(n, priority=0), loop)
             if n > 0 and n % 10 == 0:
                 for i in range(n, min(n + 10, self.search.count)):
-                    self.scraper.add_item(i, priority=10)
+                    asyncio.run_coroutine_threadsafe(
+                        self.scraper.add_item(i, priority=10), loop
+                    )
 
         if self.searchResults.Selection == self.searchResults.GetCount() - 1:
             if not config_get("autoload"):

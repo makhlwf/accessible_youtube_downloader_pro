@@ -1,12 +1,21 @@
 import ctypes
 import platform
+import os
 
 arch = platform.architecture()[0]
-dll = f".\\nvdaControllerClient{'32' if arch == '32bit' else '64'}.dll"
+dll_name = f"nvdaControllerClient{'32' if arch == '32bit' else '64'}.dll"
+# Construct absolute path to the DLL in the parent directory
+dll = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), dll_name
+)
 nvda = ctypes.windll.LoadLibrary(dll)
 
 
 def speak(msg):
-    running = nvda.nvdaController_testIfRunning()
-    if running != 1:
-        nvda.nvdaController_speakText(msg)
+    # Test if nvda is running
+    try:
+        running = nvda.nvdaController_testIfRunning()
+        if running == 0:  # 0 usually means NVDA is running
+            nvda.nvdaController_speakText(msg)
+    except Exception:
+        pass
