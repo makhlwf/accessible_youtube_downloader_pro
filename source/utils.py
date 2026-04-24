@@ -10,7 +10,7 @@ import os
 import logging
 import time
 import threading
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor
 from settings_handler import config_get
 from language_handler import _
 from deno_service import deno_service
@@ -75,9 +75,7 @@ PLAYER_OPTS = {
     "quiet": True,
     "no_warnings": True,
     "noplaylist": True,
-    "extractor_args": {
-        "youtube": {"player_client": ["ios", "android", "web"], "js_variant": "tv"}
-    },
+    "extractor_args": {"youtube": {"player_client": ["android"], "js_variant": "tv"}},
     "js_runtimes": {"deno": {}},
     "allowed_extractors": ["youtube", "youtube:.*"],
     "no_check_certificate": True,
@@ -277,11 +275,15 @@ def ensure_js_dependencies():
         return
 
     bundled_path = paths.get_bundled_data_path()
-    script_path = os.path.join(bundled_path, "get_recommendations.js")
-    history_script_path = os.path.join(bundled_path, "get_watch_history.js")
+    service_script = os.path.join(bundled_path, "service.js")
     config_path = os.path.join(bundled_path, "deno.json")
 
-    if not os.path.exists(script_path) or not os.path.exists(config_path):
+    # If not in bundled path, try main path
+    if not os.path.exists(service_script):
+        service_script = os.path.join(paths.main_path, "service.js")
+        config_path = os.path.join(paths.main_path, "deno.json")
+
+    if not os.path.exists(service_script) or not os.path.exists(config_path):
         return
 
     def _cache_task():
@@ -294,12 +296,11 @@ def ensure_js_dependencies():
                     "cache",
                     "--config",
                     config_path,
-                    script_path,
-                    history_script_path,
+                    service_script,
                 ],
                 creationflags=subprocess.CREATE_NO_WINDOW,
                 env=env,
-                cwd=bundled_path,
+                cwd=paths.main_path,
             )
         except Exception:
             pass
@@ -426,18 +427,6 @@ def get_playable_stream(url, audio_mode=False):
             return get_audio_stream(url)
         return get_video_stream(url)
 
-    if audio_mode:
-        clients_to_try = [["android"], ["ios"], ["web"], ["mweb"]]
-    else:
-        clients_to_try = [
-            ["tv"],
-            ["ios"],
-            ["android"],
-            ["web_embedded"],
-            ["web"],
-            ["mweb"],
-        ]
-
     if paths.main_path not in os.environ.get("PATH", ""):
         os.environ["PATH"] = paths.main_path + os.pathsep + os.environ.get("PATH", "")
 
@@ -495,14 +484,17 @@ def get_playable_stream(url, audio_mode=False):
             logger.debug(f"Extraction failed for client {client}: {e}")
             return None
 
-    # Try top clients sequentially to avoid heavy system load and lag
-    for client in clients_to_try:
-        result = _extract_task(client)
-        if result:
-            _stream_cache.set(cache_key, result)
-            return result
+    # Try android (VR) first as it's the most reliable
+    result = _extract_task(["android"])
+    if not result:
+        # Single fallback to ios
+        result = _extract_task(["ios"])
 
-    logger.error(f"All clients failed to extract stream for {url}")
+    if result:
+        _stream_cache.set(cache_key, result)
+        return result
+
+    logger.error(f"Extraction failed for {url}")
     return None
 
 
@@ -514,7 +506,6 @@ def get_media_info(url):
     if not YoutubeDL:
         return None
 
-    clients_to_try = [["tv"], ["ios"], ["android"], ["web_embedded"], ["web"], ["mweb"]]
     cookies_path = config_get("cookiespath")
 
     def _extract_info_task(client):
@@ -524,20 +515,17 @@ def get_media_info(url):
         except Exception:
             return None
 
-    futures = [
-        _extraction_executor.submit(_extract_info_task, client)
-        for client in clients_to_try
-    ]
-    for future in as_completed(futures):
-        try:
-            info = future.result()
-            if info:
-                _info_cache.set(url, info)
-                return info
-        except Exception:
-            continue
+    # Try android first
+    info = _extract_info_task(["android"])
+    if not info:
+        # Fallback to ios
+        info = _extract_info_task(["ios"])
 
-    logger.error(f"get_media_info failed for all clients for {url}")
+    if info:
+        _info_cache.set(url, info)
+        return info
+
+    logger.error(f"get_media_info failed for {url}")
     return None
 
 
