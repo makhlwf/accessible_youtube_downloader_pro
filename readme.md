@@ -1,15 +1,26 @@
+<h1 align="center">HexPlayer</h1>
+
 <p align="center">
-# HexPlayer
-
-[![GitHub release](https://img.shields.io/github/v/release/makhlwf/accessible_youtube_downloader_pro?style=for-the-badge&color=blue)](https://github.com/makhlwf/accessible_youtube_downloader_pro/releases)
-[![Python Version3.14](https://img.shields.io/badge/Python-3.14+-brightgreen?style=for-the-badge&logo=python)](https://www.python.org/)
-[![Platform: Microsoft Windows](https://img.shields.io/badge/Platform-Windows-0078D6?style=for-the-badge&logo=windows)](https://www.microsoft.com/windows)
-[![Accessibility](https://img.shields.io/badge/Accessibility-Screen%20Reader%20Friendly-orange?style=for-the-badge)](https://en.wikipedia.org/wiki/Web_Accessibility)
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg?style=for-the-badge)](https://www.gnu.org/licenses/gpl-3.0)
-
-**HexPlayer** is a powerful, lightweight, and highly accessible Windows application designed for browsing, watching, and downloading YouTube content. Built with a focus on blind and visually impaired users, it provides a seamless experience without the complexities of a web browser.
+  <a href="https://github.com/makhlwf/accessible_youtube_downloader_pro/releases">
+    <img src="https://img.shields.io/github/v/release/makhlwf/accessible_youtube_downloader_pro?style=for-the-badge&color=blue" />
+  </a>
+  <a href="https://www.python.org/">
+    <img src="https://img.shields.io/badge/Python-3.14+-brightgreen?style=for-the-badge&logo=python" />
+  </a>
+  <a href="https://www.microsoft.com/windows">
+    <img src="https://img.shields.io/badge/Platform-Windows-0078D6?style=for-the-badge&logo=windows" />
+  </a>
+  <a href="https://en.wikipedia.org/wiki/Web_Accessibility">
+    <img src="https://img.shields.io/badge/Accessibility-Screen%20Reader%20Friendly-orange?style=for-the-badge" />
+  </a>
+  <a href="https://www.gnu.org/licenses/gpl-3.0">
+    <img src="https://img.shields.io/badge/License-GPLv3-blue.svg?style=for-the-badge" />
+  </a>
 </p>
 
+<p align="center">
+  <b>HexPlayer</b> is a powerful, lightweight, and highly accessible Windows application designed for browsing, watching, and downloading YouTube content. Built with a focus on blind and visually impaired users, it provides a seamless experience without the complexities of a web browser.
+</p>
 ---
 
 ## Privacy Policy
