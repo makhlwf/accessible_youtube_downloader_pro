@@ -6,7 +6,6 @@ import application
 import paths
 from gui.update_dialog import UpdateDialog
 import subprocess
-import json
 import os
 import logging
 import time
@@ -14,6 +13,7 @@ import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from settings_handler import config_get
 from language_handler import _
+from deno_service import deno_service
 
 logger = logging.getLogger(__name__)
 
@@ -629,86 +629,40 @@ def get_home_feed(continuation=None):
     cookies_path = config_get("cookiespath")
     if not cookies_path or not os.path.exists(cookies_path):
         return {"videos": [], "continuation": None}
-    try:
-        env = os.environ.copy()
-        env["PATH"] = paths.main_path + os.pathsep + env.get("PATH", "")
-        bundled_path = paths.get_bundled_data_path()
-        script_path = os.path.join(bundled_path, "get_recommendations.js")
-        config_path = os.path.join(bundled_path, "deno.json")
-        command = [
-            paths.deno_path,
-            "run",
-            "--allow-read",
-            "--allow-write",
-            "--allow-net",
-            "--allow-env",
-            "--config",
-            config_path,
-            script_path,
-            cookies_path,
-        ]
-        if continuation:
-            command.append(continuation)
 
-        result = subprocess.run(
-            command,
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            creationflags=subprocess.CREATE_NO_WINDOW,
-            cwd=paths.main_path,
-            env=env,
-        )
-        if result.returncode != 0:
-            logger.error(f"Deno error: {result.stderr}")
-            return {"videos": [], "continuation": None}
-        return json.loads(result.stdout)
-    except (subprocess.SubprocessError, json.JSONDecodeError, Exception) as e:
-        logger.error(f"Error getting home feed: {e}")
+    result = deno_service.send_command(
+        "get_home_feed",
+        {"cookiesPath": cookies_path, "continuationToken": continuation},
+    )
+
+    if isinstance(result, dict) and "error" in result:
+        logger.error(f"Deno service error: {result['error']}")
         return {"videos": [], "continuation": None}
+
+    if result is None:
+        return {"videos": [], "continuation": None}
+
+    return result
 
 
 def get_watch_history(continuation=None):
     cookies_path = config_get("cookiespath")
     if not cookies_path or not os.path.exists(cookies_path):
         return {"videos": [], "continuation": None}
-    try:
-        env = os.environ.copy()
-        env["PATH"] = paths.main_path + os.pathsep + env.get("PATH", "")
-        bundled_path = paths.get_bundled_data_path()
-        script_path = os.path.join(bundled_path, "get_watch_history.js")
-        config_path = os.path.join(bundled_path, "deno.json")
-        command = [
-            paths.deno_path,
-            "run",
-            "--allow-read",
-            "--allow-write",
-            "--allow-net",
-            "--allow-env",
-            "--config",
-            config_path,
-            script_path,
-            cookies_path,
-        ]
-        if continuation:
-            command.append(continuation)
 
-        result = subprocess.run(
-            command,
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            creationflags=subprocess.CREATE_NO_WINDOW,
-            cwd=paths.main_path,
-            env=env,
-        )
-        if result.returncode != 0:
-            logger.error(f"Deno error: {result.stderr}")
-            return {"videos": [], "continuation": None}
-        return json.loads(result.stdout)
-    except (subprocess.SubprocessError, json.JSONDecodeError, Exception) as e:
-        logger.error(f"Error getting watch history: {e}")
+    result = deno_service.send_command(
+        "get_watch_history",
+        {"cookiesPath": cookies_path, "continuationToken": continuation},
+    )
+
+    if isinstance(result, dict) and "error" in result:
+        logger.error(f"Deno service error: {result['error']}")
         return {"videos": [], "continuation": None}
+
+    if result is None:
+        return {"videos": [], "continuation": None}
+
+    return result
 
 
 def update_watch_history(url, watched_seconds=0):
