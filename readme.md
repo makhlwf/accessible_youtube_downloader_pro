@@ -1,34 +1,36 @@
-# 🎥 HexPlayer
+<p align="center">
+# HexPlayer
 
 [![GitHub release](https://img.shields.io/github/v/release/makhlwf/accessible_youtube_downloader_pro?style=for-the-badge&color=blue)](https://github.com/makhlwf/accessible_youtube_downloader_pro/releases)
-[![Python Version](https://img.shields.io/badge/Python-3.14+-brightgreen?style=for-the-badge&logo=python)](https://www.python.org/)
-[![Platform](https://img.shields.io/badge/Platform-Windows-0078D6?style=for-the-badge&logo=windows)](https://www.microsoft.com/windows)
+[![Python Version3.14](https://img.shields.io/badge/Python-3.14+-brightgreen?style=for-the-badge&logo=python)](https://www.python.org/)
+[![Platform: Microsoft Windows](https://img.shields.io/badge/Platform-Windows-0078D6?style=for-the-badge&logo=windows)](https://www.microsoft.com/windows)
 [![Accessibility](https://img.shields.io/badge/Accessibility-Screen%20Reader%20Friendly-orange?style=for-the-badge)](https://en.wikipedia.org/wiki/Web_Accessibility)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg?style=for-the-badge)](https://www.gnu.org/licenses/gpl-3.0)
 
 **HexPlayer** is a powerful, lightweight, and highly accessible Windows application designed for browsing, watching, and downloading YouTube content. Built with a focus on blind and visually impaired users, it provides a seamless experience without the complexities of a web browser.
+</p>
 
 ---
 
-## 🔒 Privacy Policy
+## Privacy Policy
 HexPlayer respects your privacy. We do not collect or transmit any of your personal information. Read our full [Privacy Policy](PRIVACY_POLICY.md) for more details.
 
 ---
 
-## ✨ Key Features
+## Key Features
 
-- 🔍 **Direct Search:** Search for videos, playlists, and live streams directly within the app.
-- 🎧 **Dedicated Media Player:** An accessible built-in player that supports audio and video modes.
-- 📥 **Advanced Downloading:** Download content in various formats (MP4, MP3, M4A) with `yt-dlp` integration.
-- 🔗 **Smart Clipboard Detection:** Automatically detects YouTube links from your clipboard on startup.
-- 📁 **Auto-Organization:** Automatically creates folders for playlists and channels during downloads.
-- ⚡ **Background Tasks:** Watch your favorite videos while downloading others in the background.
-- 🌍 **Multilingual:** Full support for **Arabic** and **English** with automatic system language detection.
-- 🚀 **Performance:** Optimized for Windows 10/11 (64-bit).
+- **Direct Search:** Search for videos, playlists, and live streams directly within the app.
+- **Dedicated Media Player:** An accessible built-in player that supports audio and video modes.
+- **Advanced Downloading:** Download content in various formats (MP4, MP3, M4A) with `yt-dlp` integration.
+- **Smart Clipboard Detection:** Automatically detects YouTube links from your clipboard on startup.
+- **Auto-Organization:** Automatically creates folders for playlists and channels during downloads.
+- **Background Tasks:** Watch your favorite videos while downloading others in the background.
+- **Multilingual:** Full support for **Arabic** and **English** with automatic system language detection.
+- **Performance:** Optimized for Windows 10/11 (64-bit).
 
 ---
 
-## ⌨️ Essential Keyboard Shortcuts
+## Essential Keyboard Shortcuts
 
 HexPlayer is designed to be fully navigable via keyboard.
 
@@ -47,7 +49,7 @@ HexPlayer is designed to be fully navigable via keyboard.
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Installation
 #### from GitHub releases
@@ -110,19 +112,19 @@ To create your own standalone executable:
 
 ---
 
-## 🤝 Acknowledgements
+## Acknowledgements
 - **Original Developer:** Suleiman Al Qusaimi.
 - **Maintainer & Fork Author:** [Makhlwf](https://github.com/makhlwf).
 - **Core Engine:** Powered by [yt-dlp](https://github.com/yt-dlp/yt-dlp) and [wxPython](https://www.wxpython.org/).
 
 ---
 
-## 📜 License
+## License
 This project is licensed under the **GNU General Public License v3.0**. See the [LICENSE](LICENSE) file for details.
 
 ---
 
-## ⚠️ Disclaimer
+## Disclaimer
 This project is a fork of the original "Accessible YouTube Downloader Pro". It is provided "as is" without warranty of any kind. Please ensure you comply with YouTube's Terms of Service when using this application.
 
 ---
