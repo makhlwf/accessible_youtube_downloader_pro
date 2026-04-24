@@ -1,16 +1,18 @@
 # ruff: noqa: E402
 import os
-
-vlc_path = os.path.dirname(__file__)  # your source folder
-
-os.add_dll_directory(vlc_path)
-os.environ["VLC_PLUGIN_PATH"] = os.path.join(vlc_path, "plugins")
 import sys
+
+# Early setup for VLC and other DLLs
+vlc_path = os.path.dirname(__file__)
+if sys.platform == "win32":
+    os.add_dll_directory(vlc_path)
+os.environ["VLC_PLUGIN_PATH"] = os.path.join(vlc_path, "plugins")
+
 import threading
 import webbrowser
 import subprocess
 import logging
-from threading import Thread
+import asyncio
 import wx
 import pyperclip
 import settings_handler
@@ -245,7 +247,10 @@ class HomeScreen(wx.Frame):
             self.detectFromClipboard(settings_handler.config_get("autodetect"))
 
         if settings_handler.config_get("checkupdates"):
-            Thread(target=utils.check_for_updates, args=[True], daemon=True).start()
+            asyncio.run_coroutine_threadsafe(
+                asyncio.to_thread(utils.check_for_updates, True),
+                asyncio.get_event_loop(),
+            )
 
     def on_clip_timer(self, event):
         try:
@@ -294,7 +299,8 @@ class HomeScreen(wx.Frame):
             except Exception as e:
                 logger.error(f"Failed to load home feed: {e}")
 
-        Thread(target=_load, daemon=True).start()
+        # Run feed loading in a thread to keep UI responsive
+        threading.Thread(target=_load, daemon=True).start()
 
     def _update_home_feed(self, data, load_more=False):
         new_videos = data.get("videos", [])
@@ -321,12 +327,21 @@ class HomeScreen(wx.Frame):
         )
         self.Layout()
 
-        if not load_more:
-            for i in range(min(10, self.home_feed_results.count)):
-                self.scraper.add_item(i, priority=10)
-        else:
-            for i in range(old_count, self.home_feed_results.count):
-                self.scraper.add_item(i, priority=10)
+        # Add items to scraper using the async loop
+        def _add_to_scraper():
+            loop = asyncio.get_event_loop()
+            if not load_more:
+                for i in range(min(10, self.home_feed_results.count)):
+                    asyncio.run_coroutine_threadsafe(
+                        self.scraper.add_item(i, priority=10), loop
+                    )
+            else:
+                for i in range(old_count, self.home_feed_results.count):
+                    asyncio.run_coroutine_threadsafe(
+                        self.scraper.add_item(i, priority=10), loop
+                    )
+
+        _add_to_scraper()
 
     def on_home_feed_play(self, event, audio_mode=False):
         selection = self.home_feed_list.GetSelection()
@@ -355,10 +370,13 @@ class HomeScreen(wx.Frame):
     def on_home_feed_list_box(self, event):
         n = self.home_feed_list.Selection
         if n != wx.NOT_FOUND:
-            self.scraper.add_item(n, priority=0)
+            loop = asyncio.get_event_loop()
+            asyncio.run_coroutine_threadsafe(self.scraper.add_item(n, priority=0), loop)
             if n > 0 and n % 10 == 0:
                 for i in range(n, min(n + 10, self.home_feed_results.count)):
-                    self.scraper.add_item(i, priority=10)
+                    asyncio.run_coroutine_threadsafe(
+                        self.scraper.add_item(i, priority=10), loop
+                    )
 
     def on_home_feed_hook(self, event):
         if event.KeyCode == wx.WXK_RETURN:
@@ -445,15 +463,21 @@ class HomeScreen(wx.Frame):
 
     def onShow(self, event):
         if not self.checked:
-            wx.CallAfter(self.startup_checks)
+            asyncio.run_coroutine_threadsafe(
+                self.async_startup_checks(), asyncio.get_event_loop()
+            )
             self.checked = True
         self.instruction.SetFocus()
         event.Skip()
 
-    def startup_checks(self):
-        if utils.check_yt_dlp(self):
-            if utils.check_deno(self):
-                utils.ensure_js_dependencies()
+    async def async_startup_checks(self):
+        # Move these to thread since they might show dialogs (which must be on main thread via CallAfter)
+        def _checks():
+            if utils.check_yt_dlp(self):
+                if utils.check_deno(self):
+                    utils.ensure_js_dependencies()
+
+        await asyncio.to_thread(_checks)
 
     def onGuide(self, event):
         content = documentation_get()
@@ -507,7 +531,7 @@ class HomeScreen(wx.Frame):
 if __name__ == "__main__":
     app = wx.App()
 
-    # Single Instance Checker
+    # Single Instance Checker - run very early
     name = f"{application.name}-{wx.GetUserId()}"
     checker = wx.SingleInstanceChecker(name)
     if checker.IsAnotherRunning():
@@ -519,8 +543,8 @@ if __name__ == "__main__":
             )
         sys.exit()
 
-    _async_thread = threading.Thread(target=start_async_loop, daemon=True)
-    _async_thread.start()
+    # Start the async loop early
+    threading.Thread(target=start_async_loop, daemon=True).start()
 
     lang_id = codes.get(settings_handler.config_get("lang"), wx.LANGUAGE_ARABIC)
     locale = wx.Locale(lang_id)

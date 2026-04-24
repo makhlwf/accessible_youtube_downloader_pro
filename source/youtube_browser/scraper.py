@@ -1,6 +1,6 @@
-import queue
-import threading
+import asyncio
 import logging
+import wx
 from utils import get_playable_stream
 
 logger = logging.getLogger(__name__)
@@ -8,33 +8,33 @@ logger = logging.getLogger(__name__)
 
 class Scraper:
     def __init__(self, num_workers=2):
-        self.queue = queue.PriorityQueue()
+        self.queue = asyncio.PriorityQueue()
         self.results = None
         self.audio_mode = False
         self.queued_indices = set()
         self.processing_indices = set()
-        self.lock = threading.Lock()
+        self.lock = asyncio.Lock()
         self.workers = []
+        self.is_throttled = False
+        self._loop = asyncio.get_event_loop()
         for _ in range(num_workers):
-            t = threading.Thread(target=self._worker, daemon=True)
-            t.start()
-            self.workers.append(t)
+            task = asyncio.create_task(self._worker())
+            self.workers.append(task)
 
     def set_results(self, results):
-        with self.lock:
-            self.results = results
-            self.queued_indices.clear()
-            self.processing_indices.clear()
-            # Clear the queue
-            while not self.queue.empty():
-                try:
-                    self.queue.get_nowait()
-                    self.queue.task_done()
-                except queue.Empty:
-                    break
+        self.results = results
+        self.queued_indices.clear()
+        self.processing_indices.clear()
+        # Clear the queue
+        while not self.queue.empty():
+            try:
+                self.queue.get_nowait()
+                self.queue.task_done()
+            except asyncio.QueueEmpty:
+                break
 
-    def add_item(self, index, priority=10):
-        with self.lock:
+    async def add_item(self, index, priority=10):
+        async with self.lock:
             if self.results is None:
                 return
             if index < 0 or index >= self.results.count:
@@ -48,14 +48,28 @@ class Scraper:
             if priority > 0 and index in self.queued_indices:
                 return
 
-            self.queue.put((priority, index))
+            if priority == 0:
+                self.is_throttled = True
+                asyncio.create_task(self._reset_throttle())
+
+            await self.queue.put((priority, index))
             self.queued_indices.add(index)
 
-    def _worker(self):
+    async def _reset_throttle(self):
+        await asyncio.sleep(2)
+        self.is_throttled = False
+
+    async def _worker(self):
         while True:
             try:
-                priority, index = self.queue.get(timeout=1)
-                with self.lock:
+                priority, index = await self.queue.get()
+
+                # Throttle mechanism: if a high priority item is being handled,
+                # pause low priority tasks briefly to favor the high priority one.
+                if priority > 0 and self.is_throttled:
+                    await asyncio.sleep(0.5)
+
+                async with self.lock:
                     if index in self.processing_indices:
                         self.queue.task_done()
                         continue
@@ -73,20 +87,28 @@ class Scraper:
                                 ):
                                     url = results.get_url(index)
                                     # Direct stream scraping
-                                    stream = get_playable_stream(
-                                        url, audio_mode=self.audio_mode
+                                    # Since get_playable_stream is synchronous and might block,
+                                    # we run it in a thread pool executor.
+                                    stream = (
+                                        await asyncio.get_event_loop().run_in_executor(
+                                            None,
+                                            get_playable_stream,
+                                            url,
+                                            self.audio_mode,
+                                        )
                                     )
                                     if stream and results == self.results:
-                                        results.set_stream(index, stream)
+                                        # Use wx.CallAfter to ensure UI thread-safety if needed,
+                                        # though set_stream itself might be thread-safe depending on the implementation.
+                                        wx.CallAfter(results.set_stream, index, stream)
                         except Exception as e:
                             logger.debug(f"Scraper task failed for index {index}: {e}")
                 finally:
-                    with self.lock:
+                    async with self.lock:
                         self.processing_indices.discard(index)
                         if index in self.queued_indices:
                             self.queued_indices.discard(index)
                     self.queue.task_done()
-            except queue.Empty:
-                continue
             except Exception as e:
                 logger.error(f"Scraper worker error: {e}")
+                await asyncio.sleep(1)
