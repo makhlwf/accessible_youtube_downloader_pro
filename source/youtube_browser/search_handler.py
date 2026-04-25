@@ -193,7 +193,7 @@ class Search:
                     self.get_duration(data["duration"]),
                     f"{_('بواسطة')} {data['channel']['name']}",
                     self.views_part(data["views"]),
-                    data.get("uploadDate", ""),
+                    str(data.get("uploadDate", "")),
                 ]
             elif data["type"] == "playlist":
                 title += [
