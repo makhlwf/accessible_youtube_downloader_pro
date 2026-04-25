@@ -173,6 +173,7 @@ class Search:
                     "title": item.get("title"),
                     "url": item.get("link"),
                     "duration": item.get("duration"),  # in seconds
+                    "uploadDate": item.get("uploadDate"),
                     "elements": None,
                     "channel": {
                         "name": item.get("channel", {}).get("name"),
@@ -192,6 +193,7 @@ class Search:
                     self.get_duration(data["duration"]),
                     f"{_('بواسطة')} {data['channel']['name']}",
                     self.views_part(data["views"]),
+                    data.get("uploadDate", ""),
                 ]
             elif data["type"] == "playlist":
                 title += [
