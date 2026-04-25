@@ -173,7 +173,7 @@ class Search:
                     "title": item.get("title"),
                     "url": item.get("link"),
                     "duration": item.get("duration"),  # in seconds
-                    "uploadDate": item.get("uploadDate"),
+                    "uploadDate": item.get("publishedTime"),
                     "elements": None,
                     "channel": {
                         "name": item.get("channel", {}).get("name"),
