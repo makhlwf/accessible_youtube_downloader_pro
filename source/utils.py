@@ -75,7 +75,9 @@ PLAYER_OPTS = {
     "quiet": True,
     "no_warnings": True,
     "noplaylist": True,
-    "extractor_args": {"youtube": {"player_client": ["android"], "js_variant": "tv"}},
+    "extractor_args": {
+        "youtube": {"player_client": ["android_vr"], "js_variant": "tv"}
+    },
     "js_runtimes": {"deno": {}},
     "allowed_extractors": ["youtube", "youtube:.*"],
     "no_check_certificate": True,
@@ -485,7 +487,7 @@ def get_playable_stream(url, audio_mode=False):
             return None
 
     # Try android (VR) first as it's the most reliable
-    result = _extract_task(["android"])
+    result = _extract_task(["android_vr"])
     if not result:
         # Single fallback to ios
         result = _extract_task(["ios"])
@@ -515,8 +517,8 @@ def get_media_info(url):
         except Exception:
             return None
 
-    # Try android first
-    info = _extract_info_task(["android"])
+    # Try android (VR) first
+    info = _extract_info_task(["android_vr"])
     if not info:
         # Fallback to ios
         info = _extract_info_task(["ios"])

@@ -1,5 +1,6 @@
 # ruff: noqa: E402
 import os
+import socket
 import sys
 
 # Early setup for VLC and other DLLs
@@ -61,6 +62,7 @@ class HomeScreen(wx.Frame):
 
         if not start_hidden:
             self.Show()
+        self._start_ipc_server()
         self._startup_logic()
 
     def _init_ui(self):
@@ -527,6 +529,23 @@ class HomeScreen(wx.Frame):
         else:
             self.onExit()
 
+    def _start_ipc_server(self):
+        def listen():
+            try:
+                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                s.bind(("127.0.0.1", 57280))
+                s.listen(1)
+                while True:
+                    conn, addr = s.accept()
+                    with conn:
+                        data = conn.recv(1024)
+                        if data == b"SHOW":
+                            wx.CallAfter(self.tray_icon.on_show, None)
+            except Exception:
+                pass
+
+        threading.Thread(target=listen, daemon=True).start()
+
 
 if __name__ == "__main__":
     app = wx.App()
@@ -536,11 +555,18 @@ if __name__ == "__main__":
     checker = wx.SingleInstanceChecker(name)
     if checker.IsAnotherRunning():
         if "--background" not in sys.argv:
-            wx.MessageBox(
-                _("البرنامج قيد التشغيل بالفعل."),
-                _("تنبيه"),
-                style=wx.ICON_INFORMATION,
-            )
+            try:
+                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                s.settimeout(1)
+                s.connect(("127.0.0.1", 57280))
+                s.sendall(b"SHOW")
+                s.close()
+            except Exception:
+                wx.MessageBox(
+                    _("البرنامج قيد التشغيل بالفعل."),
+                    _("تنبيه"),
+                    style=wx.ICON_INFORMATION,
+                )
         sys.exit()
 
     # Start the async loop early

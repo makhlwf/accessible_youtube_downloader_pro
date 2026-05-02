@@ -16,8 +16,6 @@ from gui.settings_dialog import SettingsDialog
 from gui.description import DescriptionDialog
 from gui.custom_controls import CustomButton
 from gui.quality_selection import QualitySelectionDialog
-from py_yt import Video
-from async_utils import run_in_async_loop
 from threading import Thread
 from database import Continue
 from media_player.player import Player
@@ -156,8 +154,7 @@ class MediaGui(wx.Frame):
             self,
             options=options,
         )
-        if not audio_mode:
-            Thread(target=self.fetch_qualities, daemon=True).start()
+        Thread(target=self.fetch_qualities, daemon=True).start()
         if self.url in Continue.get_all() and config_get("continue"):
             self.player.media.set_position(Continue.get_all()[url])
         Thread(target=self.extract_description, daemon=True).start()
@@ -544,11 +541,10 @@ class MediaGui(wx.Frame):
         self.player.media.play()
         self.player.media.audio_set_volume(self.player.volume)
         Thread(target=self.extract_description, daemon=True).start()
-        if not self.audio_mode:
-            for item in self.qualityMenu.GetMenuItems():
-                self.qualityMenu.DestroyItem(item)
-            self.qualityMenu.Append(-1, _("جاري التحميل...")).Enable(False)
-            Thread(target=self.fetch_qualities, daemon=True).start()
+        for item in self.qualityMenu.GetMenuItems():
+            self.qualityMenu.DestroyItem(item)
+        self.qualityMenu.Append(-1, _("جاري التحميل...")).Enable(False)
+        Thread(target=self.fetch_qualities, daemon=True).start()
         # Report new track to history
         try:
             Thread(
@@ -675,8 +671,7 @@ class MediaGui(wx.Frame):
         def extract_description_sync():
             try:
                 speak(_("يتم الآن جلب وصف الفيديو"))
-                # Use run_in_async_loop for the async call
-                info = run_in_async_loop(Video.getInfo(self.url))
+                info = utils.get_media_info(self.url)
                 if info and "description" in info:
                     self.description = info["description"]
                     wx.CallAfter(DescriptionDialog, self, self.description)
@@ -697,8 +692,7 @@ class MediaGui(wx.Frame):
             return
         self.extracting_description = True
         try:
-            # Use run_in_async_loop for the async call
-            info = run_in_async_loop(Video.get(self.url))
+            info = utils.get_media_info(self.url)
             if info and "description" in info:
                 self.description = info["description"]
         except Exception as e:
