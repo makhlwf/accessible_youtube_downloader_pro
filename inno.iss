@@ -27,7 +27,11 @@ PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
 OutputDir=HexPlayer
 OutputBaseFilename=HexPlayer
+Compression=lzma2/ultra64
 SolidCompression=yes
+LZMANumBlockThreads=2
+LZMAUseSeparateProcess=yes
+InternalCompressLevel=ultra
 WizardStyle=modern dark polar includetitlebar
 
 [Languages]

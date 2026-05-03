@@ -38,11 +38,11 @@ data_to_add = [
     "libvlc.dll",
     "libvlccore.dll",
     "nvdaControllerClient64.dll",
+    "deno.exe",
     "deno.json",
     "deno.lock",
-    "get_recommendations.js",
+    "service.js",
     "update_history.js",
-    "get_watch_history.js",
     "../PRIVACY_POLICY.md",
     # Directories
     "assets",
