@@ -84,6 +84,9 @@ class EqualizerDialog(wx.Dialog):
             index = int(config_key.split("_")[1])
             self.equalizer_service.set_band(index, float(value))
 
+        # Re-apply to trigger the change in VLC
+        self.equalizer_service.apply_to_player(self.parent.player.media)
+
     def on_preset_change(self, event):
         preset = self.preset_choice.GetStringSelection()
         config_set("eq_preset", preset)
