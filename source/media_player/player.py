@@ -10,6 +10,7 @@ class Player:
     def __init__(self, filename, hwnd, window=None, options=None):
         self.instance = vlc.Instance()
         self.media = self.instance.media_player_new()
+        self.eq = None
         if config_get("eq_enabled"):
             self.eq = EqualizerService()
             preamp = float(config_get("eq_preamp") or 0.0)

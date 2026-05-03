@@ -1,6 +1,7 @@
 import wx
 from settings_handler import config_get, config_set
 from media_player.equalizer import EqualizerService
+from media_player.media_gui import MediaGui
 
 
 class EqualizerDialog(wx.Dialog):
@@ -84,9 +85,17 @@ class EqualizerDialog(wx.Dialog):
             index = int(config_key.split("_")[1])
             self.equalizer_service.set_band(index, float(value))
 
-        # Re-apply to trigger the change in VLC if the parent has a player
+        # Re-apply to trigger the change in VLC
+        # Access the player instance directly passed from MediaGui
         if hasattr(self.Parent, "player") and self.Parent.player:
             self.equalizer_service.apply_to_player(self.Parent.player.media)
+        else:
+            # Fallback if dialog is opened from Settings (which doesn't have a player)
+            # Find the active MediaGui window if possible
+            for window in wx.GetTopLevelWindows():
+                if isinstance(window, MediaGui) and window.player:
+                    self.equalizer_service.apply_to_player(window.player.media)
+                    break
 
     def on_preset_change(self, event):
         preset = self.preset_choice.GetStringSelection()
