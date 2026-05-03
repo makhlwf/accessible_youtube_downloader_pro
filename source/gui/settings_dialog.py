@@ -148,6 +148,7 @@ class SettingsDialog(wx.Dialog):
         )
         self.autoPlayNext.Value = config_get("autonext")
         self.repeateTracks.Value = config_get("repeatTracks")
+        self.eqButton = wx.Button(playerOptions, -1, _("إعدادات المعادل..."))
         self.playbackSpeedStepLabel = wx.StaticText(
             playerOptions, -1, _("مقدار تغيير سرعة التشغيل: ")
         )
@@ -226,8 +227,17 @@ class SettingsDialog(wx.Dialog):
         self.repeateTracks.Bind(wx.EVT_CHECKBOX, self.onCheck)
         self.autoPlayNext.Bind(wx.EVT_CHECKBOX, self.onCheck)
         self.continueWatching.Bind(wx.EVT_CHECKBOX, self.onCheck)
+        self.eqButton.Bind(wx.EVT_BUTTON, self.onEqualizer)
         okButton.Bind(wx.EVT_BUTTON, self.onOk)
         self.ShowModal()
+
+    def onEqualizer(self, event):
+        from gui.equalizer_dialog import EqualizerDialog
+        from media_player.equalizer import EqualizerService
+
+        dlg = EqualizerDialog(self, EqualizerService())
+        dlg.ShowModal()
+        dlg.Destroy()
 
     def onCheck(self, event):
         obj = event.EventObject

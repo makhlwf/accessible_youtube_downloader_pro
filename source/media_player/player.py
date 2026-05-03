@@ -19,6 +19,8 @@ class Player:
             for i, val in enumerate(bands):
                 self.eq.set_band(i, float(val))
             self.eq.apply_to_player(self.media)
+            # Enable the equalizer explicitly
+            self.media.set_equalizer(self.eq.equalizer)
         self.do_reset = False
         self.window = window
         self.filename = filename

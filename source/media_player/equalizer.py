@@ -35,9 +35,5 @@ class EqualizerService:
         self.equalizer.set_amp_at_index(value, index)
 
     def apply_to_player(self, player: Any) -> None:
-        """Apply the current equalizer settings to a VLC player.
-
-        Args:
-            player: The VLC player instance.
-        """
+        """Apply the current equalizer settings to a VLC player."""
         player.set_equalizer(self.equalizer)

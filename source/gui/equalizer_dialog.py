@@ -8,16 +8,13 @@ class EqualizerDialog(wx.Dialog):
         super().__init__(parent, title="Equalizer Settings", size=(600, 400))
         self.equalizer_service = equalizer_service
 
-        panel = wx.Panel(self)
         sizer = wx.BoxSizer(wx.VERTICAL)
 
         # Presets
         preset_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        preset_sizer.Add(
-            wx.StaticText(panel, label="Preset:"), 0, wx.ALL | wx.CENTER, 5
-        )
+        preset_sizer.Add(wx.StaticText(self, label="Preset:"), 0, wx.ALL | wx.CENTER, 5)
         self.preset_choice = wx.Choice(
-            panel, choices=["Flat", "Rock", "Pop", "Classical", "Jazz"]
+            self, choices=["Flat", "Rock", "Pop", "Classical", "Jazz"]
         )
         self.preset_choice.SetStringSelection(str(config_get("eq_preset")))
         self.preset_choice.Bind(wx.EVT_CHOICE, self.on_preset_change)
@@ -33,26 +30,31 @@ class EqualizerDialog(wx.Dialog):
         frequencies = [60, 170, 310, 600, 1000, 3000, 6000, 12000, 14000, 16000]
 
         # Preamp
-        self.add_slider(bands_sizer, panel, "Preamp", "eq_preamp", -20, 20)
+        self.add_slider(bands_sizer, self, "Preamp", "eq_preamp", -20, 20)
 
         for i, freq in enumerate(frequencies):
-            self.add_slider(bands_sizer, panel, f"{freq}Hz", f"band_{i}", -20, 20)
+            self.add_slider(bands_sizer, self, f"{freq}Hz", f"band_{i}", -20, 20)
 
         sizer.Add(bands_sizer, 1, wx.EXPAND | wx.ALL, 5)
 
         # Buttons
-        button_sizer = self.CreateButtonSizer(wx.OK | wx.CANCEL)
+        button_sizer = wx.StdDialogButtonSizer()
+        ok_btn = wx.Button(self, wx.ID_OK)
+        cancel_btn = wx.Button(self, wx.ID_CANCEL)
+        button_sizer.AddButton(ok_btn)
+        button_sizer.AddButton(cancel_btn)
+        button_sizer.Realize()
         sizer.Add(button_sizer, 0, wx.ALL | wx.ALIGN_RIGHT, 10)
 
-        panel.SetSizer(sizer)
+        self.SetSizer(sizer)
         self.Layout()
 
-    def add_slider(self, sizer, panel, label, config_key, min_val, max_val):
+    def add_slider(self, sizer, parent, label, config_key, min_val, max_val):
         vbox = wx.BoxSizer(wx.VERTICAL)
-        vbox.Add(wx.StaticText(panel, label=label), 0, wx.ALIGN_CENTER)
+        vbox.Add(wx.StaticText(parent, label=label), 0, wx.ALIGN_CENTER)
 
         slider = wx.Slider(
-            panel,
+            parent,
             value=int(config_get(config_key) or 0),
             minValue=min_val,
             maxValue=max_val,
@@ -74,6 +76,7 @@ class EqualizerDialog(wx.Dialog):
     def on_slider_change(self, event, config_key):
         value = event.GetInt() if event else int(config_get(config_key) or 0)
         config_set(config_key, float(value))
+        config_set("eq_enabled", True)
 
         if config_key == "eq_preamp":
             self.equalizer_service.set_preamp(float(value))
