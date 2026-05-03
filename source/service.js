@@ -1,4 +1,4 @@
-import { Innertube, UniversalCache, YTNodes, YT } from 'npm:youtubei.js';
+import { Innertube, UniversalCache, YTNodes, YT } from 'npm:youtubei.js@17.0.1';
 import { readFileSync } from 'node:fs';
 import { TextLineStream } from "https://deno.land/std@0.224.0/streams/text_line_stream.ts";
 
@@ -88,7 +88,7 @@ async function handleGetHomeFeed(params) {
     } else {
         let feed = await yt.getHomeFeed();
         let pages = 0;
-        const MAX_PAGES = 20;
+        const MAX_PAGES = 5;
 
         while (pages < MAX_PAGES) {
             let items = [];
@@ -97,9 +97,13 @@ async function handleGetHomeFeed(params) {
                 feed.contents.contents.forEach(item => {
                     if (item.type === 'RichItem' && item.content) {
                         items.push(item.content);
-                    } else if (item.type === 'RichSection' && item.content?.contents) {
-                        items.push(...item.content.contents);
-                    } else if (item.type === 'Video' || item.type === 'LockupView') { 
+                    } else if (item.type === 'RichSection' && item.content) {
+                        if (item.content.contents) {
+                            items.push(...item.content.contents.map(i => i.content || i));
+                        } else {
+                            items.push(item.content);
+                        }
+                    } else if (item.type === 'Video' || item.type === 'LockupView' || item.type === 'CompactVideo' || item.type === 'GridVideo') { 
                         items.push(item);
                     }
                 });
@@ -147,6 +151,11 @@ async function handleGetHomeFeed(params) {
                             } catch (e) {
                                 author = author || 'Unknown';
                             }
+                        } else if (type === 'Video' || type === 'CompactVideo' || type === 'GridVideo') {
+                            id = v.id || v.videoId;
+                            title = v.title?.toString();
+                            author = v.author?.name || v.short_byline?.toString() || 'Unknown';
+                            views = v.view_count?.toString() || v.short_view_count?.toString();
                         } else {
                             id = v.videoId || v.id;
                             title = v.title?.runs?.[0]?.text || v.title?.toString() || v.headline?.toString();
