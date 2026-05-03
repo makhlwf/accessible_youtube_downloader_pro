@@ -4,7 +4,6 @@ from utils import time_formatting
 from threading import Thread
 from settings_handler import config_get
 from media_player.equalizer import EqualizerService
-import json
 
 
 class Player:
@@ -15,9 +14,17 @@ class Player:
             self.eq = EqualizerService()
             preamp = float(config_get("eq_preamp") or 0.0)
             self.eq.set_preamp(preamp)
-            bands = json.loads(config_get("eq_bands") or "[]")
+            bands_raw = config_get("eq_bands")
+            if isinstance(bands_raw, str):
+                try:
+                    bands = [float(x) for x in bands_raw.split(",")]
+                except ValueError:
+                    bands = []
+            else:
+                bands = bands_raw or []
             for i, val in enumerate(bands):
-                self.eq.set_band(i, float(val))
+                if i < 10:
+                    self.eq.set_band(i, float(val))
             self.eq.apply_to_player(self.media)
             # Enable the equalizer explicitly
             self.media.set_equalizer(self.eq.equalizer)
