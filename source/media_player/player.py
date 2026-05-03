@@ -3,12 +3,22 @@ import wx
 from utils import time_formatting
 from threading import Thread
 from settings_handler import config_get
+from media_player.equalizer import EqualizerService
+import json
 
 
 class Player:
     def __init__(self, filename, hwnd, window=None, options=None):
         self.instance = vlc.Instance()
         self.media = self.instance.media_player_new()
+        if config_get("eq_enabled"):
+            self.eq = EqualizerService()
+            preamp = float(config_get("eq_preamp") or 0.0)
+            self.eq.set_preamp(preamp)
+            bands = json.loads(config_get("eq_bands") or "[]")
+            for i, val in enumerate(bands):
+                self.eq.set_band(i, float(val))
+            self.eq.apply_to_player(self.media)
         self.do_reset = False
         self.window = window
         self.filename = filename
