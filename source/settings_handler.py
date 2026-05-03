@@ -1,7 +1,7 @@
 import configparser
 import os
-from language_handler import get_default_language
-from paths import settings_path
+from source.language_handler import get_default_language
+from source.paths import settings_path
 
 # settings_path = os.path.join(os.getenv("appdata"), "accessible youtube downloader pro")
 
@@ -25,6 +25,10 @@ defaults = {
     "debug": False,
     "background_monitoring": False,
     "playback_speed_step": 0.05,
+    "eq_enabled": False,
+    "eq_preamp": 0.0,
+    "eq_bands": "0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0",
+    "eq_preset": "Flat",
 }
 
 _cache = {}
