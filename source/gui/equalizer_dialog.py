@@ -1,6 +1,6 @@
 import wx
-from source.settings_handler import config_get, config_set
-from source.media_player.equalizer import EqualizerService
+from settings_handler import config_get, config_set
+from media_player.equalizer import EqualizerService
 
 
 class EqualizerDialog(wx.Dialog):
@@ -61,6 +61,8 @@ class EqualizerDialog(wx.Dialog):
         slider.Bind(
             wx.EVT_SLIDER, lambda event: self.on_slider_change(event, config_key)
         )
+        # Manually trigger to sync initial value
+        self.on_slider_change(None, config_key)
 
         # Accessibility
         slider.SetName(label)
@@ -70,7 +72,7 @@ class EqualizerDialog(wx.Dialog):
         self.sliders[config_key] = slider
 
     def on_slider_change(self, event, config_key):
-        value = event.GetInt()
+        value = event.GetInt() if event else int(config_get(config_key) or 0)
         config_set(config_key, float(value))
 
         if config_key == "eq_preamp":

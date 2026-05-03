@@ -1,8 +1,8 @@
 import unittest
 from unittest.mock import MagicMock
 import wx
-from source.gui.equalizer_dialog import EqualizerDialog
-from source.media_player.equalizer import EqualizerService
+from gui.equalizer_dialog import EqualizerDialog
+from media_player.equalizer import EqualizerService
 
 
 class TestEqualizerDialog(unittest.TestCase):

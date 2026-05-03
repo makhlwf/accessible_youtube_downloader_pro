@@ -1,7 +1,7 @@
 import configparser
 import os
-from source.language_handler import get_default_language
-from source.paths import settings_path
+from language_handler import get_default_language
+from paths import settings_path
 
 # settings_path = os.path.join(os.getenv("appdata"), "accessible youtube downloader pro")
 
