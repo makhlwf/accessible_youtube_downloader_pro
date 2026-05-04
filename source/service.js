@@ -65,9 +65,12 @@ async function handleGetHomeFeed(params) {
             const title = v.title?.runs?.[0]?.text || v.title?.simpleText || v.title?.toString();
             const hasDuration = v.lengthText || v.thumbnailOverlays?.some(o => o.thumbnailOverlayTimeStatusRenderer);
             if (id && title && hasDuration) {
+                const date = v.publishedTimeText?.runs?.[0]?.text || v.publishedTimeText?.simpleText || v.publishedTimeText?.toString() || '';
+                let displayAuthor = v.shortBylineText?.runs?.[0]?.text || v.longBylineText?.runs?.[0]?.text || 'Unknown';
+                if (date) displayAuthor += ` - ${date}`;
                 results.push({
                     title: title,
-                    author: v.shortBylineText?.runs?.[0]?.text || v.longBylineText?.runs?.[0]?.text || 'Unknown',
+                    author: displayAuthor,
                     id: id,
                     url: `https://www.youtube.com/watch?v=${id}`
                 });
@@ -126,7 +129,7 @@ async function handleGetHomeFeed(params) {
                         
                         if (isShort) return;
 
-                        let id, title, author, views;
+                        let id, title, author, views, date;
 
                         if (type === 'LockupView' || v.metadata) {
                             id = v.content_id || v.videoId || v.id;
@@ -143,10 +146,10 @@ async function handleGetHomeFeed(params) {
                                         const text = part.text?.text || part.text?.toString() || '';
                                         if (text.includes('views') || text.includes('مشاهدة')) {
                                             views = text;
-                                            break;
+                                        } else if (text.includes('ago') || text.includes('قبل') || text.includes('hours') || text.includes('days') || text.includes('weeks') || text.includes('months') || text.includes('years')) {
+                                            date = text;
                                         }
                                     }
-                                    if (views) break;
                                 }
                             } catch (e) {
                                 author = author || 'Unknown';
@@ -156,16 +159,19 @@ async function handleGetHomeFeed(params) {
                             title = v.title?.toString();
                             author = v.author?.name || v.short_byline?.toString() || 'Unknown';
                             views = v.view_count?.toString() || v.short_view_count?.toString();
+                            date = v.published_time?.toString() || v.publishedTimeText?.toString();
                         } else {
                             id = v.videoId || v.id;
                             title = v.title?.runs?.[0]?.text || v.title?.toString() || v.headline?.toString();
                             author = v.author?.name || v.shortBylineText?.runs?.[0]?.text || v.longBylineText?.runs?.[0]?.text || 'Unknown';
                             views = v.view_count?.toString() || v.short_view_count?.toString();
+                            date = v.published_time?.toString() || v.publishedTimeText?.toString();
                         }
 
                         if (id && title) {
                             let displayAuthor = author;
                             if (views) displayAuthor += ` (${views})`;
+                            if (date) displayAuthor += ` - ${date}`;
                             results.push({
                                 title: title,
                                 author: displayAuthor,
