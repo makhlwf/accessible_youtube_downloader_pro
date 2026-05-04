@@ -722,6 +722,29 @@ def like_video(url, action="like"):
         return False
 
 
+def get_video_likes(url):
+    """
+    Fetches the like count for a video.
+    """
+    cookies_path = config_get("cookiespath")
+    match = youtube_regexp(url)
+    if not match:
+        return None
+    video_id = match.group(5)
+
+    try:
+        result = deno_service.send_command(
+            "get_video_likes",
+            {"cookiesPath": cookies_path, "videoId": video_id},
+        )
+        if isinstance(result, dict) and "likes" in result:
+            return result["likes"]
+        return None
+    except Exception as e:
+        logger.error(f"Failed to fetch video likes: {e}")
+        return None
+
+
 def time_formatting(total_seconds):
     if total_seconds is None:
         return ""

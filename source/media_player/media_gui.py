@@ -59,6 +59,7 @@ class MediaGui(wx.Frame):
         self.extracting_description = False
         self.url = url
         self.rating = None
+        self.like_count = None
         previousButton = CustomButton(self, -1, _("المقطع السابق"), name="controls")
         previousButton.Show() if self.results is not None else previousButton.Hide()
         beginingButton = CustomButton(self, -1, _("بداية المقطع"), name="controls")
@@ -417,6 +418,11 @@ class MediaGui(wx.Frame):
             event.ControlDown() and event.ShiftDown() and event.GetKeyCode() == ord("L")
         ):
             self.get_duration()
+        elif event.ShiftDown() and event.GetKeyCode() == ord("L"):
+            if self.like_count is not None:
+                speak(_("{} إعجاب").format(self.like_count))
+            else:
+                speak(_("معلومات الإعجابات غير متوفرة بعد"))
         elif (
             event.ControlDown() and event.ShiftDown() and event.GetKeyCode() == ord("T")
         ):
@@ -549,6 +555,11 @@ class MediaGui(wx.Frame):
                         parent=self,
                     )
             except Exception as e:
+                import logging
+
+                logging.getLogger(__name__).debug(
+                    f"Background description extraction failed: {e}"
+                )
                 wx.CallAfter(
                     utils.show_error,
                     _("حدث خطأ أثناء محاولة جلب رابط التشغيل"),

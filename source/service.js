@@ -320,6 +320,23 @@ async function handleLikeInteraction(params) {
     }
 }
 
+async function handleGetVideoLikes(params) {
+    if (!params.cookiesPath) {
+        throw new Error("Cookies path is required");
+    }
+    const yt = await getYT(params.cookiesPath);
+    const { videoId } = params;
+    try {
+        const info = await yt.getInfo(videoId);
+        return {
+            likes: info.basic_info.like_count,
+            title: info.basic_info.title
+        };
+    } catch (error) {
+        throw new Error(`Failed to fetch video info: ${error.message}`);
+    }
+}
+
 async function main() {
     const lines = Deno.stdin.readable
         .pipeThrough(new TextDecoderStream())
@@ -344,6 +361,8 @@ async function main() {
                 result = await handleGetWatchHistory(params);
             } else if (command === 'like_video') {
                 result = await handleLikeInteraction(params);
+            } else if (command === 'get_video_likes') {
+                result = await handleGetVideoLikes(params);
             } else {
                 throw new Error(`Unknown command: ${command}`);
             }
