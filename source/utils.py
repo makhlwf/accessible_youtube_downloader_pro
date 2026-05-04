@@ -16,6 +16,7 @@ from language_handler import _
 from deno_service import deno_service
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 class InfoCache:
@@ -732,14 +733,14 @@ def get_video_likes(url):
         logger.error(f"Failed to match URL: {url}")
         return None
     video_id = match.group(5)
-    logger.debug(f"Fetching likes for video_id: {video_id}")
+    logger.info(f"Fetching likes for video_id: {video_id} with cookies: {cookies_path}")
 
     try:
         result = deno_service.send_command(
             "get_video_likes",
             {"cookiesPath": cookies_path, "videoId": video_id},
         )
-        logger.debug(f"Deno service result: {result}")
+        logger.info(f"Deno service result for likes: {result}")
         if isinstance(result, dict) and "likes" in result:
             return result["likes"]
         logger.warning(f"Result missing 'likes' key or invalid: {result}")
