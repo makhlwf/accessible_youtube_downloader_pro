@@ -200,9 +200,15 @@ class MediaGui(wx.Frame):
 
     def fetch_like_count(self):
         def _task():
+            import logging
+
+            logger = logging.getLogger(__name__)
+            logger.info(f"Fetching likes for {self.url}")
             likes = utils.get_video_likes(self.url)
+            logger.info(f"Fetched likes: {likes}")
             if likes is not None:
                 self.like_count = likes
+                logger.info(f"Updated self.like_count to {self.like_count}")
 
         Thread(target=_task, daemon=True).start()
 

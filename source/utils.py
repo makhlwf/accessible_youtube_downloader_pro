@@ -16,7 +16,7 @@ from language_handler import _
 from deno_service import deno_service
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 
 
 class InfoCache:

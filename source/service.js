@@ -319,7 +319,6 @@ async function handleLikeInteraction(params) {
         throw new Error(`Interaction failed: ${error.message}`);
     }
 }
-
 async function handleGetVideoLikes(params) {
     if (!params.cookiesPath) {
         throw new Error("Cookies path is required");
@@ -329,9 +328,15 @@ async function handleGetVideoLikes(params) {
     try {
         const info = await yt.getInfo(videoId);
         const basic_info = info.basic_info || {};
+
+        // Check like status if available
+        const likeStatus = info.actions?.like_button?.status; // Check if this is the correct path for likes
+
         return {
             likes: basic_info.like_count || info.likes || null,
-            title: basic_info.title || info.title || "Unknown"
+            title: basic_info.title || info.title || "Unknown",
+            is_liked: info.is_liked || false,
+            is_disliked: info.is_disliked || false
         };
     } catch (error) {
         console.error(JSON.stringify({ debug: "handleGetVideoLikes error", error: error.message, stack: error.stack }));
