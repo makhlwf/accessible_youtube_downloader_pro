@@ -584,6 +584,8 @@ class MediaGui(wx.Frame):
         self.url = url
         self.title = title
         self.SetTitle(f"{title} - {application.name}")
+        self.like_count = None
+        self.fetch_like_count()
         self.player.media.play()
         self.player.media.audio_set_volume(self.player.volume)
         Thread(target=self.extract_description, daemon=True).start()
