@@ -198,6 +198,14 @@ class MediaGui(wx.Frame):
         qualities = utils.get_available_qualities(self.url, audio_mode=self.audio_mode)
         wx.CallAfter(self.populate_quality_menu, qualities)
 
+    def fetch_like_count(self):
+        def _task():
+            likes = utils.get_video_likes(self.url)
+            if likes is not None:
+                self.like_count = likes
+
+        Thread(target=_task, daemon=True).start()
+
     def populate_quality_menu(self, qualities):
         # Clear existing items
         for item in self.qualityMenu.GetMenuItems():
