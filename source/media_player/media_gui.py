@@ -58,6 +58,7 @@ class MediaGui(wx.Frame):
         self.player = None
         self.extracting_description = False
         self.url = url
+        self.rating = None
         previousButton = CustomButton(self, -1, _("المقطع السابق"), name="controls")
         previousButton.Show() if self.results is not None else previousButton.Hide()
         beginingButton = CustomButton(self, -1, _("بداية المقطع"), name="controls")
@@ -93,6 +94,8 @@ class MediaGui(wx.Frame):
         )
 
         descriptionItem = trackOptions.Append(-1, _("وصف الفيديو\tctrl+shift+d"))
+        self.likeItem = trackOptions.Append(-1, _("إعجاب (L)"))
+        self.dislikeItem = trackOptions.Append(-1, _("عدم إعجاب (D)"))
         copyItem = trackOptions.Append(-1, _("نسخ رابط المقطع\tctrl+l"))
         browserItem = trackOptions.Append(-1, _("الفتح من خلال متصفح الإنترنت\tctrl+b"))
         settingsItem = trackOptions.Append(-1, _("الإعدادات...\talt+s"))
@@ -113,6 +116,8 @@ class MediaGui(wx.Frame):
         self.Bind(wx.EVT_MENU, self.onMp3Download, mp3Item)
         self.Bind(wx.EVT_MENU, self.onDirect, directDownloadItem)
         self.Bind(wx.EVT_MENU, self.onDescription, descriptionItem)
+        self.Bind(wx.EVT_MENU, self.onLike, self.likeItem)
+        self.Bind(wx.EVT_MENU, self.onDislike, self.dislikeItem)
         self.Bind(wx.EVT_MENU, self.onCopy, copyItem)
         self.Bind(wx.EVT_MENU, self.onBrowser, browserItem)
         self.Bind(wx.EVT_MENU, lambda event: SettingsDialog(self), settingsItem)
@@ -342,6 +347,32 @@ class MediaGui(wx.Frame):
         elif event.Id == self.next_id:
             self.next()
 
+    def onLike(self, event=None):
+        if self.rating == "like":
+            action = "remove_like"
+            msg = _("تمت إزالة التقييم")
+            self.rating = None
+        else:
+            action = "like"
+            msg = _("تم الإعجاب")
+            self.rating = "like"
+
+        Thread(target=utils.like_video, args=(self.url, action), daemon=True).start()
+        speak(msg)
+
+    def onDislike(self, event=None):
+        if self.rating == "dislike":
+            action = "remove_like"
+            msg = _("تمت إزالة التقييم")
+            self.rating = None
+        else:
+            action = "dislike"
+            msg = _("تم عدم الإعجاب")
+            self.rating = "dislike"
+
+        Thread(target=utils.like_video, args=(self.url, action), daemon=True).start()
+        speak(msg)
+
     def onKeyDown(self, event):
         event.Skip()
         if event.GetKeyCode() in (wx.WXK_SPACE, wx.WXK_PAUSE):
@@ -358,6 +389,10 @@ class MediaGui(wx.Frame):
             self.increase_volume()
         elif event.GetKeyCode() == wx.WXK_DOWN and not event.HasAnyModifiers():
             self.decrease_volume()
+        elif event.GetKeyCode() == ord("L") and not event.HasAnyModifiers():
+            self.onLike()
+        elif event.GetKeyCode() == ord("D") and not event.HasAnyModifiers():
+            self.onDislike()
         elif event.GetKeyCode() == wx.WXK_UP and event.ShiftDown():
             if self.player is not None:
                 rate = round(

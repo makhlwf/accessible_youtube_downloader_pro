@@ -698,6 +698,30 @@ def update_watch_history(url, watched_seconds=0):
         logger.error(f"Error updating watch history: {e}")
 
 
+def like_video(url, action="like"):
+    """
+    Performs a like, dislike, or remove_like interaction on a video.
+    Actions: 'like', 'dislike', 'remove_like'
+    """
+    cookies_path = config_get("cookiespath")
+    if not cookies_path or not os.path.exists(cookies_path):
+        return False
+    match = youtube_regexp(url)
+    if not match:
+        return False
+    video_id = match.group(5)
+
+    try:
+        result = deno_service.send_command(
+            "like_video",
+            {"cookiesPath": cookies_path, "videoId": video_id, "action": action},
+        )
+        return result.get("success", False) if isinstance(result, dict) else False
+    except Exception as e:
+        logger.error(f"Failed to perform like interaction: {e}")
+        return False
+
+
 def time_formatting(total_seconds):
     if total_seconds is None:
         return ""

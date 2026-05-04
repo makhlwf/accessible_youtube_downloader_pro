@@ -297,6 +297,29 @@ async function handleGetWatchHistory(params) {
     };
 }
 
+async function handleLikeInteraction(params) {
+    if (!params.cookiesPath) {
+        throw new Error("Cookies path is required");
+    }
+    const yt = await getYT(params.cookiesPath);
+    if (!yt.session.logged_in) {
+        throw new Error("Not logged in");
+    }
+    const { videoId, action } = params;
+    try {
+        if (action === 'like') {
+            await yt.interact.like(videoId);
+        } else if (action === 'dislike') {
+            await yt.interact.dislike(videoId);
+        } else if (action === 'remove_like') {
+            await yt.interact.removeLike(videoId);
+        }
+        return { success: true };
+    } catch (error) {
+        throw new Error(`Interaction failed: ${error.message}`);
+    }
+}
+
 async function main() {
     const lines = Deno.stdin.readable
         .pipeThrough(new TextDecoderStream())
@@ -319,6 +342,8 @@ async function main() {
                 result = await handleGetHomeFeed(params);
             } else if (command === 'get_watch_history') {
                 result = await handleGetWatchHistory(params);
+            } else if (command === 'like_video') {
+                result = await handleLikeInteraction(params);
             } else {
                 throw new Error(`Unknown command: ${command}`);
             }
