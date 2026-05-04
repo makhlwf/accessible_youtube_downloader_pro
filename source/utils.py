@@ -729,19 +729,23 @@ def get_video_likes(url):
     cookies_path = config_get("cookiespath")
     match = youtube_regexp(url)
     if not match:
+        logger.error(f"Failed to match URL: {url}")
         return None
     video_id = match.group(5)
+    logger.debug(f"Fetching likes for video_id: {video_id}")
 
     try:
         result = deno_service.send_command(
             "get_video_likes",
             {"cookiesPath": cookies_path, "videoId": video_id},
         )
+        logger.debug(f"Deno service result: {result}")
         if isinstance(result, dict) and "likes" in result:
             return result["likes"]
+        logger.warning(f"Result missing 'likes' key or invalid: {result}")
         return None
     except Exception as e:
-        logger.error(f"Failed to fetch video likes: {e}")
+        logger.error(f"Failed to perform like interaction: {e}")
         return None
 
 

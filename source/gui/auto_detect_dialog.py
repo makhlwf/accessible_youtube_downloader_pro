@@ -3,6 +3,7 @@ from language_handler import _
 
 from media_player.media_gui import MediaGui
 from utils import get_audio_stream
+from nvda_client.client import speak
 
 
 def link_type(url):
@@ -91,4 +92,7 @@ class AutoDetectDialog(wx.Dialog):
         stream = LoadingDialog(
             main_window, _("جاري التشغيل"), get_audio_stream, self.url
         ).res
-        MediaGui(main_window, stream.title, stream, self.url)
+        if stream:
+            MediaGui(main_window, stream.title, stream, self.url)
+        else:
+            speak(_("تعذر جلب بيانات المقطع"))
