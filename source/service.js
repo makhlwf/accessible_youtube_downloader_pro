@@ -328,11 +328,15 @@ async function handleGetVideoLikes(params) {
     const { videoId } = params;
     try {
         const info = await yt.getInfo(videoId);
+        // Sometimes getInfo results are partially available even if the parser complains
+        const basic_info = info.basic_info || {};
         return {
-            likes: info.basic_info.like_count,
-            title: info.basic_info.title
+            likes: basic_info.like_count || info.likes || null,
+            title: basic_info.title || info.title || "Unknown"
         };
     } catch (error) {
+        // Even if we have a parser error, we might have successfully fetched likes 
+        // as per our test execution
         throw new Error(`Failed to fetch video info: ${error.message}`);
     }
 }
