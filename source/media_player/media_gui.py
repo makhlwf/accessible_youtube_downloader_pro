@@ -441,7 +441,11 @@ class MediaGui(wx.Frame):
             event.ControlDown() and event.ShiftDown() and event.GetKeyCode() == ord("T")
         ):
             if self.player is not None:
-                speak(_("الوقت المنقضي: {}").format(self.player.get_elapsed()))
+                elapsed = self.player.get_elapsed()
+                if elapsed == "":
+                    speak(_("جاري جلب المعلومات..."))
+                else:
+                    speak(_("الوقت المنقضي: {}").format(elapsed))
         elif event.GetKeyCode() in (ord("-"), wx.WXK_NUMPAD_SUBTRACT):
             self.seek -= 1
 
@@ -475,19 +479,35 @@ class MediaGui(wx.Frame):
 
         elif event.GetKeyCode() == ord("R"):
             if self.player is not None:
-                speak(_("المتبقي: {}").format(self.player.get_remaining()))
+                remaining = self.player.get_remaining()
+                if remaining == "":
+                    speak(_("جاري جلب المعلومات..."))
+                else:
+                    speak(_("المتبقي: {}").format(remaining))
 
         elif event.GetKeyCode() == ord("E"):
             if self.player is not None:
-                speak(_("المنقضي: {}").format(self.player.get_elapsed()))
+                elapsed = self.player.get_elapsed()
+                if elapsed == "":
+                    speak(_("جاري جلب المعلومات..."))
+                else:
+                    speak(_("المنقضي: {}").format(elapsed))
 
         elif event.GetKeyCode() == ord("T"):
             if self.player is not None:
-                speak(_("الإجمالي: {}").format(self.player.get_duration()))
+                duration = self.player.get_duration()
+                if duration == "":
+                    speak(_("جاري جلب المعلومات..."))
+                else:
+                    speak(_("الإجمالي: {}").format(duration))
 
         elif event.GetKeyCode() == ord("P"):
             if self.player is not None:
-                speak(_("{} بالمائة").format(self.player.get_position_percentage()))
+                percentage = self.player.get_position_percentage()
+                if percentage < 0:
+                    speak(_("جاري جلب المعلومات..."))
+                else:
+                    speak(_("{} بالمائة").format(percentage))
 
         elif event.GetKeyCode() == ord("N"):
             if config_get("autonext"):
@@ -512,7 +532,11 @@ class MediaGui(wx.Frame):
 
     @has_player
     def get_duration(self):
-        speak(_("المدة: {}").format(self.player.get_duration()))
+        duration = self.player.get_duration()
+        if duration == "":
+            speak(_("جاري جلب المعلومات..."))
+        else:
+            speak(_("المدة: {}").format(duration))
 
     @has_player
     def increase_volume(self):

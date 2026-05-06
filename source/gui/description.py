@@ -89,7 +89,7 @@ class DescriptionDialog(wx.Dialog):
             match = url.search(description[line])
             if match is not None:
                 description[line] = f'<a href="{match.group()}">{match.group()}</a>'
-        description = "<br \>\n".join(description)
+        description = "<br />\n".join(description)
         content += f"""<h1>{self.Parent.title}</h1>
 <p>{description}</p>
 </body>

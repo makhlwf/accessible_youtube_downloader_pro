@@ -8,7 +8,9 @@ from media_player.equalizer import EqualizerService
 
 class Player:
     def __init__(self, filename, hwnd, window=None, options=None):
-        self.instance = vlc.Instance()
+        self.instance = vlc.Instance(
+            "--no-video-title-show", "--input-repeat=999", "--network-caching=1000"
+        )
         self.media = self.instance.media_player_new()
         self.eq = None
         if config_get("eq_enabled"):
@@ -76,7 +78,10 @@ class Player:
         return time_formatting(remaining // 1000)
 
     def get_position_percentage(self):
-        return int(self.media.get_position() * 100)
+        position = self.media.get_position()
+        if position < 0:
+            return -1
+        return int(position * 100)
 
     def reset(self):
         self.do_reset = False
@@ -93,3 +98,4 @@ class Player:
             for opt in options:
                 media.add_option(opt)
         self.media.set_media(media)
+        media.parse_with_options(vlc.MediaParseFlag.fetch_network, 0)
