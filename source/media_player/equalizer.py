@@ -42,6 +42,14 @@ class EqualizerService:
         self.preamp = value
         self.equalizer.set_preamp(value)
 
+    def get_preamp(self) -> float:
+        """Get the current preamp level.
+
+        Returns:
+            Preamp value.
+        """
+        return self.preamp
+
     def set_band(self, index: int, value: float) -> None:
         """Set the gain for a specific equalizer band.
 

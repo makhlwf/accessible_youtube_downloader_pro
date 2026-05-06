@@ -48,6 +48,12 @@ def test_get_band():
     assert eq.get_band(0) == 5.0
 
 
+def test_get_preamp():
+    eq = EqualizerService()
+    eq.set_preamp(10.0)
+    assert eq.get_preamp() == 10.0
+
+
 def test_presets():
     eq = EqualizerService()
     eq.apply_preset("Rock")
