@@ -95,6 +95,7 @@ class MediaGui(wx.Frame):
         )
 
         descriptionItem = trackOptions.Append(-1, _("وصف الفيديو\tctrl+shift+d"))
+        equalizerItem = trackOptions.Append(-1, _("المعادل... \tctrl+e"))
         self.likeItem = trackOptions.Append(-1, _("إعجاب (L)"))
         self.dislikeItem = trackOptions.Append(-1, _("عدم إعجاب (D)"))
         copyItem = trackOptions.Append(-1, _("نسخ رابط المقطع\tctrl+l"))
@@ -104,6 +105,7 @@ class MediaGui(wx.Frame):
             [
                 (wx.ACCEL_CTRL, ord("D"), directDownloadItem.GetId()),
                 (wx.ACCEL_CTRL | wx.ACCEL_SHIFT, ord("D"), descriptionItem.GetId()),
+                (wx.ACCEL_CTRL, ord("E"), equalizerItem.GetId()),
                 (wx.ACCEL_CTRL, ord("L"), copyItem.GetId()),
                 (wx.ACCEL_CTRL, ord("B"), browserItem.GetId()),
                 (wx.ACCEL_ALT, ord("S"), settingsItem.GetId()),
@@ -117,6 +119,7 @@ class MediaGui(wx.Frame):
         self.Bind(wx.EVT_MENU, self.onMp3Download, mp3Item)
         self.Bind(wx.EVT_MENU, self.onDirect, directDownloadItem)
         self.Bind(wx.EVT_MENU, self.onDescription, descriptionItem)
+        self.Bind(wx.EVT_MENU, self.onEqualizer, equalizerItem)
         self.Bind(wx.EVT_MENU, self.onLike, self.likeItem)
         self.Bind(wx.EVT_MENU, self.onDislike, self.dislikeItem)
         self.Bind(wx.EVT_MENU, self.onCopy, copyItem)
@@ -772,6 +775,15 @@ class MediaGui(wx.Frame):
                 speak(_("هناك خطأ ما أدى إلى منع جلب وصف الفيديو"))
 
         Thread(target=extract_description_sync, daemon=True).start()
+
+    def onEqualizer(self, event):
+        from gui.equalizer_dialog import EqualizerDialog
+        from media_player.equalizer import EqualizerService
+
+        EqualizerDialog(
+            self,
+            self.player.eq if self.player and self.player.eq else EqualizerService(),
+        ).Show()
 
     def extract_description(self):
         if self.extracting_description or hasattr(self, "description"):

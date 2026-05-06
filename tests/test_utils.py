@@ -37,6 +37,16 @@ def test_sanitize_filename():
 def test_youtube_regexp():
     assert youtube_regexp("https://www.youtube.com/watch?v=dQw4w9WgXcQ") is not None
     assert youtube_regexp("https://youtu.be/dQw4w9WgXcQ") is not None
+    assert (
+        youtube_regexp("https://www.youtube.com/watch?feature=shared&v=dQw4w9WgXcQ")
+        is not None
+    )
+    assert (
+        youtube_regexp("https://www.youtube.com/watch?v=dQw4w9WgXcQ&feature=shared")
+        is not None
+    )
+    assert youtube_regexp("https://www.youtube.com/embed/dQw4w9WgXcQ") is not None
+    assert youtube_regexp("https://www.youtube.com/v/dQw4w9WgXcQ") is not None
     assert youtube_regexp("not a youtube link") is None
 
 

@@ -320,9 +320,6 @@ async function handleLikeInteraction(params) {
     }
 }
 async function handleGetVideoLikes(params) {
-    if (!params.cookiesPath) {
-        throw new Error("Cookies path is required");
-    }
     const yt = await getYT(params.cookiesPath);
     const { videoId } = params;
     try {
@@ -332,8 +329,15 @@ async function handleGetVideoLikes(params) {
         // Check like status if available
         const likeStatus = info.actions?.like_button?.status; // Check if this is the correct path for likes
 
+        let likes = null;
+        if (basic_info.like_count !== undefined) {
+            likes = basic_info.like_count;
+        } else if (info.likes !== undefined) {
+            likes = info.likes;
+        }
+
         return {
-            likes: basic_info.like_count || info.likes || null,
+            likes: likes,
             title: basic_info.title || info.title || "Unknown",
             is_liked: info.is_liked || false,
             is_disliked: info.is_disliked || false
@@ -341,6 +345,23 @@ async function handleGetVideoLikes(params) {
     } catch (error) {
         console.error(JSON.stringify({ debug: "handleGetVideoLikes error", error: error.message, stack: error.stack }));
         throw new Error(`Failed to fetch video info: ${error.message}`);
+    }
+}
+
+async function handleGetPlaylist(params) {
+    const yt = await getYT(params.cookiesPath);
+    const { playlistId } = params;
+    try {
+        const playlist = await yt.getPlaylist(playlistId);
+        const videos = playlist.videos.map(v => ({
+            title: v.title.text,
+            id: v.id,
+            url: `https://www.youtube.com/watch?v=${v.id}`,
+            author: v.author?.name || 'Unknown'
+        }));
+        return { videos };
+    } catch (error) {
+        throw new Error(`Failed to fetch playlist: ${error.message}`);
     }
 }
 
@@ -370,6 +391,8 @@ async function main() {
                 result = await handleLikeInteraction(params);
             } else if (command === 'get_video_likes') {
                 result = await handleGetVideoLikes(params);
+            } else if (command === 'get_playlist') {
+                result = await handleGetPlaylist(params);
             } else {
                 throw new Error(`Unknown command: ${command}`);
             }

@@ -424,16 +424,47 @@ def get_playable_stream(url, audio_mode=False):
     if cached:
         return cached
 
+    # Handle Mix/Playlist URLs via deno service
+    playlist_id = None
+    if "list=" in url_full:
+        playlist_id_match = re.search(r"[?&]list=([a-zA-Z0-9_-]+)", url_full)
+        if playlist_id_match:
+            playlist_id = playlist_id_match.group(1)
+
+    # Catch-all for Mix/RD patterns
+    if not playlist_id:
+        mix_id_match = re.search(r"(RD[a-zA-Z0-9_-]+)", url_full)
+        if mix_id_match:
+            playlist_id = mix_id_match.group(1)
+
+    logger.info(
+        f"DEBUG: Checking for playlist_id. URL: {url_full}. Detected ID: {playlist_id}"
+    )
+
+    if playlist_id:
+        cookies_path = config_get("cookiespath")
+        result = deno_service.send_command(
+            "get_playlist",
+            {"playlistId": playlist_id, "cookiesPath": cookies_path},
+        )
+        if isinstance(result, dict) and "videos" in result and result["videos"]:
+            # Pick the first video to play
+            first_video = result["videos"][0]
+            url_full = first_video["url"]
+            # We don't cache playlist extraction, but we can cache the stream of the first video
+            return get_playable_stream(url_full, audio_mode=audio_mode)
+
     if not YoutubeDL:
         logger.error("yt-dlp is not installed")
         if audio_mode:
-            return get_audio_stream(url)
-        return get_video_stream(url)
+            return get_audio_stream(url_full)
+        return get_video_stream(url_full)
 
     if paths.main_path not in os.environ.get("PATH", ""):
         os.environ["PATH"] = paths.main_path + os.pathsep + os.environ.get("PATH", "")
 
     url = url_full
+    logger.info(f"Extracting URL: {url}")
     cookies_path = config_get("cookiespath")
 
     def _extract_task(client):
@@ -837,7 +868,7 @@ def sanitize_filename(filename):
 
 def youtube_regexp(string):
     pattern = re.compile(
-        r"^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?$"
+        r"^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube\.com|youtu.be))(\/(?:[\w\-]+.*[?&]v=|embed\/|v\/|watch\?.*list=))([\w\-]{11,34})(.*)?$"
     )
     return pattern.search(string)
 

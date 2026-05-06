@@ -102,7 +102,7 @@ class DownloadDialog(wx.Frame):
             utils.show_error(_("يرجى إدخال رابطًا صحيحًا."), parent=self)
             wx.CallAfter(self.videoLink.SetFocus)
             return
-        cases = ("list", "channel", "playlist", "/user/")
+        cases = ("list", "channel", "playlist", "/user/", "RD", "mix")
         for case in cases:
             if case in url:
                 folder = True

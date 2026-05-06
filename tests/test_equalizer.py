@@ -48,6 +48,12 @@ def test_get_band():
     assert eq.get_band(0) == 5.0
 
 
+def test_apply_preset_unknown():
+    eq = EqualizerService()
+    with pytest.raises(ValueError, match="Unknown preset: Unknown"):
+        eq.apply_preset("Unknown")
+
+
 def test_get_preamp():
     eq = EqualizerService()
     eq.set_preamp(10.0)
