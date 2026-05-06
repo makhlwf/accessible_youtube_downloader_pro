@@ -15,19 +15,7 @@ class Player:
         self.eq = None
         if config_get("eq_enabled"):
             self.eq = EqualizerService()
-            preamp = float(config_get("eq_preamp") or 0.0)
-            self.eq.set_preamp(preamp)
-            bands_raw = config_get("eq_bands")
-            if isinstance(bands_raw, str):
-                try:
-                    bands = [float(x) for x in bands_raw.split(",")]
-                except ValueError:
-                    bands = []
-            else:
-                bands = bands_raw or []
-            for i, val in enumerate(bands):
-                if i < 10:
-                    self.eq.set_band(i, float(val))
+            self.eq.load_settings()
             self.eq.apply_to_player(self.media)
             # Enable the equalizer explicitly
             self.media.set_equalizer(self.eq.equalizer)
