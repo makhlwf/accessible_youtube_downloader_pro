@@ -90,6 +90,29 @@ def test_load_settings():
         assert eq.get_band(9) == 10.0
 
 
+def test_load_settings_invalid_preamp():
+    with patch("settings_handler.config_get") as mock_get:
+
+        def side_effect(key):
+            if key == "eq_preamp":
+                return getattr(side_effect, "preamp_val", None)
+            return None
+
+        mock_get.side_effect = side_effect
+
+        # Test non-numeric preamp
+        side_effect.preamp_val = "invalid"
+        eq = EqualizerService()
+        eq.set_preamp(2.0)  # Set a default first
+        eq.load_settings()
+        assert eq.preamp == 2.0  # Should remain unchanged if loading fails
+
+        # Test out of range preamp
+        side_effect.preamp_val = 30.0
+        eq.load_settings()
+        assert eq.preamp == 2.0  # Should remain unchanged
+
+
 def test_save_settings():
     with patch("settings_handler.config_set") as mock_set:
         eq = EqualizerService()
