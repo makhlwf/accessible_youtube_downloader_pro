@@ -10,6 +10,7 @@ import os
 import logging
 import time
 import threading
+import socket
 from concurrent.futures import ThreadPoolExecutor
 from settings_handler import config_get
 from language_handler import _
@@ -77,12 +78,18 @@ PLAYER_OPTS = {
     "no_warnings": True,
     "noplaylist": True,
     "extractor_args": {
-        "youtube": {"player_client": ["android_vr"], "js_variant": "tv"}
+        "youtube": {
+            "player_client": ["android_vr"],
+            "js_variant": "main",
+            "skip": ["dash", "hls"],
+        }
     },
     "js_runtimes": {"deno": {}},
     "allowed_extractors": ["youtube", "youtube:.*"],
-    "no_check_certificate": True,
+    "nocheckcertificate": True,
     "socket_timeout": 5,
+    "cachedir": os.path.join(paths.settings_path, "cache", "yt-dlp"),
+    "lazy_extractors": True,
 }
 
 
@@ -91,7 +98,9 @@ def get_ydl_instance(client, cookies_path=None):
     if not YoutubeDL:
         return None
     opts = PLAYER_OPTS.copy()
-    opts["extractor_args"] = {"youtube": {"player_client": client, "js_variant": "tv"}}
+    opts["extractor_args"] = {
+        "youtube": {"player_client": client, "js_variant": "main"}
+    }
     if cookies_path and os.path.exists(cookies_path):
         opts["cookiefile"] = cookies_path
     return YoutubeDL(opts)
@@ -313,6 +322,27 @@ def ensure_js_dependencies():
     threading.Thread(target=_cache_task, daemon=True).start()
 
 
+def prefetch_dns():
+    """Warms up the DNS cache for common YouTube video host patterns."""
+    hosts = [
+        "www.youtube.com",
+        "m.youtube.com",
+        "i.ytimg.com",
+        "yt3.ggpht.com",
+        "googlevideo.com",
+    ]
+    for host in hosts:
+        try:
+            threading.Thread(
+                target=socket.gethostbyname, args=(host,), daemon=True
+            ).start()
+        except Exception:
+            pass
+
+
+prefetch_dns()
+
+
 def pick_best_format(formats, preferred_index, is_video=True, target_height=None):
     if is_video:
         target_list = VIDEO_QUALITIES
@@ -478,6 +508,12 @@ def get_playable_stream(url, audio_mode=False):
                             {
                                 "quiet": True,
                                 "no_warnings": True,
+                                "extractor_args": {
+                                    "youtube": {
+                                        "player_client": client,
+                                        "js_variant": "main",
+                                    }
+                                },
                                 "js_runtimes": {"deno": {}},
                                 "socket_timeout": 5,
                             }
@@ -518,11 +554,8 @@ def get_playable_stream(url, audio_mode=False):
             logger.debug(f"Extraction failed for client {client}: {e}")
             return None
 
-    # Try android (VR) first as it's the most reliable
+    # Try android (VR) only
     result = _extract_task(["android_vr"])
-    if not result:
-        # Single fallback to ios
-        result = _extract_task(["ios"])
 
     if result:
         _stream_cache.set(cache_key, result)
@@ -549,11 +582,8 @@ def get_media_info(url):
         except Exception:
             return None
 
-    # Try android (VR) first
+    # Try android (VR) only
     info = _extract_info_task(["android_vr"])
-    if not info:
-        # Fallback to ios
-        info = _extract_info_task(["ios"])
 
     if info:
         _info_cache.set(url, info)

@@ -263,7 +263,11 @@ class YoutubeBrowser(wx.Frame):
         self.scraper.set_results(self.search)
         self.search.scraper = self.scraper
         loop = asyncio.get_event_loop()
-        for i in range(min(10, self.search.count)):
+        # Top 3 results are prioritized (priority 0) for instant play
+        for i in range(min(3, self.search.count)):
+            asyncio.run_coroutine_threadsafe(self.scraper.add_item(i, priority=0), loop)
+        # Next 7 results are pre-fetched with normal priority
+        for i in range(3, min(10, self.search.count)):
             asyncio.run_coroutine_threadsafe(
                 self.scraper.add_item(i, priority=10), loop
             )

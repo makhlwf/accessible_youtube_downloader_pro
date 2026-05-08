@@ -85,8 +85,8 @@ class Downloader:
             "nocacheconfig": True,
             "extractor_args": {
                 "youtube": {
-                    "player_client": ["ios", "android", "web"],
-                    "js_variant": "tv",
+                    "player_client": ["android"],
+                    "js_variant": "main",
                 }
             },
             "js_runtimes": {"deno": {}},

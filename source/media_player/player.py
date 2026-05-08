@@ -6,11 +6,19 @@ from settings_handler import config_get
 from media_player.equalizer import EqualizerService
 
 
+# Global VLC instance to avoid re-initialization overhead
+vlc_instance = vlc.Instance(
+    "--no-video-title-show",
+    "--input-repeat=999",
+    "--network-caching=300",
+    "--no-stats",
+    "--no-osd",
+)
+
+
 class Player:
     def __init__(self, filename, hwnd, window=None, options=None):
-        self.instance = vlc.Instance(
-            "--no-video-title-show", "--input-repeat=999", "--network-caching=1000"
-        )
+        self.instance = vlc_instance
         self.media = self.instance.media_player_new()
         self.eq = None
         if config_get("eq_enabled"):
@@ -92,5 +100,4 @@ class Player:
             for opt in options:
                 media.add_option(opt)
         self.media.set_media(media)
-        media.parse_with_options(vlc.MediaParseFlag.fetch_network, 0)
         self._cached_length = -1

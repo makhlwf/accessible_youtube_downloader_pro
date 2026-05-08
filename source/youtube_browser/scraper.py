@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 
 
 class Scraper:
-    def __init__(self, num_workers=2):
+    def __init__(self, num_workers=4):
         self.queue = asyncio.PriorityQueue()
         self.results = None
         self.audio_mode = False
@@ -21,7 +21,7 @@ class Scraper:
         self.workers = []
 
     def start_workers(self):
-        for _ in range(2):
+        for _ in range(4):
             task = asyncio.create_task(self._worker())
             self.workers.append(task)
 
@@ -68,10 +68,10 @@ class Scraper:
             try:
                 priority, index = await self.queue.get()
 
-                # Throttle mechanism: if a high priority item is being handled,
-                # pause low priority tasks briefly to favor the high priority one.
+                # Aggressive pre-fetching: if a high priority item (like selection) is handled,
+                # we don't sleep. If it's the first few items in a search, we also give them a boost.
                 if priority > 0 and self.is_throttled:
-                    await asyncio.sleep(0.5)
+                    await asyncio.sleep(0.3)  # Reduced sleep
 
                 async with self.lock:
                     if index in self.processing_indices:
