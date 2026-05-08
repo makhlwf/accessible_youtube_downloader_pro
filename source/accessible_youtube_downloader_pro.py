@@ -518,6 +518,7 @@ class HomeScreen(wx.Frame):
         self.clip_timer.Stop()
         self.tray_icon.Destroy()
         database.disconnect()
+        settings_handler.save_settings()
         stop_async_loop()
         self.Destroy()
         wx.Exit()

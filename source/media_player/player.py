@@ -30,23 +30,29 @@ class Player:
         self.media.play()
         self.volume = int(config_get("volume"))
         self.media.audio_set_volume(self.volume)
+        self._cached_length = -1
 
     def onEnd(self, event):
         if event.type == vlc.EventType.MediaPlayerEndReached:
             self.do_reset = True
             Thread(target=self.reset).start()
 
+    def get_length(self):
+        if self._cached_length == -1:
+            self._cached_length = self.media.get_length()
+        return self._cached_length
+
     def seek(self, seconds):
-        length = self.media.get_length()
+        length = self.get_length()
         if length == -1:
             return 0.03
         try:
-            return seconds / (self.media.get_length() / 1000)
+            return seconds / (length / 1000)
         except ZeroDivisionError:
             return 0.03
 
     def get_duration(self):
-        duration = self.media.get_length()
+        duration = self.get_length()
         if duration == -1 or not isinstance(duration, int):
             return ""
         return time_formatting(duration // 1000)
@@ -58,7 +64,7 @@ class Player:
         return time_formatting(elapsed // 1000)
 
     def get_remaining(self):
-        length = self.media.get_length()
+        length = self.get_length()
         time = self.media.get_time()
         if length == -1 or time == -1:
             return ""
@@ -87,3 +93,4 @@ class Player:
                 media.add_option(opt)
         self.media.set_media(media)
         media.parse_with_options(vlc.MediaParseFlag.fetch_network, 0)
+        self._cached_length = -1

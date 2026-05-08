@@ -571,7 +571,6 @@ class MediaGui(wx.Frame):
         else:
             url = self.results[index]["url"]
             title = self.results[index]["title"]
-        self.player.media.stop()
         if hasattr(self, "description"):
             del self.description
 
@@ -579,6 +578,7 @@ class MediaGui(wx.Frame):
 
         def _task():
             try:
+                self.player.media.stop()
                 stream = (
                     self.results.get_stream(index)
                     if hasattr(self.results, "get_stream")

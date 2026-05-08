@@ -1,5 +1,6 @@
 import configparser
 import os
+import threading
 from language_handler import get_default_language
 from paths import settings_path
 
@@ -32,6 +33,9 @@ defaults = {
 }
 
 _cache = {}
+_config = configparser.ConfigParser()
+_save_timer = None
+_lock = threading.Lock()
 
 
 def config_initialization():
@@ -45,24 +49,26 @@ def config_initialization():
         config.add_section("settings")
         for key, value in defaults.items():
             config["settings"][key] = str(value)
-        with open(settings_file, "w", encoding="utf-8") as file:
-            config.write(file)
+        try:
+            with open(settings_file, "w", encoding="utf-8") as file:
+                config.write(file)
+        except Exception:
+            pass
     _load_cache()
 
 
 def _load_cache():
-    global _cache
+    global _cache, _config
     settings_file = os.path.join(settings_path, "settings.ini")
     if not os.path.exists(settings_file):
         _cache = defaults.copy()
         return
-    config = configparser.ConfigParser()
-    config.read(settings_file, encoding="utf-8")
-    if "settings" not in config:
+    _config.read(settings_file, encoding="utf-8")
+    if "settings" not in _config:
         _cache = defaults.copy()
         return
-    for key in config["settings"]:
-        _cache[key] = string_to_bool(config["settings"][key])
+    for key in _config["settings"]:
+        _cache[key] = string_to_bool(_config["settings"][key])
     # Ensure all defaults are present
     for key, value in defaults.items():
         if key not in _cache:
@@ -94,13 +100,29 @@ def config_get(key):
     return val
 
 
+def save_settings():
+    global _save_timer
+    with _lock:
+        if _save_timer:
+            _save_timer.cancel()
+            _save_timer = None
+        settings_file = os.path.join(settings_path, "settings.ini")
+        try:
+            with open(settings_file, "w", encoding="utf-8") as file:
+                _config.write(file)
+        except Exception:
+            pass
+
+
 def config_set(key, value):
+    global _save_timer
     _cache[key] = value
-    config = configparser.ConfigParser()
-    settings_file = os.path.join(settings_path, "settings.ini")
-    config.read(settings_file, encoding="utf-8")
-    if "settings" not in config:
-        config.add_section("settings")
-    config["settings"][key] = str(value)
-    with open(settings_file, "w", encoding="utf-8") as file:
-        config.write(file)
+    with _lock:
+        if "settings" not in _config:
+            _config.add_section("settings")
+        _config["settings"][key] = str(value)
+
+        if _save_timer:
+            _save_timer.cancel()
+        _save_timer = threading.Timer(2.0, save_settings)
+        _save_timer.start()
