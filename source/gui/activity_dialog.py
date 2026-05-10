@@ -2,6 +2,7 @@ import wx
 from threading import Thread
 import inspect
 from async_utils import run_in_async_loop
+from theme_handler import apply_theme
 
 
 class LoadingDialog(wx.Dialog):
@@ -23,6 +24,7 @@ class LoadingDialog(wx.Dialog):
         sizer.Add(indicator, 1, wx.EXPAND)
         sizer.AddStretchSpacer()
         p.SetSizer(sizer)
+        apply_theme(self)
         self.Bind(wx.EVT_CLOSE, self.onClose)
         self.Bind(wx.EVT_CHAR_HOOK, self.onHook)
         Thread(target=self.run).start()

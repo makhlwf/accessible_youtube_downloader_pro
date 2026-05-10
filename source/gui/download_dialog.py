@@ -7,6 +7,7 @@ from .download_progress import DownloadProgress
 import utils
 from utils import youtube_regexp
 from language_handler import _
+from theme_handler import apply_theme
 
 
 class DownloadDialog(wx.Frame):
@@ -50,6 +51,7 @@ class DownloadDialog(wx.Frame):
         self.Bind(wx.EVT_ACTIVATE, self.onActivate)
         self.Bind(wx.EVT_RADIOBOX, self.onRadioBox)
         self.Bind(wx.EVT_CHAR_HOOK, self.onHook)
+        apply_theme(self)
 
     # a method to show/hide the audio formats box depending on the downloading type
     def toggleChoices(self):

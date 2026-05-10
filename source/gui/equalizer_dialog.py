@@ -2,6 +2,7 @@ import wx
 from settings_handler import config_get, config_set
 from media_player.equalizer import EqualizerService
 from media_player.media_gui import MediaGui
+from theme_handler import apply_theme
 
 
 class EqualizerDialog(wx.Dialog):
@@ -59,6 +60,7 @@ class EqualizerDialog(wx.Dialog):
 
         self.SetSizer(sizer)
         self.Layout()
+        apply_theme(self)
 
     def add_slider(self, sizer, parent, label, slider_id, min_val, max_val):
         vbox = wx.BoxSizer(wx.VERTICAL)

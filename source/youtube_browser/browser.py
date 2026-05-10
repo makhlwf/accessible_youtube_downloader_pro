@@ -3,7 +3,6 @@ import utils
 import webbrowser
 from threading import Thread
 import os
-import logging
 
 import pyperclip
 import wx
@@ -22,23 +21,28 @@ from youtube_browser.search_handler import Search
 from youtube_browser.scraper import Scraper
 from utils import get_playable_stream
 from async_utils import run_in_async_loop
+from theme_handler import apply_theme
 
 from download_handler.downloader import downloadAction
 from database import Favorite
+import logging
 
 logger = logging.getLogger(__name__)
 
 
+# ...
 class YoutubeBrowser(wx.Frame):
     def __init__(self, parent):
         wx.Frame.__init__(self, parent=parent, title=parent.Title)
         self.favorites = Favorite()
         self.scraper = Scraper()
         self.search = None
-
+        # ...
         self._init_ui()
+        apply_theme(self)
         self._setup_menus()
         self._bind_events()
+        # ...
 
         if self.searchAction():
             self.Show()

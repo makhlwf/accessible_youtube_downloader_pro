@@ -17,6 +17,7 @@ import asyncio
 import wx
 import pyperclip
 import settings_handler
+from theme_handler import apply_theme
 from language_handler import init_translation, codes, _
 import application
 import database
@@ -57,6 +58,7 @@ class HomeScreen(wx.Frame):
         self.tray_icon = TaskBarIcon(self)
 
         self._init_ui()
+        apply_theme(self)
         self._setup_menus()
         self._bind_events()
 

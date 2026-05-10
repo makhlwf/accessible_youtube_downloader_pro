@@ -30,6 +30,7 @@ defaults = {
     "eq_preamp": 0.0,
     "eq_bands": "0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0",
     "eq_preset": "Flat",
+    "theme": "System Default",
 }
 
 _cache = {}

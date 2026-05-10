@@ -9,8 +9,92 @@ sys.path.insert(
     0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "source"))
 )
 
+
 # Mock wx module
+class wxWindow:
+    def __init__(self, *args, **kwargs):
+        self.Bind = MagicMock()
+        self.SetSizer = MagicMock()
+        self.SetSizerAndFit = MagicMock()
+        self.Layout = MagicMock()
+        self.Fit = MagicMock()
+        self.SetBackgroundColour = MagicMock()
+        self.SetForegroundColour = MagicMock()
+        self.GetChildren = MagicMock(return_value=[])
+        self.Refresh = MagicMock()
+        self.Update = MagicMock()
+
+
+class Frame(wxWindow):
+    pass
+
+
+class Panel(wxWindow):
+    pass
+
+
+class Dialog(wxWindow):
+    pass
+
+
+class Button(wxWindow):
+    pass
+
+
+class StaticText(wxWindow):
+    pass
+
+
+class TextCtrl(wxWindow):
+    pass
+
+
+class ListBox(wxWindow):
+    pass
+
+
+class Choice(wxWindow):
+    pass
+
+
+class SpinCtrl(wxWindow):
+    pass
+
+
+class SpinCtrlDouble(wxWindow):
+    pass
+
+
+class CheckBox(wxWindow):
+    pass
+
+
+class RadioButton(wxWindow):
+    pass
+
+
+class StaticBox(wxWindow):
+    pass
+
+
 mock_wx = MagicMock()
+mock_wx.Frame = Frame
+mock_wx.Panel = Panel
+mock_wx.Dialog = Dialog
+mock_wx.Button = Button
+mock_wx.StaticText = StaticText
+mock_wx.TextCtrl = TextCtrl
+mock_wx.ListBox = ListBox
+mock_wx.Choice = Choice
+mock_wx.SpinCtrl = SpinCtrl
+mock_wx.SpinCtrlDouble = SpinCtrlDouble
+mock_wx.CheckBox = CheckBox
+mock_wx.RadioButton = RadioButton
+mock_wx.StaticBox = StaticBox
+mock_wx.Colour = MagicMock
+mock_wx.SystemSettings = MagicMock()
+mock_wx.NullColour = MagicMock()
+
 mock_wx.LANGUAGE_ARABIC = 1
 mock_wx.LANGUAGE_ENGLISH = 2
 mock_wx.ID_OK = 5100
@@ -35,6 +119,7 @@ mock_wx.ALIGN_CENTER = 1
 mock_wx.NOT_FOUND = -1
 mock_wx.Locale = MagicMock()
 mock_wx.GetApp = MagicMock()
+mock_wx.Timer = MagicMock()
 
 sys.modules["wx"] = mock_wx
 sys.modules["wx.lib"] = MagicMock()

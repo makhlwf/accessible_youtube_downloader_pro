@@ -2,9 +2,9 @@ import os
 import sys
 
 import wx
-from language_handler import _
+from language_handler import _, supported_languages
 from settings_handler import config_get, config_set
-from language_handler import supported_languages
+from theme_handler import THEMES, apply_theme
 
 
 languages = {
@@ -83,6 +83,11 @@ class SettingsDialog(wx.Dialog):
         self.autoLoadItem.SetValue(config_get("autoload"))
         self.debugMode.SetValue(config_get("debug"))
         self.backgroundMonitoring.SetValue(config_get("background_monitoring"))
+        wx.StaticText(preferencesBox, -1, _("مظهر البرنامج: "), name="theme")
+        self.themeBox = wx.Choice(
+            preferencesBox, -1, name="theme", choices=list(THEMES.keys())
+        )
+        self.themeBox.SetStringSelection(config_get("theme"))
         downloadPreferencesBox = wx.StaticBox(panel, -1, _("إعدادات التنزيل"))
         lbl2 = wx.StaticText(downloadPreferencesBox, -1, _("صيغة التحميل المباشر: "))
         self.formats = wx.Choice(
@@ -228,8 +233,14 @@ class SettingsDialog(wx.Dialog):
         self.autoPlayNext.Bind(wx.EVT_CHECKBOX, self.onCheck)
         self.continueWatching.Bind(wx.EVT_CHECKBOX, self.onCheck)
         self.eqButton.Bind(wx.EVT_BUTTON, self.onEqualizer)
+        self.themeBox.Bind(wx.EVT_CHOICE, self.onThemeChange)
         okButton.Bind(wx.EVT_BUTTON, self.onOk)
+        apply_theme(self)
         self.ShowModal()
+
+    def onThemeChange(self, event):
+        new_theme = self.themeBox.GetStringSelection()
+        apply_theme(self, theme_name=new_theme)
 
     def onEqualizer(self, event):
         from gui.equalizer_dialog import EqualizerDialog
@@ -294,6 +305,7 @@ class SettingsDialog(wx.Dialog):
         config_set("defaultvideoquality", self.videoQuality.Selection)
         config_set("defaultaudioquality", self.audioQuality.Selection)
         config_set("playback_speed_step", self.playbackSpeedStep.Value)
+        config_set("theme", self.themeBox.GetStringSelection())
         lang = {value: key for key, value in languages.items()}
         if not lang[self.languageBox.Selection] == config_get("lang"):
             config_set("lang", lang[self.languageBox.Selection])

@@ -1,5 +1,6 @@
 import wx
 from language_handler import _
+from theme_handler import apply_theme
 
 from media_player.media_gui import MediaGui
 from utils import get_audio_stream
@@ -59,6 +60,7 @@ class AutoDetectDialog(wx.Dialog):
 
         main_sizer.Add(panel, 1, wx.EXPAND)
         self.SetSizerAndFit(main_sizer)
+        apply_theme(self)
 
         downloadButton.Bind(wx.EVT_BUTTON, self.onDownload)
         playButton.Bind(wx.EVT_BUTTON, self.onPlay)

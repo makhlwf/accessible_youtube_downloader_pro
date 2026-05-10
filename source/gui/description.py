@@ -3,6 +3,7 @@ import re
 import webbrowser
 import pyperclip
 from language_handler import _
+from theme_handler import apply_theme
 
 
 url = re.compile(
@@ -51,6 +52,7 @@ class DescriptionDialog(wx.Dialog):
         htmlExport.Bind(wx.EVT_BUTTON, self.onHtml)
         closeButton.Bind(wx.EVT_BUTTON, lambda event: self.Destroy())
         self.Bind(wx.EVT_CLOSE, lambda event: self.Destroy())
+        apply_theme(self)
         self.ShowModal()
 
     def process(self):

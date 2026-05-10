@@ -22,3 +22,17 @@ def test_eq_settings():
     # Cleanup
     if os.path.exists(os.path.join(settings_path, "settings.ini")):
         os.remove(os.path.join(settings_path, "settings.ini"))
+
+
+def test_theme_default():
+    # Ensure fresh settings
+    if os.path.exists(os.path.join(settings_path, "settings.ini")):
+        os.remove(os.path.join(settings_path, "settings.ini"))
+    config_initialization()
+
+    # Verify default theme
+    assert config_get("theme") == "System Default"
+
+    # Cleanup
+    if os.path.exists(os.path.join(settings_path, "settings.ini")):
+        os.remove(os.path.join(settings_path, "settings.ini"))
