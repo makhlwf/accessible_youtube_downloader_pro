@@ -1318,3 +1318,23 @@ msgstr "Contains {} videos"
 msgid "عدد المشاهدات {}"
 msgstr "{} views"
 
+
+#: source/gui/settings_dialog.py:86
+msgid "مظهر البرنامج: "
+msgstr "Application Theme: "
+
+#: source/theme_handler.py:5
+msgid "System Default"
+msgstr "System Default"
+
+#: source/theme_handler.py:6
+msgid "Light"
+msgstr "Light"
+
+#: source/theme_handler.py:7
+msgid "Dark"
+msgstr "Dark"
+
+#: source/theme_handler.py:8
+msgid "High Contrast Dark"
+msgstr "High Contrast Dark"
