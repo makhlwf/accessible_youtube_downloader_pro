@@ -947,9 +947,8 @@ msgid "الانتقال إلى المقطع التالي تلقائيًا عند
 msgstr "Automatically play the next clip"
 
 #: source/gui/settings_dialog.py:156
-#, fuzzy
 msgid "إعدادات المعادل..."
-msgstr "Player Settings"
+msgstr "Equalizer Settings..."
 
 #: source/gui/settings_dialog.py:158
 msgid "مقدار تغيير سرعة التشغيل: "
