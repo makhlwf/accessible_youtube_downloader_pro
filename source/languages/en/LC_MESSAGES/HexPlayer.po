@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: HexPlayer 2.0.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-10 15:12+0200\n"
+"POT-Creation-Date: 2026-05-10 15:22+0200\n"
 "PO-Revision-Date: 2026-04-09 08:38+0200\n"
 "Last-Translator: makhlwf <altrhwnyashrf1@gmail.com>\n"
 "Language: en\n"
@@ -1317,23 +1317,15 @@ msgstr "Contains {} videos"
 msgid "عدد المشاهدات {}"
 msgstr "{} views"
 
+#~ msgid "System Default"
+#~ msgstr "System Default"
 
-#: source/gui/settings_dialog.py:86
-msgid "مظهر البرنامج: "
-msgstr "Application Theme: "
+#~ msgid "Light"
+#~ msgstr "Light"
 
-#: source/theme_handler.py:5
-msgid "System Default"
-msgstr "System Default"
+#~ msgid "Dark"
+#~ msgstr "Dark"
 
-#: source/theme_handler.py:6
-msgid "Light"
-msgstr "Light"
+#~ msgid "High Contrast Dark"
+#~ msgstr "High Contrast Dark"
 
-#: source/theme_handler.py:7
-msgid "Dark"
-msgstr "Dark"
-
-#: source/theme_handler.py:8
-msgid "High Contrast Dark"
-msgstr "High Contrast Dark"
