@@ -4,7 +4,6 @@ import requests
 import wx
 import application
 import paths
-from gui.update_dialog import UpdateDialog
 import subprocess
 import os
 import logging
@@ -128,6 +127,7 @@ def get_quality_description(height):
 
 
 def download_yt_dlp():
+    from gui.update_dialog import UpdateDialog
     url = "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp"
     UpdateDialog(
         wx.GetApp().GetTopWindow(),
@@ -189,6 +189,7 @@ def update_yt_dlp():
 
 
 def download_deno():
+    from gui.update_dialog import UpdateDialog
     url = "https://github.com/denoland/deno/releases/latest/download/deno-x86_64-pc-windows-msvc.zip"
     UpdateDialog(
         wx.GetApp().GetTopWindow(),
@@ -809,6 +810,31 @@ def get_video_likes(url):
     except Exception as e:
         logger.error(f"Failed to perform like interaction: {e}")
         return None
+
+
+def get_video_chapters(url):
+    """
+    Fetches the chapters for a video.
+    Returns a list of dictionaries with 'title' and 'time_ms'.
+    """
+    cookies_path = config_get("cookiespath")
+    match = youtube_regexp(url)
+    if not match:
+        logger.error(f"Failed to match URL for chapters: {url}")
+        return []
+    video_id = match.group(5)
+
+    try:
+        result = deno_service.send_command(
+            "get_video_chapters",
+            {"cookiesPath": cookies_path, "videoId": video_id},
+        )
+        if isinstance(result, dict) and "chapters" in result:
+            return result["chapters"]
+        return []
+    except Exception as e:
+        logger.error(f"Failed to fetch chapters: {e}")
+        return []
 
 
 def time_formatting(total_seconds):

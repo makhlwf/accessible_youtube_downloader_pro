@@ -1,0 +1,40 @@
+import unittest
+from unittest.mock import patch, MagicMock
+import source.utils
+
+class TestVideoChapters(unittest.TestCase):
+    @patch("source.utils.deno_service")
+    @patch("source.utils.config_get")
+    def test_get_video_chapters_success(self, mock_config_get, mock_deno_service):
+        from source.utils import get_video_chapters
+        # Setup mocks
+        mock_config_get.return_value = "fake/path/to/cookies"
+        mock_deno_service.send_command.return_value = {
+            "chapters": [
+                {"title": "Chapter 1", "time_ms": 0},
+                {"title": "Chapter 2", "time_ms": 60000}
+            ]
+        }
+        
+        url = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        chapters = get_video_chapters(url)
+        
+        # Assertions
+        self.assertEqual(len(chapters), 2)
+        self.assertEqual(chapters[0]["title"], "Chapter 1")
+        self.assertEqual(chapters[0]["time_ms"], 0)
+        self.assertEqual(chapters[1]["title"], "Chapter 2")
+        self.assertEqual(chapters[1]["time_ms"], 60000)
+        
+        mock_deno_service.send_command.assert_called_once_with(
+            "get_video_chapters",
+            {"cookiesPath": "fake/path/to/cookies", "videoId": "dQw4w9WgXcQ"}
+        )
+
+    @patch("source.utils.youtube_regexp")
+    def test_get_video_chapters_invalid_url(self, mock_regexp):
+        from source.utils import get_video_chapters
+        mock_regexp.return_value = None
+        url = "invalid_url"
+        chapters = get_video_chapters(url)
+        self.assertEqual(chapters, [])

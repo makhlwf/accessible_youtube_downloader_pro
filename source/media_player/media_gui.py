@@ -93,6 +93,11 @@ class MediaGui(wx.Frame):
         self.qualitySubMenu = trackOptions.AppendSubMenu(
             self.qualityMenu, _("جودة التشغيل")
         )
+        self.chaptersMenu = wx.Menu()
+        self.chaptersMenu.Append(-1, _("جاري التحميل...")).Enable(False)
+        self.chaptersSubMenu = trackOptions.AppendSubMenu(
+            self.chaptersMenu, _("الفصول")
+        )
 
         descriptionItem = trackOptions.Append(-1, _("وصف الفيديو\tctrl+shift+d"))
         equalizerItem = trackOptions.Append(-1, _("المعادل... \tctrl+e"))
