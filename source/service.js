@@ -348,6 +348,31 @@ async function handleGetVideoLikes(params) {
     }
 }
 
+async function handleGetVideoChapters(params) {
+    const yt = await getYT(params.cookiesPath);
+    const { videoId } = params;
+    try {
+        const info = await yt.getInfo(videoId);
+        const markers_map = info.player_overlays?.decorated_player_bar?.player_bar?.markers_map;
+        
+        let chapters = [];
+        if (markers_map) {
+            const chapters_marker = markers_map.find(m => m.marker_key === 'MARKERS_KEY_CHAPTERS' || (m.value && m.value.chapters));
+            if (chapters_marker && chapters_marker.value && chapters_marker.value.chapters) {
+                chapters = chapters_marker.value.chapters.map(c => ({
+                    title: c.title.toString(),
+                    time_ms: c.time_range_start_millis
+                }));
+            }
+        }
+        
+        return { chapters };
+    } catch (error) {
+        console.error(JSON.stringify({ debug: "handleGetVideoChapters error", error: error.message }));
+        throw new Error(`Failed to fetch chapters: ${error.message}`);
+    }
+}
+
 async function handleGetPlaylist(params) {
     const yt = await getYT(params.cookiesPath);
     const { playlistId } = params;
@@ -391,6 +416,8 @@ async function main() {
                 result = await handleLikeInteraction(params);
             } else if (command === 'get_video_likes') {
                 result = await handleGetVideoLikes(params);
+            } else if (command === 'get_video_chapters') {
+                result = await handleGetVideoChapters(params);
             } else if (command === 'get_playlist') {
                 result = await handleGetPlaylist(params);
             } else {
