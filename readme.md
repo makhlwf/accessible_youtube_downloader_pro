@@ -1,5 +1,5 @@
 > [!WARNING]
-> Following the release of version 3.0.0, the repository has been archived, and project maintenance has been permanently discontinued due to a decline in interest.
+> Following the release of version 2.0.0, the repository has been archived, and project maintenance has been permanently discontinued due to a decline in interest.
 >
 > You are permitted to fork the repository and utilize it as desired, provided that you comply with the project license.
 >

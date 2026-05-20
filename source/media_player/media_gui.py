@@ -169,6 +169,7 @@ class MediaGui(wx.Frame):
             options=options,
         )
         Thread(target=self.fetch_qualities, daemon=True).start()
+        Thread(target=self.fetch_chapters, daemon=True).start()
         if self.url in Continue.get_all() and config_get("continue"):
             self.player.media.set_position(Continue.get_all()[url])
         Thread(target=self.extract_description, daemon=True).start()
@@ -188,6 +189,41 @@ class MediaGui(wx.Frame):
             ).start()
         except Exception:
             pass
+
+    def fetch_chapters(self):
+        import logging
+
+        logging.getLogger(__name__).debug(f"Fetching chapters for {self.url}")
+        chapters = utils.get_video_chapters(self.url)
+        logging.getLogger(__name__).debug(f"Fetched {len(chapters)} chapters")
+        wx.CallAfter(self.populate_chapters_menu, chapters)
+
+    def populate_chapters_menu(self, chapters):
+        # Clear existing items
+        for item in self.chaptersMenu.GetMenuItems():
+            self.chaptersMenu.DestroyItem(item)
+
+        if not chapters:
+            self.chaptersMenu.Append(-1, _("لا توجد فصول متاحة")).Enable(False)
+            return
+
+        for chapter in chapters:
+            title = chapter.get("title", _("فصل بدون عنوان"))
+            time_ms = chapter.get("time_ms", 0)
+            time_str = utils.time_formatting(time_ms // 1000)
+            label = f"{title} ({time_str})"
+            item = self.chaptersMenu.Append(-1, label)
+            self.Bind(
+                wx.EVT_MENU,
+                lambda event, t=time_ms, n=title: self.on_seek_to_chapter(t, n),
+                item,
+            )
+
+    def on_seek_to_chapter(self, time_ms, title):
+        if self.player:
+            self.player.media.set_time(time_ms)
+            time_str = utils.time_formatting(time_ms // 1000)
+            speak(_("الانتقال إلى {} في {}").format(title, time_str))
 
     def on_history_timer(self, event):
         try:
@@ -639,6 +675,10 @@ class MediaGui(wx.Frame):
             self.qualityMenu.DestroyItem(item)
         self.qualityMenu.Append(-1, _("جاري التحميل...")).Enable(False)
         Thread(target=self.fetch_qualities, daemon=True).start()
+        for item in self.chaptersMenu.GetMenuItems():
+            self.chaptersMenu.DestroyItem(item)
+        self.chaptersMenu.Append(-1, _("جاري التحميل...")).Enable(False)
+        Thread(target=self.fetch_chapters, daemon=True).start()
         # Report new track to history
         try:
             Thread(

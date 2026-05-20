@@ -128,6 +128,7 @@ def get_quality_description(height):
 
 def download_yt_dlp():
     from gui.update_dialog import UpdateDialog
+
     url = "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp"
     UpdateDialog(
         wx.GetApp().GetTopWindow(),
@@ -190,6 +191,7 @@ def update_yt_dlp():
 
 def download_deno():
     from gui.update_dialog import UpdateDialog
+
     url = "https://github.com/denoland/deno/releases/latest/download/deno-x86_64-pc-windows-msvc.zip"
     UpdateDialog(
         wx.GetApp().GetTopWindow(),

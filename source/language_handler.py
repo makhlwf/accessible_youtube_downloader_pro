@@ -7,7 +7,10 @@ import builtins
 
 
 def _(text):
-    return getattr(builtins, "_", lambda x: x)(text)
+    translated = getattr(builtins, "_", lambda x: x)(text)
+    if translated == text:
+        print(f"DEBUG: Translation missing for: {text!r}")
+    return translated
 
 
 supported_languages = OrderedDict(
