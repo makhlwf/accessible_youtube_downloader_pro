@@ -1,7 +1,9 @@
 import ctypes
 import os
+import shutil
 import sys
 import threading
+import zipfile
 from enum import IntEnum
 from pathlib import Path
 from typing import Any
@@ -115,17 +117,44 @@ def _bundle_root() -> Path:
     return Path(__file__).resolve().parent.parent
 
 
+def _extract_mpv_dll(root: Path) -> Path | None:
+    dll_path = root / "libmpv-2.dll"
+    if dll_path.exists():
+        return dll_path
+
+    archive_path = root / "libmpv-2.dll.zip"
+    if not archive_path.exists():
+        return None
+
+    try:
+        with zipfile.ZipFile(archive_path) as archive:
+            member = next(
+                (
+                    name
+                    for name in archive.namelist()
+                    if Path(name).name.lower() == "libmpv-2.dll"
+                ),
+                None,
+            )
+            if member is None:
+                raise MPVError("libmpv-2.dll.zip does not contain libmpv-2.dll.")
+            with archive.open(member) as source, dll_path.open("wb") as target:
+                shutil.copyfileobj(source, target)
+    except (OSError, zipfile.BadZipFile) as exc:
+        raise MPVError("Unable to extract libmpv-2.dll from bundled archive.") from exc
+
+    return dll_path if dll_path.exists() else None
+
+
 def _mpv_candidates() -> list[Path]:
-    root = _bundle_root()
-    candidates = [root / "libmpv-2.dll"]
+    roots = [_bundle_root()]
     if getattr(sys, "frozen", False):
         exe_dir = Path(sys.executable).resolve().parent
-        candidates.extend(
-            [
-                exe_dir / "libmpv-2.dll",
-                exe_dir / "_internal" / "libmpv-2.dll",
-            ]
-        )
+        roots.extend([exe_dir, exe_dir / "_internal"])
+
+    candidates = []
+    for root in roots:
+        candidates.append(_extract_mpv_dll(root) or root / "libmpv-2.dll")
     return candidates
 
 

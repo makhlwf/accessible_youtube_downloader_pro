@@ -1,11 +1,40 @@
 import os
 import subprocess
 import shutil
+import zipfile
 
 # It's better to run this from the repo root.
 if not os.path.exists("source"):
     print("Error: This script should be run from the root of the repository.")
     exit(1)
+
+mpv_dll = os.path.join("source", "libmpv-2.dll")
+mpv_archive = os.path.join("source", "libmpv-2.dll.zip")
+
+
+def ensure_mpv_runtime():
+    if os.path.exists(mpv_dll):
+        return
+    if not os.path.exists(mpv_archive):
+        return
+
+    print("Extracting libmpv-2.dll from bundled archive...")
+    with zipfile.ZipFile(mpv_archive) as archive:
+        member = next(
+            (
+                name
+                for name in archive.namelist()
+                if os.path.basename(name).lower() == "libmpv-2.dll"
+            ),
+            None,
+        )
+        if member is None:
+            raise RuntimeError("libmpv-2.dll.zip does not contain libmpv-2.dll")
+        with archive.open(member) as source, open(mpv_dll, "wb") as target:
+            shutil.copyfileobj(source, target)
+
+
+ensure_mpv_runtime()
 
 # Clean up previous builds
 if os.path.exists("dist"):
