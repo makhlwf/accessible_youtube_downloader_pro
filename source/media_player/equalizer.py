@@ -1,9 +1,8 @@
-import vlc
 from typing import Any
 
 
 class EqualizerService:
-    """Service to manage VLC audio equalizer settings."""
+    """Service to manage MPV audio equalizer settings."""
 
     PRESETS = {
         "Flat": {"preamp": 0.0, "bands": [0.0] * 10},
@@ -27,7 +26,7 @@ class EqualizerService:
 
     def __init__(self) -> None:
         """Initialize the equalizer service."""
-        self.equalizer = vlc.AudioEqualizer()
+        self.equalizer = self
         self.preamp: float = 0.0
         self.bands: list[float] = [0.0] * 10
 
@@ -40,7 +39,6 @@ class EqualizerService:
         if not -20.0 <= value <= 20.0:
             raise ValueError("Preamp value out of range (-20.0 to 20.0).")
         self.preamp = value
-        self.equalizer.set_preamp(value)
 
     def get_preamp(self) -> float:
         """Get the current preamp level.
@@ -62,7 +60,6 @@ class EqualizerService:
         if not -20.0 <= value <= 20.0:
             raise ValueError("Gain value out of range (-20.0 to 20.0).")
         self.bands[index] = value
-        self.equalizer.set_amp_at_index(value, index)
 
     def get_band(self, index: int) -> float:
         """Get the gain for a specific equalizer band.
@@ -126,5 +123,10 @@ class EqualizerService:
             self.set_band(i, 0.0)
 
     def apply_to_player(self, player: Any) -> None:
-        """Apply the current equalizer settings to a VLC player."""
-        player.set_equalizer(self.equalizer)
+        """Apply the current equalizer settings to an MPV player."""
+        if hasattr(player, "set_equalizer"):
+            player.set_equalizer(self)
+
+    def apply_to_mpv(self, player: Any) -> None:
+        """Apply the current equalizer settings to the MPV backend."""
+        player.apply_equalizer(self.preamp, self.bands)

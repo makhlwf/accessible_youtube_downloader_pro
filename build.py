@@ -35,8 +35,7 @@ data_to_add = [
     "swscale-7.dll",
     "ffmpeg.exe",
     "ffprobe.exe",
-    "libvlc.dll",
-    "libvlccore.dll",
+    "libmpv-2.dll",
     "nvdaControllerClient64.dll",
     "deno.exe",
     "deno.json",
@@ -48,7 +47,6 @@ data_to_add = [
     "assets",
     "docs",
     "languages",
-    "plugins",
 ]
 
 # ------------------------------------------------------------------

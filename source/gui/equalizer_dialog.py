@@ -108,7 +108,7 @@ class EqualizerDialog(wx.Dialog):
         self.apply_to_player()
 
     def apply_to_player(self):
-        # Re-apply to trigger the change in VLC
+        # Re-apply to trigger the change in MPV.
         if hasattr(self.Parent, "player") and self.Parent.player:
             self.equalizer_service.apply_to_player(self.Parent.player.media)
         else:

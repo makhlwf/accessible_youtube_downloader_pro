@@ -13,7 +13,10 @@ sys.path.insert(
 # Mock wx module
 class wxWindow:
     def __init__(self, *args, **kwargs):
+        self.Parent = kwargs.get("parent", args[0] if args else None)
         self.Bind = MagicMock()
+        self.Freeze = MagicMock()
+        self.Thaw = MagicMock()
         self.SetSizer = MagicMock()
         self.SetSizerAndFit = MagicMock()
         self.Layout = MagicMock()
@@ -23,6 +26,16 @@ class wxWindow:
         self.GetChildren = MagicMock(return_value=[])
         self.Refresh = MagicMock()
         self.Update = MagicMock()
+        self.SetName = MagicMock()
+
+
+_next_control_id = 1000
+
+
+def _new_control_id():
+    global _next_control_id
+    _next_control_id += 1
+    return _next_control_id
 
 
 class Frame(wxWindow):
@@ -54,7 +67,35 @@ class ListBox(wxWindow):
 
 
 class Choice(wxWindow):
-    pass
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._choices = list(kwargs.get("choices", []))
+        self._selection = self._choices[0] if self._choices else ""
+
+    def GetStrings(self):
+        return self._choices
+
+    def SetStringSelection(self, value):
+        self._selection = value
+
+    def GetStringSelection(self):
+        return self._selection
+
+
+class Slider(wxWindow):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._id = _new_control_id()
+        self._value = kwargs.get("value", 0)
+
+    def GetId(self):
+        return self._id
+
+    def SetValue(self, value):
+        self._value = value
+
+    def GetValue(self):
+        return self._value
 
 
 class SpinCtrl(wxWindow):
@@ -77,6 +118,17 @@ class StaticBox(wxWindow):
     pass
 
 
+class CommandEvent:
+    def __init__(self, *args, **kwargs):
+        self._int = 0
+
+    def SetInt(self, value):
+        self._int = value
+
+    def GetInt(self):
+        return self._int
+
+
 mock_wx = MagicMock()
 mock_wx.Frame = Frame
 mock_wx.Panel = Panel
@@ -86,12 +138,14 @@ mock_wx.StaticText = StaticText
 mock_wx.TextCtrl = TextCtrl
 mock_wx.ListBox = ListBox
 mock_wx.Choice = Choice
+mock_wx.Slider = Slider
 mock_wx.SpinCtrl = SpinCtrl
 mock_wx.SpinCtrlDouble = SpinCtrlDouble
 mock_wx.CheckBox = CheckBox
 mock_wx.RadioButton = RadioButton
 mock_wx.StaticBox = StaticBox
-mock_wx.Colour = MagicMock
+mock_wx.CommandEvent = CommandEvent
+mock_wx.Colour = lambda value: value
 mock_wx.SystemSettings = MagicMock()
 mock_wx.NullColour = MagicMock()
 
@@ -115,7 +169,10 @@ mock_wx.EXPAND = 8192
 mock_wx.VERTICAL = 8
 mock_wx.HORIZONTAL = 4
 mock_wx.CENTRE = 1
+mock_wx.CENTER = 1
 mock_wx.ALIGN_CENTER = 1
+mock_wx.ALIGN_RIGHT = 2
+mock_wx.SL_VERTICAL = 4
 mock_wx.NOT_FOUND = -1
 mock_wx.Locale = MagicMock()
 mock_wx.GetApp = MagicMock()
@@ -156,7 +213,6 @@ mock_py_yt.Playlist = Playlist
 mock_py_yt.VideosSearch = VideosSearch
 mock_py_yt.PlaylistsSearch = PlaylistsSearch
 sys.modules["py_yt"] = mock_py_yt
-sys.modules["vlc"] = MagicMock()
 sys.modules["pyperclip"] = MagicMock()
 
 # Mock builtins._ for translation

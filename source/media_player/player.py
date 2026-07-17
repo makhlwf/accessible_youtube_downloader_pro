@@ -1,49 +1,33 @@
-import vlc
 import wx
-from utils import time_formatting
 from threading import Thread
-from settings_handler import config_get
+
 from media_player.equalizer import EqualizerService
-
-
-# Global VLC instance to avoid re-initialization overhead
-vlc_instance = vlc.Instance(
-    "--no-video-title-show",
-    "--input-repeat=999",
-    "--network-caching=300",
-    "--no-stats",
-    "--no-osd",
-)
+from media_player.mpv_backend import MpvMedia, MpvMediaPlayer, State
+from settings_handler import config_get
+from utils import time_formatting
 
 
 class Player:
     def __init__(self, filename, hwnd, window=None, options=None):
-        self.instance = vlc_instance
-        self.media = self.instance.media_player_new()
         self.eq = None
-        if config_get("eq_enabled"):
-            self.eq = EqualizerService()
-            self.eq.load_settings()
-            self.eq.apply_to_player(self.media)
-            # Enable the equalizer explicitly
-            self.media.set_equalizer(self.eq.equalizer)
         self.do_reset = False
         self.window = window
         self.filename = filename
         self.hwnd = hwnd
+        self.media = MpvMediaPlayer(hwnd=self.hwnd or None, end_callback=self.onEnd)
+        if config_get("eq_enabled"):
+            self.eq = EqualizerService()
+            self.eq.load_settings()
+            self.eq.apply_to_player(self.media)
         self.set_media(self.filename, options)
-        self.media.set_hwnd(self.hwnd or 0)
-        self.manager = self.media.event_manager()
-        self.manager.event_attach(vlc.EventType.MediaPlayerEndReached, self.onEnd)
         self.media.play()
         self.volume = int(config_get("volume"))
         self.media.audio_set_volume(self.volume)
         self._cached_length = -1
 
-    def onEnd(self, event):
-        if event.type == vlc.EventType.MediaPlayerEndReached:
-            self.do_reset = True
-            Thread(target=self.reset).start()
+    def onEnd(self, event=None):
+        self.do_reset = True
+        Thread(target=self.reset).start()
 
     def get_length(self):
         if self._cached_length == -1:
@@ -87,7 +71,9 @@ class Player:
 
     def reset(self):
         self.do_reset = False
-        self.media.set_media(self.media.get_media())
+        current_media = self.media.get_media()
+        if current_media is not None:
+            self.media.set_media(current_media)
         if config_get("repeatTracks") and not config_get("autonext"):
             self.media.play()
         elif config_get("autonext") and not config_get("repeatTracks"):
@@ -95,9 +81,9 @@ class Player:
                 wx.CallAfter(self.window.next)
 
     def set_media(self, m, options=None):
-        media = self.instance.media_new(m)
-        if options:
-            for opt in options:
-                media.add_option(opt)
+        media = MpvMedia(m, options)
         self.media.set_media(media)
         self._cached_length = -1
+
+
+__all__ = ["Player", "State"]

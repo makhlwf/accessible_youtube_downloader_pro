@@ -3,11 +3,10 @@ import os
 import socket
 import sys
 
-# Early setup for VLC and other DLLs
-vlc_path = os.path.dirname(__file__)
+# Early setup for MPV and other DLLs
+runtime_path = os.path.dirname(__file__)
 if sys.platform == "win32":
-    os.add_dll_directory(vlc_path)
-os.environ["VLC_PLUGIN_PATH"] = os.path.join(vlc_path, "plugins")
+    os.add_dll_directory(runtime_path)
 
 import threading
 import webbrowser

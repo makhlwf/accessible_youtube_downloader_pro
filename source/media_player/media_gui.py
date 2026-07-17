@@ -11,14 +11,13 @@ import application
 import utils
 from utils import get_playable_stream
 from download_handler.downloader import downloadAction
-from vlc import State
 from gui.settings_dialog import SettingsDialog
 from gui.description import DescriptionDialog
 from gui.custom_controls import CustomButton
 from gui.quality_selection import QualitySelectionDialog
 from threading import Thread
 from database import Continue
-from media_player.player import Player
+from media_player.player import Player, State
 
 
 def has_player(method):
@@ -332,7 +331,7 @@ class MediaGui(wx.Frame):
 
     def playAction(self):
         state = self.player.media.get_state()
-        if state in (State.NothingSpecial, State.Stopped):
+        if state in (State.NothingSpecial, State.Stopped, State.Ended):
             self.player.media.play()
         elif state in (State.Playing, State.Paused):
             if not self.is_live:
@@ -359,7 +358,11 @@ class MediaGui(wx.Frame):
     def beginingAction(self):
         self.player.media.set_position(0.0)
         speak(_("بداية المقطع"))
-        if self.player.media.get_state() in (State.NothingSpecial, State.Stopped):
+        if self.player.media.get_state() in (
+            State.NothingSpecial,
+            State.Stopped,
+            State.Ended,
+        ):
             self.player.media.play()
 
     def closeAction(self):
@@ -389,6 +392,8 @@ class MediaGui(wx.Frame):
                 pass
 
             self.player.media.stop()
+            if hasattr(self.player.media, "close"):
+                self.player.media.close()
         self.GetParent().Show()
 
         self.Destroy()
