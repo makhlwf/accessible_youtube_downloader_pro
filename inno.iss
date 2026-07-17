@@ -33,10 +33,23 @@ LZMANumBlockThreads=2
 LZMAUseSeparateProcess=yes
 InternalCompressLevel=ultra
 WizardStyle=modern dark polar includetitlebar
+LicenseFile=PRIVACY_POLICY.md
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "arabic"; MessagesFile: "compiler:Languages\Arabic.isl"
+
+[Messages]
+english.WizardLicense=Privacy Policy
+english.LicenseLabel=Please read the following Privacy Policy. You must accept it before continuing setup.
+english.LicenseLabel3=Please accept the Privacy Policy before continuing.
+english.LicenseAccepted=I accept the Privacy Policy
+english.LicenseNotAccepted=I do not accept the Privacy Policy
+arabic.WizardLicense=سياسة الخصوصية
+arabic.LicenseLabel=يرجى قراءة سياسة الخصوصية التالية. يجب قبولها قبل متابعة التثبيت.
+arabic.LicenseLabel3=يرجى قبول سياسة الخصوصية قبل المتابعة.
+arabic.LicenseAccepted=أوافق على سياسة الخصوصية
+arabic.LicenseNotAccepted=لا أوافق على سياسة الخصوصية
 
 [CustomMessages]
 english.DownloadYtDlp=Download latest yt-dlp library (recommended)
