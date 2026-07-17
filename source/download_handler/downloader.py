@@ -1,6 +1,7 @@
 import os
 import wx
 import logging
+import time
 from settings_handler import config_get
 import paths
 import utils
@@ -39,6 +40,8 @@ class Downloader:
         self.folder = folder
         self.cancelled = False
         self.cancel_checker = cancel_checker
+        self.last_file = None
+        self.started_at = None
 
     def get_quality(self):
         qualities = {0: "96", 1: "128", 2: "192"}
@@ -51,6 +54,50 @@ class Downloader:
         return self.cancelled or (
             self.cancel_checker is not None and self.cancel_checker()
         )
+
+    def _remember_file(self, path):
+        if path and os.path.exists(path):
+            self.last_file = path
+
+    def _hook_file(self, data):
+        if isinstance(data, str):
+            return data
+        if not isinstance(data, dict):
+            return None
+        info = data.get("info_dict") or {}
+        return (
+            data.get("filepath")
+            or data.get("filename")
+            or info.get("filepath")
+            or info.get("_filename")
+        )
+
+    def _after_move_hook(self, data):
+        self._remember_file(self._hook_file(data))
+
+    def _postprocessor_hook(self, data):
+        if isinstance(data, dict) and data.get("status") not in (None, "finished"):
+            return
+        self._remember_file(self._hook_file(data))
+
+    def _find_latest_downloaded_file(self):
+        if not os.path.isdir(self.path):
+            return None
+        latest_file = None
+        latest_time = 0
+        for root, dirs, files in os.walk(self.path):
+            for filename in files:
+                path = os.path.join(root, filename)
+                try:
+                    modified = os.path.getmtime(path)
+                except OSError:
+                    continue
+                if self.started_at is not None and modified < self.started_at - 2:
+                    continue
+                if modified > latest_time:
+                    latest_time = modified
+                    latest_file = path
+        return latest_file
 
     def _progress_hook(self, d):
         if self._is_cancelled():
@@ -81,15 +128,7 @@ class Downloader:
                 ),
             )
 
-    def download(self):
-        if not utils.YoutubeDL:
-            logger.error("YoutubeDL library not loaded")
-            return 1
-
-        if self._is_cancelled():
-            return DownloadCancelled()
-
-        os.makedirs(self.path, exist_ok=True)
+    def _base_options(self, use_cookies=True):
         abs_ffmpeg_dir = os.path.abspath(paths.ffmpeg_dir)
         abs_ffmpeg_dir = os.path.normpath(abs_ffmpeg_dir).replace("\\", "/")
 
@@ -106,7 +145,11 @@ class Downloader:
             "nocheckcertificate": True,
             "outtmpl": os.path.join(self.path, "%(title)s.%(ext)s"),
             "format": self.downloading_format,
+            "noplaylist": not self.folder,
+            "continuedl": True,
             "progress_hooks": [self._progress_hook],
+            "postprocessor_hooks": [self._postprocessor_hook],
+            "post_hooks": [self._after_move_hook],
             "ffmpeg_location": abs_ffmpeg_dir,
             "nocacheconfig": True,
             "extractor_args": {
@@ -121,7 +164,7 @@ class Downloader:
         }
 
         cookies_path = config_get("cookiespath")
-        if cookies_path and os.path.exists(cookies_path):
+        if use_cookies and cookies_path and os.path.exists(cookies_path):
             ydl_opts["cookiefile"] = cookies_path
 
         if self.convert:
@@ -132,10 +175,40 @@ class Downloader:
                     "preferredquality": self.get_quality(),
                 }
             ]
+        return ydl_opts
+
+    def _is_cookie_error(self, error):
+        message = str(error).lower()
+        return any(
+            part in message
+            for part in (
+                "cookie",
+                "cookies",
+                "dpapi",
+                "decrypt",
+                "could not copy",
+                "database is locked",
+                "unable to open database file",
+            )
+        )
+
+    def download(self, use_cookies=True):
+        if not utils.YoutubeDL:
+            logger.error("YoutubeDL library not loaded")
+            return 1
+
+        if self._is_cancelled():
+            return DownloadCancelled()
+
+        os.makedirs(self.path, exist_ok=True)
+        self.started_at = time.time()
+        ydl_opts = self._base_options(use_cookies=use_cookies)
 
         try:
             with utils.YoutubeDL(ydl_opts) as ydl:
                 ydl.download([self.url])
+            if not self.last_file or not os.path.exists(self.last_file):
+                self.last_file = self._find_latest_downloaded_file()
             return 0
         except DownloadCancelled as e:
             logger.info("Download cancelled")
@@ -143,6 +216,13 @@ class Downloader:
         except Exception as e:
             logger.error(f"Download failed: {e}")
             return e
+
+    def download_with_cookie_fallback(self):
+        result = self.download(use_cookies=True)
+        if isinstance(result, Exception) and self._is_cookie_error(result):
+            logger.warning("Cookie-based download failed; retrying without cookies")
+            return self.download(use_cookies=False)
+        return result
 
 
 def downloadAction(
@@ -198,15 +278,31 @@ def downloadAction(
     dlg.Show()
 
     def download_thread():
-        result = downloader.download()
+        result = None
+        for attempt in range(3):
+            result = downloader.download_with_cookie_fallback()
+            if result == 0 or isinstance(result, DownloadCancelled):
+                break
+            logger.warning("Download attempt %s failed for %s", attempt + 1, url)
 
         def finish_download():
             if hasattr(dlg, "mark_finished"):
                 dlg.mark_finished()
             if result == 0:
-                wx.MessageBox(_("اكتمل التنزيل بنجاح"), _("نجاح"), parent=dlg)
+                parent = (
+                    dlg.GetParent() if dlg is not None else wx.GetApp().GetTopWindow()
+                )
+                file_path = downloader.last_file
+                folder_path = path if folder else None
+                dlg.Destroy()
+                from gui.download_complete_dialog import show_download_complete
+
+                show_download_complete(
+                    parent, file_path=file_path, folder_path=folder_path
+                )
             elif isinstance(result, DownloadCancelled):
                 wx.MessageBox(_("تم إلغاء التنزيل"), _("إلغاء"), parent=dlg)
+                dlg.Destroy()
             else:
                 utils.show_error(
                     _(
@@ -215,7 +311,7 @@ def downloadAction(
                     result if isinstance(result, Exception) else None,
                     parent=dlg,
                 )
-            dlg.Destroy()
+                dlg.Destroy()
 
         wx.CallAfter(finish_download)
 
