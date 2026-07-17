@@ -16,6 +16,7 @@ class Player:
     def __init__(self, filename, hwnd, window=None, options=None):
         self.eq = None
         self.do_reset = False
+        self._closing = False
         self.window = window
         self.filename = filename
         self.hwnd = hwnd
@@ -32,6 +33,8 @@ class Player:
         self._cached_length = -1
 
     def onEnd(self, event=None):
+        if self._closing:
+            return
         self.do_reset = True
         Thread(target=self.reset).start()
 
@@ -76,6 +79,8 @@ class Player:
         return int(position * 100)
 
     def reset(self):
+        if self._closing:
+            return
         self.do_reset = False
         current_media = self.media.get_media()
         if current_media is not None:
@@ -181,6 +186,20 @@ class Player:
     def _notify_audio_output_fallback(self):
         if self.window is not None and hasattr(self.window, "on_audio_output_fallback"):
             self.window.on_audio_output_fallback()
+
+    def close(self):
+        self._closing = True
+        self.window = None
+        if self.media is None:
+            return
+        try:
+            self.media.stop()
+        except Exception:
+            logger.exception("Could not stop MPV during player close")
+        try:
+            self.media.close()
+        except Exception:
+            logger.exception("Could not close MPV during player close")
 
 
 __all__ = ["Player", "State"]

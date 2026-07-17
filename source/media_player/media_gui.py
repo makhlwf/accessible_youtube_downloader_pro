@@ -101,6 +101,7 @@ class MediaGui(wx.Frame):
         self.Maximize(True)
         self.SetBackgroundColour(wx.BLACK)
         self.player = None
+        self._closing = False
         self.extracting_description = False
         self.url = url
         self.current_channel = self._resolve_channel(stream, url)
@@ -185,6 +186,7 @@ class MediaGui(wx.Frame):
         self.Bind(wx.EVT_MENU, self.onOpenChannel, channelItem)
         self.Bind(wx.EVT_MENU, lambda event: SettingsDialog(self), settingsItem)
         self.Bind(wx.EVT_KEY_DOWN, self.onKeyDown)
+        self.Bind(wx.EVT_CHAR_HOOK, self.onCharHook)
         self.prev_id = 100
         self.play_pause_id = 150
         self.next_id = 200
@@ -199,7 +201,7 @@ class MediaGui(wx.Frame):
         playButton.Bind(wx.EVT_BUTTON, lambda event: self.playAction())
         forwardButton.Bind(wx.EVT_BUTTON, lambda event: self.forwardAction())
         nextButton.Bind(wx.EVT_BUTTON, lambda event: self.next())
-        self.Bind(wx.EVT_CLOSE, lambda event: self.closeAction())
+        self.Bind(wx.EVT_CLOSE, self.onClose)
         self.Show()
         if stream is None:
             utils.show_error(_("لا يمكن تشغيل الرابط"), parent=self)
@@ -472,23 +474,41 @@ class MediaGui(wx.Frame):
         ):
             self.player.media.play()
 
+    def onClose(self, event):
+        self.closeAction()
+
+    def onCharHook(self, event):
+        if event.GetKeyCode() == wx.WXK_ESCAPE:
+            self.closeAction()
+            return
+        event.Skip()
+
     def closeAction(self):
+        if self._closing:
+            return
+        self._closing = True
         if hasattr(self, "history_timer"):
-            self.history_timer.Stop()
-        if self.player is not None:
-            if (
-                self.player.media.get_position() in (0.0, -1)
-                and self.url in Continue.get_all()
-            ):
-                Continue.remove_continue(self.url)
-            elif self.url in Continue.get_all():
-                Continue.update(self.url, self.player.media.get_position())
-            else:
-                Continue.new_continue(self.url, self.player.media.get_position())
+            try:
+                self.history_timer.Stop()
+            except Exception:
+                logger.debug("Could not stop history timer during close", exc_info=True)
+        player = self.player
+        self.player = None
+        if player is not None:
+            try:
+                position = player.media.get_position()
+                if position in (0.0, -1) and self.url in Continue.get_all():
+                    Continue.remove_continue(self.url)
+                elif self.url in Continue.get_all():
+                    Continue.update(self.url, position)
+                else:
+                    Continue.new_continue(self.url, position)
+            except Exception:
+                logger.debug("Could not save playback position during close", exc_info=True)
 
             # Final history update
             try:
-                watched_seconds = self.player.media.get_time() / 1000
+                watched_seconds = player.media.get_time() / 1000
                 if watched_seconds > 0:
                     Thread(
                         target=utils.update_watch_history,
@@ -498,10 +518,13 @@ class MediaGui(wx.Frame):
             except Exception:
                 pass
 
-            self.player.media.stop()
-            if hasattr(self.player.media, "close"):
-                self.player.media.close()
-        self.GetParent().Show()
+            player.close()
+        parent = self.GetParent()
+        if parent is not None:
+            try:
+                parent.Show()
+            except Exception:
+                logger.debug("Could not show parent after media close", exc_info=True)
 
         self.Destroy()
 

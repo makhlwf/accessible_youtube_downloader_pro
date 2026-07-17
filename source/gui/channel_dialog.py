@@ -28,17 +28,26 @@ class ChannelDialog(wx.Dialog):
         self.results_by_tab = {}
         self.current_result = None
         self.scraper = Scraper()
+        self.item_boxes = {}
 
         self.CenterOnParent()
         self.Maximize(True)
         panel = wx.Panel(self)
 
-        tabLabel = wx.StaticText(panel, -1, _("تبويب القناة: "))
-        self.tabBox = wx.Choice(panel, -1, choices=[label for _, label in CHANNEL_TABS])
-        self.tabBox.Selection = self._default_tab_selection()
+        self.tabNotebook = wx.Notebook(panel, -1)
+        for tab, label in CHANNEL_TABS:
+            page = wx.Panel(self.tabNotebook)
+            pageSizer = wx.BoxSizer(wx.VERTICAL)
+            listLabel = wx.StaticText(page, -1, _("العناصر: "))
+            itemsBox = wx.ListBox(page, -1)
+            pageSizer.Add(listLabel, 0, wx.ALL, 5)
+            pageSizer.Add(itemsBox, 1, wx.EXPAND | wx.ALL, 5)
+            page.SetSizer(pageSizer)
+            self.tabNotebook.AddPage(page, label)
+            self.item_boxes[tab] = itemsBox
+        self.tabNotebook.SetSelection(self._default_tab_selection())
+        self.itemsBox = self.current_items_box()
 
-        listLabel = wx.StaticText(panel, -1, _("العناصر: "))
-        self.itemsBox = wx.ListBox(panel, -1)
         self.loadMoreButton = wx.Button(panel, -1, _("تحميل المزيد"))
         self.loadMoreButton.Enabled = False
         self.playButton = wx.Button(panel, -1, _("تشغيل"), name="control")
@@ -46,19 +55,6 @@ class ChannelDialog(wx.Dialog):
         backButton = wx.Button(panel, -1, _("رجوع"), name="control")
 
         self.contextSetup()
-        hotkeys = wx.AcceleratorTable(
-            [
-                (0, wx.WXK_RETURN, self.audioPlayItemId),
-                (wx.ACCEL_CTRL, wx.WXK_RETURN, self.videoPlayItemId),
-                (wx.ACCEL_CTRL, ord("D"), self.directDownloadId),
-                (wx.ACCEL_CTRL, ord("L"), self.copyItemId),
-            ]
-        )
-        self.itemsBox.SetAcceleratorTable(hotkeys)
-
-        tabSizer = wx.BoxSizer(wx.HORIZONTAL)
-        tabSizer.Add(tabLabel, 1, wx.ALL, 5)
-        tabSizer.Add(self.tabBox, 2, wx.EXPAND | wx.ALL, 5)
 
         controlSizer = wx.BoxSizer(wx.HORIZONTAL)
         for control in panel.GetChildren():
@@ -66,16 +62,12 @@ class ChannelDialog(wx.Dialog):
                 controlSizer.Add(control, 1, wx.ALL, 5)
 
         sizer = wx.BoxSizer(wx.VERTICAL)
-        sizer.Add(tabSizer, 0, wx.EXPAND)
-        sizer.Add(listLabel, 0, wx.ALL, 5)
-        sizer.Add(self.itemsBox, 1, wx.EXPAND | wx.ALL, 5)
+        sizer.Add(self.tabNotebook, 1, wx.EXPAND | wx.ALL, 5)
         sizer.Add(self.loadMoreButton, 0, wx.ALIGN_CENTER | wx.ALL, 5)
         sizer.Add(controlSizer, 0, wx.EXPAND)
         panel.SetSizer(sizer)
 
-        self.tabBox.Bind(wx.EVT_CHOICE, self.onTabChoice)
-        self.itemsBox.Bind(wx.EVT_LISTBOX_DCLICK, lambda event: self.playAudio())
-        self.itemsBox.Bind(wx.EVT_LISTBOX, self.onListBox)
+        self.tabNotebook.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, self.onTabChanged)
         self.loadMoreButton.Bind(wx.EVT_BUTTON, self.onLoadMore)
         self.playButton.Bind(wx.EVT_BUTTON, lambda event: self.playAudio())
         self.downloadButton.Bind(wx.EVT_BUTTON, self.onDownload)
@@ -97,7 +89,56 @@ class ChannelDialog(wx.Dialog):
         return 0
 
     def selected_tab(self):
-        return CHANNEL_TABS[self.tabBox.Selection][0]
+        selection = self.tabNotebook.GetSelection()
+        if selection == wx.NOT_FOUND:
+            selection = 0
+        return CHANNEL_TABS[selection][0]
+
+    def current_items_box(self):
+        return self.item_boxes[self.selected_tab()]
+
+    def item_hotkeys(self):
+        return wx.AcceleratorTable(
+            [
+                (0, wx.WXK_RETURN, self.audioPlayItemId),
+                (wx.ACCEL_CTRL, wx.WXK_RETURN, self.videoPlayItemId),
+                (wx.ACCEL_CTRL, ord("D"), self.directDownloadId),
+                (wx.ACCEL_CTRL, ord("L"), self.copyItemId),
+            ]
+        )
+
+    def bind_items_box(self, items_box):
+        items_box.SetAcceleratorTable(self.item_hotkeys())
+        items_box.Bind(wx.EVT_LISTBOX_DCLICK, lambda event: self.playAudio())
+        items_box.Bind(wx.EVT_LISTBOX, self.onListBox)
+        items_box.Bind(
+            wx.EVT_CONTEXT_MENU,
+            lambda event, box=items_box: self.showContextMenu(box),
+        )
+        items_box.Bind(
+            wx.EVT_MENU, lambda event: self.playVideo(), id=self.videoPlayItemId
+        )
+        items_box.Bind(
+            wx.EVT_MENU, lambda event: self.playAudio(), id=self.audioPlayItemId
+        )
+        items_box.Bind(
+            wx.EVT_MENU, lambda event: self.directDownload(), id=self.directDownloadId
+        )
+        items_box.Bind(wx.EVT_MENU, self.onCopy, id=self.copyItemId)
+        items_box.Bind(
+            wx.EVT_MENU, self.onOpenChannelInApp, id=self.openChannelInAppItemId
+        )
+        items_box.Bind(
+            wx.EVT_MENU, self.onOpenChannelInBrowser, id=self.openChannelInBrowserItemId
+        )
+        items_box.Bind(
+            wx.EVT_MENU, self.onDownloadChannel, id=self.downloadChannelItemId
+        )
+
+    def showContextMenu(self, items_box):
+        self.itemsBox = items_box
+        if self.current_result and self.current_result.count:
+            items_box.PopupMenu(self.contextMenu)
 
     def contextSetup(self):
         self.contextMenu = wx.Menu()
@@ -133,30 +174,8 @@ class ChannelDialog(wx.Dialog):
         webbrowserItem = self.contextMenu.Append(-1, _("الفتح من خلال متصفح الإنترنت"))
         self.browserItemId = webbrowserItem.GetId()
 
-        def popup():
-            if self.current_result and self.current_result.count:
-                self.itemsBox.PopupMenu(self.contextMenu)
-
-        self.itemsBox.Bind(wx.EVT_CONTEXT_MENU, lambda event: popup())
-        self.itemsBox.Bind(
-            wx.EVT_MENU, lambda event: self.playVideo(), id=self.videoPlayItemId
-        )
-        self.itemsBox.Bind(
-            wx.EVT_MENU, lambda event: self.playAudio(), id=self.audioPlayItemId
-        )
-        self.itemsBox.Bind(
-            wx.EVT_MENU, lambda event: self.directDownload(), id=self.directDownloadId
-        )
-        self.itemsBox.Bind(wx.EVT_MENU, self.onCopy, id=self.copyItemId)
-        self.itemsBox.Bind(
-            wx.EVT_MENU, self.onOpenChannelInApp, id=self.openChannelInAppItemId
-        )
-        self.itemsBox.Bind(
-            wx.EVT_MENU, self.onOpenChannelInBrowser, id=self.openChannelInBrowserItemId
-        )
-        self.itemsBox.Bind(
-            wx.EVT_MENU, self.onDownloadChannel, id=self.downloadChannelItemId
-        )
+        for items_box in self.item_boxes.values():
+            self.bind_items_box(items_box)
         self.Bind(wx.EVT_MENU, self.onOpenInBrowser, id=self.browserItemId)
         self.Bind(wx.EVT_MENU, self.onVideoDownload, videoItem)
         self.Bind(wx.EVT_MENU, self.onM4aDownload, m4aItem)
@@ -195,12 +214,16 @@ class ChannelDialog(wx.Dialog):
         )
 
     def load_selected_tab(self):
+        self.itemsBox = self.current_items_box()
         tab = self.selected_tab()
         if tab in self.results_by_tab:
             self.set_result(self.results_by_tab[tab])
             return True
 
         if tab != "about" and not utils.check_yt_dlp(self):
+            self.current_result = None
+            self.itemsBox.Set([_("تعذر تحميل القناة")])
+            self.toggleActions()
             return False
 
         try:
@@ -214,6 +237,9 @@ class ChannelDialog(wx.Dialog):
             ).res
         except Exception as exc:
             utils.show_error(_("تعذر تحميل القناة"), exc, parent=self)
+            self.current_result = None
+            self.itemsBox.Set([_("تعذر تحميل القناة")])
+            self.toggleActions()
             return False
 
         self.results_by_tab[tab] = result
@@ -223,6 +249,7 @@ class ChannelDialog(wx.Dialog):
         return True
 
     def set_result(self, result):
+        self.itemsBox = self.current_items_box()
         self.current_result = result
         titles = result.get_display_titles()
         self.itemsBox.Set(titles or [_("لا توجد عناصر متاحة")])
@@ -250,8 +277,10 @@ class ChannelDialog(wx.Dialog):
             return "none"
         return self.current_result.get_type(selection)
 
-    def onTabChoice(self, event):
+    def onTabChanged(self, event):
+        self.itemsBox = self.current_items_box()
         self.load_selected_tab()
+        event.Skip()
 
     def onListBox(self, event):
         self.toggleActions()
