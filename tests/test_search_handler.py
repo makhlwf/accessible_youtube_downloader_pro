@@ -1,6 +1,11 @@
 import pytest
 from unittest.mock import AsyncMock, patch
-from youtube_browser.search_handler import PlaylistResult, SimpleResult, Search
+from youtube_browser.search_handler import (
+    ChannelTabResult,
+    PlaylistResult,
+    SimpleResult,
+    Search,
+)
 
 
 @pytest.mark.asyncio
@@ -91,3 +96,71 @@ async def test_search_init_async():
         search.set_stream(0, "video", audio_mode=False)
         assert search.get_stream(0, audio_mode=True) == "audio"
         assert search.get_stream(0, audio_mode=False) == "video"
+
+
+@pytest.mark.asyncio
+async def test_channel_search_init_async():
+    search_result = {
+        "result": [
+            {
+                "type": "channel",
+                "id": "UC123",
+                "title": "Test Channel",
+                "videoCount": "12",
+                "subscribers": "1.2K subscribers",
+                "link": "https://www.youtube.com/channel/UC123",
+            }
+        ]
+    }
+
+    with patch("youtube_browser.search_handler.ChannelsSearch") as MockChannelsSearch:
+        mock_search_instance = MockChannelsSearch.return_value
+        mock_search_instance.next = AsyncMock(return_value=search_result)
+
+        search = Search("test", filter=5)
+        await search.init_async()
+
+        assert search.count == 1
+        assert search.get_type(0) == "channel"
+        assert search.get_url(0) == "https://www.youtube.com/channel/UC123"
+        assert "قناة" in search.get_titles()[0]
+        assert "1.2K subscribers" in search.get_titles()[0]
+
+
+def test_channel_tab_result_normalizes_video_entries(monkeypatch):
+    class FakeYDL:
+        def __init__(self, options):
+            self.options = options
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+        def extract_info(self, url, download=False):
+            return {
+                "title": "Test Channel",
+                "entries": [
+                    {
+                        "id": "abc123",
+                        "title": "Video 1",
+                        "url": "abc123",
+                        "duration": "01:00",
+                        "channel": "Test Channel",
+                        "channel_url": "https://www.youtube.com/channel/UC123",
+                        "view_count": 42,
+                    }
+                ],
+            }
+
+    monkeypatch.setattr("youtube_browser.search_handler.utils.YoutubeDL", FakeYDL)
+
+    result = ChannelTabResult(
+        "https://www.youtube.com/channel/UC123/videos", "videos", "Test Channel"
+    )
+
+    assert result.count == 1
+    assert result.get_type(0) == "video"
+    assert result.get_url(0) == "https://www.youtube.com/watch?v=abc123"
+    assert result.get_channel(0)["url"] == "https://www.youtube.com/channel/UC123"

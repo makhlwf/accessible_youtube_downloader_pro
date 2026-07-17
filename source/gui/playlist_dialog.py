@@ -5,6 +5,7 @@ from youtube_browser.search_handler import PlaylistResult
 from youtube_browser.scraper import Scraper
 from utils import get_audio_stream, get_video_stream
 from download_handler.downloader import downloadAction
+from gui.channel_dialog import ChannelDialog
 from media_player.media_gui import MediaGui
 import pyperclip
 from gui.download_progress import DownloadProgress
@@ -88,6 +89,7 @@ class PlaylistDialog(wx.Dialog):
         self.Parent.Hide()
         self.Show()
         self.videosBox.Selection = 0
+        self.toggleChannelActions()
 
     def _download_media(
         self,
@@ -96,6 +98,7 @@ class PlaylistDialog(wx.Dialog):
         dlg,
         download_type="video",
         path=config_get("path"),
+        title=None,
         quality=None,
     ):
         if option == 0:
@@ -107,6 +110,8 @@ class PlaylistDialog(wx.Dialog):
             format = "bestaudio[ext=m4a]"
         convert = True if option == 2 else False
         folder = False if download_type == "video" else True
+        if folder and title:
+            path = os.path.join(path, utils.sanitize_filename(title))
         downloadAction(
             url,
             path,
@@ -137,8 +142,14 @@ class PlaylistDialog(wx.Dialog):
             -1, _("التنزيل المباشر...\tctrl+d")
         )
         self.directDownloadId = directDownloadItem.GetId()
-        openChannelItem = self.contextMenu.Append(-1, _("الانتقال إلى القناة"))
+        openChannelMenu = wx.Menu()
+        openChannelInAppItem = openChannelMenu.Append(-1, _("فتح داخل التطبيق"))
+        self.openChannelInAppItemId = openChannelInAppItem.GetId()
+        openChannelInBrowserItem = openChannelMenu.Append(-1, _("فتح في المتصفح"))
+        self.openChannelInBrowserItemId = openChannelInBrowserItem.GetId()
+        self.contextMenu.AppendSubMenu(openChannelMenu, _("الانتقال إلى القناة"))
         downloadChannelItem = self.contextMenu.Append(-1, _("تنزيل القناة"))
+        self.downloadChannelItemId = downloadChannelItem.GetId()
         copyItem = self.contextMenu.Append(-1, _("نسخ رابط المقطع"))
         self.copyItemId = copyItem.GetId()
         webbrowserItem = self.contextMenu.Append(-1, _("الفتح من خلال متصفح الإنترنت"))
@@ -162,7 +173,10 @@ class PlaylistDialog(wx.Dialog):
             wx.EVT_MENU, lambda e: self.directDownload(), id=self.directDownloadId
         )
         self.videosBox.Bind(wx.EVT_MENU, self.onCopy, id=self.copyItemId)
-        self.videosBox.Bind(wx.EVT_MENU, self.onOpenChannel, openChannelItem)
+        self.videosBox.Bind(wx.EVT_MENU, self.onOpenChannel, openChannelInAppItem)
+        self.videosBox.Bind(
+            wx.EVT_MENU, self.onOpenChannelInBrowser, openChannelInBrowserItem
+        )
         self.videosBox.Bind(wx.EVT_MENU, self.onDownloadChannel, downloadChannelItem)
         self.Bind(wx.EVT_MENU, self.onOpenInBrowser, webbrowserItem)
 
@@ -181,7 +195,15 @@ class PlaylistDialog(wx.Dialog):
 
     def onOpenChannel(self, event):
         n = self.videosBox.Selection
-        webbrowser.open(self.result.videos[n]["channel"]["url"])
+        channel = self.result.videos[n]["channel"]
+        if channel["url"]:
+            ChannelDialog(self, channel["url"], channel["name"])
+
+    def onOpenChannelInBrowser(self, event):
+        n = self.videosBox.Selection
+        channel = self.result.videos[n]["channel"]
+        if channel["url"]:
+            webbrowser.open(channel["url"])
 
     def onDownloadChannel(self, event):
         n = self.videosBox.Selection
@@ -189,7 +211,13 @@ class PlaylistDialog(wx.Dialog):
         url = self.result.videos[n]["channel"]["url"]
         download_type = "channel"
         dlg = DownloadProgress(wx.GetApp().GetTopWindow(), title)
-        self._download_media(int(config_get("defaultformat")), url, dlg, download_type)
+        self._download_media(
+            int(config_get("defaultformat")),
+            url,
+            dlg,
+            download_type,
+            title=title,
+        )
 
     def playVideo(self):
         n = self.videosBox.Selection
@@ -294,11 +322,24 @@ class PlaylistDialog(wx.Dialog):
 
     def onListBox(self, event):
         n = self.videosBox.Selection
+        self.toggleChannelActions()
         if n != wx.NOT_FOUND:
             self.scraper.add_item(n, priority=0)
             if n > 0 and n % 10 == 0:
                 for i in range(n, min(n + 10, self.result.count)):
                     self.scraper.add_item(i, priority=10)
+
+    def toggleChannelActions(self):
+        n = self.videosBox.Selection
+        enabled = (
+            n != wx.NOT_FOUND
+            and self.result.videos
+            and n < len(self.result.videos)
+            and bool(self.result.videos[n]["channel"].get("url"))
+        )
+        self.contextMenu.Enable(self.openChannelInAppItemId, enabled)
+        self.contextMenu.Enable(self.openChannelInBrowserItemId, enabled)
+        self.contextMenu.Enable(self.downloadChannelItemId, enabled)
 
     def onDownload(self, event):
         downloadMenu = wx.Menu()

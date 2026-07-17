@@ -530,12 +530,29 @@ def pick_best_format(formats, preferred_index, is_video=True, target_height=None
 
 
 class Stream:
-    def __init__(self, title, url, headers=None, audio_url=None, quality=None):
+    def __init__(
+        self,
+        title,
+        url,
+        headers=None,
+        audio_url=None,
+        quality=None,
+        webpage_url="",
+        channel_name="",
+        channel_url="",
+        view_count=None,
+        upload_date="",
+    ):
         self.title = title
         self.url = url
         self.headers = headers or {}
         self.audio_url = audio_url
         self.quality = quality
+        self.webpage_url = webpage_url
+        self.channel_name = channel_name
+        self.channel_url = channel_url
+        self.view_count = view_count
+        self.upload_date = upload_date
 
 
 def _stream_from_info(entry, audio_mode=False):
@@ -565,7 +582,18 @@ def _stream_from_info(entry, audio_mode=False):
     headers.setdefault("User-Agent", "libmpv")
 
     audio_url = audio_fmt.get("url") if audio_fmt else None
-    return Stream(title, url_to_play, headers, audio_url, quality=quality)
+    return Stream(
+        title,
+        url_to_play,
+        headers,
+        audio_url,
+        quality=quality,
+        webpage_url=entry.get("webpage_url") or entry.get("original_url") or "",
+        channel_name=entry.get("channel") or entry.get("uploader") or "",
+        channel_url=entry.get("channel_url") or entry.get("uploader_url") or "",
+        view_count=entry.get("view_count"),
+        upload_date=entry.get("upload_date") or entry.get("timestamp") or "",
+    )
 
 
 def _begin_stream_extraction(cache_key):

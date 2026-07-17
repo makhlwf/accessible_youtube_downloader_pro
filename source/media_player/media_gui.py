@@ -103,6 +103,7 @@ class MediaGui(wx.Frame):
         self.player = None
         self.extracting_description = False
         self.url = url
+        self.current_channel = self._resolve_channel(stream, url)
         self.rating = None
         self.like_count = None
         previousButton = CustomButton(self, -1, _("المقطع السابق"), name="controls")
@@ -153,6 +154,7 @@ class MediaGui(wx.Frame):
         self.dislikeItem = trackOptions.Append(-1, _("عدم إعجاب (D)"))
         copyItem = trackOptions.Append(-1, _("نسخ رابط المقطع\tctrl+l"))
         browserItem = trackOptions.Append(-1, _("الفتح من خلال متصفح الإنترنت\tctrl+b"))
+        channelItem = trackOptions.Append(-1, _("الانتقال إلى القناة\tctrl+shift+c"))
         settingsItem = trackOptions.Append(-1, _("الإعدادات...\talt+s"))
         hotKeys = wx.AcceleratorTable(
             [
@@ -162,6 +164,7 @@ class MediaGui(wx.Frame):
                 (wx.ACCEL_NORMAL, wx.WXK_F12, audioOutputDeviceItem.GetId()),
                 (wx.ACCEL_CTRL, ord("L"), copyItem.GetId()),
                 (wx.ACCEL_CTRL, ord("B"), browserItem.GetId()),
+                (wx.ACCEL_CTRL | wx.ACCEL_SHIFT, ord("C"), channelItem.GetId()),
                 (wx.ACCEL_ALT, ord("S"), settingsItem.GetId()),
             ]
         )
@@ -179,6 +182,7 @@ class MediaGui(wx.Frame):
         self.Bind(wx.EVT_MENU, self.onDislike, self.dislikeItem)
         self.Bind(wx.EVT_MENU, self.onCopy, copyItem)
         self.Bind(wx.EVT_MENU, self.onBrowser, browserItem)
+        self.Bind(wx.EVT_MENU, self.onOpenChannel, channelItem)
         self.Bind(wx.EVT_MENU, lambda event: SettingsDialog(self), settingsItem)
         self.Bind(wx.EVT_KEY_DOWN, self.onKeyDown)
         self.prev_id = 100
@@ -245,6 +249,50 @@ class MediaGui(wx.Frame):
             ).start()
         except Exception:
             pass
+
+    def _resolve_channel(self, stream=None, url=None, index=None):
+        channel_name = getattr(stream, "channel_name", "") if stream else ""
+        channel_url = getattr(stream, "channel_url", "") if stream else ""
+        if channel_url or channel_name:
+            return {"name": channel_name or _("قناة"), "url": channel_url}
+
+        if index is None:
+            index = self._find_result_index(url or self.url)
+        if index is None or self.results is None:
+            return {"name": "", "url": ""}
+
+        try:
+            if hasattr(self.results, "get_channel"):
+                channel = self.results.get_channel(index)
+                return {
+                    "name": channel.get("name") or _("قناة"),
+                    "url": channel.get("url") or "",
+                }
+            if isinstance(self.results, list):
+                row = self.results[index]
+                return {
+                    "name": row.get("channel_name") or row.get("author") or _("قناة"),
+                    "url": row.get("channel_url") or "",
+                }
+        except Exception:
+            logger.debug("Could not resolve channel for current media", exc_info=True)
+        return {"name": "", "url": ""}
+
+    def _find_result_index(self, url):
+        if not url or self.results is None:
+            return None
+        try:
+            if hasattr(self.results, "count") and hasattr(self.results, "get_url"):
+                for index in range(self.results.count):
+                    if self.results.get_url(index) == url:
+                        return index
+            if isinstance(self.results, list):
+                for index, item in enumerate(self.results):
+                    if item.get("url") == url:
+                        return index
+        except Exception:
+            logger.debug("Could not find result index for %s", url, exc_info=True)
+        return None
 
     def fetch_chapters(self):
         import logging
@@ -726,7 +774,7 @@ class MediaGui(wx.Frame):
                     stream = get_playable_stream(url, audio_mode=self.audio_mode)
 
                 if stream:
-                    wx.CallAfter(self._perform_track_change, stream, url, title)
+                    wx.CallAfter(self._perform_track_change, stream, url, title, index)
                 else:
                     wx.CallAfter(
                         utils.show_error,
@@ -748,7 +796,7 @@ class MediaGui(wx.Frame):
 
         Thread(target=_task, daemon=True).start()
 
-    def _perform_track_change(self, stream, url, title):
+    def _perform_track_change(self, stream, url, title, index=None):
         options = []
         if hasattr(stream, "headers") and stream.headers:
             ua = stream.headers.get("User-Agent")
@@ -762,6 +810,7 @@ class MediaGui(wx.Frame):
         self.player.set_media(stream.url, options=options)
         self.url = url
         self.title = title
+        self.current_channel = self._resolve_channel(stream, url, index)
         self.SetTitle(f"{title} - {application.name}")
         self.like_count = None
         self.fetch_like_count()
@@ -791,6 +840,8 @@ class MediaGui(wx.Frame):
             box = self.Parent.searchResults
         elif hasattr(self.Parent, "videosBox"):
             box = self.Parent.videosBox
+        elif hasattr(self.Parent, "itemsBox"):
+            box = self.Parent.itemsBox
         elif hasattr(self.Parent, "home_feed_list"):
             box = self.Parent.home_feed_list
         elif hasattr(self.Parent, "historyList"):
@@ -837,6 +888,8 @@ class MediaGui(wx.Frame):
             box = self.Parent.searchResults
         elif hasattr(self.Parent, "videosBox"):
             box = self.Parent.videosBox
+        elif hasattr(self.Parent, "itemsBox"):
+            box = self.Parent.itemsBox
         elif hasattr(self.Parent, "home_feed_list"):
             box = self.Parent.home_feed_list
         elif hasattr(self.Parent, "historyList"):
@@ -862,6 +915,15 @@ class MediaGui(wx.Frame):
     def onBrowser(self, event):
         speak(_("جاري الفتح"))
         webbrowser.open(self.url)
+
+    def onOpenChannel(self, event):
+        channel = self.current_channel or {}
+        if not channel.get("url"):
+            speak(_("رابط القناة غير متوفر"))
+            return
+        from gui.channel_dialog import ChannelDialog
+
+        ChannelDialog(self, channel["url"], channel.get("name") or _("قناة"))
 
     def onM4aDownload(self, event):
         dlg = DownloadProgress(wx.GetApp().GetTopWindow(), self.title)

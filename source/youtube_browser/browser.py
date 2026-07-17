@@ -10,6 +10,7 @@ from gui.download_progress import DownloadProgress
 from gui.search_dialog import SearchDialog
 from gui.settings_dialog import SettingsDialog
 from gui.playlist_dialog import PlaylistDialog
+from gui.channel_dialog import ChannelDialog
 from gui.activity_dialog import LoadingDialog
 from gui.quality_selection import QualitySelectionDialog
 
@@ -135,9 +136,12 @@ class YoutubeBrowser(wx.Frame):
             -1, _("التنزيل المباشر...\tctrl+d")
         ).GetId()
 
-        self.openChannelId = self.contextMenu.Append(
-            -1, _("الانتقال إلى القناة")
-        ).GetId()
+        openChannelMenu = wx.Menu()
+        openChannelInAppItem = openChannelMenu.Append(-1, _("فتح داخل التطبيق"))
+        self.openChannelInAppId = openChannelInAppItem.GetId()
+        openChannelInBrowserItem = openChannelMenu.Append(-1, _("فتح في المتصفح"))
+        self.openChannelInBrowserId = openChannelInBrowserItem.GetId()
+        self.contextMenu.AppendSubMenu(openChannelMenu, _("الانتقال إلى القناة"))
         self.downloadChannelId = self.contextMenu.Append(-1, _("تنزيل القناة")).GetId()
         self.copyItemId = self.contextMenu.Append(-1, _("نسخ رابط المقطع")).GetId()
         self.browserItemId = self.contextMenu.Append(
@@ -174,7 +178,10 @@ class YoutubeBrowser(wx.Frame):
         self.Bind(wx.EVT_MENU, self.onCopy, id=1004)
         self.Bind(wx.EVT_MENU, self.onCopy, id=self.copyItemId)
 
-        self.Bind(wx.EVT_MENU, self.onOpenChannel, id=self.openChannelId)
+        self.Bind(wx.EVT_MENU, self.onOpenChannel, id=self.openChannelInAppId)
+        self.Bind(
+            wx.EVT_MENU, self.onOpenChannelInBrowser, id=self.openChannelInBrowserId
+        )
         self.Bind(wx.EVT_MENU, self.onDownloadChannel, id=self.downloadChannelId)
         self.Bind(wx.EVT_MENU, self.onOpenInBrowser, id=self.browserItemId)
 
@@ -208,7 +215,7 @@ class YoutubeBrowser(wx.Frame):
             fmt = "bestaudio[ext=m4a]"
         convert = True if option == 2 else False
         folder = False if download_type == "video" else True
-        if download_type == "playlist" and title:
+        if folder and title:
             path = os.path.join(path, utils.sanitize_filename(title))
         downloadAction(
             url,
@@ -260,6 +267,7 @@ class YoutubeBrowser(wx.Frame):
         self.searchResults.SetFocus()
         self.toggleDownload()
         self.togglePlay()
+        self.toggleChannelActions()
         speak(_("اكتمل البحث"))
 
         # Clear queue and add new videos for scraping
@@ -285,6 +293,13 @@ class YoutubeBrowser(wx.Frame):
         if self.search.get_type(number) == "playlist":
             PlaylistDialog(self, self.search.get_url(number))
             return
+        if self.search.get_type(number) == "channel":
+            ChannelDialog(
+                self,
+                self.search.get_url(number),
+                self.search.get_title(number),
+            )
+            return
         title = self.search.get_title(number)
         url = self.search.get_url(number)
         stream = self.search.get_stream(number, audio_mode=False)
@@ -307,7 +322,10 @@ class YoutubeBrowser(wx.Frame):
 
     def playAudio(self):
         number = self.searchResults.Selection
-        if number == wx.NOT_FOUND or self.search.get_type(number) == "playlist":
+        if number == wx.NOT_FOUND:
+            return
+        if self.search.get_type(number) in ("playlist", "channel"):
+            self.playVideo()
             return
         title = self.search.get_title(number)
         url = self.search.get_url(number)
@@ -350,7 +368,16 @@ class YoutubeBrowser(wx.Frame):
     def onOpenChannel(self, event):
         n = self.searchResults.Selection
         if n != wx.NOT_FOUND:
-            webbrowser.open(self.search.get_channel(n)["url"])
+            channel = self.search.get_channel(n)
+            if channel["url"]:
+                ChannelDialog(self, channel["url"], channel["name"])
+
+    def onOpenChannelInBrowser(self, event):
+        n = self.searchResults.Selection
+        if n != wx.NOT_FOUND:
+            channel = self.search.get_channel(n)
+            if channel["url"]:
+                webbrowser.open(channel["url"])
 
     def onDownloadChannel(self, event):
         n = self.searchResults.Selection
@@ -467,6 +494,7 @@ class YoutubeBrowser(wx.Frame):
     def onListBox(self, event):
         self.toggleDownload()
         self.togglePlay()
+        self.toggleChannelActions()
         self.toggleFavorite()
         n = self.searchResults.Selection
         if n != wx.NOT_FOUND:
@@ -501,6 +529,9 @@ class YoutubeBrowser(wx.Frame):
     def toggleDownload(self):
         n = self.searchResults.Selection
         if n == wx.NOT_FOUND:
+            self.contextMenu.Enable(self.downloadId, False)
+            self.contextMenu.Enable(self.directDownloadId, False)
+            self.downloadButton.Enabled = False
             return
         is_live = (
             self.search.get_views(n) is None and self.search.get_type(n) == "video"
@@ -510,14 +541,24 @@ class YoutubeBrowser(wx.Frame):
         self.contextMenu.Enable(self.directDownloadId, enable)
         self.downloadButton.Enabled = enable
 
+    def toggleChannelActions(self):
+        n = self.searchResults.Selection
+        channel_url = ""
+        if n != wx.NOT_FOUND:
+            channel_url = self.search.get_channel(n).get("url")
+        enabled = bool(channel_url)
+        self.contextMenu.Enable(self.openChannelInAppId, enabled)
+        self.contextMenu.Enable(self.openChannelInBrowserId, enabled)
+        self.contextMenu.Enable(self.downloadChannelId, enabled)
+
     def togglePlay(self):
         n = self.searchResults.Selection
         if n == wx.NOT_FOUND:
             return
-        is_playlist = self.search.get_type(n) == "playlist"
-        self.playButton.Label = _("فتح") if is_playlist else _("تشغيل (enter)")
-        self.contextMenu.Enable(self.videoPlayItemId, not is_playlist)
-        self.contextMenu.Enable(self.audioPlayItemId, not is_playlist)
+        is_collection = self.search.get_type(n) in ("playlist", "channel")
+        self.playButton.Label = _("فتح") if is_collection else _("تشغيل (enter)")
+        self.contextMenu.Enable(self.videoPlayItemId, not is_collection)
+        self.contextMenu.Enable(self.audioPlayItemId, not is_collection)
 
     def onFavorite(self, event):
         n = self.searchResults.Selection

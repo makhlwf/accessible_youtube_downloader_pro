@@ -208,10 +208,15 @@ class PlaylistsSearch(metaclass=MockType):
     pass
 
 
+class ChannelsSearch(metaclass=MockType):
+    pass
+
+
 mock_py_yt = MagicMock()
 mock_py_yt.Playlist = Playlist
 mock_py_yt.VideosSearch = VideosSearch
 mock_py_yt.PlaylistsSearch = PlaylistsSearch
+mock_py_yt.ChannelsSearch = ChannelsSearch
 sys.modules["py_yt"] = mock_py_yt
 sys.modules["pyperclip"] = MagicMock()
 

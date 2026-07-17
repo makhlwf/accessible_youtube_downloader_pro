@@ -1,3 +1,5 @@
+import os
+
 import wx
 from language_handler import _
 import application
@@ -7,8 +9,10 @@ from utils import (
     get_audio_stream,
     get_video_stream,
     get_available_qualities,
+    sanitize_filename,
 )
 from download_handler.downloader import downloadAction
+from gui.channel_dialog import ChannelDialog
 from media_player.media_gui import MediaGui
 from nvda_client.client import speak
 import pyperclip
@@ -74,6 +78,7 @@ class Favorites(wx.Frame):
         dlg,
         download_type="video",
         path=config_get("path"),
+        title=None,
         quality=None,
     ):
         if option == 0:
@@ -85,6 +90,8 @@ class Favorites(wx.Frame):
             format = "bestaudio[ext=m4a]"
         convert = True if option == 2 else False
         folder = False if download_type == "video" else True
+        if folder and title:
+            path = os.path.join(path, sanitize_filename(title))
         downloadAction(
             url,
             path,
@@ -163,7 +170,10 @@ class Favorites(wx.Frame):
             -1, _("التنزيل المباشر...\tctrl+d")
         )
         self.directDownloadId = directDownloadItem.GetId()
-        openChannelItem = self.contextMenu.Append(-1, _("الانتقال إلى القناة"))
+        openChannelMenu = wx.Menu()
+        openChannelInAppItem = openChannelMenu.Append(-1, _("فتح داخل التطبيق"))
+        openChannelInBrowserItem = openChannelMenu.Append(-1, _("فتح في المتصفح"))
+        self.contextMenu.AppendSubMenu(openChannelMenu, _("الانتقال إلى القناة"))
         downloadChannelItem = self.contextMenu.Append(-1, _("تنزيل القناة"))
         copyItem = self.contextMenu.Append(-1, _("نسخ رابط المقطع"))
         self.copyItemId = copyItem.GetId()
@@ -188,7 +198,10 @@ class Favorites(wx.Frame):
 
         self.Bind(wx.EVT_MENU, self.onM4aDownload, m4aItem)
         self.Bind(wx.EVT_MENU, self.onMp3Download, mp3Item)
-        self.favList.Bind(wx.EVT_MENU, self.onOpenChannel, openChannelItem)
+        self.favList.Bind(wx.EVT_MENU, self.onOpenChannel, openChannelInAppItem)
+        self.favList.Bind(
+            wx.EVT_MENU, self.onOpenChannelInBrowser, openChannelInBrowserItem
+        )
         self.favList.Bind(wx.EVT_MENU, self.onDownloadChannel, downloadChannelItem)
         self.Bind(wx.EVT_MENU, self.onOpenInBrowser, webbrowserItem)
 
@@ -198,7 +211,17 @@ class Favorites(wx.Frame):
 
     def onOpenChannel(self, event):
         n = self.favList.Selection
-        webbrowser.open(self.rows[n]["channel_url"])
+        if self.rows[n]["channel_url"]:
+            ChannelDialog(
+                self,
+                self.rows[n]["channel_url"],
+                self.rows[n]["channel_name"],
+            )
+
+    def onOpenChannelInBrowser(self, event):
+        n = self.favList.Selection
+        if self.rows[n]["channel_url"]:
+            webbrowser.open(self.rows[n]["channel_url"])
 
     def onDownloadChannel(self, event):
         n = self.favList.Selection
@@ -206,7 +229,13 @@ class Favorites(wx.Frame):
         url = self.rows[n]["channel_url"]
         download_type = "channel"
         dlg = DownloadProgress(wx.GetApp().GetTopWindow(), title)
-        self._download_media(int(config_get("defaultformat")), url, dlg, download_type)
+        self._download_media(
+            int(config_get("defaultformat")),
+            url,
+            dlg,
+            download_type,
+            title=title,
+        )
 
     def onCopy(self, event):
         pyperclip.copy(self.rows[self.favList.Selection]["url"])

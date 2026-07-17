@@ -1,14 +1,136 @@
 from py_yt import (
+    ChannelsSearch,
     Playlist,
     VideosSearch,
     PlaylistsSearch,
 )
+import os
+from urllib.parse import urlsplit, urlunsplit
+
+import utils
+from settings_handler import config_get
 from utils import time_to_seconds, format_duration
 from language_handler import _
 
 
+CHANNEL_TAB_SUFFIXES = {
+    "featured",
+    "videos",
+    "shorts",
+    "streams",
+    "live",
+    "playlists",
+    "community",
+    "channels",
+    "about",
+}
+
+CHANNEL_TABS = [
+    ("home", _("الرئيسية")),
+    ("videos", _("الفيديوهات")),
+    ("shorts", _("المقاطع القصيرة")),
+    ("live", _("البث المباشر")),
+    ("playlists", _("قوائم التشغيل")),
+    ("community", _("المجتمع")),
+    ("channels", _("القنوات")),
+    ("about", _("حول")),
+]
+
+
 def stream_key(audio_mode=False):
     return "audio_stream" if audio_mode else "video_stream"
+
+
+def normalise_channel_url(url):
+    if not url:
+        return ""
+    parts = urlsplit(url)
+    scheme = parts.scheme or "https"
+    netloc = parts.netloc or "www.youtube.com"
+    path = parts.path.rstrip("/")
+    segments = [segment for segment in path.split("/") if segment]
+    if segments and segments[-1].lower() in CHANNEL_TAB_SUFFIXES:
+        segments = segments[:-1]
+    path = "/" + "/".join(segments) if segments else ""
+    return urlunsplit((scheme, netloc, path, "", ""))
+
+
+def channel_tab_url(url, tab):
+    base = normalise_channel_url(url)
+    suffixes = {
+        "home": "",
+        "videos": "videos",
+        "shorts": "shorts",
+        "live": "streams",
+        "playlists": "playlists",
+        "community": "community",
+        "channels": "channels",
+        "about": "about",
+    }
+    suffix = suffixes.get(tab, "")
+    return f"{base}/{suffix}" if suffix else base
+
+
+def _absolute_youtube_url(url, result_type, fallback_id=None):
+    if url and url.startswith(("http://", "https://")):
+        return url
+    if url and url.startswith("/"):
+        return f"https://www.youtube.com{url}"
+    if result_type == "playlist":
+        playlist_id = fallback_id or url
+        return (
+            f"https://www.youtube.com/playlist?list={playlist_id}"
+            if playlist_id
+            else ""
+        )
+    if result_type == "channel":
+        channel_id = fallback_id or url
+        if not channel_id:
+            return ""
+        if str(channel_id).startswith("@"):
+            return f"https://www.youtube.com/{channel_id}"
+        return f"https://www.youtube.com/channel/{channel_id}"
+    video_id = fallback_id or url
+    return f"https://www.youtube.com/watch?v={video_id}" if video_id else ""
+
+
+def _channel_from_data(data, default_name="", default_url=""):
+    channel = data.get("channel") if isinstance(data.get("channel"), dict) else {}
+    return {
+        "name": (
+            channel.get("name")
+            or data.get("channel_name")
+            or data.get("channel")
+            or data.get("uploader")
+            or default_name
+            or _("غير معروف")
+        ),
+        "url": (
+            channel.get("url")
+            or channel.get("link")
+            or data.get("channel_url")
+            or data.get("uploader_url")
+            or default_url
+            or ""
+        ),
+    }
+
+
+def _yt_dlp_flat_options(start=1, end=30):
+    options = {
+        "quiet": True,
+        "no_warnings": True,
+        "skip_download": True,
+        "extract_flat": "in_playlist",
+        "playliststart": start,
+        "playlistend": end,
+        "ignoreerrors": True,
+        "nocheckcertificate": True,
+    }
+    cookies_path = config_get("cookiespath")
+    if cookies_path and os.path.exists(cookies_path):
+        options["cookiefile"] = cookies_path
+    return options
 
 
 class PlaylistResult:
@@ -73,6 +195,21 @@ class PlaylistResult:
     def get_url(self, n):
         return self.videos[n]["url"]
 
+    def get_channel(self, n):
+        return self.videos[n]["channel"]
+
+    def get_views(self, n):
+        return None
+
+    def get_history_data(self, n):
+        video = self.videos[n]
+        return {
+            "title": video["title"],
+            "url": video["url"],
+            "channel_name": video["channel"]["name"],
+            "channel_url": video["channel"]["url"],
+        }
+
     def get_stream(self, n, audio_mode=False):
         try:
             return self.videos[n].get(stream_key(audio_mode))
@@ -113,6 +250,238 @@ class SimpleResult:
     def get_type(self, n):
         return self.data_list[n].get("type", "video")
 
+    def get_channel(self, n):
+        return _channel_from_data(self.data_list[n])
+
+    def get_views(self, n):
+        return self.data_list[n].get("views")
+
+    def get_history_data(self, n):
+        data = self.data_list[n]
+        channel = self.get_channel(n)
+        return {
+            "title": data.get("title", ""),
+            "url": data.get("url", ""),
+            "views": data.get("views"),
+            "upload_date": data.get("uploadDate") or data.get("upload_date", ""),
+            "channel_name": channel["name"],
+            "channel_url": channel["url"],
+        }
+
+
+class ChannelTabResult:
+    def __init__(self, url, tab="videos", title=""):
+        self.source_url = normalise_channel_url(url)
+        self.tab = tab
+        self.title = title
+        self.items = []
+        self.videos = self.items
+        self.count = 0
+        self.new_videos = 0
+        self.batch_size = 30
+        self.has_more = tab != "about"
+        self.load()
+
+    def load(self):
+        if self.tab == "about":
+            self.load_about()
+            return
+        if not utils.YoutubeDL:
+            raise RuntimeError(_("yt-dlp is not installed"))
+
+        start = self.count + 1
+        end = self.count + self.batch_size
+        url = channel_tab_url(self.source_url, self.tab)
+        with utils.YoutubeDL(_yt_dlp_flat_options(start, end)) as ydl:
+            info = ydl.extract_info(url, download=False)
+
+        self.title = (
+            self.title
+            or info.get("channel")
+            or info.get("uploader")
+            or info.get("title")
+            or _("قناة")
+        )
+        entries = [entry for entry in info.get("entries", []) if entry]
+        current = len(self.items)
+        seen_urls = {item["url"] for item in self.items}
+        for entry in entries:
+            item = self.normalise_entry(entry)
+            if item and item["url"] not in seen_urls:
+                self.items.append(item)
+                seen_urls.add(item["url"])
+
+        self.count = len(self.items)
+        self.new_videos = self.count - current
+        if len(entries) < self.batch_size or self.new_videos == 0:
+            self.has_more = False
+
+    def load_about(self):
+        self.has_more = False
+        info = {}
+        if utils.YoutubeDL:
+            try:
+                with utils.YoutubeDL(_yt_dlp_flat_options(1, 1)) as ydl:
+                    info = ydl.extract_info(
+                        channel_tab_url(self.source_url, "about"), download=False
+                    )
+            except Exception:
+                info = {}
+        self.title = (
+            self.title
+            or info.get("channel")
+            or info.get("uploader")
+            or info.get("title")
+            or _("قناة")
+        )
+        rows = [
+            _("القناة: {}").format(self.title),
+            _("الرابط: {}").format(self.source_url),
+        ]
+        for key, label in (
+            ("channel_follower_count", _("عدد المشتركين: {}")),
+            ("view_count", _("عدد المشاهدات: {}")),
+            ("description", _("الوصف: {}")),
+        ):
+            value = info.get(key)
+            if value:
+                rows.append(label.format(value))
+        self.items = [
+            {
+                "type": "info",
+                "title": row,
+                "url": self.source_url,
+                "duration": None,
+                "views": None,
+                "uploadDate": "",
+                "channel": {"name": self.title, "url": self.source_url},
+            }
+            for row in rows
+        ]
+        self.videos = self.items
+        self.count = len(self.items)
+        self.new_videos = self.count
+
+    def normalise_entry(self, entry):
+        result_type = self.result_type(entry)
+        fallback_id = entry.get("id")
+        url = _absolute_youtube_url(
+            entry.get("webpage_url") or entry.get("url"),
+            result_type,
+            fallback_id,
+        )
+        if not url:
+            return None
+        title = entry.get("title") or entry.get("channel") or entry.get("uploader")
+        if not title:
+            title = _("غير معروف")
+        channel = _channel_from_data(
+            entry,
+            default_name=self.title,
+            default_url=self.source_url,
+        )
+        if result_type == "channel":
+            channel = {"name": title, "url": url}
+        return {
+            "type": result_type,
+            "id": fallback_id,
+            "title": title,
+            "url": url,
+            "duration": entry.get("duration") or entry.get("duration_string"),
+            "views": entry.get("view_count"),
+            "uploadDate": entry.get("upload_date") or entry.get("timestamp") or "",
+            "elements": entry.get("playlist_count") or entry.get("n_entries"),
+            "channel": channel,
+            "audio_stream": None,
+            "video_stream": None,
+        }
+
+    def result_type(self, entry):
+        url = str(entry.get("webpage_url") or entry.get("url") or "")
+        ie_key = str(entry.get("ie_key") or "")
+        if self.tab == "playlists" or "playlist" in ie_key.lower() or "list=" in url:
+            return "playlist"
+        if self.tab == "channels" or "/channel/" in url or "/@" in url:
+            return "channel"
+        return "video"
+
+    def load_more(self):
+        if not self.has_more:
+            return False
+        self.load()
+        return self.new_videos > 0
+
+    def get_display_titles(self):
+        return [self.get_display_title(item) for item in self.items]
+
+    def get_display_title(self, item):
+        if item["type"] == "video":
+            parts = [
+                item["title"],
+                format_duration(item["duration"]) if item["duration"] else "",
+                f"{_('بواسطة')} {item['channel']['name']}",
+                self.views_part(item["views"]),
+                str(item.get("uploadDate", "")),
+            ]
+        elif item["type"] == "playlist":
+            parts = [
+                item["title"],
+                _("قائمة تشغيل"),
+                f"{_('بواسطة')} {item['channel']['name']}",
+                _("تحتوي على {} من الفيديوهات").format(item["elements"])
+                if item.get("elements")
+                else "",
+            ]
+        elif item["type"] == "channel":
+            parts = [item["title"], _("قناة")]
+        else:
+            parts = [item["title"]]
+        return ", ".join([part for part in parts if part])
+
+    def get_last_titles(self):
+        titles = self.get_display_titles()
+        return titles[len(titles) - self.new_videos : len(titles)]
+
+    def get_id(self, n):
+        return self.items[n].get("id")
+
+    def get_title(self, n):
+        return self.items[n]["title"]
+
+    def get_url(self, n):
+        return self.items[n]["url"]
+
+    def get_type(self, n):
+        return self.items[n]["type"]
+
+    def get_channel(self, n):
+        return self.items[n]["channel"]
+
+    def get_views(self, n):
+        return self.items[n]["views"]
+
+    def get_stream(self, n, audio_mode=False):
+        return self.items[n].get(stream_key(audio_mode))
+
+    def set_stream(self, n, stream, audio_mode=False):
+        self.items[n][stream_key(audio_mode)] = stream
+
+    def get_history_data(self, n):
+        item = self.items[n]
+        return {
+            "title": item["title"],
+            "url": item["url"],
+            "views": item["views"],
+            "upload_date": item.get("uploadDate", ""),
+            "channel_name": item["channel"]["name"],
+            "channel_url": item["channel"]["url"],
+        }
+
+    def views_part(self, data):
+        if data is not None:
+            return _("عدد المشاهدات {}").format(data)
+        return ""
+
 
 class Search:
     def __init__(self, query, filter=0):
@@ -128,6 +497,10 @@ class Search:
             self.search = PlaylistsSearch(
                 self.query, limit=20, language="ar", region="SA"
             )
+        elif self.filter == 5:  # Channels
+            self.search = ChannelsSearch(
+                self.query, limit=20, language="ar", region="SA"
+            )
         else:
             self.search = VideosSearch(self.query, limit=20, language="ar", region="SA")
 
@@ -141,7 +514,7 @@ class Search:
 
     async def parse_results(self, result):
         items = result.get("result", [])
-        if isinstance(self.search, PlaylistsSearch):
+        if self.filter == 4:
             for item in items:
                 video_count_str = item.get("videoCount", "0")
                 try:
@@ -158,6 +531,31 @@ class Search:
                     "channel": {
                         "name": item.get("channel", {}).get("name"),
                         "url": item.get("channel", {}).get("link"),
+                    },
+                    "views": None,
+                }
+        elif self.filter == 5:
+            for item in items:
+                self.count += 1
+                title = (
+                    item.get("title")
+                    or item.get("channel", {}).get("name")
+                    or _("غير معروف")
+                )
+                channel_url = item.get("link")
+                channel_id = item.get("id")
+                if not channel_url and channel_id:
+                    channel_url = f"https://www.youtube.com/channel/{channel_id}"
+                self.results[self.count] = {
+                    "type": "channel",
+                    "title": title,
+                    "url": channel_url,
+                    "duration": None,
+                    "elements": item.get("videoCount"),
+                    "subscribers": item.get("subscribers"),
+                    "channel": {
+                        "name": title,
+                        "url": channel_url,
                     },
                     "views": None,
                 }
@@ -205,6 +603,14 @@ class Search:
                     _("قائمة تشغيل"),
                     f"{_('بواسطة')} {data['channel']['name']}",
                     _("تحتوي على {} من الفيديوهات").format(data["elements"]),
+                ]
+            elif data["type"] == "channel":
+                title += [
+                    _("قناة"),
+                    data.get("subscribers") or "",
+                    _("تحتوي على {} من الفيديوهات").format(data["elements"])
+                    if data.get("elements")
+                    else "",
                 ]
             titles.append(", ".join([element for element in title if element != ""]))
         return titles
