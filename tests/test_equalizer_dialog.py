@@ -12,16 +12,6 @@ class FakeEqualizerService:
         self.last_preamp = 0.0
         self.last_band = (0, 0.0)
 
-
-class FakeEqualizerService:
-    def __init__(self):
-        self.preamp = 0.0
-        self.bands = [0.0] * 10
-        self.set_preamp_called = False
-        self.set_band_called = False
-        self.last_preamp = 0.0
-        self.last_band = (0, 0.0)
-
     def load_settings(self):
         pass
 

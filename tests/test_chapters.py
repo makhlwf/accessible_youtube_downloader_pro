@@ -3,10 +3,10 @@ from unittest.mock import patch
 
 
 class TestVideoChapters(unittest.TestCase):
-    @patch("source.utils.deno_service")
-    @patch("source.utils.config_get")
+    @patch("utils.deno_service")
+    @patch("utils.config_get")
     def test_get_video_chapters_success(self, mock_config_get, mock_deno_service):
-        from source.utils import get_video_chapters
+        from utils import get_video_chapters
 
         # Setup mocks
         mock_config_get.return_value = "fake/path/to/cookies"
@@ -32,9 +32,9 @@ class TestVideoChapters(unittest.TestCase):
             {"cookiesPath": "fake/path/to/cookies", "videoId": "dQw4w9WgXcQ"},
         )
 
-    @patch("source.utils.youtube_regexp")
+    @patch("utils.youtube_regexp")
     def test_get_video_chapters_invalid_url(self, mock_regexp):
-        from source.utils import get_video_chapters
+        from utils import get_video_chapters
 
         mock_regexp.return_value = None
         url = "invalid_url"

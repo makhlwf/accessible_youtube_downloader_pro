@@ -80,9 +80,7 @@ def test_download_prepares_runtime_path_and_output_directory(monkeypatch):
     }
     assert os.path.normcase(os.path.normpath(ffmpeg_dir)) in path_parts
     assert os.path.normcase(os.path.normpath(main_path)) in path_parts
-    assert calls["opts"]["outtmpl"] == os.path.join(
-        output_path, "%(title)s.%(ext)s"
-    )
+    assert calls["opts"]["outtmpl"] == os.path.join(output_path, "%(title)s.%(ext)s")
     assert calls["opts"]["noplaylist"] is False
     assert calls["opts"]["continuedl"] is True
     assert calls["opts"]["post_hooks"]

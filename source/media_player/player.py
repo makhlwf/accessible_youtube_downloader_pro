@@ -130,7 +130,9 @@ class Player:
     def apply_saved_audio_output_device(self):
         device_id = self.get_selected_audio_output_device()
         if not device_id:
-            logger.info("No custom audio output device configured; using system default")
+            logger.info(
+                "No custom audio output device configured; using system default"
+            )
             return True
         return self.select_audio_output_device(
             device_id,

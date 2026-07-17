@@ -62,7 +62,9 @@ class DownloadCompleteDialog(wx.Dialog):
 
 
 def show_download_complete(parent, file_path=None, folder_path=None):
-    dialog = DownloadCompleteDialog(parent, file_path=file_path, folder_path=folder_path)
+    dialog = DownloadCompleteDialog(
+        parent, file_path=file_path, folder_path=folder_path
+    )
     try:
         dialog.ShowModal()
     finally:

@@ -117,13 +117,9 @@ class Scraper:
                         try:
                             if index < results.count:
                                 # Check if still needed
-                                if (
-                                    results.get_type(index) == "video"
-                                    and any(
-                                        results.get_stream(index, audio_mode=mode)
-                                        is None
-                                        for mode in self._prefetch_modes()
-                                    )
+                                if results.get_type(index) == "video" and any(
+                                    results.get_stream(index, audio_mode=mode) is None
+                                    for mode in self._prefetch_modes()
                                 ):
                                     if not utils.YoutubeDL:
                                         continue

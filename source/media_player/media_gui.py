@@ -336,7 +336,9 @@ class MediaGui(wx.Frame):
                     item,
                 )
         except RuntimeError:
-            logger.debug("Skipping chapter menu update after player close", exc_info=True)
+            logger.debug(
+                "Skipping chapter menu update after player close", exc_info=True
+            )
 
     def on_seek_to_chapter(self, time_ms, title):
         if self.player:
@@ -394,9 +396,13 @@ class MediaGui(wx.Frame):
                 item = self.qualityMenu.AppendCheckItem(-1, label)
                 if q == self.current_quality:
                     item.Check(True)
-                self.Bind(wx.EVT_MENU, lambda event, h=q: self.on_change_quality(h), item)
+                self.Bind(
+                    wx.EVT_MENU, lambda event, h=q: self.on_change_quality(h), item
+                )
         except RuntimeError:
-            logger.debug("Skipping quality menu update after player close", exc_info=True)
+            logger.debug(
+                "Skipping quality menu update after player close", exc_info=True
+            )
 
     def on_change_quality(self, height):
         label = f"{height}{_('ك.ب/ث')}" if self.audio_mode else f"{height}{_('ب')}"
@@ -524,7 +530,9 @@ class MediaGui(wx.Frame):
                 else:
                     Continue.new_continue(self.url, position)
             except Exception:
-                logger.debug("Could not save playback position during close", exc_info=True)
+                logger.debug(
+                    "Could not save playback position during close", exc_info=True
+                )
 
             # Final history update
             try:
@@ -765,9 +773,7 @@ class MediaGui(wx.Frame):
             device = dlg.get_selected_device()
             if self.player.select_audio_output_device(device["id"]):
                 speak(
-                    _("audio output device changed to {}").format(
-                        device["description"]
-                    )
+                    _("audio output device changed to {}").format(device["description"])
                 )
             else:
                 speak(
@@ -781,7 +787,9 @@ class MediaGui(wx.Frame):
     def on_audio_output_fallback(self):
         wx.CallAfter(
             speak,
-            _("selected audio output device is unavailable. using default audio output device"),
+            _(
+                "selected audio output device is unavailable. using default audio output device"
+            ),
         )
 
     def toggleFullScreen(self):
