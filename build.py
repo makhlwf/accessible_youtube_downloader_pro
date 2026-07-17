@@ -66,7 +66,6 @@ data_to_add = [
     "ffprobe.exe",
     "libmpv-2.dll",
     "nvdaControllerClient64.dll",
-    "deno.exe",
     "deno.json",
     "deno.lock",
     "service.js",
@@ -83,7 +82,6 @@ data_to_add = [
 # required for dynamic loading of complex packages like yt-dlp
 # ------------------------------------------------------------------
 stdlib_hidden_imports = [
-    # The specific ones you already hit
     "optparse",
     "getpass",
     "netrc",
