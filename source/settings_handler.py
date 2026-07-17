@@ -23,6 +23,7 @@ defaults = {
     "cookiespath": "",
     "defaultvideoquality": 4,
     "defaultaudioquality": 2,
+    "audiooutputdevice": "",
     "debug": False,
     "background_monitoring": False,
     "playback_speed_step": 0.05,

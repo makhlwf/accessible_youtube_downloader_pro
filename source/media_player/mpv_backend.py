@@ -12,7 +12,9 @@ from typing import Any
 
 MPV_FORMAT_STRING = 1
 MPV_FORMAT_FLAG = 3
+MPV_FORMAT_INT64 = 4
 MPV_FORMAT_DOUBLE = 5
+MPV_FORMAT_NODE = 6
 MPV_FORMAT_NODE_ARRAY = 7
 MPV_FORMAT_NODE_MAP = 8
 
@@ -231,6 +233,9 @@ def _load_mpv() -> ctypes.CDLL:
     lib.mpv_get_property_string.argtypes = [ctypes.c_void_p, ctypes.c_char_p]
     lib.mpv_get_property_string.restype = ctypes.c_void_p
 
+    lib.mpv_free_node_contents.argtypes = [ctypes.POINTER(MpvNode)]
+    lib.mpv_free_node_contents.restype = None
+
     lib.mpv_wait_event.argtypes = [ctypes.c_void_p, ctypes.c_double]
     lib.mpv_wait_event.restype = ctypes.POINTER(MpvEvent)
 
@@ -252,6 +257,44 @@ def _load_mpv() -> ctypes.CDLL:
 
 def _encode(value: Any) -> bytes:
     return str(value).encode("utf-8")
+
+
+def _decode_mpv_string(value: Any) -> str:
+    if value is None:
+        return ""
+    if isinstance(value, bytes):
+        return value.decode("utf-8", errors="replace")
+    return str(value)
+
+
+def _parse_node(node: MpvNode) -> Any:
+    if node.format == MPV_FORMAT_STRING:
+        return _decode_mpv_string(node.u.string)
+    if node.format == MPV_FORMAT_FLAG:
+        return bool(node.u.flag)
+    if node.format == MPV_FORMAT_INT64:
+        return int(node.u.int64)
+    if node.format == MPV_FORMAT_DOUBLE:
+        return float(node.u.double_)
+    if node.format not in (MPV_FORMAT_NODE_ARRAY, MPV_FORMAT_NODE_MAP):
+        return None
+
+    node_list_ptr = node.u.list
+    if not node_list_ptr:
+        return {} if node.format == MPV_FORMAT_NODE_MAP else []
+
+    node_list = node_list_ptr.contents
+    if node.format == MPV_FORMAT_NODE_ARRAY:
+        return [_parse_node(node_list.values[index]) for index in range(node_list.num)]
+
+    values: dict[str, Any] = {}
+    for index in range(node_list.num):
+        if node_list.keys:
+            key = _decode_mpv_string(node_list.keys[index])
+        else:
+            key = str(index)
+        values[key] = _parse_node(node_list.values[index])
+    return values
 
 
 def _clean_option(option: str) -> tuple[str, str]:
@@ -448,6 +491,32 @@ class MpvMediaPlayer:
             return None
         return bool(flag.value)
 
+    def _get_property_string(self, name: str) -> str | None:
+        value = self._lib.mpv_get_property_string(self._handle, _encode(name))
+        if not value:
+            return None
+        try:
+            return ctypes.cast(value, ctypes.c_char_p).value.decode(
+                "utf-8", errors="replace"
+            )
+        finally:
+            self._lib.mpv_free(value)
+
+    def _get_property_node(self, name: str) -> Any:
+        node = MpvNode()
+        result = self._lib.mpv_get_property(
+            self._handle,
+            _encode(name),
+            MPV_FORMAT_NODE,
+            ctypes.byref(node),
+        )
+        if result < 0:
+            return None
+        try:
+            return _parse_node(node)
+        finally:
+            self._lib.mpv_free_node_contents(ctypes.byref(node))
+
     def _event_loop(self) -> None:
         while not self._closed:
             event_ptr = self._lib.mpv_wait_event(self._handle, 0.1)
@@ -609,6 +678,44 @@ class MpvMediaPlayer:
     def audio_set_volume(self, volume: int | float) -> None:
         self._set_property_double("volume", max(0.0, min(350.0, float(volume))))
 
+    def get_audio_output_devices(self) -> list[dict[str, str]]:
+        with self._lock:
+            if self._closed:
+                return []
+            raw_devices = self._get_property_node("audio-device-list")
+
+        devices: list[dict[str, str]] = []
+        seen = set()
+        if not isinstance(raw_devices, list):
+            return devices
+
+        for device in raw_devices:
+            if not isinstance(device, dict):
+                continue
+            device_id = str(device.get("name") or device.get("id") or "")
+            description = str(device.get("description") or device_id)
+            if not device_id or device_id == "auto" or device_id in seen:
+                continue
+            devices.append({"id": device_id, "description": description})
+            seen.add(device_id)
+        return devices
+
+    def get_audio_output_device(self) -> str:
+        with self._lock:
+            if self._closed:
+                return ""
+            device_id = self._get_property_string("audio-device")
+        if not device_id or device_id == "auto":
+            return ""
+        return device_id
+
+    def set_audio_output_device(self, device_id: str | None) -> bool:
+        with self._lock:
+            if self._closed:
+                return False
+            result = self._set_property_string("audio-device", device_id or "auto")
+        return result >= 0
+
     def set_equalizer(self, equalizer: Any) -> None:
         if hasattr(equalizer, "apply_to_mpv"):
             equalizer.apply_to_mpv(self)
@@ -643,3 +750,11 @@ class MpvMediaPlayer:
             self.close()
         except Exception:
             pass
+
+
+def get_available_audio_output_devices() -> list[dict[str, str]]:
+    player = MpvMediaPlayer()
+    try:
+        return player.get_audio_output_devices()
+    finally:
+        player.close()

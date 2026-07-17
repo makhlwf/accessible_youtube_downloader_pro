@@ -23,6 +23,49 @@ from media_player.player import Player, State
 logger = logging.getLogger(__name__)
 
 
+class AudioOutputDeviceDialog(wx.Dialog):
+    def __init__(self, parent, devices, selected_device):
+        wx.Dialog.__init__(self, parent, title=_("audio output device"))
+        self.SetSize(450, 200)
+        self.Centre()
+        self.devices = [{"id": "", "description": _("default audio output device")}]
+        self.devices.extend(devices)
+
+        panel = wx.Panel(self)
+        label = wx.StaticText(panel, -1, _("audio output device: "))
+        self.deviceBox = wx.Choice(
+            panel,
+            -1,
+            choices=[device["description"] for device in self.devices],
+        )
+        self.deviceBox.Selection = self.get_selection_for_device(selected_device)
+        okButton = wx.Button(panel, wx.ID_OK, _("مواف&ق"))
+        okButton.SetDefault()
+        cancelButton = wx.Button(panel, wx.ID_CANCEL, _("إل&غاء"))
+
+        deviceSizer = wx.BoxSizer(wx.HORIZONTAL)
+        deviceSizer.Add(label, 1)
+        deviceSizer.Add(self.deviceBox, 2, wx.EXPAND)
+
+        buttonSizer = wx.BoxSizer(wx.HORIZONTAL)
+        buttonSizer.Add(okButton, 1)
+        buttonSizer.Add(cancelButton, 1)
+
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(deviceSizer, 1, wx.EXPAND)
+        sizer.Add(buttonSizer, 1, wx.EXPAND)
+        panel.SetSizer(sizer)
+
+    def get_selection_for_device(self, selected_device):
+        for index, device in enumerate(self.devices):
+            if device["id"] == selected_device:
+                return index
+        return 0
+
+    def get_selected_device(self):
+        return self.devices[self.deviceBox.Selection]
+
+
 def has_player(method):
     def wrapper(self, *args, **kwargs):
         if self.player is not None:
@@ -103,6 +146,9 @@ class MediaGui(wx.Frame):
 
         descriptionItem = trackOptions.Append(-1, _("وصف الفيديو\tctrl+shift+d"))
         equalizerItem = trackOptions.Append(-1, _("المعادل... \tctrl+e"))
+        audioOutputDeviceItem = trackOptions.Append(
+            -1, _("audio output device...\tf12")
+        )
         self.likeItem = trackOptions.Append(-1, _("إعجاب (L)"))
         self.dislikeItem = trackOptions.Append(-1, _("عدم إعجاب (D)"))
         copyItem = trackOptions.Append(-1, _("نسخ رابط المقطع\tctrl+l"))
@@ -113,6 +159,7 @@ class MediaGui(wx.Frame):
                 (wx.ACCEL_CTRL, ord("D"), directDownloadItem.GetId()),
                 (wx.ACCEL_CTRL | wx.ACCEL_SHIFT, ord("D"), descriptionItem.GetId()),
                 (wx.ACCEL_CTRL, ord("E"), equalizerItem.GetId()),
+                (wx.ACCEL_NORMAL, wx.WXK_F12, audioOutputDeviceItem.GetId()),
                 (wx.ACCEL_CTRL, ord("L"), copyItem.GetId()),
                 (wx.ACCEL_CTRL, ord("B"), browserItem.GetId()),
                 (wx.ACCEL_ALT, ord("S"), settingsItem.GetId()),
@@ -127,6 +174,7 @@ class MediaGui(wx.Frame):
         self.Bind(wx.EVT_MENU, self.onDirect, directDownloadItem)
         self.Bind(wx.EVT_MENU, self.onDescription, descriptionItem)
         self.Bind(wx.EVT_MENU, self.onEqualizer, equalizerItem)
+        self.Bind(wx.EVT_MENU, self.onAudioOutputDevice, audioOutputDeviceItem)
         self.Bind(wx.EVT_MENU, self.onLike, self.likeItem)
         self.Bind(wx.EVT_MENU, self.onDislike, self.dislikeItem)
         self.Bind(wx.EVT_MENU, self.onCopy, copyItem)
@@ -464,6 +512,9 @@ class MediaGui(wx.Frame):
             self.increase_volume()
         elif event.GetKeyCode() == wx.WXK_DOWN and not event.HasAnyModifiers():
             self.decrease_volume()
+        elif event.GetKeyCode() == wx.WXK_F12:
+            event.Skip(False)
+            self.onAudioOutputDevice(event)
         elif event.GetKeyCode() == ord("L") and not event.HasAnyModifiers():
             self.onLike()
         elif event.GetKeyCode() == ord("D") and not event.HasAnyModifiers():
@@ -611,6 +662,36 @@ class MediaGui(wx.Frame):
         self.player.media.audio_set_volume(self.player.volume)
         speak(f"{self.player.volume}%")
         config_set("volume", self.player.volume)
+
+    @has_player
+    def onAudioOutputDevice(self, event=None):
+        devices = self.player.get_audio_output_devices()
+        selected_device = self.player.get_selected_audio_output_device()
+        dlg = AudioOutputDeviceDialog(self, devices, selected_device)
+        try:
+            if dlg.ShowModal() != wx.ID_OK:
+                return
+            device = dlg.get_selected_device()
+            if self.player.select_audio_output_device(device["id"]):
+                speak(
+                    _("audio output device changed to {}").format(
+                        device["description"]
+                    )
+                )
+            else:
+                speak(
+                    _(
+                        "selected audio output device is unavailable. using default audio output device"
+                    )
+                )
+        finally:
+            dlg.Destroy()
+
+    def on_audio_output_fallback(self):
+        wx.CallAfter(
+            speak,
+            _("selected audio output device is unavailable. using default audio output device"),
+        )
 
     def toggleFullScreen(self):
         self.ShowFullScreen(not self.IsFullScreen())

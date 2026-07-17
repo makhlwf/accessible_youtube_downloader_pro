@@ -14,6 +14,7 @@ def test_eq_settings():
     assert config_get("eq_preamp") == defaults["eq_preamp"]
     assert config_get("eq_bands") == defaults["eq_bands"]
     assert config_get("eq_preset") == defaults["eq_preset"]
+    assert config_get("audiooutputdevice") == defaults["audiooutputdevice"]
 
     # Test setting values
     config_set("eq_enabled", True)

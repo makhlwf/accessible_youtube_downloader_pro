@@ -11,6 +11,36 @@ languages = {
     index: language for language, index in enumerate(supported_languages.values())
 }
 
+DEFAULT_AUDIO_OUTPUT_DEVICE = ""
+
+
+def _normalise_audio_output_device(device_id):
+    if device_id is None or device_id == "None":
+        return DEFAULT_AUDIO_OUTPUT_DEVICE
+    return str(device_id)
+
+
+def _get_audio_output_device_choices():
+    devices = [
+        {
+            "id": DEFAULT_AUDIO_OUTPUT_DEVICE,
+            "description": _("default audio output device"),
+        }
+    ]
+    try:
+        from media_player.mpv_backend import get_available_audio_output_devices
+
+        devices.extend(get_available_audio_output_devices())
+    except Exception:
+        pass
+
+    selected_device = _normalise_audio_output_device(config_get("audiooutputdevice"))
+    if selected_device and not any(
+        device["id"] == selected_device for device in devices
+    ):
+        devices.append({"id": selected_device, "description": selected_device})
+    return devices
+
 
 class SettingsDialog(wx.Dialog):
     def __init__(self, parent):
@@ -132,6 +162,18 @@ class SettingsDialog(wx.Dialog):
             choices=[_("منخفضة"), _("متوسطة"), _("عالية")],
         )
         self.audioQuality.Selection = int(config_get("defaultaudioquality"))
+        self.audioOutputDevices = _get_audio_output_device_choices()
+        self.audioOutputDeviceLabel = wx.StaticText(
+            playerOptions, -1, _("audio output device: ")
+        )
+        self.audioOutputDevice = wx.Choice(
+            playerOptions,
+            -1,
+            choices=[device["description"] for device in self.audioOutputDevices],
+        )
+        self.audioOutputDevice.Selection = self.getAudioOutputDeviceSelection(
+            config_get("audiooutputdevice")
+        )
         self.continueWatching = wx.CheckBox(
             playerOptions,
             -1,
@@ -199,6 +241,7 @@ class SettingsDialog(wx.Dialog):
         playerOptionsSizer = wx.BoxSizer(wx.VERTICAL)
         videoQualitySizer = wx.BoxSizer(wx.HORIZONTAL)
         audioQualitySizer = wx.BoxSizer(wx.HORIZONTAL)
+        audioOutputDeviceSizer = wx.BoxSizer(wx.HORIZONTAL)
         playbackSpeedStepSizer = wx.BoxSizer(wx.HORIZONTAL)
         playbackSpeedStepSizer.Add(self.playbackSpeedStepLabel, 1)
         playbackSpeedStepSizer.Add(self.playbackSpeedStep, 1)
@@ -206,8 +249,11 @@ class SettingsDialog(wx.Dialog):
         videoQualitySizer.Add(self.videoQuality, 1)
         audioQualitySizer.Add(self.audioQualityLabel, 1)
         audioQualitySizer.Add(self.audioQuality, 1)
+        audioOutputDeviceSizer.Add(self.audioOutputDeviceLabel, 1)
+        audioOutputDeviceSizer.Add(self.audioOutputDevice, 1)
         playerOptionsSizer.Add(videoQualitySizer, 0, wx.EXPAND | wx.ALL, 5)
         playerOptionsSizer.Add(audioQualitySizer, 0, wx.EXPAND | wx.ALL, 5)
+        playerOptionsSizer.Add(audioOutputDeviceSizer, 0, wx.EXPAND | wx.ALL, 5)
         playerOptionsSizer.Add(playbackSpeedStepSizer, 0, wx.EXPAND | wx.ALL, 5)
         playerOptionsSizer.Add(self.continueWatching, 0, wx.ALL, 5)
         playerOptionsSizer.Add(self.repeateTracks, 0, wx.ALL, 5)
@@ -237,6 +283,13 @@ class SettingsDialog(wx.Dialog):
         okButton.Bind(wx.EVT_BUTTON, self.onOk)
         apply_theme(self)
         self.ShowModal()
+
+    def getAudioOutputDeviceSelection(self, selected_device):
+        selected_device = _normalise_audio_output_device(selected_device)
+        for index, device in enumerate(self.audioOutputDevices):
+            if device["id"] == selected_device:
+                return index
+        return 0
 
     def onThemeChange(self, event):
         new_theme = self.themeBox.GetStringSelection()
@@ -304,6 +357,10 @@ class SettingsDialog(wx.Dialog):
         ) if not self.formats.Selection == int(config_get("defaultformat")) else None
         config_set("defaultvideoquality", self.videoQuality.Selection)
         config_set("defaultaudioquality", self.audioQuality.Selection)
+        config_set(
+            "audiooutputdevice",
+            self.audioOutputDevices[self.audioOutputDevice.Selection]["id"],
+        )
         config_set("playback_speed_step", self.playbackSpeedStep.Value)
         config_set("theme", self.themeBox.GetStringSelection())
         lang = {value: key for key, value in languages.items()}

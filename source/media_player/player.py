@@ -1,10 +1,15 @@
+import logging
+
 import wx
 from threading import Thread
 
 from media_player.equalizer import EqualizerService
 from media_player.mpv_backend import MpvMedia, MpvMediaPlayer, State
-from settings_handler import config_get
+from settings_handler import config_get, config_set
 from utils import time_formatting
+
+logger = logging.getLogger(__name__)
+DEFAULT_AUDIO_OUTPUT_DEVICE = ""
 
 
 class Player:
@@ -19,6 +24,7 @@ class Player:
             self.eq = EqualizerService()
             self.eq.load_settings()
             self.eq.apply_to_player(self.media)
+        self.apply_saved_audio_output_device()
         self.set_media(self.filename, options)
         self.media.play()
         self.volume = int(config_get("volume"))
@@ -74,6 +80,7 @@ class Player:
         current_media = self.media.get_media()
         if current_media is not None:
             self.media.set_media(current_media)
+            self.apply_saved_audio_output_device()
         if config_get("repeatTracks") and not config_get("autonext"):
             self.media.play()
         elif config_get("autonext") and not config_get("repeatTracks"):
@@ -84,6 +91,96 @@ class Player:
         media = MpvMedia(m, options)
         self.media.set_media(media)
         self._cached_length = -1
+
+    def get_audio_output_devices(self):
+        try:
+            return self.media.get_audio_output_devices()
+        except Exception:
+            logger.exception("Could not enumerate MPV audio output devices")
+            return []
+
+    def get_selected_audio_output_device(self):
+        device_id = config_get("audiooutputdevice")
+        if device_id is None or device_id == "None":
+            return DEFAULT_AUDIO_OUTPUT_DEVICE
+        return str(device_id)
+
+    def get_current_audio_output_device(self):
+        try:
+            return self.media.get_audio_output_device()
+        except Exception:
+            logger.exception("Could not get current MPV audio output device")
+            return DEFAULT_AUDIO_OUTPUT_DEVICE
+
+    def _get_audio_output_device_connection_status(self, device_id):
+        devices = self.get_audio_output_devices()
+        if not devices:
+            logger.info(
+                "MPV did not return audio output devices; keeping configured device. device_id=%s",
+                device_id,
+            )
+            return None
+        return any(device["id"] == device_id for device in devices)
+
+    def apply_saved_audio_output_device(self):
+        device_id = self.get_selected_audio_output_device()
+        if not device_id:
+            logger.info("No custom audio output device configured; using system default")
+            return True
+        return self.select_audio_output_device(
+            device_id,
+            notify_on_fallback=True,
+            reset_on_failure=True,
+        )
+
+    def select_audio_output_device(
+        self, device_id, notify_on_fallback=False, reset_on_failure=True
+    ):
+        device_id = device_id or DEFAULT_AUDIO_OUTPUT_DEVICE
+        if device_id == DEFAULT_AUDIO_OUTPUT_DEVICE:
+            return self.reset_audio_output_device_to_default()
+
+        connection_status = self._get_audio_output_device_connection_status(device_id)
+        if connection_status is False:
+            logger.warning(
+                "Selected audio output device is not connected. device_id=%s",
+                device_id,
+            )
+            if reset_on_failure:
+                self.reset_audio_output_device_to_default(notify=notify_on_fallback)
+            return False
+
+        try:
+            selected = self.media.set_audio_output_device(device_id)
+        except Exception:
+            logger.exception(
+                "Could not select MPV audio output device. device_id=%s", device_id
+            )
+            selected = False
+
+        if not selected:
+            if reset_on_failure:
+                self.reset_audio_output_device_to_default(notify=notify_on_fallback)
+            return False
+
+        logger.info("Selected audio output device. device_id=%s", device_id)
+        config_set("audiooutputdevice", device_id)
+        return True
+
+    def reset_audio_output_device_to_default(self, notify=False):
+        try:
+            self.media.set_audio_output_device(DEFAULT_AUDIO_OUTPUT_DEVICE)
+        except Exception:
+            logger.exception("Could not reset MPV audio output device to default")
+        logger.info("Using default audio output device")
+        config_set("audiooutputdevice", DEFAULT_AUDIO_OUTPUT_DEVICE)
+        if notify:
+            self._notify_audio_output_fallback()
+        return True
+
+    def _notify_audio_output_fallback(self):
+        if self.window is not None and hasattr(self.window, "on_audio_output_fallback"):
+            self.window.on_audio_output_fallback()
 
 
 __all__ = ["Player", "State"]
