@@ -264,7 +264,7 @@ class Favorites(wx.Frame):
         audioMenu = wx.Menu()
         m4aItem = audioMenu.Append(-1, "m4a")
         mp3Item = audioMenu.Append(-1, "mp3")
-        downloadMenu.Append(-1, _("صوت"), audioMenu)
+        downloadMenu.AppendSubMenu(audioMenu, _("صوت"))
         self.Bind(wx.EVT_MENU, self.onVideoDownload, videoItem)
         self.Bind(wx.EVT_MENU, self.onM4aDownload, m4aItem)
         self.Bind(wx.EVT_MENU, self.onMp3Download, mp3Item)

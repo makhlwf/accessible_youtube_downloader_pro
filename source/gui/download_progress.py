@@ -8,6 +8,9 @@ class DownloadProgress(wx.Frame):
         self.Title = _("جاري التنزيل - {}").format(
             title if title != "" else "accessible youtube downloader pro"
         )
+        self.cancelled = False
+        self.finished = False
+        self.cancel_callback = None
         self.Centre()
         panel = wx.Panel(self)
         self.textProgress = wx.Choice(
@@ -15,22 +18,48 @@ class DownloadProgress(wx.Frame):
             -1,
             choices=[
                 _("نسبة التنزيل: {}%").format(0),
-                _("حجم الملف الإجمالي: {} {}"),
-                _("مقدار الحجم الذي تم تنزيله: {} {}"),
-                _("المقدار المتبقي: {} {}"),
-                _("سرعة التنزيل: {} {}"),
+                _("حجم الملف الإجمالي: غير معروف"),
+                _("مقدار الحجم الذي تم تنزيله: غير معروف"),
+                _("الوقت المتبقي: غير معروف"),
+                _("سرعة التنزيل: غير معروفة"),
             ],
         )
         self.textProgress.Selection = 0
         self.gaugeProgress = wx.Gauge(panel, -1, range=100)
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(self.textProgress, 0, wx.EXPAND | wx.ALL, 8)
+        sizer.Add(self.gaugeProgress, 0, wx.EXPAND | wx.ALL, 8)
+        panel.SetSizer(sizer)
+        self.Fit()
         self.Bind(wx.EVT_CLOSE, self.onClose)
 
+    def set_cancel_callback(self, callback):
+        self.cancel_callback = callback
+
+    def is_cancelled(self):
+        return self.cancelled
+
+    def mark_finished(self):
+        self.finished = True
+
     def onClose(self, event):
+        if self.finished:
+            self.Destroy()
+            return
         message = wx.MessageBox(
-            "هناك عملية تنزيل جارية. هل تريد إلغاءها؟",
-            "إنهاء",
+            _("هناك عملية تنزيل جارية. هل تريد إلغاءها؟"),
+            _("إنهاء"),
             style=wx.YES_NO,
             parent=self,
         )
-        if message == 2:
-            self.Destroy()
+        if message == wx.YES:
+            self.cancelled = True
+            self.textProgress.SetString(0, _("جاري إلغاء التنزيل..."))
+            self.gaugeProgress.Disable()
+            if self.cancel_callback:
+                self.cancel_callback()
+            if event.CanVeto():
+                event.Veto()
+            return
+        if event.CanVeto():
+            event.Veto()
