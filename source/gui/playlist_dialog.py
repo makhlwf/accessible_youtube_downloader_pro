@@ -196,6 +196,8 @@ class PlaylistDialog(wx.Dialog):
         video_id = self.result.get_id(n)
         url = f"https://www.youtube.com/watch?v={video_id}"
         title = self.result.get_title(n)
+        if not utils.check_yt_dlp(self):
+            return
         stream = LoadingDialog(self, _("جاري التشغيل"), get_video_stream, url).res
         gui = MediaGui(self, title, stream, url, True, self.result)
         gui.path = os.path.join(gui.path, utils.sanitize_filename(self.title))
@@ -206,6 +208,8 @@ class PlaylistDialog(wx.Dialog):
         video_id = self.result.get_id(n)
         url = f"https://www.youtube.com/watch?v={video_id}"
         title = self.result.get_title(n)
+        if not utils.check_yt_dlp(self):
+            return
         stream = LoadingDialog(self, _("جاري التشغيل"), get_audio_stream, url).res
         gui = MediaGui(self, title, stream, url, audio_mode=True, results=self.result)
         gui.path = os.path.join(gui.path, utils.sanitize_filename(self.title))
@@ -217,6 +221,8 @@ class PlaylistDialog(wx.Dialog):
         url = f"https://www.youtube.com/watch?v={video_id}"
         title = self.result.get_title(n)
 
+        if not utils.check_yt_dlp(self):
+            return
         qualities = LoadingDialog(
             self,
             _("جاري جلب الجودات المتاحة..."),

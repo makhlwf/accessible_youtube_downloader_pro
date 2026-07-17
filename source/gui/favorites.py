@@ -2,7 +2,12 @@ import wx
 from language_handler import _
 import application
 from database import Favorite
-from utils import get_audio_stream, get_video_stream, get_available_qualities
+from utils import (
+    check_yt_dlp,
+    get_audio_stream,
+    get_video_stream,
+    get_available_qualities,
+)
 from download_handler.downloader import downloadAction
 from media_player.media_gui import MediaGui
 from nvda_client.client import speak
@@ -111,6 +116,8 @@ class Favorites(wx.Frame):
         n = self.favList.Selection
         url = self.rows[n]["url"]
         title = self.rows[n]["title"]
+        if not check_yt_dlp(self):
+            return
         stream = LoadingDialog(self, _("جاري التشغيل"), get_video_stream, url).res
         MediaGui(
             self,
@@ -126,6 +133,8 @@ class Favorites(wx.Frame):
         n = self.favList.Selection
         url = self.rows[n]["url"]
         title = self.rows[n]["title"]
+        if not check_yt_dlp(self):
+            return
         stream = LoadingDialog(self, _("جاري التشغيل"), get_audio_stream, url).res
         MediaGui(self, title, stream, url, audio_mode=True, results=self.rows)
         self.Hide()
@@ -231,6 +240,8 @@ class Favorites(wx.Frame):
         url = self.rows[n]["url"]
         title = self.rows[n]["title"]
 
+        if not check_yt_dlp(self):
+            return
         qualities = LoadingDialog(
             self,
             _("جاري جلب الجودات المتاحة..."),

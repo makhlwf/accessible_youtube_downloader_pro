@@ -1,5 +1,6 @@
 import ctypes
 import os
+import locale
 import shutil
 import sys
 import threading
@@ -40,6 +41,13 @@ class State(IntEnum):
 
 class MPVError(RuntimeError):
     pass
+
+
+def _ensure_numeric_locale() -> None:
+    try:
+        locale.setlocale(locale.LC_NUMERIC, "C")
+    except locale.Error:
+        pass
 
 
 class MpvNode(ctypes.Structure):
@@ -274,6 +282,7 @@ def parse_player_options(options: list[str] | None) -> dict[str, str]:
 
 class MpvMediaPlayer:
     def __init__(self, hwnd: int | None = None, end_callback=None) -> None:
+        _ensure_numeric_locale()
         self._lib = _load_mpv()
         self._handle = self._lib.mpv_create()
         if not self._handle:

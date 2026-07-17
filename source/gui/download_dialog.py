@@ -124,6 +124,9 @@ class DownloadDialog(wx.Frame):
         else:
             convert = False
 
+        if not utils.check_yt_dlp(self):
+            return
+
         config_set("defaultaudio", str(self.convertingFormat.Selection))
         downloadFrame = DownloadProgress(wx.GetApp().GetTopWindow())
         self.Hide()

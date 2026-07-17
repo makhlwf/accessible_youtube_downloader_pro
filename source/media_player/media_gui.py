@@ -1,3 +1,4 @@
+import logging
 import webbrowser
 import pyperclip
 import time
@@ -18,6 +19,8 @@ from gui.quality_selection import QualitySelectionDialog
 from threading import Thread
 from database import Continue
 from media_player.player import Player, State
+
+logger = logging.getLogger(__name__)
 
 
 def has_player(method):
@@ -161,12 +164,18 @@ class MediaGui(wx.Frame):
         if audio_mode:
             options.append(":no-video")
 
-        self.player = Player(
-            stream.url,
-            self.GetHandle() if not audio_mode else None,
-            self,
-            options=options,
-        )
+        try:
+            self.player = Player(
+                stream.url,
+                self.GetHandle() if not audio_mode else None,
+                self,
+                options=options,
+            )
+        except Exception as e:
+            logger.exception("Failed to initialize media player")
+            utils.show_error(_("لا يمكن تشغيل الرابط"), e, parent=self)
+            self.closeAction()
+            return
         Thread(target=self.fetch_qualities, daemon=True).start()
         Thread(target=self.fetch_chapters, daemon=True).start()
         if self.url in Continue.get_all() and config_get("continue"):
@@ -329,6 +338,7 @@ class MediaGui(wx.Frame):
             folder,
         )
 
+    @has_player
     def playAction(self):
         state = self.player.media.get_state()
         if state in (State.NothingSpecial, State.Stopped, State.Ended):
@@ -349,6 +359,7 @@ class MediaGui(wx.Frame):
         position = self.player.media.get_position()
         self.player.media.set_position(position - self.player.seek(self.seek))
 
+    @has_player
     def set_position(self, key):
         step = int(chr(key)) / 10
         self.player.media.set_position(step)
@@ -780,6 +791,8 @@ class MediaGui(wx.Frame):
         self._download_media(2, self.url, dlg, path=self.path)
 
     def onVideoDownload(self, event):
+        if not utils.check_yt_dlp(self):
+            return
         qualities = LoadingDialog(
             self,
             _("جاري جلب الجودات المتاحة..."),

@@ -10,6 +10,8 @@ import logging
 import time
 import threading
 import socket
+import zipfile
+import zipimport
 from concurrent.futures import ThreadPoolExecutor
 from settings_handler import config_get
 from language_handler import _
@@ -51,21 +53,86 @@ yt_dlp_module = None
 YoutubeDL = None
 
 
+class InvalidYtDlpArchiveError(ImportError):
+    pass
+
+
+def _clear_yt_dlp_import_state(path):
+    while path in sys.path:
+        sys.path.remove(path)
+    for module_name in list(sys.modules):
+        if module_name == "yt_dlp" or module_name.startswith("yt_dlp."):
+            del sys.modules[module_name]
+
+
+def _is_corrupt_yt_dlp_error(exception):
+    message = str(exception).lower()
+    return isinstance(
+        exception,
+        (InvalidYtDlpArchiveError, zipfile.BadZipFile, zipimport.ZipImportError),
+    ) or (
+        "bad local file header" in message
+        or "not a zip file" in message
+        or "file is not a zip file" in message
+        or "no module named 'yt_dlp'" in message
+    )
+
+
+def _discard_bad_yt_dlp(path, reason):
+    _clear_yt_dlp_import_state(path)
+    try:
+        os.remove(path)
+        logger.warning("Removed invalid yt-dlp archive at %s: %s", path, reason)
+    except OSError as exc:
+        logger.error("Failed to remove invalid yt-dlp archive at %s: %s", path, exc)
+
+
+def _use_yt_dlp_module(module):
+    global YoutubeDL, yt_dlp_module
+    yt_dlp_module = module
+    YoutubeDL = module.YoutubeDL
+    return True
+
+
+def _loaded_from_path(module, path):
+    module_file = os.path.abspath(getattr(module, "__file__", ""))
+    expected_path = os.path.abspath(path)
+    return module_file.lower().startswith(expected_path.lower())
+
+
 def load_yt_dlp():
     global YoutubeDL, yt_dlp_module
-    if os.path.exists(paths.yt_dlp_path):
+    tried_paths = set()
+    while os.path.exists(paths.yt_dlp_path) and paths.yt_dlp_path not in tried_paths:
+        current_path = paths.yt_dlp_path
+        tried_paths.add(current_path)
+        if current_path.lower().endswith(".zip") and not zipfile.is_zipfile(
+            current_path
+        ):
+            _discard_bad_yt_dlp(current_path, "not a valid zip file")
+            paths.yt_dlp_path = paths._get_yt_dlp_path()
+            continue
         try:
-            if paths.yt_dlp_path not in sys.path:
-                sys.path.insert(0, paths.yt_dlp_path)
-            if "yt_dlp" in sys.modules:
-                del sys.modules["yt_dlp"]
+            _clear_yt_dlp_import_state(current_path)
+            if current_path not in sys.path:
+                sys.path.insert(0, current_path)
             import yt_dlp
 
-            yt_dlp_module = yt_dlp
-            YoutubeDL = yt_dlp.YoutubeDL
-            return True
+            if not _loaded_from_path(yt_dlp, current_path):
+                raise InvalidYtDlpArchiveError(
+                    f"yt-dlp was loaded from an unexpected location: {yt_dlp.__file__}"
+                )
+            return _use_yt_dlp_module(yt_dlp)
         except Exception as e:
-            logger.error(f"Failed to load yt-dlp from {paths.yt_dlp_path}: {e}")
+            logger.error(f"Failed to load yt-dlp from {current_path}: {e}")
+            _clear_yt_dlp_import_state(current_path)
+            yt_dlp_module = None
+            YoutubeDL = None
+            if _is_corrupt_yt_dlp_error(e):
+                _discard_bad_yt_dlp(current_path, e)
+                paths.yt_dlp_path = paths._get_yt_dlp_path()
+                continue
+            return False
 
     return False
 
@@ -130,11 +197,34 @@ def download_yt_dlp():
     from gui.update_dialog import UpdateDialog
 
     url = "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp"
+    os.makedirs(paths.settings_path, exist_ok=True)
+    target_path = os.path.join(paths.settings_path, "yt_dlp.zip")
+    download_path = f"{target_path}.download"
+    try:
+        if os.path.exists(download_path):
+            os.remove(download_path)
+    except OSError:
+        pass
+
     UpdateDialog(
         wx.GetApp().GetTopWindow(),
         url,
-        paths.yt_dlp_path,
+        download_path,
         _("جاري تنزيل واي تي دي إل بي"),
+    )
+
+    if os.path.exists(download_path):
+        if zipfile.is_zipfile(download_path):
+            os.replace(download_path, target_path)
+        else:
+            try:
+                os.remove(download_path)
+            except OSError:
+                pass
+            show_error(_("ملف واي تي دي إل بي الذي تم تنزيله غير صالح"))
+
+    paths.yt_dlp_path = (
+        target_path if os.path.exists(target_path) else paths._get_yt_dlp_path()
     )
     load_yt_dlp()
 

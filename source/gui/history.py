@@ -147,6 +147,8 @@ class HistoryDialog(wx.Frame):
 
         stream = self.history_results.get_stream(selection)
         if stream is None:
+            if not utils.check_yt_dlp(self):
+                return
             stream = LoadingDialog(
                 self,
                 _("جاري التشغيل"),
@@ -290,6 +292,8 @@ class HistoryDialog(wx.Frame):
         url = self.history_data[selection]["url"]
         title = self.history_data[selection]["title"]
 
+        if not utils.check_yt_dlp(self):
+            return
         qualities = LoadingDialog(
             self,
             _("جاري جلب الجودات المتاحة..."),

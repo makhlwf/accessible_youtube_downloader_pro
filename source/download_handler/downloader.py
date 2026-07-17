@@ -126,6 +126,10 @@ def downloadAction(
     convert=False,
     folder=False,
 ):
+    if not utils.check_yt_dlp(wx.GetApp().GetTopWindow()):
+        dlg.Destroy()
+        return
+
     downloader = Downloader(
         url,
         path,

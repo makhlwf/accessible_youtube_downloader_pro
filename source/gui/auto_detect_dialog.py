@@ -3,7 +3,7 @@ from language_handler import _
 from theme_handler import apply_theme
 
 from media_player.media_gui import MediaGui
-from utils import get_audio_stream
+from utils import check_yt_dlp, get_audio_stream
 from nvda_client.client import speak
 
 
@@ -91,6 +91,8 @@ class AutoDetectDialog(wx.Dialog):
         from .activity_dialog import LoadingDialog
 
         self.Destroy()
+        if not check_yt_dlp(main_window):
+            return
         stream = LoadingDialog(
             main_window, _("جاري التشغيل"), get_audio_stream, self.url
         ).res

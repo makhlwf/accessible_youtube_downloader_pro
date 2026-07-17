@@ -1,7 +1,7 @@
 import asyncio
 import logging
 import wx
-from utils import get_playable_stream
+import utils
 
 logger = logging.getLogger(__name__)
 
@@ -89,6 +89,8 @@ class Scraper:
                                     results.get_type(index) == "video"
                                     and results.get_stream(index) is None
                                 ):
+                                    if not utils.YoutubeDL:
+                                        continue
                                     url = results.get_url(index)
                                     # Direct stream scraping
                                     # Since get_playable_stream is synchronous and might block,
@@ -96,7 +98,7 @@ class Scraper:
                                     stream = (
                                         await asyncio.get_event_loop().run_in_executor(
                                             None,
-                                            get_playable_stream,
+                                            utils.get_playable_stream,
                                             url,
                                             self.audio_mode,
                                         )

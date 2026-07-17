@@ -293,6 +293,8 @@ class YoutubeBrowser(wx.Frame):
         url = self.search.get_url(number)
         stream = self.search.get_stream(number)
         if stream is None:
+            if not utils.check_yt_dlp(self):
+                return
             stream = LoadingDialog(
                 self, _("جاري التشغيل"), get_playable_stream, url, False
             ).res
@@ -313,6 +315,8 @@ class YoutubeBrowser(wx.Frame):
             return
         title = self.search.get_title(number)
         url = self.search.get_url(number)
+        if not utils.check_yt_dlp(self):
+            return
         stream = LoadingDialog(
             self, _("جاري التشغيل"), get_playable_stream, url, True
         ).res
@@ -408,6 +412,8 @@ class YoutubeBrowser(wx.Frame):
         title = self.search.get_title(n)
         download_type = self.search.get_type(n)
 
+        if not utils.check_yt_dlp(self):
+            return
         qualities = LoadingDialog(
             self,
             _("جاري جلب الجودات المتاحة..."),

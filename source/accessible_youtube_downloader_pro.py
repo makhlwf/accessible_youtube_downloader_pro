@@ -354,6 +354,8 @@ class HomeScreen(wx.Frame):
         url = video_data["url"]
         stream = self.home_feed_results.get_stream(selection)
         if stream is None:
+            if not utils.check_yt_dlp(self):
+                return
             stream = LoadingDialog(
                 self, _("جاري التشغيل"), utils.get_playable_stream, url, audio_mode
             ).res
@@ -400,6 +402,8 @@ class HomeScreen(wx.Frame):
             return
         url = data["link"]
         audio_mode = data["audio"]
+        if not utils.check_yt_dlp(self):
+            return
         stream = LoadingDialog(
             self, _("جاري التشغيل"), utils.get_playable_stream, url, audio_mode
         ).res
@@ -474,13 +478,11 @@ class HomeScreen(wx.Frame):
         event.Skip()
 
     async def async_startup_checks(self):
-        # Move these to thread since they might show dialogs (which must be on main thread via CallAfter)
-        def _checks():
-            if utils.check_yt_dlp(self):
-                if utils.check_deno(self):
-                    utils.ensure_js_dependencies()
+        wx.CallAfter(self.startup_dependency_checks)
 
-        await asyncio.to_thread(_checks)
+    def startup_dependency_checks(self):
+        if utils.check_yt_dlp(self) and utils.check_deno(self):
+            utils.ensure_js_dependencies()
 
     def onGuide(self, event):
         content = documentation_get()
