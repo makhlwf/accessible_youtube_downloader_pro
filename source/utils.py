@@ -46,6 +46,8 @@ class InfoCache:
 
 _info_cache = InfoCache()
 _stream_cache = InfoCache()
+_stream_inflight = {}
+_stream_inflight_lock = threading.Lock()
 _extraction_executor = ThreadPoolExecutor(max_workers=20)
 
 
@@ -536,6 +538,53 @@ class Stream:
         self.quality = quality
 
 
+def _stream_from_info(entry, audio_mode=False):
+    formats = entry.get("formats", [])
+    if audio_mode:
+        preferred_audio = int(config_get("defaultaudioquality"))
+        fmt, audio_fmt, quality = pick_best_format(
+            formats, preferred_audio, is_video=False
+        )
+    else:
+        preferred_video = int(config_get("defaultvideoquality"))
+        fmt, audio_fmt, quality = pick_best_format(
+            formats, preferred_video, is_video=True
+        )
+
+    if not fmt:
+        fmt = entry
+
+    title = entry.get("title")
+    url_to_play = fmt.get("url")
+    if not url_to_play:
+        return None
+
+    headers = {}
+    headers.update(entry.get("http_headers", {}) or {})
+    headers.update(fmt.get("http_headers", {}) or {})
+    headers.setdefault("User-Agent", "libmpv")
+
+    audio_url = audio_fmt.get("url") if audio_fmt else None
+    return Stream(title, url_to_play, headers, audio_url, quality=quality)
+
+
+def _begin_stream_extraction(cache_key):
+    with _stream_inflight_lock:
+        event = _stream_inflight.get(cache_key)
+        if event is not None:
+            return event, False
+        event = threading.Event()
+        _stream_inflight[cache_key] = event
+        return event, True
+
+
+def _finish_stream_extraction(cache_key, event):
+    with _stream_inflight_lock:
+        if _stream_inflight.get(cache_key) is event:
+            del _stream_inflight[cache_key]
+        event.set()
+
+
 def get_playable_stream(url, audio_mode=False):
     if "youtube.com" not in url and "youtu.be" not in url:
         url_full = f"https://www.youtube.com/watch?v={url}"
@@ -546,6 +595,13 @@ def get_playable_stream(url, audio_mode=False):
     cached = _stream_cache.get(cache_key, ttl=1200)
     if cached:
         return cached
+
+    cached_info = _info_cache.get(url_full, ttl=1200)
+    if cached_info:
+        stream = _stream_from_info(cached_info, audio_mode=audio_mode)
+        if stream:
+            _stream_cache.set(cache_key, stream)
+            return stream
 
     # Handle Mix/Playlist URLs via deno service
     playlist_id = None
@@ -587,6 +643,20 @@ def get_playable_stream(url, audio_mode=False):
         os.environ["PATH"] = paths.main_path + os.pathsep + os.environ.get("PATH", "")
 
     url = url_full
+    event, owner = _begin_stream_extraction(url_full)
+    if not owner:
+        event.wait(timeout=30)
+        cached = _stream_cache.get(cache_key, ttl=1200)
+        if cached:
+            return cached
+        cached_info = _info_cache.get(url_full, ttl=1200)
+        if cached_info:
+            stream = _stream_from_info(cached_info, audio_mode=audio_mode)
+            if stream:
+                _stream_cache.set(cache_key, stream)
+                return stream
+        return None
+
     logger.info(f"Extracting URL: {url}")
     cookies_path = config_get("cookiespath")
 
@@ -615,47 +685,24 @@ def get_playable_stream(url, audio_mode=False):
                     else:
                         raise e
 
-            formats = entry.get("formats", [])
-            if audio_mode:
-                preferred_audio = int(config_get("defaultaudioquality"))
-                fmt, audio_fmt, quality = pick_best_format(
-                    formats, preferred_audio, is_video=False
-                )
-            else:
-                preferred_video = int(config_get("defaultvideoquality"))
-                fmt, audio_fmt, quality = pick_best_format(
-                    formats, preferred_video, is_video=True
-                )
-
-            if not fmt:
-                fmt = entry
-
-            title = entry.get("title")
-            url_to_play = fmt.get("url")
-
-            if not url_to_play:
-                return None
-
-            headers = {}
-            headers.update(entry.get("http_headers", {}) or {})
-            headers.update(fmt.get("http_headers", {}) or {})
-            headers.setdefault("User-Agent", "libmpv")
-
-            audio_url = audio_fmt.get("url") if audio_fmt else None
-            return Stream(title, url_to_play, headers, audio_url, quality=quality)
+            _info_cache.set(url, entry)
+            return _stream_from_info(entry, audio_mode=audio_mode)
         except Exception as e:
             logger.debug(f"Extraction failed for client {client}: {e}")
             return None
 
-    # Try android (VR) only
-    result = _extract_task(["android_vr"])
+    try:
+        # Try android (VR) only
+        result = _extract_task(["android_vr"])
 
-    if result:
-        _stream_cache.set(cache_key, result)
-        return result
+        if result:
+            _stream_cache.set(cache_key, result)
+            return result
 
-    logger.error(f"Extraction failed for {url}")
-    return None
+        logger.error(f"Extraction failed for {url}")
+        return None
+    finally:
+        _finish_stream_extraction(url_full, event)
 
 
 def get_media_info(url):
@@ -687,31 +734,31 @@ def get_media_info(url):
 
 
 def get_audio_stream(url):
+    cache_key = f"{url}_audio"
+    cached = _stream_cache.get(cache_key, ttl=1200)
+    if cached:
+        return cached
     info = get_media_info(url)
     if info is None:
         return None
-    title = info.get("title")
-    formats = info.get("formats", [])
-    preferred = int(config_get("defaultaudioquality"))
-    stream, audio_stream, quality = pick_best_format(formats, preferred, is_video=False)
+    stream = _stream_from_info(info, audio_mode=True)
     if stream:
-        return Stream(title, stream["url"], quality=quality)
-    return None
+        _stream_cache.set(cache_key, stream)
+    return stream
 
 
 def get_video_stream(url):
+    cache_key = f"{url}_video"
+    cached = _stream_cache.get(cache_key, ttl=1200)
+    if cached:
+        return cached
     info = get_media_info(url)
     if info is None:
         return None
-    title = info.get("title")
-    formats = info.get("formats", [])
-    preferred = int(config_get("defaultvideoquality"))
-    stream, audio_stream, quality = pick_best_format(formats, preferred, is_video=True)
-
+    stream = _stream_from_info(info, audio_mode=False)
     if stream:
-        audio_url = audio_stream.get("url") if audio_stream else None
-        return Stream(title, stream["url"], audio_url=audio_url, quality=quality)
-    return None
+        _stream_cache.set(cache_key, stream)
+    return stream
 
 
 def get_available_qualities(url, audio_mode=False):

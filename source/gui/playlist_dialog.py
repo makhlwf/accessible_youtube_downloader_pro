@@ -198,7 +198,9 @@ class PlaylistDialog(wx.Dialog):
         title = self.result.get_title(n)
         if not utils.check_yt_dlp(self):
             return
-        stream = LoadingDialog(self, _("جاري التشغيل"), get_video_stream, url).res
+        stream = self.result.get_stream(n, audio_mode=False)
+        if stream is None:
+            stream = LoadingDialog(self, _("جاري التشغيل"), get_video_stream, url).res
         gui = MediaGui(self, title, stream, url, True, self.result)
         gui.path = os.path.join(gui.path, utils.sanitize_filename(self.title))
         self.Hide()
@@ -210,7 +212,9 @@ class PlaylistDialog(wx.Dialog):
         title = self.result.get_title(n)
         if not utils.check_yt_dlp(self):
             return
-        stream = LoadingDialog(self, _("جاري التشغيل"), get_audio_stream, url).res
+        stream = self.result.get_stream(n, audio_mode=True)
+        if stream is None:
+            stream = LoadingDialog(self, _("جاري التشغيل"), get_audio_stream, url).res
         gui = MediaGui(self, title, stream, url, audio_mode=True, results=self.result)
         gui.path = os.path.join(gui.path, utils.sanitize_filename(self.title))
         self.Hide()

@@ -43,6 +43,22 @@ def test_simple_result():
     assert res.get_type(0) == "video"
 
 
+def test_stream_cache_is_mode_specific():
+    data = [{"url": "url1", "title": "Title 1", "type": "video"}]
+    simple = SimpleResult(data)
+    simple.set_stream(0, "audio", audio_mode=True)
+    simple.set_stream(0, "video", audio_mode=False)
+    assert simple.get_stream(0, audio_mode=True) == "audio"
+    assert simple.get_stream(0, audio_mode=False) == "video"
+
+    playlist = PlaylistResult("https://youtube.com/playlist?list=123")
+    playlist.videos = [{"url": "url1"}]
+    playlist.set_stream(0, "audio", audio_mode=True)
+    playlist.set_stream(0, "video", audio_mode=False)
+    assert playlist.get_stream(0, audio_mode=True) == "audio"
+    assert playlist.get_stream(0, audio_mode=False) == "video"
+
+
 @pytest.mark.asyncio
 async def test_search_init_async():
     query = "test"
@@ -71,3 +87,7 @@ async def test_search_init_async():
         assert search.count == 1
         assert search.get_title(0) == "Search Result 1"
         assert search.get_url(0) == "https://youtube.com/watch?v=sr1"
+        search.set_stream(0, "audio", audio_mode=True)
+        search.set_stream(0, "video", audio_mode=False)
+        assert search.get_stream(0, audio_mode=True) == "audio"
+        assert search.get_stream(0, audio_mode=False) == "video"

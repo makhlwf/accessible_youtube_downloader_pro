@@ -1,4 +1,3 @@
-import asyncio
 import utils
 import webbrowser
 from threading import Thread
@@ -266,15 +265,12 @@ class YoutubeBrowser(wx.Frame):
         # Clear queue and add new videos for scraping
         self.scraper.set_results(self.search)
         self.search.scraper = self.scraper
-        loop = asyncio.get_event_loop()
         # Top 3 results are prioritized (priority 0) for instant play
         for i in range(min(3, self.search.count)):
-            asyncio.run_coroutine_threadsafe(self.scraper.add_item(i, priority=0), loop)
+            self.scraper.add_item(i, priority=0)
         # Next 7 results are pre-fetched with normal priority
         for i in range(3, min(10, self.search.count)):
-            asyncio.run_coroutine_threadsafe(
-                self.scraper.add_item(i, priority=10), loop
-            )
+            self.scraper.add_item(i, priority=10)
 
     def onSearch(self, event):
         if self.search:
@@ -291,7 +287,7 @@ class YoutubeBrowser(wx.Frame):
             return
         title = self.search.get_title(number)
         url = self.search.get_url(number)
-        stream = self.search.get_stream(number)
+        stream = self.search.get_stream(number, audio_mode=False)
         if stream is None:
             if not utils.check_yt_dlp(self):
                 return
@@ -315,11 +311,13 @@ class YoutubeBrowser(wx.Frame):
             return
         title = self.search.get_title(number)
         url = self.search.get_url(number)
+        stream = self.search.get_stream(number, audio_mode=True)
         if not utils.check_yt_dlp(self):
             return
-        stream = LoadingDialog(
-            self, _("جاري التشغيل"), get_playable_stream, url, True
-        ).res
+        if stream is None:
+            stream = LoadingDialog(
+                self, _("جاري التشغيل"), get_playable_stream, url, True
+            ).res
         if stream:
             MediaGui(
                 self,
@@ -472,13 +470,10 @@ class YoutubeBrowser(wx.Frame):
         self.toggleFavorite()
         n = self.searchResults.Selection
         if n != wx.NOT_FOUND:
-            loop = asyncio.get_event_loop()
-            asyncio.run_coroutine_threadsafe(self.scraper.add_item(n, priority=0), loop)
+            self.scraper.add_item(n, priority=0)
             if n > 0 and n % 10 == 0:
                 for i in range(n, min(n + 10, self.search.count)):
-                    asyncio.run_coroutine_threadsafe(
-                        self.scraper.add_item(i, priority=10), loop
-                    )
+                    self.scraper.add_item(i, priority=10)
 
         if self.searchResults.Selection == self.searchResults.GetCount() - 1:
             if not config_get("autoload"):

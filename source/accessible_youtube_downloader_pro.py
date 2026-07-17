@@ -12,7 +12,6 @@ import threading
 import webbrowser
 import subprocess
 import logging
-import asyncio
 import wx
 import pyperclip
 import settings_handler
@@ -250,10 +249,11 @@ class HomeScreen(wx.Frame):
             self.detectFromClipboard(settings_handler.config_get("autodetect"))
 
         if settings_handler.config_get("checkupdates"):
-            asyncio.run_coroutine_threadsafe(
-                asyncio.to_thread(utils.check_for_updates, True),
-                asyncio.get_event_loop(),
-            )
+            threading.Thread(
+                target=utils.check_for_updates,
+                args=(True,),
+                daemon=True,
+            ).start()
 
     def on_clip_timer(self, event):
         try:
@@ -332,17 +332,12 @@ class HomeScreen(wx.Frame):
 
         # Add items to scraper using the async loop
         def _add_to_scraper():
-            loop = asyncio.get_event_loop()
             if not load_more:
                 for i in range(min(10, self.home_feed_results.count)):
-                    asyncio.run_coroutine_threadsafe(
-                        self.scraper.add_item(i, priority=10), loop
-                    )
+                    self.scraper.add_item(i, priority=10)
             else:
                 for i in range(old_count, self.home_feed_results.count):
-                    asyncio.run_coroutine_threadsafe(
-                        self.scraper.add_item(i, priority=10), loop
-                    )
+                    self.scraper.add_item(i, priority=10)
 
         _add_to_scraper()
 
@@ -352,7 +347,7 @@ class HomeScreen(wx.Frame):
             return
         video_data = self.home_feed_data[selection]
         url = video_data["url"]
-        stream = self.home_feed_results.get_stream(selection)
+        stream = self.home_feed_results.get_stream(selection, audio_mode=audio_mode)
         if stream is None:
             if not utils.check_yt_dlp(self):
                 return
@@ -375,13 +370,10 @@ class HomeScreen(wx.Frame):
     def on_home_feed_list_box(self, event):
         n = self.home_feed_list.Selection
         if n != wx.NOT_FOUND:
-            loop = asyncio.get_event_loop()
-            asyncio.run_coroutine_threadsafe(self.scraper.add_item(n, priority=0), loop)
+            self.scraper.add_item(n, priority=0)
             if n > 0 and n % 10 == 0:
                 for i in range(n, min(n + 10, self.home_feed_results.count)):
-                    asyncio.run_coroutine_threadsafe(
-                        self.scraper.add_item(i, priority=10), loop
-                    )
+                    self.scraper.add_item(i, priority=10)
 
     def on_home_feed_hook(self, event):
         if event.KeyCode == wx.WXK_RETURN:
@@ -470,15 +462,10 @@ class HomeScreen(wx.Frame):
 
     def onShow(self, event):
         if not self.checked:
-            asyncio.run_coroutine_threadsafe(
-                self.async_startup_checks(), asyncio.get_event_loop()
-            )
+            self.startup_dependency_checks()
             self.checked = True
         self.instruction.SetFocus()
         event.Skip()
-
-    async def async_startup_checks(self):
-        wx.CallAfter(self.startup_dependency_checks)
 
     def startup_dependency_checks(self):
         if utils.check_yt_dlp(self) and utils.check_deno(self):
@@ -573,9 +560,6 @@ if __name__ == "__main__":
                 )
         sys.exit()
 
-    # Start the async loop early
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
     threading.Thread(target=start_async_loop, daemon=True).start()
 
     lang_id = codes.get(settings_handler.config_get("lang"), wx.LANGUAGE_ARABIC)
@@ -583,8 +567,4 @@ if __name__ == "__main__":
 
     start_hidden = "--background" in sys.argv
     home_screen = HomeScreen(start_hidden=start_hidden)
-    # Start scraper workers now that loop is active
-    asyncio.run_coroutine_threadsafe(
-        asyncio.to_thread(home_screen.scraper.start_workers), loop
-    )
     app.MainLoop()

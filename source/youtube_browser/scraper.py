@@ -1,6 +1,6 @@
 import asyncio
 import logging
-import wx
+from async_utils import submit_async
 import utils
 
 logger = logging.getLogger(__name__)
@@ -8,36 +8,58 @@ logger = logging.getLogger(__name__)
 
 class Scraper:
     def __init__(self, num_workers=4):
+        self.num_workers = num_workers
         self.queue = asyncio.PriorityQueue()
         self.results = None
-        self.audio_mode = False
+        self.audio_mode = True
         self.queued_indices = set()
         self.processing_indices = set()
         self.lock = asyncio.Lock()
         self.workers = []
         self.is_throttled = False
-        # Do not start tasks in __init__, wait until the loop is actually running
-        # We'll need a mechanism to start workers once the loop is running
-        self.workers = []
+        self._start_future = None
 
-    def start_workers(self):
-        for _ in range(4):
+    def _submit(self, coro):
+        try:
+            return submit_async(coro)
+        except RuntimeError as e:
+            logger.debug("Could not schedule scraper task: %s", e)
+            coro.close()
+            return None
+
+    def _ensure_started(self):
+        if self._start_future is None or (
+            self._start_future.done() and self._start_future.exception() is not None
+        ):
+            self._start_future = self._submit(self._start_workers())
+
+    async def _start_workers(self):
+        self.workers = [task for task in self.workers if not task.done()]
+        for _ in range(max(0, self.num_workers - len(self.workers))):
             task = asyncio.create_task(self._worker())
             self.workers.append(task)
 
     def set_results(self, results):
-        self.results = results
-        self.queued_indices.clear()
-        self.processing_indices.clear()
-        # Clear the queue
-        while not self.queue.empty():
-            try:
-                self.queue.get_nowait()
-                self.queue.task_done()
-            except asyncio.QueueEmpty:
-                break
+        self._ensure_started()
+        self._submit(self._set_results(results))
 
-    async def add_item(self, index, priority=10):
+    async def _set_results(self, results):
+        async with self.lock:
+            self.results = results
+            self.queued_indices.clear()
+            self.processing_indices.clear()
+            while not self.queue.empty():
+                try:
+                    self.queue.get_nowait()
+                    self.queue.task_done()
+                except asyncio.QueueEmpty:
+                    break
+
+    def add_item(self, index, priority=10):
+        self._ensure_started()
+        self._submit(self._add_item(index, priority))
+
+    async def _add_item(self, index, priority=10):
         async with self.lock:
             if self.results is None:
                 return
@@ -45,7 +67,10 @@ class Scraper:
                 return
 
             # If it's already scraped, don't queue
-            if self.results.get_stream(index) is not None:
+            if all(
+                self.results.get_stream(index, audio_mode=mode) is not None
+                for mode in self._prefetch_modes()
+            ):
                 return
 
             # If it's high priority (0), we always allow re-queueing to jump the line
@@ -58,6 +83,13 @@ class Scraper:
 
             await self.queue.put((priority, index))
             self.queued_indices.add(index)
+
+    def _prefetch_modes(self):
+        modes = [self.audio_mode]
+        other_mode = not self.audio_mode
+        if other_mode not in modes:
+            modes.append(other_mode)
+        return modes
 
     async def _reset_throttle(self):
         await asyncio.sleep(2)
@@ -87,26 +119,34 @@ class Scraper:
                                 # Check if still needed
                                 if (
                                     results.get_type(index) == "video"
-                                    and results.get_stream(index) is None
+                                    and any(
+                                        results.get_stream(index, audio_mode=mode)
+                                        is None
+                                        for mode in self._prefetch_modes()
+                                    )
                                 ):
                                     if not utils.YoutubeDL:
                                         continue
                                     url = results.get_url(index)
-                                    # Direct stream scraping
-                                    # Since get_playable_stream is synchronous and might block,
-                                    # we run it in a thread pool executor.
-                                    stream = (
-                                        await asyncio.get_event_loop().run_in_executor(
-                                            None,
-                                            utils.get_playable_stream,
-                                            url,
-                                            self.audio_mode,
+                                    for audio_mode in self._prefetch_modes():
+                                        if results.get_stream(
+                                            index, audio_mode=audio_mode
+                                        ):
+                                            continue
+                                        stream = await (
+                                            asyncio.get_running_loop().run_in_executor(
+                                                None,
+                                                utils.get_playable_stream,
+                                                url,
+                                                audio_mode,
+                                            )
                                         )
-                                    )
-                                    if stream and results == self.results:
-                                        # Use wx.CallAfter to ensure UI thread-safety if needed,
-                                        # though set_stream itself might be thread-safe depending on the implementation.
-                                        wx.CallAfter(results.set_stream, index, stream)
+                                        if stream and results == self.results:
+                                            results.set_stream(
+                                                index,
+                                                stream,
+                                                audio_mode=audio_mode,
+                                            )
                         except Exception as e:
                             logger.debug(f"Scraper task failed for index {index}: {e}")
                 finally:

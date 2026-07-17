@@ -7,6 +7,10 @@ from utils import time_to_seconds, format_duration
 from language_handler import _
 
 
+def stream_key(audio_mode=False):
+    return "audio_stream" if audio_mode else "video_stream"
+
+
 class PlaylistResult:
     def __init__(self, url):
         self.url = url
@@ -69,15 +73,15 @@ class PlaylistResult:
     def get_url(self, n):
         return self.videos[n]["url"]
 
-    def get_stream(self, n):
+    def get_stream(self, n, audio_mode=False):
         try:
-            return self.videos[n].get("stream")
+            return self.videos[n].get(stream_key(audio_mode))
         except (IndexError, KeyError):
             return None
 
-    def set_stream(self, n, stream):
+    def set_stream(self, n, stream, audio_mode=False):
         try:
-            self.videos[n]["stream"] = stream
+            self.videos[n][stream_key(audio_mode)] = stream
         except IndexError:
             pass
 
@@ -100,11 +104,11 @@ class SimpleResult:
     def get_title(self, n):
         return self.data_list[n].get("title", "")
 
-    def get_stream(self, n):
-        return self.data_list[n].get("stream")
+    def get_stream(self, n, audio_mode=False):
+        return self.data_list[n].get(stream_key(audio_mode))
 
-    def set_stream(self, n, stream):
-        self.data_list[n]["stream"] = stream
+    def set_stream(self, n, stream, audio_mode=False):
+        self.data_list[n][stream_key(audio_mode)] = stream
 
     def get_type(self, n):
         return self.data_list[n].get("type", "video")
@@ -180,7 +184,8 @@ class Search:
                         "url": item.get("channel", {}).get("link"),
                     },
                     "views": views,
-                    "stream": None,
+                    "audio_stream": None,
+                    "video_stream": None,
                 }
 
     def get_titles(self):
@@ -220,11 +225,11 @@ class Search:
     def get_channel(self, number):
         return self.results[number + 1]["channel"]
 
-    def get_stream(self, number):
-        return self.results[number + 1].get("stream")
+    def get_stream(self, number, audio_mode=False):
+        return self.results[number + 1].get(stream_key(audio_mode))
 
-    def set_stream(self, number, stream):
-        self.results[number + 1]["stream"] = stream
+    def set_stream(self, number, stream, audio_mode=False):
+        self.results[number + 1][stream_key(audio_mode)] = stream
 
     async def load_more(self):
         if not self.search.continuationKey:  # Check if there are more results

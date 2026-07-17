@@ -145,7 +145,7 @@ class HistoryDialog(wx.Frame):
         url = video_data["url"]
         title = video_data["title"]
 
-        stream = self.history_results.get_stream(selection)
+        stream = self.history_results.get_stream(selection, audio_mode=audio_mode)
         if stream is None:
             if not utils.check_yt_dlp(self):
                 return

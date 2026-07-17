@@ -637,7 +637,7 @@ class MediaGui(wx.Frame):
             try:
                 self.player.media.stop()
                 stream = (
-                    self.results.get_stream(index)
+                    self.results.get_stream(index, audio_mode=self.audio_mode)
                     if hasattr(self.results, "get_stream")
                     else None
                 )
