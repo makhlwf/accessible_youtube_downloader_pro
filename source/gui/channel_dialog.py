@@ -7,7 +7,11 @@ import wx
 
 import application
 import utils
-from download_handler.downloader import downloadAction
+from download_handler.downloader import (
+    downloadAction,
+    get_audio_download_format,
+    get_video_download_format,
+)
 from gui.activity_dialog import LoadingDialog
 from gui.download_progress import DownloadProgress
 from gui.quality_selection import QualitySelectionDialog
@@ -192,12 +196,9 @@ class ChannelDialog(wx.Dialog):
         quality=None,
     ):
         if option == 0:
-            if quality:
-                fmt = f"bestvideo[height<={quality}][ext=mp4]+bestaudio[ext=m4a]/best[height<={quality}][ext=mp4]/best"
-            else:
-                fmt = "bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4"
+            fmt = get_video_download_format(quality)
         else:
-            fmt = "bestaudio[ext=m4a]"
+            fmt = get_audio_download_format(convert=option == 2)
         convert = option == 2
         folder = download_type != "video"
         if folder and title:

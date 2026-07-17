@@ -5,12 +5,23 @@ import pytest
 import download_handler.downloader as downloader_module
 import paths
 import utils
-from download_handler.downloader import DownloadCancelled, Downloader
+from download_handler.downloader import (
+    DownloadCancelled,
+    Downloader,
+    clean_progress_text,
+    get_audio_download_format,
+    get_video_download_format,
+)
 
 
 def test_progress_hook_handles_missing_status():
     downloader = Downloader("url", ".", "best", None, None)
     downloader._progress_hook({})
+
+
+def test_clean_progress_text_strips_ansi_sequences():
+    assert clean_progress_text("\x1b[0;94m 791.19KiB\x1b[0m") == "791.19KiB"
+    assert clean_progress_text("[0;33m00:16[0m") == "00:16"
 
 
 def test_progress_hook_raises_when_cancelled():
@@ -25,6 +36,44 @@ def test_progress_hook_raises_when_cancelled():
 
     with pytest.raises(DownloadCancelled):
         downloader._progress_hook({"status": "downloading"})
+
+
+def test_audio_download_format_falls_back_when_converting_to_mp3():
+    downloader = Downloader("url", ".", "bestaudio[ext=m4a]", None, None, convert=True)
+
+    assert get_audio_download_format(convert=True) == "bestaudio/best"
+    assert downloader._effective_format() == "bestaudio/best"
+
+
+def test_audio_download_format_falls_back_for_m4a_downloads():
+    downloader = Downloader("url", ".", "bestaudio[ext=m4a]", None, None)
+
+    assert get_audio_download_format() == "bestaudio[ext=m4a]/bestaudio/best"
+    assert downloader._effective_format() == "bestaudio[ext=m4a]/bestaudio/best"
+
+
+def test_video_download_format_falls_back_for_selected_quality():
+    expected = (
+        "bestvideo[height<=720][ext=mp4]+bestaudio[ext=m4a]/"
+        "bestvideo[height<=720]+bestaudio/"
+        "best[height<=720][ext=mp4]/best[height<=720]/best"
+    )
+
+    assert get_video_download_format(720) == expected
+
+
+def test_base_options_use_audio_fallback_for_mp3_conversion(monkeypatch):
+    monkeypatch.setattr(
+        downloader_module,
+        "config_get",
+        lambda key: "1" if key == "conversion" else "",
+    )
+
+    downloader = Downloader("url", ".", "bestaudio[ext=m4a]", None, None, convert=True)
+    options = downloader._base_options()
+
+    assert options["format"] == "bestaudio/best"
+    assert options["postprocessors"][0]["preferredcodec"] == "mp3"
 
 
 def test_download_prepares_runtime_path_and_output_directory(monkeypatch):

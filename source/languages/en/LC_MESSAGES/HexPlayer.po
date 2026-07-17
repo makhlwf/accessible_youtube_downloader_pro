@@ -415,6 +415,15 @@ msgstr "Total file size: {}"
 msgid "حجم الملف الإجمالي: غير معروف"
 msgstr "Total file size: Unknown"
 
+#: source/download_handler/downloader.py:305
+#, python-brace-format
+msgid "مقدار الحجم الذي تم تنزيله: {}"
+msgstr "Downloaded amount: {}"
+
+#: source/download_handler/downloader.py:308 source/gui/download_progress.py:22
+msgid "مقدار الحجم الذي تم تنزيله: غير معروف"
+msgstr "Downloaded amount: Unknown"
+
 #: source/download_handler/downloader.py:147
 #, python-brace-format
 msgid "سرعة التنزيل: {}"

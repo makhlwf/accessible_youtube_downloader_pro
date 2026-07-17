@@ -23,7 +23,11 @@ from utils import get_playable_stream
 from async_utils import run_in_async_loop
 from theme_handler import apply_theme
 
-from download_handler.downloader import downloadAction
+from download_handler.downloader import (
+    downloadAction,
+    get_audio_download_format,
+    get_video_download_format,
+)
 from database import Favorite
 import logging
 
@@ -207,12 +211,9 @@ class YoutubeBrowser(wx.Frame):
         quality=None,
     ):
         if option == 0:
-            if quality:
-                fmt = f"bestvideo[height<={quality}][ext=mp4]+bestaudio[ext=m4a]/best[height<={quality}][ext=mp4]/best"
-            else:
-                fmt = "bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4"
+            fmt = get_video_download_format(quality)
         else:
-            fmt = "bestaudio[ext=m4a]"
+            fmt = get_audio_download_format(convert=option == 2)
         convert = True if option == 2 else False
         folder = False if download_type == "video" else True
         if folder and title:

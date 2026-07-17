@@ -1,7 +1,11 @@
 import wx
 import pyperclip
 import os
-from download_handler.downloader import downloadAction
+from download_handler.downloader import (
+    downloadAction,
+    get_audio_download_format,
+    get_video_download_format,
+)
 from settings_handler import config_get, config_set
 from .download_progress import DownloadProgress
 import utils
@@ -112,8 +116,8 @@ class DownloadDialog(wx.Frame):
         else:
             folder = False
         formats = {
-            0: "bestaudio[ext=m4a]/bestaudio/best",
-            1: "bestvideo[ext=mp4]+bestaudio[ext=m4a]/bestvideo+bestaudio/best",
+            0: get_audio_download_format(convert=self.convertingFormat.Selection == 1),
+            1: get_video_download_format(),
         }
         format = formats[self.downloadingFormat.GetSelection()]
         if (

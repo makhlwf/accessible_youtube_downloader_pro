@@ -4,7 +4,11 @@ from language_handler import _
 from youtube_browser.search_handler import PlaylistResult
 from youtube_browser.scraper import Scraper
 from utils import get_audio_stream, get_video_stream
-from download_handler.downloader import downloadAction
+from download_handler.downloader import (
+    downloadAction,
+    get_audio_download_format,
+    get_video_download_format,
+)
 from gui.channel_dialog import ChannelDialog
 from media_player.media_gui import MediaGui
 import pyperclip
@@ -107,12 +111,9 @@ class PlaylistDialog(wx.Dialog):
         quality=None,
     ):
         if option == 0:
-            if quality:
-                format = f"bestvideo[height<={quality}][ext=mp4]+bestaudio[ext=m4a]/best[height<={quality}][ext=mp4]/best"
-            else:
-                format = "bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4"
+            format = get_video_download_format(quality)
         else:
-            format = "bestaudio[ext=m4a]"
+            format = get_audio_download_format(convert=option == 2)
         convert = True if option == 2 else False
         folder = False if download_type == "video" else True
         if folder and title:

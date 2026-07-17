@@ -1,4 +1,5 @@
 import os
+import re
 import wx
 import logging
 import time
@@ -16,6 +17,33 @@ ProgressChangedEvent, EVT_PROGRESS_CHANGED = NewEvent()
 
 class DownloadCancelled(Exception):
     pass
+
+
+ANSI_RE = re.compile(r"(?:\x1b\[[0-?]*[ -/]*[@-~]|\[[0-9;]*m)")
+
+
+def clean_progress_text(value):
+    if value is None:
+        return ""
+    return ANSI_RE.sub("", str(value)).replace("\r", "").strip()
+
+
+def get_audio_download_format(convert=False):
+    if convert:
+        return "bestaudio/best"
+    return "bestaudio[ext=m4a]/bestaudio/best"
+
+
+def get_video_download_format(quality=None):
+    if quality:
+        return (
+            f"bestvideo[height<={quality}][ext=mp4]+bestaudio[ext=m4a]/"
+            f"bestvideo[height<={quality}]+bestaudio/"
+            f"best[height<={quality}][ext=mp4]/best[height<={quality}]/best"
+        )
+    return (
+        "bestvideo[ext=mp4]+bestaudio[ext=m4a]/bestvideo+bestaudio/best[ext=mp4]/best"
+    )
 
 
 class Downloader:
@@ -106,16 +134,20 @@ class Downloader:
             return
 
         if d.get("status") == "downloading":
-            percent_str = d.get("_percent_str", "0%").replace("%", "").strip()
+            percent_str = clean_progress_text(d.get("_percent_str", "0%")).replace(
+                "%", ""
+            )
             try:
                 percent = float(percent_str)
             except ValueError:
                 percent = 0.0
 
-            total = d.get("_total_bytes_str") or d.get("_total_bytes_estimate_str", "")
-            downloaded = d.get("_downloaded_bytes_str", "")
-            speed = d.get("_speed_str", "")
-            eta = d.get("_eta_str", "")
+            total = clean_progress_text(
+                d.get("_total_bytes_str") or d.get("_total_bytes_estimate_str", "")
+            )
+            downloaded = clean_progress_text(d.get("_downloaded_bytes_str", ""))
+            speed = clean_progress_text(d.get("_speed_str", ""))
+            eta = clean_progress_text(d.get("_eta_str", ""))
 
             wx.PostEvent(
                 self.monitor,
@@ -144,7 +176,7 @@ class Downloader:
         ydl_opts = {
             "nocheckcertificate": True,
             "outtmpl": os.path.join(self.path, "%(title)s.%(ext)s"),
-            "format": self.downloading_format,
+            "format": self._effective_format(),
             "noplaylist": not self.folder,
             "continuedl": True,
             "progress_hooks": [self._progress_hook],
@@ -176,6 +208,15 @@ class Downloader:
                 }
             ]
         return ydl_opts
+
+    def _effective_format(self):
+        if self.convert:
+            return get_audio_download_format(convert=True)
+        if self.downloading_format == "bestaudio[ext=m4a]":
+            return get_audio_download_format()
+        if self.downloading_format == "bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4":
+            return get_video_download_format()
+        return self.downloading_format
 
     def _is_cookie_error(self, error):
         message = str(error).lower()

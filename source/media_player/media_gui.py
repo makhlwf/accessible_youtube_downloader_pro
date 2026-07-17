@@ -11,7 +11,11 @@ from settings_handler import config_get, config_set
 import application
 import utils
 from utils import get_playable_stream
-from download_handler.downloader import downloadAction
+from download_handler.downloader import (
+    downloadAction,
+    get_audio_download_format,
+    get_video_download_format,
+)
 from gui.settings_dialog import SettingsDialog
 from gui.description import DescriptionDialog
 from gui.custom_controls import CustomButton
@@ -443,12 +447,9 @@ class MediaGui(wx.Frame):
         if path is None:
             path = self.path
         if option == 0:
-            if quality:
-                format = f"bestvideo[height<={quality}][ext=mp4]+bestaudio[ext=m4a]/best[height<={quality}][ext=mp4]/best"
-            else:
-                format = "bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4"
+            format = get_video_download_format(quality)
         else:
-            format = "bestaudio[ext=m4a]"
+            format = get_audio_download_format(convert=option == 2)
         convert = True if option == 2 else False
         folder = False  # Not relevant for single video downloads in MediaGui
         downloadAction(
