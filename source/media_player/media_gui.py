@@ -302,28 +302,41 @@ class MediaGui(wx.Frame):
         logging.getLogger(__name__).debug(f"Fetching chapters for {self.url}")
         chapters = utils.get_video_chapters(self.url)
         logging.getLogger(__name__).debug(f"Fetched {len(chapters)} chapters")
+        if self._closing:
+            return
         wx.CallAfter(self.populate_chapters_menu, chapters)
 
+    def can_update_player_ui(self):
+        try:
+            return not self._closing and not self.IsBeingDeleted()
+        except RuntimeError:
+            return False
+
     def populate_chapters_menu(self, chapters):
-        # Clear existing items
-        for item in self.chaptersMenu.GetMenuItems():
-            self.chaptersMenu.DestroyItem(item)
-
-        if not chapters:
-            self.chaptersMenu.Append(-1, _("لا توجد فصول متاحة")).Enable(False)
+        if not self.can_update_player_ui():
             return
+        # Clear existing items
+        try:
+            for item in self.chaptersMenu.GetMenuItems():
+                self.chaptersMenu.DestroyItem(item)
 
-        for chapter in chapters:
-            title = chapter.get("title", _("فصل بدون عنوان"))
-            time_ms = chapter.get("time_ms", 0)
-            time_str = utils.time_formatting(time_ms // 1000)
-            label = f"{title} ({time_str})"
-            item = self.chaptersMenu.Append(-1, label)
-            self.Bind(
-                wx.EVT_MENU,
-                lambda event, t=time_ms, n=title: self.on_seek_to_chapter(t, n),
-                item,
-            )
+            if not chapters:
+                self.chaptersMenu.Append(-1, _("لا توجد فصول متاحة")).Enable(False)
+                return
+
+            for chapter in chapters:
+                title = chapter.get("title", _("فصل بدون عنوان"))
+                time_ms = chapter.get("time_ms", 0)
+                time_str = utils.time_formatting(time_ms // 1000)
+                label = f"{title} ({time_str})"
+                item = self.chaptersMenu.Append(-1, label)
+                self.Bind(
+                    wx.EVT_MENU,
+                    lambda event, t=time_ms, n=title: self.on_seek_to_chapter(t, n),
+                    item,
+                )
+        except RuntimeError:
+            logger.debug("Skipping chapter menu update after player close", exc_info=True)
 
     def on_seek_to_chapter(self, time_ms, title):
         if self.player:
@@ -346,6 +359,8 @@ class MediaGui(wx.Frame):
 
     def fetch_qualities(self):
         qualities = utils.get_available_qualities(self.url, audio_mode=self.audio_mode)
+        if self._closing:
+            return
         wx.CallAfter(self.populate_quality_menu, qualities)
 
     def fetch_like_count(self):
@@ -363,20 +378,25 @@ class MediaGui(wx.Frame):
         Thread(target=_task, daemon=True).start()
 
     def populate_quality_menu(self, qualities):
-        # Clear existing items
-        for item in self.qualityMenu.GetMenuItems():
-            self.qualityMenu.DestroyItem(item)
-
-        if not qualities:
-            self.qualityMenu.Append(-1, _("لا توجد جودات متاحة")).Enable(False)
+        if not self.can_update_player_ui():
             return
+        # Clear existing items
+        try:
+            for item in self.qualityMenu.GetMenuItems():
+                self.qualityMenu.DestroyItem(item)
 
-        for q in qualities:
-            label = f"{q}{_('ك.ب/ث')}" if self.audio_mode else f"{q}{_('ب')}"
-            item = self.qualityMenu.AppendCheckItem(-1, label)
-            if q == self.current_quality:
-                item.Check(True)
-            self.Bind(wx.EVT_MENU, lambda event, h=q: self.on_change_quality(h), item)
+            if not qualities:
+                self.qualityMenu.Append(-1, _("لا توجد جودات متاحة")).Enable(False)
+                return
+
+            for q in qualities:
+                label = f"{q}{_('ك.ب/ث')}" if self.audio_mode else f"{q}{_('ب')}"
+                item = self.qualityMenu.AppendCheckItem(-1, label)
+                if q == self.current_quality:
+                    item.Check(True)
+                self.Bind(wx.EVT_MENU, lambda event, h=q: self.on_change_quality(h), item)
+        except RuntimeError:
+            logger.debug("Skipping quality menu update after player close", exc_info=True)
 
     def on_change_quality(self, height):
         label = f"{height}{_('ك.ب/ث')}" if self.audio_mode else f"{height}{_('ب')}"
@@ -772,6 +792,8 @@ class MediaGui(wx.Frame):
             speak(_("وضع ملء الشاشة متوقف"))
 
     def changeTrack(self, index):
+        if self._closing or self.player is None:
+            return
         if hasattr(self.results, "scraper"):
             self.results.scraper.add_item(index, priority=0)
         if not isinstance(self.results, list):
@@ -787,6 +809,8 @@ class MediaGui(wx.Frame):
 
         def _task():
             try:
+                if self._closing or self.player is None:
+                    return
                 self.player.media.stop()
                 stream = (
                     self.results.get_stream(index, audio_mode=self.audio_mode)
@@ -797,6 +821,8 @@ class MediaGui(wx.Frame):
                     stream = get_playable_stream(url, audio_mode=self.audio_mode)
 
                 if stream:
+                    if self._closing:
+                        return
                     wx.CallAfter(self._perform_track_change, stream, url, title, index)
                 else:
                     wx.CallAfter(
@@ -820,6 +846,8 @@ class MediaGui(wx.Frame):
         Thread(target=_task, daemon=True).start()
 
     def _perform_track_change(self, stream, url, title, index=None):
+        if self._closing or self.player is None:
+            return
         options = []
         if hasattr(stream, "headers") and stream.headers:
             ua = stream.headers.get("User-Agent")

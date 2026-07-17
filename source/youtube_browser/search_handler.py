@@ -4,6 +4,8 @@ from py_yt import (
     VideosSearch,
     PlaylistsSearch,
 )
+import asyncio
+import logging
 import os
 from urllib.parse import urlsplit, urlunsplit
 
@@ -11,6 +13,8 @@ import utils
 from settings_handler import config_get
 from utils import time_to_seconds, format_duration
 from language_handler import _
+
+logger = logging.getLogger(__name__)
 
 
 CHANNEL_TAB_SUFFIXES = {
@@ -143,14 +147,69 @@ class PlaylistResult:
         self.videos_data = []  # To store the raw video data from Playlist.getVideos()
 
     async def init_async(self):
-        playlist_data = await Playlist.getVideos(self.url)
+        try:
+            playlist_data = await Playlist.getVideos(self.url)
+        except Exception:
+            logger.debug(
+                "py_yt playlist extraction failed; retrying with yt-dlp. url=%s",
+                self.url,
+                exc_info=True,
+            )
+            await asyncio.to_thread(self.load_with_yt_dlp)
+            return self
+        if not isinstance(playlist_data, dict):
+            playlist_data = {}
         self.videos_data = playlist_data.get("videos", [])
         self.title = playlist_data.get("title", "")
         # If the title is not available in playlist_data, try to get it from the first video
         if not self.title and self.videos_data:
             self.title = self.videos_data[0].get("playlistTitle", "")
         await self.parse()
+        if not self.videos and utils.YoutubeDL:
+            await asyncio.to_thread(self.load_with_yt_dlp)
         return self
+
+    def load_with_yt_dlp(self):
+        if not utils.YoutubeDL:
+            return
+        with utils.YoutubeDL(_yt_dlp_flat_options(1, 100)) as ydl:
+            info = ydl.extract_info(self.url, download=False)
+        if not isinstance(info, dict):
+            return
+        self.title = (
+            self.title
+            or info.get("title")
+            or info.get("playlist_title")
+            or _("قائمة تشغيل")
+        )
+        self.videos = []
+        seen_urls = set()
+        for entry in info.get("entries", []) or []:
+            video = self.normalise_yt_dlp_entry(entry)
+            if video and video["url"] not in seen_urls:
+                seen_urls.add(video["url"])
+                self.videos.append(video)
+        self.count = len(self.videos)
+        self.new_videos = self.count
+
+    def normalise_yt_dlp_entry(self, entry):
+        if not entry:
+            return None
+        fallback_id = entry.get("id")
+        url = _absolute_youtube_url(
+            entry.get("webpage_url") or entry.get("url"),
+            "video",
+            fallback_id,
+        )
+        if not url:
+            return None
+        return {
+            "id": fallback_id,
+            "title": entry.get("title") or _("غير معروف"),
+            "url": url,
+            "duration": entry.get("duration") or entry.get("duration_string"),
+            "channel": _channel_from_data(entry, default_name=self.title),
+        }
 
     async def parse(self):
         # Iterate through the raw video data obtained from Playlist.getVideos()
@@ -294,6 +353,11 @@ class ChannelTabResult:
         url = channel_tab_url(self.source_url, self.tab)
         with utils.YoutubeDL(_yt_dlp_flat_options(start, end)) as ydl:
             info = ydl.extract_info(url, download=False)
+        if not isinstance(info, dict):
+            self.title = self.title or _("قناة")
+            self.new_videos = 0
+            self.has_more = False
+            return
 
         self.title = (
             self.title
@@ -302,7 +366,7 @@ class ChannelTabResult:
             or info.get("title")
             or _("قناة")
         )
-        entries = [entry for entry in info.get("entries", []) if entry]
+        entries = [entry for entry in info.get("entries", []) or [] if entry]
         current = len(self.items)
         seen_urls = {item["url"] for item in self.items}
         for entry in entries:
@@ -327,6 +391,8 @@ class ChannelTabResult:
                     )
             except Exception:
                 info = {}
+        if not isinstance(info, dict):
+            info = {}
         self.title = (
             self.title
             or info.get("channel")

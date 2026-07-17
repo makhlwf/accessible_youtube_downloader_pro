@@ -227,18 +227,26 @@ class ChannelDialog(wx.Dialog):
             return False
 
         try:
-            result = LoadingDialog(
+            dialog = LoadingDialog(
                 self,
                 _("جاري تحميل القناة"),
                 ChannelTabResult,
                 self.url,
                 tab,
                 self.title,
-            ).res
+            )
+            if dialog.error:
+                raise dialog.error
+            result = dialog.res
         except Exception as exc:
             utils.show_error(_("تعذر تحميل القناة"), exc, parent=self)
             self.current_result = None
             self.itemsBox.Set([_("تعذر تحميل القناة")])
+            self.toggleActions()
+            return False
+        if result is None:
+            self.current_result = None
+            self.itemsBox.Set([_("لا توجد عناصر متاحة")])
             self.toggleActions()
             return False
 

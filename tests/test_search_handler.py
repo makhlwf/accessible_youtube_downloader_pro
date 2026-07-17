@@ -39,6 +39,47 @@ async def test_playlist_result_init_async():
         assert res.get_url(0) == "https://youtube.com/watch?v=vid1"
 
 
+@pytest.mark.asyncio
+async def test_playlist_result_falls_back_to_yt_dlp(monkeypatch):
+    class FakeYDL:
+        def __init__(self, options):
+            self.options = options
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+        def extract_info(self, url, download=False):
+            return {
+                "title": "Fallback Playlist",
+                "entries": [
+                    {
+                        "id": "fallback1",
+                        "title": "Fallback Video",
+                        "url": "fallback1",
+                        "duration": 90,
+                        "channel": "Fallback Channel",
+                        "channel_url": "https://youtube.com/channel/fallback",
+                    }
+                ],
+            }
+
+    monkeypatch.setattr("youtube_browser.search_handler.utils.YoutubeDL", FakeYDL)
+
+    with patch("youtube_browser.search_handler.Playlist") as MockPlaylist:
+        MockPlaylist.getVideos = AsyncMock(side_effect=TypeError("bad playlist"))
+
+        res = PlaylistResult("https://youtube.com/playlist?list=123")
+        await res.init_async()
+
+        assert res.title == "Fallback Playlist"
+        assert res.count == 1
+        assert res.get_url(0) == "https://www.youtube.com/watch?v=fallback1"
+        assert res.get_channel(0)["url"] == "https://youtube.com/channel/fallback"
+
+
 def test_simple_result():
     data = [{"url": "url1", "title": "Title 1", "type": "video"}]
     res = SimpleResult(data)
@@ -164,3 +205,28 @@ def test_channel_tab_result_normalizes_video_entries(monkeypatch):
     assert result.get_type(0) == "video"
     assert result.get_url(0) == "https://www.youtube.com/watch?v=abc123"
     assert result.get_channel(0)["url"] == "https://www.youtube.com/channel/UC123"
+
+
+def test_channel_tab_result_handles_missing_tab(monkeypatch):
+    class FakeYDL:
+        def __init__(self, options):
+            self.options = options
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+        def extract_info(self, url, download=False):
+            return None
+
+    monkeypatch.setattr("youtube_browser.search_handler.utils.YoutubeDL", FakeYDL)
+
+    result = ChannelTabResult(
+        "https://www.youtube.com/channel/UC123/streams", "live", "Test Channel"
+    )
+
+    assert result.count == 0
+    assert result.has_more is False
+    assert result.get_display_titles() == []

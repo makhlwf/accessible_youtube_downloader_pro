@@ -61,9 +61,12 @@ class PlaylistDialog(wx.Dialog):
             # Instantiate PlaylistResult
             playlist_result_obj = PlaylistResult(self.url)
             # Call LoadingDialog with the async init_async method
-            self.result = LoadingDialog(
+            dialog = LoadingDialog(
                 self.Parent, _("جاري عرض قائمة التشغيل"), playlist_result_obj.init_async
-            ).res
+            )
+            if dialog.error:
+                raise dialog.error
+            self.result = dialog.res
 
             if (
                 self.result is None
@@ -72,13 +75,14 @@ class PlaylistDialog(wx.Dialog):
 
             self.title = self.result.title
             self.SetTitle(f"{application.name} - {self.title}")
-            self.videosBox.Set(self.result.get_display_titles())
+            self.videosBox.Set(
+                self.result.get_display_titles() or [_("لا توجد فيديوهات متاحة")]
+            )
             self.scraper.set_results(self.result)
             self.result.scraper = self.scraper
             for i in range(min(10, self.result.count)):
                 self.scraper.add_item(i, priority=10)
         except Exception as e:  # Catch a broader exception here
-            print(e)  # Added for debugging
             utils.show_error(
                 _("حدث خطأ ما أثناء محاولة فتح قائمة التشغيل"),
                 e,
@@ -88,7 +92,8 @@ class PlaylistDialog(wx.Dialog):
             return
         self.Parent.Hide()
         self.Show()
-        self.videosBox.Selection = 0
+        if self.result.count:
+            self.videosBox.Selection = 0
         self.toggleChannelActions()
 
     def _download_media(
