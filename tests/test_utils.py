@@ -47,6 +47,15 @@ def test_youtube_regexp():
     )
     assert youtube_regexp("https://www.youtube.com/embed/dQw4w9WgXcQ") is not None
     assert youtube_regexp("https://www.youtube.com/v/dQw4w9WgXcQ") is not None
+    assert youtube_regexp("https://www.youtube.com/shorts/dQw4w9WgXcQ") is not None
+    assert (
+        youtube_regexp("https://youtube.com/shorts/dQw4w9WgXcQ?feature=share")
+        is not None
+    )
+    assert (
+        youtube_regexp("https://m.youtube.com/shorts/dQw4w9WgXcQ?si=test")
+        is not None
+    )
     assert youtube_regexp("not a youtube link") is None
 
 

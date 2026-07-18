@@ -1091,7 +1091,7 @@ def sanitize_filename(filename):
 
 def youtube_regexp(string):
     pattern = re.compile(
-        r"^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube\.com|youtu.be))(\/(?:[\w\-]+.*[?&]v=|embed\/|v\/|watch\?.*list=|))([\w\-]{11,34})(.*)?$"
+        r"^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube\.com|youtu.be))(\/(?:[\w\-]+.*[?&]v=|embed\/|v\/|shorts\/|watch\?.*list=|))([\w\-]{11,34})(.*)?$"
     )
     return pattern.search(string)
 
