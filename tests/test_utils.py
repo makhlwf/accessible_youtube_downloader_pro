@@ -3,6 +3,9 @@ from utils import (
     time_to_seconds,
     sanitize_filename,
     youtube_regexp,
+    is_supported_youtube_url,
+    extract_supported_youtube_url,
+    extract_launch_youtube_url,
     format_duration,
 )
 
@@ -57,6 +60,39 @@ def test_youtube_regexp():
         is not None
     )
     assert youtube_regexp("not a youtube link") is None
+
+
+def test_is_supported_youtube_url():
+    assert is_supported_youtube_url("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
+    assert is_supported_youtube_url("https://youtu.be/dQw4w9WgXcQ")
+    assert is_supported_youtube_url("https://music.youtube.com/watch?v=dQw4w9WgXcQ")
+    assert is_supported_youtube_url("https://www.youtube.com/playlist?list=PL123")
+    assert is_supported_youtube_url("https://www.youtube.com/channel/UC12345678901")
+    assert is_supported_youtube_url("https://www.youtube.com/@HexPlayer")
+    assert not is_supported_youtube_url("https://www.youtube.com/")
+    assert not is_supported_youtube_url("https://example.com/watch?v=dQw4w9WgXcQ")
+
+
+def test_extract_supported_youtube_url():
+    text = "open https://www.youtube.com/watch?v=dQw4w9WgXcQ&feature=shared now"
+    assert (
+        extract_supported_youtube_url(text)
+        == "https://www.youtube.com/watch?v=dQw4w9WgXcQ&feature=shared"
+    )
+    assert extract_supported_youtube_url("youtube.com/playlist?list=PL123") == (
+        "https://youtube.com/playlist?list=PL123"
+    )
+    assert extract_supported_youtube_url("no link here") == ""
+
+
+def test_extract_launch_youtube_url():
+    assert extract_launch_youtube_url(
+        "hexplayer://open?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DdQw4w9WgXcQ"
+    ) == "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+    assert extract_launch_youtube_url(
+        "hexplayer://open/https%3A%2F%2Fyoutu.be%2FdQw4w9WgXcQ"
+    ) == "https://youtu.be/dQw4w9WgXcQ"
+    assert extract_launch_youtube_url("hexplayer://open?url=https%3A%2F%2Fexample.com") == ""
 
 
 def test_format_duration():

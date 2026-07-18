@@ -5,6 +5,7 @@ import wx
 from language_handler import _, supported_languages
 from settings_handler import config_get, config_set
 from theme_handler import THEMES, apply_theme
+import windows_url_association
 
 
 languages = {
@@ -108,11 +109,20 @@ class SettingsDialog(wx.Dialog):
             _("التشغيل في الخلفية ومراقبة الحافظة عند بدء تشغيل النظام"),
             name="background_monitoring",
         )
+        self.browserIntegration = wx.CheckBox(
+            preferencesBox,
+            -1,
+            _("تفعيل التكامل الآمن مع إضافة المتصفح"),
+            name="browser_integration",
+        )
         self.autoCheckForUpdates.SetValue(config_get("checkupdates"))
         self.autoDetectItem.SetValue(config_get("autodetect"))
         self.autoLoadItem.SetValue(config_get("autoload"))
         self.debugMode.SetValue(config_get("debug"))
         self.backgroundMonitoring.SetValue(config_get("background_monitoring"))
+        self.browserIntegration.SetValue(config_get("browser_integration"))
+        if sys.platform != "win32":
+            self.browserIntegration.Disable()
         wx.StaticText(preferencesBox, -1, _("مظهر البرنامج: "), name="theme")
         self.themeBox = wx.Choice(
             preferencesBox, -1, name="theme", choices=list(THEMES.keys())
@@ -275,6 +285,7 @@ class SettingsDialog(wx.Dialog):
         self.autoCheckForUpdates.Bind(wx.EVT_CHECKBOX, self.onCheck)
         self.debugMode.Bind(wx.EVT_CHECKBOX, self.onCheck)
         self.backgroundMonitoring.Bind(wx.EVT_CHECKBOX, self.onCheck)
+        self.browserIntegration.Bind(wx.EVT_CHECKBOX, self.onCheck)
         self.repeateTracks.Bind(wx.EVT_CHECKBOX, self.onCheck)
         self.autoPlayNext.Bind(wx.EVT_CHECKBOX, self.onCheck)
         self.continueWatching.Bind(wx.EVT_CHECKBOX, self.onCheck)
@@ -348,8 +359,23 @@ class SettingsDialog(wx.Dialog):
         self.cookiesPathField.Value = ""
 
     def onOk(self, event):
+        old_browser_integration = config_get("browser_integration")
         for key, item in self.preferences.items():
             config_set(key, item)
+        new_browser_integration = config_get("browser_integration")
+        if new_browser_integration != old_browser_integration:
+            if new_browser_integration:
+                success = windows_url_association.register_browser_integration()
+            else:
+                success = windows_url_association.unregister_browser_integration()
+            if not success and sys.platform == "win32":
+                config_set("browser_integration", old_browser_integration)
+                wx.MessageBox(
+                    _("تعذر تحديث تكامل المتصفح في Windows."),
+                    _("خطأ"),
+                    style=wx.ICON_ERROR,
+                    parent=self,
+                )
         if not self.mp3Quality.Selection == int(config_get("conversion")):
             config_set("conversion", self.mp3Quality.Selection)
         config_set(

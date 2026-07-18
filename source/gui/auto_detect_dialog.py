@@ -8,17 +8,16 @@ from nvda_client.client import speak
 
 
 def link_type(url):
-    cases = ("list", "channel", "playlist", "/user/")
-    if cases[0] in url or cases[2] in url:
+    if "list" in url or "playlist" in url:
         return _("قائمة تشغيل")
-    elif cases[1] in url or cases[3] in url:
+    elif any(case in url for case in ("channel", "/user/", "/c/", "/@")):
         return _("قناة")
     else:
         return _("فيديو")
 
 
 class AutoDetectDialog(wx.Dialog):
-    def __init__(self, parent, url):
+    def __init__(self, parent, url, source="clipboard"):
         wx.Dialog.__init__(
             self,
             None,
@@ -31,13 +30,14 @@ class AutoDetectDialog(wx.Dialog):
         main_sizer = wx.BoxSizer(wx.VERTICAL)
         content_sizer = wx.BoxSizer(wx.VERTICAL)
 
-        text = wx.StaticText(
-            panel,
-            -1,
-            _(
+        message = (
+            _("لقد تم فتح رابط ل{} يوتيوب. يرجى اختيار الإجراء المطلوب")
+            if source == "external"
+            else _(
                 "لقد تم الكشف عن وجود رابط ل{} يوتيوب في الحافظة. يرجى اختيار الإجراء المطلوب"
-            ).format(link_type(url)),
+            )
         )
+        text = wx.StaticText(panel, -1, message.format(link_type(url)))
         content_sizer.Add(text, 0, wx.ALL | wx.CENTER, 10)
 
         btn_sizer = wx.BoxSizer(wx.HORIZONTAL)

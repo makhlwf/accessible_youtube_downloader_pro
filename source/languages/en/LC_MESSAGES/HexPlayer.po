@@ -88,6 +88,10 @@ msgid "التحقق من وجود تحديث لـ دينو"
 msgstr "Check for Deno update"
 
 #: source/accessible_youtube_downloader_pro.py:151
+msgid "فتح مجلد إضافة المتصفح"
+msgstr "Open browser extension folder"
+
+#: source/accessible_youtube_downloader_pro.py:151
 msgid "قائمة الأدوات الخارجية"
 msgstr "External tools list"
 
@@ -167,6 +171,10 @@ msgstr "HexPlayer User Guide"
 #: source/accessible_youtube_downloader_pro.py:504
 msgid "تعذر العثور على ملف سياسة الخصوصية"
 msgstr "Couldn't find the Privacy Policy file."
+
+#: source/accessible_youtube_downloader_pro.py:392
+msgid "تعذر العثور على مجلد إضافة المتصفح"
+msgstr "Couldn't find the browser extension folder."
 
 #: source/accessible_youtube_downloader_pro.py:508
 msgid "جاري البحث عن التحديثات. يرجى الانتظار"
@@ -484,6 +492,11 @@ msgid ""
 msgstr ""
 "A YouTube {} link has been detected in the clipboard. Please choose an "
 "action:"
+
+#: source/gui/auto_detect_dialog.py:39
+#, python-brace-format
+msgid "لقد تم فتح رابط ل{} يوتيوب. يرجى اختيار الإجراء المطلوب"
+msgstr "A YouTube {} link was opened. Please choose an action:"
 
 #: source/gui/auto_detect_dialog.py:44 source/gui/download_dialog.py:15
 #: source/gui/download_dialog.py:33 source/gui/favorites.py:27
@@ -846,6 +859,10 @@ msgstr "Enable debug messages for developers only"
 msgid "التشغيل في الخلفية ومراقبة الحافظة عند بدء تشغيل النظام"
 msgstr "Run in background and monitor clipboard on system startup"
 
+#: source/gui/settings_dialog.py:84
+msgid "تفعيل التكامل الآمن مع إضافة المتصفح"
+msgstr "Enable safe browser extension integration"
+
 #: source/gui/settings_dialog.py:86
 #, fuzzy
 msgid "مظهر البرنامج: "
@@ -983,6 +1000,10 @@ msgid ""
 msgstr ""
 "You have changed the language to {}. The program must be restarted to "
 "apply changes. Restart now?"
+
+#: source/gui/settings_dialog.py:366
+msgid "تعذر تحديث تكامل المتصفح في Windows."
+msgstr "Could not update browser integration in Windows."
 
 #: source/gui/tray_icon.py:11
 msgid "HexPlayer"

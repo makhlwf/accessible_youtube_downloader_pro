@@ -16,6 +16,12 @@ from concurrent.futures import ThreadPoolExecutor
 from settings_handler import config_get
 from language_handler import _
 from deno_service import deno_service
+from youtube_url_utils import (
+    extract_launch_youtube_url as extract_launch_youtube_url,
+    extract_supported_youtube_url as extract_supported_youtube_url,
+    is_supported_youtube_url as is_supported_youtube_url,
+    youtube_regexp,
+)
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -1087,13 +1093,6 @@ def sanitize_filename(filename):
     if not filename:
         return "unnamed"
     return re.sub(r'[<>:"/\\|?*]', "_", filename).strip()
-
-
-def youtube_regexp(string):
-    pattern = re.compile(
-        r"^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube\.com|youtu.be))(\/(?:[\w\-]+.*[?&]v=|embed\/|v\/|shorts\/|watch\?.*list=|))([\w\-]{11,34})(.*)?$"
-    )
-    return pattern.search(string)
 
 
 def check_for_updates(quiet=False):

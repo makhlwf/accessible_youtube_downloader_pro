@@ -1,6 +1,8 @@
 # ruff: noqa: E402
+import json
 import os
 import socket
+import struct
 import sys
 
 # Early setup for MPV and other DLLs
@@ -15,6 +17,8 @@ import logging
 import wx
 import pyperclip
 import settings_handler
+import windows_url_association
+import browser_extension_manager
 from theme_handler import apply_theme
 from language_handler import init_translation, codes, _
 import application
@@ -39,10 +43,117 @@ from youtube_browser.search_handler import SimpleResult
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+IPC_HOST = "127.0.0.1"
+IPC_PORT = 57280
+
+
+def get_launch_url(argv):
+    for arg in argv[1:]:
+        if arg.startswith("--"):
+            continue
+        url = utils.extract_launch_youtube_url(arg)
+        if url:
+            return url
+    return ""
+
+
+def send_ipc_message(action, url=""):
+    payload = json.dumps({"action": action, "url": url}).encode("utf-8")
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.settimeout(1)
+        s.connect((IPC_HOST, IPC_PORT))
+        s.sendall(payload)
+
+
+def is_native_messaging_invocation(argv):
+    return "--native-messaging-host" in argv or any(
+        arg.startswith("chrome-extension://") for arg in argv[1:]
+    )
+
+
+def read_native_message(stdin=None):
+    stdin = stdin or sys.stdin.buffer
+    raw_length = stdin.read(4)
+    if len(raw_length) == 0:
+        return None
+    if len(raw_length) != 4:
+        raise ValueError("Invalid native message length header")
+    message_length = struct.unpack("<I", raw_length)[0]
+    if message_length > 1024 * 1024:
+        raise ValueError("Native message is too large")
+    data = stdin.read(message_length)
+    if len(data) != message_length:
+        raise ValueError("Incomplete native message")
+    return json.loads(data.decode("utf-8"))
+
+
+def write_native_message(message, stdout=None):
+    stdout = stdout or sys.stdout.buffer
+    data = json.dumps(message).encode("utf-8")
+    stdout.write(struct.pack("<I", len(data)))
+    stdout.write(data)
+    stdout.flush()
+
+
+def start_detached_process(command):
+    kwargs = {
+        "close_fds": True,
+        "stdin": subprocess.DEVNULL,
+        "stdout": subprocess.DEVNULL,
+        "stderr": subprocess.DEVNULL,
+    }
+    if sys.platform == "win32":
+        kwargs["creationflags"] = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+    return subprocess.Popen(command, **kwargs)
+
+
+def launch_or_forward_external_url(url):
+    url = utils.extract_launch_youtube_url(url)
+    if not url:
+        return False
+
+    try:
+        send_ipc_message("open_url", url)
+        return True
+    except Exception:
+        pass
+
+    try:
+        if getattr(sys, "frozen", False):
+            start_detached_process([sys.executable, url])
+        else:
+            script_path = os.path.abspath(sys.modules["__main__"].__file__)
+            start_detached_process([sys.executable, script_path, url])
+        return True
+    except Exception as e:
+        logger.error("Failed to launch HexPlayer from native host: %s", e)
+        return False
+
+
+def native_messaging_main():
+    try:
+        message = read_native_message()
+        if not isinstance(message, dict):
+            write_native_message({"ok": False, "error": "Invalid message"})
+            return 1
+        if message.get("type") != "open":
+            write_native_message({"ok": False, "error": "Unsupported message type"})
+            return 1
+
+        url = message.get("url", "")
+        opened = launch_or_forward_external_url(url)
+        write_native_message({"ok": opened})
+        return 0 if opened else 1
+    except Exception as e:
+        try:
+            write_native_message({"ok": False, "error": str(e)})
+        except Exception:
+            pass
+        return 1
 
 
 class HomeScreen(wx.Frame):
-    def __init__(self, start_hidden=False):
+    def __init__(self, start_hidden=False, launch_url=""):
         wx.Frame.__init__(self, parent=None, title=application.name)
         settings_handler.config_initialization()
         init_translation("HexPlayer")
@@ -53,6 +164,7 @@ class HomeScreen(wx.Frame):
         self.scraper = Scraper()
         self.home_feed_continuation = None
         self.last_clip_content = ""
+        self.pending_launch_url = launch_url
         self.tray_icon = TaskBarIcon(self)
 
         self._init_ui()
@@ -64,6 +176,8 @@ class HomeScreen(wx.Frame):
             self.Show()
         self._start_ipc_server()
         self._startup_logic()
+        if self.pending_launch_url:
+            wx.CallAfter(self.handle_external_url, self.pending_launch_url)
 
     def _init_ui(self):
         self.Centre()
@@ -146,6 +260,9 @@ class HomeScreen(wx.Frame):
         )
         self.showDenoVer = toolsMenu.Append(-1, _("عرض إصدار دينو"))
         self.updateDeno = toolsMenu.Append(-1, _("التحقق من وجود تحديث لـ دينو"))
+        self.openBrowserExtensionFolder = toolsMenu.Append(
+            -1, _("فتح مجلد إضافة المتصفح")
+        )
         menuBar.Append(toolsMenu, _("قائمة الأدوات الخارجية"))
 
         # About Menu
@@ -195,6 +312,11 @@ class HomeScreen(wx.Frame):
         self.Bind(wx.EVT_MENU, self.on_update_yt_dlp, self.updateYtdlp)
         self.Bind(wx.EVT_MENU, self.on_show_deno_version, self.showDenoVer)
         self.Bind(wx.EVT_MENU, self.on_update_deno, self.updateDeno)
+        self.Bind(
+            wx.EVT_MENU,
+            self.onOpenBrowserExtensionFolder,
+            self.openBrowserExtensionFolder,
+        )
 
         self.Bind(wx.EVT_MENU, self.onGuide, self.guideItem)
         self.Bind(wx.EVT_MENU, self.onCheckForUpdates, self.checkUpdatesItem)
@@ -235,6 +357,21 @@ class HomeScreen(wx.Frame):
         self.Bind(wx.EVT_CLOSE, self.onClose)
 
     def _startup_logic(self):
+        try:
+            browser_extension_manager.sync_browser_extension_files()
+        except Exception as e:
+            logger.error("Failed to sync browser extension files: %s", e)
+
+        legacy_url_association = settings_handler.config_get("url_association")
+        if (
+            legacy_url_association
+            or windows_url_association.is_legacy_http_url_handler_registered()
+        ):
+            if windows_url_association.cleanup_legacy_http_url_handler():
+                settings_handler.config_set("url_association", False)
+        if settings_handler.config_get("browser_integration"):
+            windows_url_association.register_browser_integration()
+
         cookies_path = settings_handler.config_get("cookiespath")
         if cookies_path and os.path.exists(cookies_path):
             self.historyBtn.Show()
@@ -262,8 +399,9 @@ class HomeScreen(wx.Frame):
             return
         if clip_content != self.last_clip_content:
             self.last_clip_content = clip_content
-            if utils.youtube_regexp(clip_content):
-                dlg = AutoDetectDialog(self, clip_content)
+            detected_url = utils.extract_supported_youtube_url(clip_content)
+            if detected_url:
+                dlg = AutoDetectDialog(self, detected_url)
                 utils.ensure_focus(dlg)
                 dlg.ShowModal()
 
@@ -387,6 +525,20 @@ class HomeScreen(wx.Frame):
     def on_update_yt_dlp(self, event):
         utils.update_yt_dlp()
 
+    def onOpenBrowserExtensionFolder(self, event):
+        try:
+            extension_path = browser_extension_manager.sync_browser_extension_files()
+        except Exception as e:
+            logger.error("Failed to sync browser extension files: %s", e)
+            extension_path = browser_extension_manager.get_user_extension_path()
+        if not os.path.isdir(extension_path):
+            utils.show_error(_("تعذر العثور على مجلد إضافة المتصفح"), parent=self)
+            return
+        if sys.platform == "win32":
+            os.startfile(extension_path)
+        else:
+            subprocess.call(["xdg-open", extension_path])
+
     def onPlay(self, event):
         linkDlg = LinkDlg(self)
         data = linkDlg.data
@@ -418,8 +570,20 @@ class HomeScreen(wx.Frame):
         if not config:
             return
         clip_content = pyperclip.paste()
-        if utils.youtube_regexp(clip_content):
-            AutoDetectDialog(self, clip_content).ShowModal()
+        detected_url = utils.extract_supported_youtube_url(clip_content)
+        if detected_url:
+            AutoDetectDialog(self, detected_url).ShowModal()
+
+    def handle_external_url(self, url):
+        url = utils.extract_supported_youtube_url(url)
+        if not url:
+            return
+        if not self.IsShown():
+            self.Show()
+        self.Raise()
+        dlg = AutoDetectDialog(self, url, source="external")
+        utils.ensure_focus(dlg)
+        dlg.ShowModal()
 
     def onSettings(self, event):
         SettingsDialog(self)
@@ -521,17 +685,36 @@ class HomeScreen(wx.Frame):
             self.onExit()
 
     def _start_ipc_server(self):
+        def handle_message(data):
+            try:
+                message = json.loads(data.decode("utf-8"))
+            except Exception:
+                if data == b"SHOW":
+                    wx.CallAfter(self.tray_icon.on_show, None)
+                return
+
+            action = message.get("action")
+            if action == "show":
+                wx.CallAfter(self.tray_icon.on_show, None)
+            elif action == "open_url":
+                wx.CallAfter(self.handle_external_url, message.get("url", ""))
+
         def listen():
             try:
                 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                s.bind(("127.0.0.1", 57280))
+                s.bind((IPC_HOST, IPC_PORT))
                 s.listen(1)
                 while True:
                     conn, addr = s.accept()
                     with conn:
-                        data = conn.recv(1024)
-                        if data == b"SHOW":
-                            wx.CallAfter(self.tray_icon.on_show, None)
+                        chunks = []
+                        while True:
+                            chunk = conn.recv(4096)
+                            if not chunk:
+                                break
+                            chunks.append(chunk)
+                        if chunks:
+                            handle_message(b"".join(chunks))
             except Exception:
                 pass
 
@@ -539,19 +722,24 @@ class HomeScreen(wx.Frame):
 
 
 if __name__ == "__main__":
+    if is_native_messaging_invocation(sys.argv):
+        sys.exit(native_messaging_main())
+
     app = wx.App()
+    launch_url = get_launch_url(sys.argv)
 
     # Single Instance Checker - run very early
     name = f"{application.name}-{wx.GetUserId()}"
     checker = wx.SingleInstanceChecker(name)
     if checker.IsAnotherRunning():
-        if "--background" not in sys.argv:
+        if launch_url:
             try:
-                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                s.settimeout(1)
-                s.connect(("127.0.0.1", 57280))
-                s.sendall(b"SHOW")
-                s.close()
+                send_ipc_message("open_url", launch_url)
+            except Exception:
+                pass
+        elif "--background" not in sys.argv:
+            try:
+                send_ipc_message("show")
             except Exception:
                 wx.MessageBox(
                     _("البرنامج قيد التشغيل بالفعل."),
@@ -565,6 +753,6 @@ if __name__ == "__main__":
     lang_id = codes.get(settings_handler.config_get("lang"), wx.LANGUAGE_ARABIC)
     locale = wx.Locale(lang_id)
 
-    start_hidden = "--background" in sys.argv
-    home_screen = HomeScreen(start_hidden=start_hidden)
+    start_hidden = "--background" in sys.argv and not launch_url
+    home_screen = HomeScreen(start_hidden=start_hidden, launch_url=launch_url)
     app.MainLoop()

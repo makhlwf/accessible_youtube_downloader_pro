@@ -9,7 +9,6 @@ from download_handler.downloader import (
 from settings_handler import config_get, config_set
 from .download_progress import DownloadProgress
 import utils
-from utils import youtube_regexp
 from language_handler import _
 from theme_handler import apply_theme
 
@@ -96,19 +95,17 @@ class DownloadDialog(wx.Frame):
     # detect youtube links from the clipboard function
     def detectFromClipboard(self):
         clip_content = pyperclip.paste()  # get the clipboard content
-        match = youtube_regexp(clip_content)
-        if match is not None and youtube_regexp(self.videoLink.Value) is None:
-            self.videoLink.SetValue(
-                match.group()
-            )  # set the url box content to the detected youtube link if the box was not impty
+        detected_url = utils.extract_supported_youtube_url(clip_content)
+        if detected_url and not utils.is_supported_youtube_url(self.videoLink.Value):
+            self.videoLink.SetValue(detected_url)
 
     def onDownload(self, event):
         url = self.videoLink.GetValue()
-        if url == "" or utils.youtube_regexp(url) is None:
+        if url == "" or not utils.is_supported_youtube_url(url):
             utils.show_error(_("يرجى إدخال رابطًا صحيحًا."), parent=self)
             wx.CallAfter(self.videoLink.SetFocus)
             return
-        cases = ("list", "channel", "playlist", "/user/", "RD", "mix")
+        cases = ("list", "channel", "playlist", "/user/", "/c/", "/@", "RD", "mix")
         for case in cases:
             if case in url:
                 folder = True

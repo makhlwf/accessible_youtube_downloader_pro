@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Opening HexPlayer</title>
+    <style>
+      body {
+        color: #111827;
+        font: 16px/1.5 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        margin: 24px;
+        max-width: 720px;
+      }
+
+      button,
+      a {
+        font: inherit;
+      }
+
+      code {
+        overflow-wrap: anywhere;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Opening HexPlayer</h1>
+    <p id="status" role="status" aria-live="polite">Preparing link...</p>
+    <p><code id="url"></code></p>
+    <p>
+      <button id="open" type="button">Open in HexPlayer</button>
+    </p>
+    <p>
+      This fallback page is used when direct Native Messaging launch is not
+      available. If Brave asks for permission to open HexPlayer, choose the
+      option to allow it.
+    </p>
+    <script src="youtube-links.js"></script>
+    <script src="launch.js"></script>
+  </body>
+</html>

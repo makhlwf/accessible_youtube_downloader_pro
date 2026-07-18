@@ -76,8 +76,13 @@ Name: "download_ytdlp"; Description: "{cm:DownloadYtDlp}"; Flags: unchecked
 Name: "download_deno"; Description: "{cm:DownloadDeno}"; Flags: unchecked
 
 [Files]
-Source: "C:\accessible_youtube_downloader_pro\dist\HexPlayer.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\accessible_youtube_downloader_pro\dist\_internal\*"; DestDir: "{app}\_internal"; Flags: recursesubdirs createallsubdirs
+Source: "C:\accessible_youtube_downloader_pro\dist\HexPlayer\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "C:\accessible_youtube_downloader_pro\dist\HexPlayer\_internal\browser_extension\*"; DestDir: "{userappdata}\HexPlayer\browser_extension"; Flags: ignoreversion recursesubdirs createallsubdirs
+
+[InstallDelete]
+Type: filesandordirs; Name: "{app}\browser_extension"
+Type: filesandordirs; Name: "{app}\_internal\browser_extension"
+Type: filesandordirs; Name: "{userappdata}\HexPlayer\browser_extension"
 
 [Icons]
 Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"

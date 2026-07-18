@@ -86,6 +86,10 @@ msgid "التحقق من وجود تحديث لـ دينو"
 msgstr ""
 
 #: source/accessible_youtube_downloader_pro.py:149
+msgid "فتح مجلد إضافة المتصفح"
+msgstr ""
+
+#: source/accessible_youtube_downloader_pro.py:149
 msgid "قائمة الأدوات الخارجية"
 msgstr ""
 
@@ -168,6 +172,10 @@ msgstr ""
 
 #: source/accessible_youtube_downloader_pro.py:492
 msgid "تعذر العثور على ملف سياسة الخصوصية"
+msgstr ""
+
+#: source/accessible_youtube_downloader_pro.py:392
+msgid "تعذر العثور على مجلد إضافة المتصفح"
 msgstr ""
 
 #: source/accessible_youtube_downloader_pro.py:496
@@ -487,6 +495,11 @@ msgstr ""
 msgid ""
 "لقد تم الكشف عن وجود رابط ل{} يوتيوب في الحافظة. يرجى اختيار الإجراء "
 "المطلوب"
+msgstr ""
+
+#: source/gui/auto_detect_dialog.py:39
+#, python-brace-format
+msgid "لقد تم فتح رابط ل{} يوتيوب. يرجى اختيار الإجراء المطلوب"
 msgstr ""
 
 #: source/gui/auto_detect_dialog.py:44 source/gui/channel_dialog.py:58
@@ -932,6 +945,10 @@ msgstr ""
 msgid "التشغيل في الخلفية ومراقبة الحافظة عند بدء تشغيل النظام"
 msgstr ""
 
+#: source/gui/settings_dialog.py:114
+msgid "تفعيل التكامل الآمن مع إضافة المتصفح"
+msgstr ""
+
 #: source/gui/settings_dialog.py:116
 msgid "مظهر البرنامج: "
 msgstr ""
@@ -1069,6 +1086,10 @@ msgstr ""
 msgid ""
 "لقد قمت بتغيير لغة البرنامج إلى {}, مما يعني أنه ينبغي عليك إعادة تشغيل "
 "البرنامج لتطبيق التعديلات. هل تريد القيام بذلك حالًا?"
+msgstr ""
+
+#: source/gui/settings_dialog.py:366
+msgid "تعذر تحديث تكامل المتصفح في Windows."
 msgstr ""
 
 #: source/gui/tray_icon.py:11
@@ -1505,4 +1526,3 @@ msgstr ""
 #, python-brace-format
 msgid "عدد المشاهدات {}"
 msgstr ""
-

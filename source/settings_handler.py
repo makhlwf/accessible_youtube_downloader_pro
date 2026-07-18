@@ -26,6 +26,7 @@ defaults = {
     "audiooutputdevice": "",
     "debug": False,
     "background_monitoring": False,
+    "browser_integration": False,
     "playback_speed_step": 0.05,
     "eq_enabled": False,
     "eq_preamp": 0.0,

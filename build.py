@@ -1,6 +1,7 @@
 import os
 import shutil
 import subprocess
+import sys
 import zipfile
 
 # It's better to run this from the repo root.
@@ -44,9 +45,12 @@ if os.path.exists("build"):
 
 # The entry point of the application
 entry_point = os.path.join("source", "accessible_youtube_downloader_pro.py")
+native_host_entry_point = os.path.join("source", "native_messaging_host.py")
 
 # Name of the output executable
 app_name = "HexPlayer"
+native_host_name = "HexPlayerNativeHost"
+package_dir = os.path.join("dist", app_name)
 
 # Native runtime files must be added as binaries so PyInstaller handles them
 # with the same layout and loader semantics as extension modules.
@@ -81,6 +85,7 @@ data_to_add = [
     "../PRIVACY_POLICY.md",
     # Directories
     "assets",
+    "browser_extension",
     "docs",
     "languages",
 ]
@@ -242,10 +247,14 @@ stdlib_hidden_imports = [
 
 # Construct the pyinstaller command
 command = [
-    "pyinstaller",
+    sys.executable,
+    "-m",
+    "PyInstaller",
     "--noconfirm",
     "--name",
     app_name,
+    "--distpath",
+    "dist",
     "--noconsole",
     # Clean build
     "--clean",
@@ -299,15 +308,84 @@ for item in data_to_add:
 # Add the entry point script at the end
 command.append(entry_point)
 
+native_host_command = [
+    sys.executable,
+    "-m",
+    "PyInstaller",
+    "--noconfirm",
+    "--clean",
+    "--name",
+    native_host_name,
+    "--console",
+    "--onefile",
+    "--distpath",
+    package_dir,
+    "--workpath",
+    os.path.join("build", native_host_name),
+    "--specpath",
+    os.path.join("build", native_host_name),
+    native_host_entry_point,
+]
+
 print(f"Running command: {' '.join(command)}")
+print(f"Running command: {' '.join(native_host_command)}")
+
+
+def normalize_main_build_output():
+    expected_exe = os.path.join(package_dir, f"{app_name}.exe")
+    expected_internal = os.path.join(package_dir, "_internal")
+    if os.path.exists(expected_exe) and os.path.isdir(expected_internal):
+        return
+
+    nested_dir = os.path.join(package_dir, app_name)
+    nested_exe = os.path.join(nested_dir, f"{app_name}.exe")
+    nested_internal = os.path.join(nested_dir, "_internal")
+    if os.path.exists(nested_exe) and os.path.isdir(nested_internal):
+        for item in os.listdir(nested_dir):
+            shutil.move(os.path.join(nested_dir, item), os.path.join(package_dir, item))
+        os.rmdir(nested_dir)
+        return
+
+    root_exe = os.path.join("dist", f"{app_name}.exe")
+    root_internal = os.path.join("dist", "_internal")
+    if os.path.exists(root_exe) and os.path.isdir(root_internal):
+        os.makedirs(package_dir, exist_ok=True)
+        shutil.move(root_exe, expected_exe)
+        shutil.move(root_internal, expected_internal)
+        return
+
+    raise RuntimeError("Could not find the main PyInstaller output layout to package.")
+
+
+def validate_package_layout():
+    required_paths = [
+        os.path.join(package_dir, f"{app_name}.exe"),
+        os.path.join(package_dir, f"{native_host_name}.exe"),
+        os.path.join(package_dir, "_internal"),
+        os.path.join(package_dir, "_internal", "browser_extension", "manifest.json"),
+    ]
+    missing_paths = [path for path in required_paths if not os.path.exists(path)]
+    if missing_paths:
+        missing_list = "\n".join(f"- {path}" for path in missing_paths)
+        raise RuntimeError(
+            "Build output is incomplete. The installer would be broken.\n"
+            f"Missing paths:\n{missing_list}"
+        )
+
 
 # Run the command
 try:
     subprocess.run(command, check=True)
+    normalize_main_build_output()
+    subprocess.run(native_host_command, check=True)
+    validate_package_layout()
     print("Build completed successfully!")
-    print("The executable is in the 'dist' directory.")
+    print(f"The package directory is: {package_dir}")
 except subprocess.CalledProcessError as e:
     print(f"Build failed with error: {e}")
+    exit(1)
+except RuntimeError as e:
+    print(f"Build failed: {e}")
     exit(1)
 except FileNotFoundError:
     print("Error: pyinstaller is not installed or not in the system's PATH.")
