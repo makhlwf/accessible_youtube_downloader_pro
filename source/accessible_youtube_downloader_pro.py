@@ -4,9 +4,9 @@ import socket
 import sys
 
 # Early setup for MPV and other DLLs
-runtime_path = os.path.dirname(__file__)
-if sys.platform == "win32":
-    os.add_dll_directory(runtime_path)
+from runtime_dlls import configure_dll_search_path
+
+configure_dll_search_path()
 
 import threading
 import webbrowser

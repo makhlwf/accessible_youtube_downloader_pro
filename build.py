@@ -1,6 +1,6 @@
 import os
-import subprocess
 import shutil
+import subprocess
 import zipfile
 
 # It's better to run this from the repo root.
@@ -16,7 +16,7 @@ def ensure_mpv_runtime():
     if os.path.exists(mpv_dll):
         return
     if not os.path.exists(mpv_archive):
-        return
+        raise RuntimeError("libmpv-2.dll or libmpv-2.dll.zip is required to build")
 
     print("Extracting libmpv-2.dll from bundled archive...")
     with zipfile.ZipFile(mpv_archive) as archive:
@@ -48,11 +48,9 @@ entry_point = os.path.join("source", "accessible_youtube_downloader_pro.py")
 # Name of the output executable
 app_name = "HexPlayer"
 
-# Data files and directories to be included
-# The format is 'source_path:destination_in_bundle'
-# Using os.pathsep for the separator.
-data_to_add = [
-    # DLLs and EXEs
+# Native runtime files must be added as binaries so PyInstaller handles them
+# with the same layout and loader semantics as extension modules.
+binary_files = [
     "api-ms-win-core-path-l1-1-0.dll",
     "avcodec-60.dll",
     "avdevice-60.dll",
@@ -66,6 +64,16 @@ data_to_add = [
     "ffprobe.exe",
     "libmpv-2.dll",
     "nvdaControllerClient64.dll",
+]
+
+system_binary_files = [
+    # libmpv imports the Vulkan loader. Many end-user systems do not have it,
+    # and Windows reports that failure as libmpv-2.dll not being found.
+    "vulkan-1.dll",
+]
+
+# Data files and directories to be included.
+data_to_add = [
     "deno.json",
     "deno.lock",
     "service.js",
@@ -76,6 +84,32 @@ data_to_add = [
     "docs",
     "languages",
 ]
+
+
+def source_item_path(item):
+    return os.path.normpath(os.path.join("source", item))
+
+
+def find_system_dll(name):
+    search_dirs = []
+    windir = os.environ.get("WINDIR")
+    if windir:
+        search_dirs.append(os.path.join(windir, "System32"))
+    search_dirs.extend(os.environ.get("PATH", "").split(os.pathsep))
+
+    seen = set()
+    for directory in search_dirs:
+        if not directory:
+            continue
+        directory_key = directory.casefold()
+        if directory_key in seen:
+            continue
+        seen.add(directory_key)
+        candidate = os.path.join(directory, name)
+        if os.path.isfile(candidate):
+            return candidate
+    return None
+
 
 # ------------------------------------------------------------------
 # THE NUCLEAR LIST: Forces PyInstaller to include the full StdLib
@@ -235,18 +269,31 @@ command.extend(
     ["--collect-submodules", "curses"]
 )  # Windows sometimes needs this for progress bars
 
+# Add binary files
+for item in binary_files:
+    source_path = source_item_path(item)
+    if not os.path.isfile(source_path):
+        raise RuntimeError(f"Required runtime file is missing: {source_path}")
+    command.extend(["--add-binary", f"{source_path}{os.pathsep}."])
+
+for dll_name in system_binary_files:
+    source_path = find_system_dll(dll_name)
+    if not source_path:
+        raise RuntimeError(
+            f"Required system runtime is missing: {dll_name}. "
+            "Install the Vulkan Runtime or use a libmpv build that does not "
+            "import vulkan-1.dll."
+        )
+    command.extend(["--add-binary", f"{source_path}{os.pathsep}."])
+    print(f"Bundling system runtime: {source_path}")
+
 # Add data files
 for item in data_to_add:
-    source_path = os.path.join("source", item)
-    if not os.path.exists(source_path):
-        # some files might be in the root, like PRIVACY_POLICY.md which is ../PRIVACY_POLICY.md relative to source
-        source_path = os.path.normpath(os.path.join("source", item))
+    source_path = source_item_path(item)
 
     if os.path.isdir(source_path):
-        # For directories, destination is the same as the directory name in the bundle root
         command.extend(["--add-data", f"{source_path}{os.pathsep}{item}"])
     elif os.path.isfile(source_path):
-        # For files, destination is the root of the bundle
         command.extend(["--add-data", f"{source_path}{os.pathsep}."])
 
 # Add the entry point script at the end

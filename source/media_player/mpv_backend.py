@@ -1,5 +1,4 @@
 import ctypes
-import os
 import locale
 import shutil
 import sys
@@ -8,6 +7,8 @@ import zipfile
 from enum import IntEnum
 from pathlib import Path
 from typing import Any
+
+from runtime_dlls import configure_dll_search_path, runtime_roots
 
 
 MPV_FORMAT_STRING = 1
@@ -118,7 +119,6 @@ class MpvMedia:
 
 
 _mpv_lib: ctypes.CDLL | None = None
-_mpv_dll_directory: Any = None
 
 
 def _bundle_root() -> Path:
@@ -157,10 +157,7 @@ def _extract_mpv_dll(root: Path) -> Path | None:
 
 
 def _mpv_candidates() -> list[Path]:
-    roots = [_bundle_root()]
-    if getattr(sys, "frozen", False):
-        exe_dir = Path(sys.executable).resolve().parent
-        roots.extend([exe_dir, exe_dir / "_internal"])
+    roots = runtime_roots([_bundle_root()])
 
     candidates = []
     for root in roots:
@@ -169,7 +166,7 @@ def _mpv_candidates() -> list[Path]:
 
 
 def _load_mpv() -> ctypes.CDLL:
-    global _mpv_lib, _mpv_dll_directory
+    global _mpv_lib
     if _mpv_lib is not None:
         return _mpv_lib
 
@@ -181,9 +178,14 @@ def _load_mpv() -> ctypes.CDLL:
         except OSError as exc:
             raise MPVError("libmpv-2.dll was not found.") from exc
     else:
-        if sys.platform == "win32" and hasattr(os, "add_dll_directory"):
-            _mpv_dll_directory = os.add_dll_directory(str(dll_path.parent))
-        lib = ctypes.CDLL(str(dll_path))
+        configure_dll_search_path([dll_path.parent])
+        try:
+            lib = ctypes.CDLL(str(dll_path))
+        except OSError as exc:
+            raise MPVError(
+                f"Failed to load {dll_path}. The file exists, but Windows could "
+                f"not load one of its runtime dependencies. Original error: {exc}"
+            ) from exc
 
     lib.mpv_create.restype = ctypes.c_void_p
 
