@@ -1,5 +1,6 @@
 from threading import Thread
 
+import pyperclip
 import wx
 
 import utils
@@ -18,14 +19,14 @@ def format_comment_item(comment):
         content = _("تعليق فارغ")
 
     return _(
-        "المستخدم: {author}، التاريخ: {published_time}، الإعجابات: {likes}، "
-        "الردود: {replies}، التعليق: {content}"
+        "التعليق: {content}، المستخدم: {author}، التاريخ: {published_time}، "
+        "الإعجابات: {likes}، الردود: {replies}"
     ).format(
+        content=content,
         author=author,
         published_time=published_time,
         likes=likes,
         replies=replies,
-        content=content,
     )
 
 
@@ -71,6 +72,7 @@ class CommentsDialog(wx.Dialog):
         self.loadMoreButton.Bind(wx.EVT_BUTTON, self.onLoadMore)
         self.closeButton.Bind(wx.EVT_BUTTON, lambda event: self.Destroy())
         self.commentsList.Bind(wx.EVT_LISTBOX_DCLICK, self.onOpenReplies)
+        self.commentsList.Bind(wx.EVT_CONTEXT_MENU, self.onContextMenu)
         self.Bind(wx.EVT_CHAR_HOOK, self.onCharHook)
         self.Bind(wx.EVT_CLOSE, lambda event: self.Destroy())
 
@@ -157,6 +159,25 @@ class CommentsDialog(wx.Dialog):
             reply_token=comment["reply_token"],
             parent_comment_id=comment.get("id"),
         )
+
+    def onContextMenu(self, event):
+        selection = self.commentsList.GetSelection()
+        if selection == wx.NOT_FOUND or selection >= len(self.comments):
+            return
+
+        menu = wx.Menu()
+        copy_item = menu.Append(-1, _("نسخ نص التعليق"))
+        self.Bind(wx.EVT_MENU, self.onCopyComment, copy_item)
+        self.commentsList.PopupMenu(menu)
+        menu.Destroy()
+
+    def onCopyComment(self, event=None):
+        selection = self.commentsList.GetSelection()
+        if selection == wx.NOT_FOUND or selection >= len(self.comments):
+            return
+
+        pyperclip.copy(self.comments[selection].get("content") or "")
+        speak(_("تم نسخ نص التعليق"))
 
     def onCharHook(self, event):
         key = event.GetKeyCode()

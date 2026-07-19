@@ -153,8 +153,35 @@ def test_format_comment_item_contains_accessible_metadata():
         }
     )
 
+    assert row.startswith("التعليق: Great video")
     assert "User" in row
     assert "1 day ago" in row
     assert "5" in row
     assert "2" in row
     assert "Great video" in row
+
+
+def test_copy_comment_copies_selected_content(monkeypatch):
+    from gui import comments_dialog
+
+    dialog = comments_dialog.CommentsDialog.__new__(comments_dialog.CommentsDialog)
+    dialog.comments = [{"content": "Original\ncomment content"}]
+
+    class FakeList:
+        def GetSelection(self):
+            return 0
+
+    copied = {}
+    spoken = []
+    dialog.commentsList = FakeList()
+    monkeypatch.setattr(
+        comments_dialog.pyperclip,
+        "copy",
+        lambda content: copied.setdefault("content", content),
+    )
+    monkeypatch.setattr(comments_dialog, "speak", lambda message: spoken.append(message))
+
+    dialog.onCopyComment()
+
+    assert copied["content"] == "Original\ncomment content"
+    assert spoken == ["تم نسخ نص التعليق"]
