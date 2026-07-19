@@ -1607,3 +1607,80 @@ msgstr "Contains {} videos"
 msgid "عدد المشاهدات {}"
 msgstr "{} views"
 
+#: source/gui/comments_dialog.py:13
+msgid "تاريخ غير معروف"
+msgstr "Unknown date"
+
+#: source/gui/comments_dialog.py:17
+msgid "تعليق فارغ"
+msgstr "Empty comment"
+
+#: source/gui/comments_dialog.py:21
+#, python-brace-format
+msgid ""
+"التعليق: {content}، المستخدم: {author}، التاريخ: {published_time}، "
+"الإعجابات: {likes}، الردود: {replies}"
+msgstr ""
+"Comment: {content}, user: {author}, date: {published_time}, likes: {likes}, "
+"replies: {replies}"
+
+#: source/gui/comments_dialog.py:42
+msgid "ردود التعليق"
+msgstr "Comment replies"
+
+#: source/gui/comments_dialog.py:42
+msgid "تعليقات الفيديو"
+msgstr "Video comments"
+
+#: source/gui/comments_dialog.py:55
+msgid "الردود:"
+msgstr "Replies:"
+
+#: source/gui/comments_dialog.py:55
+msgid "التعليقات:"
+msgstr "Comments:"
+
+#: source/gui/comments_dialog.py:57
+#, python-brace-format
+msgid "تعليقات {}:"
+msgstr "Comments for {}:"
+
+#: source/gui/comments_dialog.py:89
+msgid "جاري تحميل التعليقات..."
+msgstr "Loading comments..."
+
+#: source/gui/comments_dialog.py:90
+msgid "جاري تحميل التعليقات"
+msgstr "Loading comments"
+
+#: source/gui/comments_dialog.py:92
+msgid "جاري تحميل المزيد من التعليقات"
+msgstr "Loading more comments"
+
+#: source/gui/comments_dialog.py:127
+msgid "لا توجد ردود متاحة"
+msgstr "No replies available"
+
+#: source/gui/comments_dialog.py:129
+msgid "لا توجد تعليقات متاحة"
+msgstr "No comments available"
+
+#: source/gui/comments_dialog.py:140
+msgid "تم تحميل التعليقات"
+msgstr "Comments loaded"
+
+#: source/gui/comments_dialog.py:153
+msgid "لا توجد ردود لهذا التعليق"
+msgstr "This comment has no replies"
+
+#: source/gui/comments_dialog.py:169
+msgid "نسخ نص التعليق"
+msgstr "Copy comment text"
+
+#: source/gui/comments_dialog.py:180
+msgid "تم نسخ نص التعليق"
+msgstr "Comment text copied"
+
+#: source/media_player/media_gui.py:156
+msgid "تعليقات الفيديو\tctrl+shift+m"
+msgstr "Video comments\tctrl+shift+m"
