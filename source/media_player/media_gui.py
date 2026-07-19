@@ -29,14 +29,14 @@ logger = logging.getLogger(__name__)
 
 class AudioOutputDeviceDialog(wx.Dialog):
     def __init__(self, parent, devices, selected_device):
-        wx.Dialog.__init__(self, parent, title=_("audio output device"))
+        wx.Dialog.__init__(self, parent, title=_("جهاز إخراج الصوت"))
         self.SetSize(450, 200)
         self.Centre()
-        self.devices = [{"id": "", "description": _("default audio output device")}]
+        self.devices = [{"id": "", "description": _("جهاز إخراج الصوت الافتراضي")}]
         self.devices.extend(devices)
 
         panel = wx.Panel(self)
-        label = wx.StaticText(panel, -1, _("audio output device: "))
+        label = wx.StaticText(panel, -1, _("جهاز إخراج الصوت: "))
         self.deviceBox = wx.Choice(
             panel,
             -1,
@@ -153,7 +153,7 @@ class MediaGui(wx.Frame):
         descriptionItem = trackOptions.Append(-1, _("وصف الفيديو\tctrl+shift+d"))
         equalizerItem = trackOptions.Append(-1, _("المعادل... \tctrl+e"))
         audioOutputDeviceItem = trackOptions.Append(
-            -1, _("audio output device...\tf12")
+            -1, _("جهاز إخراج الصوت...\tf12")
         )
         self.likeItem = trackOptions.Append(-1, _("إعجاب (L)"))
         self.dislikeItem = trackOptions.Append(-1, _("عدم إعجاب (D)"))
@@ -774,12 +774,14 @@ class MediaGui(wx.Frame):
             device = dlg.get_selected_device()
             if self.player.select_audio_output_device(device["id"]):
                 speak(
-                    _("audio output device changed to {}").format(device["description"])
+                    _("تم تغيير جهاز إخراج الصوت إلى {}").format(
+                        device["description"]
+                    )
                 )
             else:
                 speak(
                     _(
-                        "selected audio output device is unavailable. using default audio output device"
+                        "جهاز إخراج الصوت المحدد غير متاح. سيتم استخدام جهاز إخراج الصوت الافتراضي"
                     )
                 )
         finally:
@@ -789,7 +791,7 @@ class MediaGui(wx.Frame):
         wx.CallAfter(
             speak,
             _(
-                "selected audio output device is unavailable. using default audio output device"
+                "جهاز إخراج الصوت المحدد غير متاح. سيتم استخدام جهاز إخراج الصوت الافتراضي"
             ),
         )
 

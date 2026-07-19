@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: HexPlayer 2.0.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-10 15:22+0200\n"
+"POT-Creation-Date: 2026-07-19 15:40+0200\n"
 "PO-Revision-Date: 2026-04-09 08:38+0200\n"
 "Last-Translator: makhlwf <altrhwnyashrf1@gmail.com>\n"
 "Language: en\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
-#: source/accessible_youtube_downloader_pro.py:82
+#: source/accessible_youtube_downloader_pro.py:194
 msgid ""
 "اضغط على مفتاح القوائم alt للوصول إلى خيارات البرنامج, أو تنقل بزر التاب "
 "للوصول سريعًا إلى أهم الخيارات المتاحة."
@@ -25,241 +25,249 @@ msgstr ""
 "Press the Alt menu key to access program options, or use the Tab key to "
 "quickly navigate through the main options."
 
-#: source/accessible_youtube_downloader_pro.py:87
-#: source/accessible_youtube_downloader_pro.py:129
+#: source/accessible_youtube_downloader_pro.py:199
+#: source/accessible_youtube_downloader_pro.py:241
 msgid "البحث في يوتيوب\tctrl+f"
 msgstr "Search in YouTube\tctrl+f"
 
-#: source/accessible_youtube_downloader_pro.py:89
-#: source/accessible_youtube_downloader_pro.py:130
+#: source/accessible_youtube_downloader_pro.py:201
+#: source/accessible_youtube_downloader_pro.py:242
 msgid "التنزيل من خلال رابط\tctrl+d"
 msgstr "Download from link\tctrl+d"
 
-#: source/accessible_youtube_downloader_pro.py:92
-#: source/accessible_youtube_downloader_pro.py:132
+#: source/accessible_youtube_downloader_pro.py:204
+#: source/accessible_youtube_downloader_pro.py:244
 msgid "تشغيل فيديو يوتيوب من خلال الرابط\tctrl+y"
 msgstr "Play YouTube video from link\tctrl+y"
 
-#: source/accessible_youtube_downloader_pro.py:95
-#: source/accessible_youtube_downloader_pro.py:134
+#: source/accessible_youtube_downloader_pro.py:207
+#: source/accessible_youtube_downloader_pro.py:246
 msgid "الفيديوهات المفضلة\tctrl+shift+f"
 msgstr "Favorite videos\tctrl+shift+f"
 
-#: source/accessible_youtube_downloader_pro.py:97
-#: source/accessible_youtube_downloader_pro.py:135
+#: source/accessible_youtube_downloader_pro.py:209
+#: source/accessible_youtube_downloader_pro.py:247
 msgid "سجل المشاهدة\tctrl+h"
 msgstr "Watch History\tctrl+h"
 
-#: source/accessible_youtube_downloader_pro.py:104
+#: source/accessible_youtube_downloader_pro.py:216
 msgid "تحميل المزيد من الفيديوهات المقترحة"
 msgstr "Load more suggested videos"
 
-#: source/accessible_youtube_downloader_pro.py:137
+#: source/accessible_youtube_downloader_pro.py:249
 msgid "فتح مجلد التنزيل\tctrl+p"
 msgstr "Open download folder\tctrl+p"
 
-#: source/accessible_youtube_downloader_pro.py:138
-#: source/media_player/media_gui.py:103 source/youtube_browser/browser.py:103
+#: source/accessible_youtube_downloader_pro.py:250
+#: source/media_player/media_gui.py:163 source/youtube_browser/browser.py:107
 msgid "الإعدادات...\talt+s"
 msgstr "Settings...\talt+s"
 
-#: source/accessible_youtube_downloader_pro.py:139
+#: source/accessible_youtube_downloader_pro.py:251
 msgid "خروج\tctrl+w"
 msgstr "Exit\tctrl+w"
 
-#: source/accessible_youtube_downloader_pro.py:141
+#: source/accessible_youtube_downloader_pro.py:253
 msgid "القائمة الرئيسية"
 msgstr "Main Menu"
 
-#: source/accessible_youtube_downloader_pro.py:145
+#: source/accessible_youtube_downloader_pro.py:257
 msgid "عرض إصدار واي تي دي إل بي"
 msgstr "View YT-DLP version"
 
-#: source/accessible_youtube_downloader_pro.py:147
+#: source/accessible_youtube_downloader_pro.py:259
 msgid "التحقق من وجود تحديث لـ واي تي دي إل بي"
 msgstr "Check for YT-DLP update"
 
-#: source/accessible_youtube_downloader_pro.py:149
+#: source/accessible_youtube_downloader_pro.py:261
 msgid "عرض إصدار دينو"
 msgstr "View Deno version"
 
-#: source/accessible_youtube_downloader_pro.py:150
+#: source/accessible_youtube_downloader_pro.py:262
 msgid "التحقق من وجود تحديث لـ دينو"
 msgstr "Check for Deno update"
 
-#: source/accessible_youtube_downloader_pro.py:151
+#: source/accessible_youtube_downloader_pro.py:264
 msgid "فتح مجلد إضافة المتصفح"
 msgstr "Open browser extension folder"
 
-#: source/accessible_youtube_downloader_pro.py:151
+#: source/accessible_youtube_downloader_pro.py:266
 msgid "قائمة الأدوات الخارجية"
 msgstr "External tools list"
 
-#: source/accessible_youtube_downloader_pro.py:155
+#: source/accessible_youtube_downloader_pro.py:270
 msgid "دليل المستخدم...\tf1"
 msgstr "User Guide...\tf1"
 
-#: source/accessible_youtube_downloader_pro.py:156
+#: source/accessible_youtube_downloader_pro.py:271
 msgid "البحث عن التحديثات"
 msgstr "Check for updates"
 
-#: source/accessible_youtube_downloader_pro.py:157
-#: source/accessible_youtube_downloader_pro.py:502
+#: source/accessible_youtube_downloader_pro.py:272
+#: source/accessible_youtube_downloader_pro.py:654
 msgid "سياسة الخصوصية"
 msgstr "Privacy Policy"
 
-#: source/accessible_youtube_downloader_pro.py:158
+#: source/accessible_youtube_downloader_pro.py:273
 msgid "عن البرنامج..."
 msgstr "About..."
 
-#: source/accessible_youtube_downloader_pro.py:161
+#: source/accessible_youtube_downloader_pro.py:276
 msgid "البريد الالكتروني..."
 msgstr "Email..."
 
-#: source/accessible_youtube_downloader_pro.py:162
+#: source/accessible_youtube_downloader_pro.py:277
 msgid "تلجرام..."
 msgstr "Telegram..."
 
-#: source/accessible_youtube_downloader_pro.py:163
+#: source/accessible_youtube_downloader_pro.py:278
 msgid "تواصل معي"
 msgstr "Contact me"
 
-#: source/accessible_youtube_downloader_pro.py:165
-#: source/accessible_youtube_downloader_pro.py:517
+#: source/accessible_youtube_downloader_pro.py:280
+#: source/accessible_youtube_downloader_pro.py:669
+#: source/youtube_browser/search_handler.py:40
 msgid "حول"
 msgstr "About"
 
-#: source/accessible_youtube_downloader_pro.py:275
+#: source/accessible_youtube_downloader_pro.py:412
 msgid "لم يتم العثور على مكتبة واي تي دي إل بي أو تعذر الحصول على إصدارها"
 msgstr "YT-DLP library not found or version could not be retrieved"
 
-#: source/accessible_youtube_downloader_pro.py:279
+#: source/accessible_youtube_downloader_pro.py:416
 msgid "إصدار واي تي دي إل بي"
 msgstr "YT-DLP version"
 
-#: source/accessible_youtube_downloader_pro.py:285
+#: source/accessible_youtube_downloader_pro.py:422
 msgid "لم يتم العثور على أداة دينو أو تعذر الحصول على إصدارها"
 msgstr "Deno tool not found or version could not be retrieved"
 
-#: source/accessible_youtube_downloader_pro.py:289
+#: source/accessible_youtube_downloader_pro.py:426
 msgid "إصدار دينو"
 msgstr "Deno version"
 
-#: source/accessible_youtube_downloader_pro.py:293
+#: source/accessible_youtube_downloader_pro.py:430
 msgid "جاري تحميل الاقتراحات... يرجى الانتظار"
 msgstr "Loading suggestions... Please wait"
 
-#: source/accessible_youtube_downloader_pro.py:359
-#: source/accessible_youtube_downloader_pro.py:405
-#: source/gui/auto_detect_dialog.py:95 source/gui/favorites.py:114
-#: source/gui/favorites.py:129 source/gui/history.py:152
-#: source/gui/playlist_dialog.py:199 source/gui/playlist_dialog.py:209
-#: source/youtube_browser/browser.py:297 source/youtube_browser/browser.py:317
+#: source/accessible_youtube_downloader_pro.py:493
+#: source/accessible_youtube_downloader_pro.py:552
+#: source/gui/auto_detect_dialog.py:97 source/gui/channel_dialog.py:369
+#: source/gui/channel_dialog.py:392 source/gui/favorites.py:129
+#: source/gui/favorites.py:146 source/gui/history.py:158
+#: source/gui/playlist_dialog.py:237 source/gui/playlist_dialog.py:251
+#: source/youtube_browser/browser.py:311 source/youtube_browser/browser.py:338
 msgid "جاري التشغيل"
 msgstr "Playing"
 
-#: source/accessible_youtube_downloader_pro.py:362
-#: source/accessible_youtube_downloader_pro.py:408 source/gui/history.py:159
-#: source/media_player/media_gui.py:146
+#: source/accessible_youtube_downloader_pro.py:496
+#: source/accessible_youtube_downloader_pro.py:555
+#: source/gui/channel_dialog.py:372 source/gui/channel_dialog.py:395
+#: source/gui/history.py:165 source/media_player/media_gui.py:211
+#: source/media_player/media_gui.py:234
 msgid "لا يمكن تشغيل الرابط"
 msgstr "Cannot play the link"
 
-#: source/accessible_youtube_downloader_pro.py:489
-msgid "دليل استخدام برنامج HexPlayer"
-msgstr "HexPlayer User Guide"
-
-#: source/accessible_youtube_downloader_pro.py:504
-msgid "تعذر العثور على ملف سياسة الخصوصية"
-msgstr "Couldn't find the Privacy Policy file."
-
-#: source/accessible_youtube_downloader_pro.py:392
+#: source/accessible_youtube_downloader_pro.py:535
 msgid "تعذر العثور على مجلد إضافة المتصفح"
 msgstr "Couldn't find the browser extension folder."
 
-#: source/accessible_youtube_downloader_pro.py:508
+#: source/accessible_youtube_downloader_pro.py:641
+msgid "دليل استخدام برنامج HexPlayer"
+msgstr "HexPlayer User Guide"
+
+#: source/accessible_youtube_downloader_pro.py:656
+msgid "تعذر العثور على ملف سياسة الخصوصية"
+msgstr "Couldn't find the Privacy Policy file."
+
+#: source/accessible_youtube_downloader_pro.py:660
 msgid "جاري البحث عن التحديثات. يرجى الانتظار"
 msgstr "Checking for updates. Please wait..."
 
-#: source/accessible_youtube_downloader_pro.py:513
+#: source/accessible_youtube_downloader_pro.py:665
 msgid "اسم البرنامج"
 msgstr "Software Name"
 
-#: source/accessible_youtube_downloader_pro.py:514
+#: source/accessible_youtube_downloader_pro.py:666
 msgid "الإصدار"
 msgstr "Version"
 
-#: source/accessible_youtube_downloader_pro.py:515
+#: source/accessible_youtube_downloader_pro.py:667
 msgid "طُوِر بواسطة"
 msgstr "Developed by"
 
-#: source/accessible_youtube_downloader_pro.py:516 source/gui/description.py:20
+#: source/accessible_youtube_downloader_pro.py:668 source/gui/description.py:20
 msgid "الوصف: "
 msgstr "Description: "
 
-#: source/accessible_youtube_downloader_pro.py:569
+#: source/accessible_youtube_downloader_pro.py:745
 msgid "البرنامج قيد التشغيل بالفعل."
 msgstr "The program is already running."
 
-#: source/accessible_youtube_downloader_pro.py:570
-#: source/gui/settings_dialog.py:316 source/utils.py:256 source/utils.py:273
+#: source/accessible_youtube_downloader_pro.py:746
+#: source/gui/settings_dialog.py:440 source/utils.py:357 source/utils.py:374
 msgid "تنبيه"
 msgstr "Warning"
 
-#: source/utils.py:113
+#: source/utils.py:187
 msgid "144ب (جودة منخفضة جدًا)"
 msgstr "144p (Very Low Quality)"
 
-#: source/utils.py:114
+#: source/utils.py:188
 msgid "240ب (جودة منخفضة)"
 msgstr "240p (Low Quality)"
 
-#: source/utils.py:115
+#: source/utils.py:189
 msgid "360ب (جودة متوسطة)"
 msgstr "360p (Medium Quality)"
 
-#: source/utils.py:116
+#: source/utils.py:190
 msgid "480ب (جودة متوسطة)"
 msgstr "480p (Medium Quality)"
 
-#: source/utils.py:117
+#: source/utils.py:191
 msgid "720ب (جودة عالية عالية الدقة)"
 msgstr "720p (High Quality HD)"
 
-#: source/utils.py:118
+#: source/utils.py:192
 msgid "1080ب (جودة عالية جدًا عالية الدقة الكاملة)"
 msgstr "1080p (Very High Quality Full HD)"
 
-#: source/utils.py:119
+#: source/utils.py:193
 msgid "1440ب (جودة فائقة 2 كي)"
 msgstr "1440p (Super Quality 2K)"
 
-#: source/utils.py:120
+#: source/utils.py:194
 msgid "2160ب (جودة فائقة 4 كي)"
 msgstr "2160p (Super Quality 4K)"
 
-#: source/utils.py:126
+#: source/utils.py:200
 #, python-brace-format
 msgid "{}ب (جودة غير معروفة)"
 msgstr "{}p (Unknown Quality)"
 
-#: source/utils.py:136
+#: source/utils.py:221
 msgid "جاري تنزيل واي تي دي إل بي"
 msgstr "Downloading YT-DLP..."
 
-#: source/utils.py:168 source/utils.py:229
+#: source/utils.py:232
+msgid "ملف واي تي دي إل بي الذي تم تنزيله غير صالح"
+msgstr "The downloaded YT-DLP file is invalid"
+
+#: source/utils.py:267 source/utils.py:330
 msgid "تعذر الحصول على معلومات التحديث من غيت هاب"
 msgstr "Could not get update information from GitHub"
 
-#: source/utils.py:174
+#: source/utils.py:273
 #, python-brace-format
 msgid "أنت تستخدم بالفعل أحدث إصدار من واي تي دي إل بي ({})"
 msgstr "You are using the latest version of YT-DLP ({})"
 
-#: source/utils.py:175 source/utils.py:236 source/utils.py:952
+#: source/utils.py:274 source/utils.py:337 source/utils.py:1144
 msgid "لا يوجد تحديث"
 msgstr "No update available"
 
-#: source/utils.py:181
+#: source/utils.py:280
 #, python-brace-format
 msgid ""
 "هناك إصدار جديد متوفر من واي تي دي إل بي\n"
@@ -272,24 +280,28 @@ msgstr ""
 "Last version: {}\n"
 "Do you want to update now?"
 
-#: source/utils.py:182 source/utils.py:243 source/utils.py:870
+#: source/utils.py:281 source/utils.py:344 source/utils.py:1069
+#: source/youtube_browser/search_handler.py:110
+#: source/youtube_browser/search_handler.py:208
+#: source/youtube_browser/search_handler.py:443
+#: source/youtube_browser/search_handler.py:609
 msgid "غير معروف"
 msgstr "Unknown"
 
-#: source/utils.py:183 source/utils.py:244
+#: source/utils.py:282 source/utils.py:345
 msgid "تحديث متوفر"
 msgstr "Update available"
 
-#: source/utils.py:197
+#: source/utils.py:298
 msgid "جاري تنزيل دينو"
 msgstr "Downloading Deno..."
 
-#: source/utils.py:235
+#: source/utils.py:336
 #, python-brace-format
 msgid "أنت تستخدم بالفعل أحدث إصدار من دينو ({})"
 msgstr "You are using the latest version of Deno ({})"
 
-#: source/utils.py:242
+#: source/utils.py:343
 #, python-brace-format
 msgid ""
 "هناك إصدار جديد متوفر من دينو\n"
@@ -302,11 +314,11 @@ msgstr ""
 "Last version: {}\n"
 "Do you want to update now?"
 
-#: source/utils.py:255
+#: source/utils.py:356
 msgid "لم يتم العثور على مكتبة واي تي دي إل بي, هل تريد تنزيلها الآن؟"
 msgstr "YT-DLP library was not found. Would you like to download it now?"
 
-#: source/utils.py:271
+#: source/utils.py:372
 msgid ""
 "لم يتم العثور على أداة deno.exe, وهي مطلوبة لبعض وظائف اليوتيوب. هل تريد "
 "تنزيلها الآن؟"
@@ -314,78 +326,78 @@ msgstr ""
 "Deno.exe was not found. It is required for some YouTube functions. Would "
 "you like to download it now?"
 
-#: source/utils.py:828
+#: source/utils.py:1027
 msgid "ساعة واحدة"
 msgstr "1 hour"
 
-#: source/utils.py:830
+#: source/utils.py:1029
 msgid "ساعتان"
 msgstr "2 hours"
 
-#: source/utils.py:832
+#: source/utils.py:1031
 #, python-brace-format
 msgid "{} ساعات"
 msgstr "{} hours"
 
-#: source/utils.py:834
+#: source/utils.py:1033
 #, python-brace-format
 msgid "{} ساعة"
 msgstr "{} hours"
 
-#: source/utils.py:838
+#: source/utils.py:1037
 msgid "دقيقة واحدة"
 msgstr "1 minute"
 
-#: source/utils.py:840
+#: source/utils.py:1039
 msgid "دقيقتان"
 msgstr "2 minutes"
 
-#: source/utils.py:842
+#: source/utils.py:1041
 #, python-brace-format
 msgid "{} دقائق"
 msgstr "{} minutes"
 
-#: source/utils.py:844
+#: source/utils.py:1043
 #, python-brace-format
 msgid "{} دقيقة"
 msgstr "{} minutes"
 
-#: source/utils.py:848
+#: source/utils.py:1047
 msgid "ثانية واحدة"
 msgstr "1 second"
 
-#: source/utils.py:850
+#: source/utils.py:1049
 msgid "ثانيتين"
 msgstr "2 seconds"
 
-#: source/utils.py:852
+#: source/utils.py:1051
 #, python-brace-format
 msgid "{} ثواني"
 msgstr "{} seconds"
 
-#: source/utils.py:854
+#: source/utils.py:1053
 #, python-brace-format
 msgid "{} ثانية"
 msgstr "{} seconds"
 
-#: source/utils.py:857
+#: source/utils.py:1056
 msgid "0 ثانية"
 msgstr "0 seconds"
 
-#: source/utils.py:859
+#: source/utils.py:1058
 msgid " و"
 msgstr " and"
 
-#: source/utils.py:864
+#: source/utils.py:1063
 msgid "مباشر"
 msgstr "Live"
 
-#: source/media_player/media_gui.py:542 source/utils.py:871
+#: source/media_player/media_gui.py:750 source/utils.py:1070
 #, python-brace-format
 msgid "المدة: {}"
 msgstr "Duration: {}"
 
-#: source/utils.py:921 source/utils.py:960
+#: source/utils.py:1113 source/utils.py:1152
 msgid ""
 "حدث خطأ ما أثناء الاتصال بخدمة العثور على التحديثات. تأكد من وجود اتصال "
 "مستقر بالإنترنت ثم عاود المحاولة"
@@ -393,33 +405,33 @@ msgstr ""
 "An error occurred while connecting to the update service. Please ensure "
 "you have a stable internet connection and try again."
 
-#: source/utils.py:931
+#: source/utils.py:1123
 msgid "لا توجد معلومات حول هذا التحديث"
 msgstr "No information available about this update"
 
-#: source/utils.py:942
+#: source/utils.py:1134
 msgid "جاري تنزيل التحديث"
 msgstr "Downloading update"
 
-#: source/utils.py:951
+#: source/utils.py:1143
 msgid "أنت تعمل الآن على آخر تحديث متوفر من التطبيق"
 msgstr "You are using the latest version of the application."
 
-#: source/utils.py:974
+#: source/gui/settings_dialog.py:416 source/utils.py:1166
 msgid "خطأ"
 msgstr "Error"
 
-#: source/download_handler/downloader.py:141 source/gui/download_progress.py:17
+#: source/download_handler/downloader.py:298 source/gui/download_progress.py:20
 #, python-brace-format
 msgid "نسبة التنزيل: {}%"
 msgstr "Download Progress: {}%"
 
-#: source/download_handler/downloader.py:143
+#: source/download_handler/downloader.py:300
 #, python-brace-format
 msgid "حجم الملف الإجمالي: {}"
 msgstr "Total file size: {}"
 
-#: source/download_handler/downloader.py:145
+#: source/download_handler/downloader.py:302 source/gui/download_progress.py:21
 msgid "حجم الملف الإجمالي: غير معروف"
 msgstr "Total file size: Unknown"
 
@@ -432,59 +444,74 @@ msgstr "Downloaded amount: {}"
 msgid "مقدار الحجم الذي تم تنزيله: غير معروف"
 msgstr "Downloaded amount: Unknown"
 
-#: source/download_handler/downloader.py:147
+#: source/download_handler/downloader.py:310
 #, python-brace-format
 msgid "سرعة التنزيل: {}"
 msgstr "Download speed: {}"
 
-#: source/download_handler/downloader.py:149
+#: source/download_handler/downloader.py:312 source/gui/download_progress.py:24
 msgid "سرعة التنزيل: غير معروفة"
 msgstr "Download speed: Unknown"
 
-#: source/download_handler/downloader.py:151
+#: source/download_handler/downloader.py:314
 #, python-brace-format
 msgid "الوقت المتبقي: {}"
 msgstr "Time remaining: {}"
 
-#: source/download_handler/downloader.py:153
+#: source/download_handler/downloader.py:316 source/gui/download_progress.py:23
 msgid "الوقت المتبقي: غير معروف"
 msgstr "Time remaining: Unknown"
 
-#: source/download_handler/downloader.py:161
-msgid "اكتمل التنزيل بنجاح"
-msgstr "Download completed successfully"
+#: source/download_handler/downloader.py:345
+msgid "تم إلغاء التنزيل"
+msgstr "Download cancelled"
 
-#: source/download_handler/downloader.py:161 source/gui/update_dialog.py:118
-#: source/gui/update_dialog.py:125
-msgid "نجاح"
-msgstr "Success"
+#: source/download_handler/downloader.py:345
+#: source/gui/auto_detect_dialog.py:52 source/gui/update_check_dialog.py:42
+msgid "إلغاء"
+msgstr "Cancel"
 
-#: source/download_handler/downloader.py:164
+#: source/download_handler/downloader.py:350
 msgid "حدث خطأ أثناء التنزيل. يرجى التحقق من الرابط أو اتصالك بالإنترنت."
 msgstr ""
 "An error occurred during download. Please check the link or your internet"
 " connection."
 
-#: source/gui/auto_detect_dialog.py:13 source/gui/auto_detect_dialog.py:47
+#: source/gui/auto_detect_dialog.py:12 source/gui/auto_detect_dialog.py:47
 #: source/gui/auto_detect_dialog.py:87 source/gui/search_dialog.py:22
-#: source/youtube_browser/search_handler.py:200
+#: source/youtube_browser/search_handler.py:183
+#: source/youtube_browser/search_handler.py:495
+#: source/youtube_browser/search_handler.py:669
 msgid "قائمة تشغيل"
 msgstr "Playlist"
 
-#: source/gui/auto_detect_dialog.py:15
+#: source/gui/auto_detect_dialog.py:14 source/gui/channel_dialog.py:31
+#: source/media_player/media_gui.py:263 source/media_player/media_gui.py:274
+#: source/media_player/media_gui.py:280 source/media_player/media_gui.py:988
+#: source/youtube_browser/search_handler.py:357
+#: source/youtube_browser/search_handler.py:367
+#: source/youtube_browser/search_handler.py:401
+#: source/youtube_browser/search_handler.py:502
+#: source/youtube_browser/search_handler.py:675
 msgid "قناة"
 msgstr "Channel"
 
-#: source/gui/auto_detect_dialog.py:17 source/gui/auto_detect_dialog.py:49
-#: source/gui/download_dialog.py:26 source/gui/favorites.py:145
-#: source/gui/favorites.py:252 source/gui/history.py:200
-#: source/gui/history.py:238 source/gui/playlist_dialog.py:128
-#: source/gui/playlist_dialog.py:295 source/media_player/media_gui.py:82
-#: source/youtube_browser/browser.py:126 source/youtube_browser/browser.py:372
+#: source/gui/auto_detect_dialog.py:16 source/gui/auto_detect_dialog.py:49
+#: source/gui/channel_dialog.py:154 source/gui/channel_dialog.py:458
+#: source/gui/download_dialog.py:29 source/gui/favorites.py:162
+#: source/gui/favorites.py:293 source/gui/history.py:206
+#: source/gui/history.py:244 source/gui/playlist_dialog.py:139
+#: source/gui/playlist_dialog.py:352 source/media_player/media_gui.py:133
+#: source/youtube_browser/browser.py:130 source/youtube_browser/browser.py:402
 msgid "فيديو"
 msgstr "Video"
 
-#: source/gui/auto_detect_dialog.py:38
+#: source/gui/auto_detect_dialog.py:34
+#, python-brace-format
+msgid "لقد تم فتح رابط ل{} يوتيوب. يرجى اختيار الإجراء المطلوب"
+msgstr "A YouTube {} link was opened. Please choose an action:"
+
+#: source/gui/auto_detect_dialog.py:37
 #, python-brace-format
 msgid ""
 "لقد تم الكشف عن وجود رابط ل{} يوتيوب في الحافظة. يرجى اختيار الإجراء "
@@ -493,25 +520,23 @@ msgstr ""
 "A YouTube {} link has been detected in the clipboard. Please choose an "
 "action:"
 
-#: source/gui/auto_detect_dialog.py:39
-#, python-brace-format
-msgid "لقد تم فتح رابط ل{} يوتيوب. يرجى اختيار الإجراء المطلوب"
-msgstr "A YouTube {} link was opened. Please choose an action:"
-
-#: source/gui/auto_detect_dialog.py:44 source/gui/download_dialog.py:15
-#: source/gui/download_dialog.py:33 source/gui/favorites.py:27
-#: source/gui/favorites.py:151 source/gui/history.py:35
-#: source/gui/history.py:206 source/gui/playlist_dialog.py:30
-#: source/gui/playlist_dialog.py:134 source/gui/update_check_dialog.py:40
-#: source/media_player/media_gui.py:87 source/youtube_browser/browser.py:67
-#: source/youtube_browser/browser.py:133
+#: source/gui/auto_detect_dialog.py:44 source/gui/channel_dialog.py:58
+#: source/gui/channel_dialog.py:160 source/gui/download_dialog.py:18
+#: source/gui/download_dialog.py:36 source/gui/favorites.py:40
+#: source/gui/favorites.py:168 source/gui/history.py:39
+#: source/gui/history.py:212 source/gui/playlist_dialog.py:35
+#: source/gui/playlist_dialog.py:145 source/gui/update_check_dialog.py:40
+#: source/media_player/media_gui.py:138 source/youtube_browser/browser.py:71
+#: source/youtube_browser/browser.py:137
 msgid "تنزيل"
 msgstr "Download"
 
-#: source/gui/auto_detect_dialog.py:45 source/gui/favorites.py:26
-#: source/gui/favorites.py:140 source/gui/history.py:194
-#: source/gui/link_dlg.py:22 source/gui/playlist_dialog.py:29
-#: source/gui/playlist_dialog.py:123 source/youtube_browser/browser.py:120
+#: source/gui/auto_detect_dialog.py:45 source/gui/channel_dialog.py:57
+#: source/gui/channel_dialog.py:149 source/gui/channel_dialog.py:520
+#: source/gui/favorites.py:39 source/gui/favorites.py:157
+#: source/gui/history.py:200 source/gui/link_dlg.py:22
+#: source/gui/playlist_dialog.py:34 source/gui/playlist_dialog.py:134
+#: source/youtube_browser/browser.py:124
 msgid "تشغيل"
 msgstr "Play"
 
@@ -519,14 +544,125 @@ msgstr "Play"
 msgid "فتح..."
 msgstr "Open..."
 
-#: source/gui/auto_detect_dialog.py:52 source/gui/update_check_dialog.py:42
-msgid "إلغاء"
-msgstr "Cancel"
-
-#: source/gui/auto_detect_dialog.py:100
-#, fuzzy
+#: source/gui/auto_detect_dialog.py:102
 msgid "تعذر جلب بيانات المقطع"
-msgstr "Could not get playback link for this clip"
+msgstr "Could not fetch clip data"
+
+#: source/gui/channel_dialog.py:45
+msgid "العناصر: "
+msgstr "Items: "
+
+#: source/gui/channel_dialog.py:55
+msgid "تحميل المزيد"
+msgstr "Load more"
+
+#: source/gui/channel_dialog.py:59 source/gui/playlist_dialog.py:36
+msgid "رجوع"
+msgstr "Back"
+
+#: source/gui/channel_dialog.py:151 source/gui/favorites.py:159
+#: source/gui/history.py:202 source/gui/playlist_dialog.py:136
+#: source/youtube_browser/browser.py:126
+msgid "التشغيل كمقطع صوتي"
+msgstr "Play as Audio"
+
+#: source/gui/channel_dialog.py:158 source/gui/channel_dialog.py:462
+#: source/gui/download_dialog.py:29 source/gui/favorites.py:166
+#: source/gui/favorites.py:297 source/gui/history.py:210
+#: source/gui/history.py:248 source/gui/playlist_dialog.py:143
+#: source/gui/playlist_dialog.py:356 source/media_player/media_gui.py:137
+#: source/youtube_browser/browser.py:134 source/youtube_browser/browser.py:406
+msgid "صوت"
+msgstr "Audio"
+
+#: source/gui/channel_dialog.py:163 source/gui/favorites.py:171
+#: source/gui/playlist_dialog.py:148 source/media_player/media_gui.py:140
+#: source/youtube_browser/browser.py:140
+msgid "التنزيل المباشر...\tctrl+d"
+msgstr "Direct Download...\tctrl+d"
+
+#: source/gui/channel_dialog.py:168 source/gui/favorites.py:175
+#: source/gui/playlist_dialog.py:152 source/youtube_browser/browser.py:144
+msgid "فتح داخل التطبيق"
+msgstr "Open in app"
+
+#: source/gui/channel_dialog.py:170 source/gui/favorites.py:176
+#: source/gui/playlist_dialog.py:154 source/youtube_browser/browser.py:146
+msgid "فتح في المتصفح"
+msgstr "Open in browser"
+
+#: source/gui/channel_dialog.py:172 source/gui/favorites.py:177
+#: source/gui/playlist_dialog.py:156 source/youtube_browser/browser.py:148
+msgid "الانتقال إلى القناة"
+msgstr "Go to Channel"
+
+#: source/gui/channel_dialog.py:174 source/gui/favorites.py:178
+#: source/gui/playlist_dialog.py:157 source/youtube_browser/browser.py:149
+msgid "تنزيل القناة"
+msgstr "Download Channel"
+
+#: source/gui/channel_dialog.py:176 source/gui/favorites.py:179
+#: source/gui/history.py:215 source/gui/playlist_dialog.py:159
+#: source/youtube_browser/browser.py:150
+msgid "نسخ رابط المقطع"
+msgstr "Copy clip link"
+
+#: source/gui/channel_dialog.py:178 source/gui/favorites.py:181
+#: source/gui/history.py:216 source/gui/playlist_dialog.py:161
+#: source/youtube_browser/browser.py:152
+msgid "الفتح من خلال متصفح الإنترنت"
+msgstr "Open in Web Browser"
+
+#: source/gui/channel_dialog.py:226 source/gui/channel_dialog.py:243
+#: source/gui/channel_dialog.py:245
+msgid "تعذر تحميل القناة"
+msgstr "Could not load channel"
+
+#: source/gui/channel_dialog.py:233
+msgid "جاري تحميل القناة"
+msgstr "Loading channel"
+
+#: source/gui/channel_dialog.py:250 source/gui/channel_dialog.py:264
+msgid "لا توجد عناصر متاحة"
+msgstr "No items available"
+
+#: source/gui/channel_dialog.py:314 source/youtube_browser/browser.py:468
+msgid "جاري تحميل المزيد من النتائج"
+msgstr "Loading more results..."
+
+#: source/gui/channel_dialog.py:321
+msgid "تعذر تحميل المزيد"
+msgstr "Could not load more"
+
+#: source/gui/channel_dialog.py:327
+msgid "لا توجد عناصر إضافية"
+msgstr "No additional items"
+
+#: source/gui/channel_dialog.py:337 source/youtube_browser/browser.py:492
+msgid "تم تحميل المزيد من نتائج البحث"
+msgstr "More search results loaded"
+
+#: source/gui/channel_dialog.py:423 source/gui/favorites.py:277
+#: source/gui/history.py:300 source/gui/playlist_dialog.py:266
+#: source/media_player/media_gui.py:1003 source/youtube_browser/browser.py:445
+msgid "جاري جلب الجودات المتاحة..."
+msgstr "Fetching available qualities..."
+
+#: source/gui/channel_dialog.py:507 source/gui/favorites.py:243
+#: source/gui/history.py:318 source/gui/playlist_dialog.py:200
+#: source/media_player/media_gui.py:975 source/youtube_browser/browser.py:463
+msgid "تم نسخ رابط المقطع بنجاح"
+msgstr "Clip link copied successfully"
+
+#: source/gui/channel_dialog.py:507 source/gui/favorites.py:243
+#: source/gui/history.py:318 source/gui/playlist_dialog.py:200
+#: source/media_player/media_gui.py:975 source/youtube_browser/browser.py:463
+msgid "اكتمال"
+msgstr "Completed"
+
+#: source/gui/channel_dialog.py:520 source/youtube_browser/browser.py:560
+msgid "فتح"
+msgstr "Open"
 
 #: source/gui/description.py:16
 msgid "وصف الفيديو"
@@ -545,40 +681,56 @@ msgid "التصدير إلى صفحة ويب (html)..."
 msgstr "Export to web page (html)..."
 
 #: source/gui/description.py:34 source/gui/link_dlg.py:24
-#: source/gui/search_dialog.py:29 source/gui/text_viewer.py:18
+#: source/gui/search_dialog.py:30 source/gui/text_viewer.py:18
 msgid "إغلاق"
 msgstr "Close"
 
-#: source/gui/download_dialog.py:23
+#: source/gui/download_complete_dialog.py:10
+msgid "اكتمل التنزيل"
+msgstr "Download complete"
+
+#: source/gui/download_complete_dialog.py:18
+msgid "اكتمل التنزيل بنجاح."
+msgstr "Download completed successfully."
+
+#: source/gui/download_complete_dialog.py:19
+msgid "موافق"
+msgstr "OK"
+
+#: source/gui/download_complete_dialog.py:24
+msgid "تشغيل الملف الذي تم تنزيله"
+msgstr "Play downloaded file"
+
+#: source/gui/download_complete_dialog.py:25
+msgid "إظهار الملف في مستكشف الملفات"
+msgstr "Show file in File Explorer"
+
+#: source/gui/download_complete_dialog.py:30
+msgid "فتح مجلد التنزيل"
+msgstr "Open download folder"
+
+#: source/gui/download_dialog.py:26
 msgid "رابط التنزيل: : "
 msgstr "Download Link: "
 
-#: source/gui/download_dialog.py:26
+#: source/gui/download_dialog.py:29
 msgid "نوع المقطع"
 msgstr "Clip Type"
 
-#: source/gui/download_dialog.py:26 source/gui/favorites.py:149
-#: source/gui/favorites.py:256 source/gui/history.py:204
-#: source/gui/history.py:242 source/gui/playlist_dialog.py:132
-#: source/gui/playlist_dialog.py:299 source/media_player/media_gui.py:86
-#: source/youtube_browser/browser.py:130 source/youtube_browser/browser.py:376
-msgid "صوت"
-msgstr "Audio"
-
-#: source/gui/download_dialog.py:28
+#: source/gui/download_dialog.py:31
 msgid "صيغة المقطع"
 msgstr "Clip Format"
 
-#: source/gui/download_dialog.py:36 source/gui/download_dialog.py:88
-#: source/gui/settings_dialog.py:29
+#: source/gui/download_dialog.py:39 source/gui/download_dialog.py:91
+#: source/gui/settings_dialog.py:259
 msgid "مسار مجلد التنزيل: "
 msgstr "Download folder path: "
 
-#: source/gui/download_dialog.py:81 source/gui/settings_dialog.py:267
+#: source/gui/download_dialog.py:84 source/gui/settings_dialog.py:372
 msgid "اختر مجلد التنزيل"
 msgstr "Select download folder"
 
-#: source/gui/download_dialog.py:104
+#: source/gui/download_dialog.py:105
 msgid "يرجى إدخال رابطًا صحيحًا."
 msgstr "Please enter a valid link."
 
@@ -587,138 +739,118 @@ msgstr "Please enter a valid link."
 msgid "جاري التنزيل - {}"
 msgstr "Downloading - {}"
 
-#: source/gui/download_progress.py:18
-#, python-brace-format
-msgid "حجم الملف الإجمالي: {} {}"
-msgstr "Total file size: {} {}"
+#: source/gui/download_progress.py:50
+msgid "هناك عملية تنزيل جارية. هل تريد إلغاءها؟"
+msgstr "A download is in progress. Do you want to cancel it?"
 
-#: source/gui/download_progress.py:19
-#, python-brace-format
-msgid "مقدار الحجم الذي تم تنزيله: {} {}"
-msgstr "Downloaded amount: {} {}"
+#: source/gui/download_progress.py:51
+msgid "إنهاء"
+msgstr "Exit"
 
-#: source/gui/download_progress.py:20
-#, python-brace-format
-msgid "المقدار المتبقي: {} {}"
-msgstr "Remaining amount: {} {}"
+#: source/gui/download_progress.py:57
+msgid "جاري إلغاء التنزيل..."
+msgstr "Cancelling download..."
 
-#: source/gui/download_progress.py:21
-#, python-brace-format
-msgid "سرعة التنزيل: {} {}"
-msgstr "Download speed: {} {}"
+#: source/gui/equalizer_dialog.py:11
+msgid "مستو"
+msgstr "Flat"
 
-#: source/gui/favorites.py:24
+#: source/gui/equalizer_dialog.py:12
+msgid "روك"
+msgstr "Rock"
+
+#: source/gui/equalizer_dialog.py:13
+msgid "بوب"
+msgstr "Pop"
+
+#: source/gui/equalizer_dialog.py:14
+msgid "كلاسيكي"
+msgstr "Classical"
+
+#: source/gui/equalizer_dialog.py:15
+msgid "جاز"
+msgstr "Jazz"
+
+#: source/gui/equalizer_dialog.py:21
+msgid "إعدادات المعادل"
+msgstr "Equalizer Settings"
+
+#: source/gui/equalizer_dialog.py:35
+msgid "الإعداد المسبق:"
+msgstr "Preset:"
+
+#: source/gui/equalizer_dialog.py:50
+msgid "إعادة ضبط"
+msgstr "Reset"
+
+#: source/gui/equalizer_dialog.py:65
+msgid "مضخم الصوت"
+msgstr "Preamp"
+
+#: source/gui/favorites.py:37
 msgid "المفضلة: "
 msgstr "Favorites: "
 
-#: source/gui/favorites.py:28
+#: source/gui/favorites.py:41
 msgid "إلغاء التفضيل"
 msgstr "Remove from Favorites"
 
-#: source/gui/favorites.py:29 source/gui/history.py:38
-#: source/youtube_browser/browser.py:72
+#: source/gui/favorites.py:42 source/gui/history.py:42
+#: source/youtube_browser/browser.py:76
 msgid "العودة إلى النافذة الرئيسية"
 msgstr "Back to Main Window"
 
-#: source/gui/favorites.py:108 source/gui/history.py:338
-#: source/youtube_browser/browser.py:541
+#: source/gui/favorites.py:121 source/gui/history.py:343
+#: source/youtube_browser/browser.py:584
 msgid "تم حذف الفيديو من قائمة المفضلة"
 msgstr "Video removed from Favorites"
 
-#: source/gui/favorites.py:142 source/gui/history.py:196
-#: source/gui/playlist_dialog.py:125 source/youtube_browser/browser.py:122
-msgid "التشغيل كمقطع صوتي"
-msgstr "Play as Audio"
-
-#: source/gui/favorites.py:154 source/gui/playlist_dialog.py:137
-#: source/media_player/media_gui.py:89 source/youtube_browser/browser.py:136
-msgid "التنزيل المباشر...\tctrl+d"
-msgstr "Direct Download...\tctrl+d"
-
-#: source/gui/favorites.py:157 source/gui/playlist_dialog.py:140
-#: source/youtube_browser/browser.py:140
-msgid "الانتقال إلى القناة"
-msgstr "Go to Channel"
-
-#: source/gui/favorites.py:158 source/gui/playlist_dialog.py:141
-#: source/youtube_browser/browser.py:142
-msgid "تنزيل القناة"
-msgstr "Download Channel"
-
-#: source/gui/favorites.py:159 source/gui/history.py:209
-#: source/gui/playlist_dialog.py:142 source/youtube_browser/browser.py:143
-msgid "نسخ رابط المقطع"
-msgstr "Copy clip link"
-
-#: source/gui/favorites.py:161 source/gui/history.py:210
-#: source/gui/playlist_dialog.py:144 source/youtube_browser/browser.py:145
-msgid "الفتح من خلال متصفح الإنترنت"
-msgstr "Open in Web Browser"
-
-#: source/gui/favorites.py:204 source/gui/history.py:313
-#: source/gui/playlist_dialog.py:180 source/media_player/media_gui.py:718
-#: source/youtube_browser/browser.py:431
-msgid "تم نسخ رابط المقطع بنجاح"
-msgstr "Clip link copied successfully"
-
-#: source/gui/favorites.py:204 source/gui/history.py:313
-#: source/gui/playlist_dialog.py:180 source/media_player/media_gui.py:718
-#: source/youtube_browser/browser.py:431
-msgid "اكتمال"
-msgstr "Completed"
-
-#: source/gui/favorites.py:236 source/gui/history.py:295
-#: source/gui/playlist_dialog.py:222 source/media_player/media_gui.py:735
-#: source/youtube_browser/browser.py:413
-msgid "جاري جلب الجودات المتاحة..."
-msgstr "Fetching available qualities..."
-
-#: source/gui/history.py:23
+#: source/gui/history.py:27
 msgid "سجل المشاهدة"
 msgstr "Watch History"
 
-#: source/gui/history.py:29
+#: source/gui/history.py:33
 msgid "الفيديوهات التي شاهدتها مؤخرًا: "
 msgstr "Videos you have watched recently: "
 
-#: source/gui/history.py:31
+#: source/gui/history.py:35
 msgid "تحميل المزيد من السجل"
 msgstr "Load more history"
 
-#: source/gui/history.py:34 source/youtube_browser/browser.py:66
-#: source/youtube_browser/browser.py:517
+#: source/gui/history.py:38 source/youtube_browser/browser.py:70
+#: source/youtube_browser/browser.py:560
 msgid "تشغيل (enter)"
 msgstr "Play (Enter)"
 
-#: source/gui/history.py:36 source/youtube_browser/browser.py:68
+#: source/gui/history.py:40 source/youtube_browser/browser.py:72
 msgid "تفضيل الفيديو"
 msgstr "Favorite Video"
 
-#: source/gui/history.py:88
+#: source/gui/history.py:92
 msgid "جاري تحميل السجل... يرجى الانتظار"
 msgstr "Loading history... Please wait"
 
-#: source/gui/history.py:89
+#: source/gui/history.py:93
 msgid "جاري تحميل السجل..."
 msgstr "Loading history..."
 
-#: source/gui/history.py:91
+#: source/gui/history.py:95
 msgid "جاري تحميل المزيد من السجل"
 msgstr "Loading more history..."
 
-#: source/gui/history.py:123
+#: source/gui/history.py:127
 msgid "لا يوجد سجل مشاهدة متاح"
 msgstr "No watch history available"
 
-#: source/gui/history.py:128
+#: source/gui/history.py:132
 msgid "تم تحميل المزيد من السجل"
 msgstr "More history loaded"
 
-#: source/gui/history.py:132
+#: source/gui/history.py:136
 msgid "تم تحميل السجل"
 msgstr "History loaded"
 
-#: source/gui/history.py:335 source/youtube_browser/browser.py:538
+#: source/gui/history.py:340 source/youtube_browser/browser.py:581
 msgid "تمت إضافة الفيديو إلى قائمة المفضلة"
 msgstr "Video added to favorites"
 
@@ -742,19 +874,19 @@ msgstr "Video Clip"
 msgid "مقطع صوتي"
 msgstr "Audio Clip"
 
-#: source/gui/playlist_dialog.py:27
+#: source/gui/playlist_dialog.py:32
 msgid "قائمة الفيديوهات: "
 msgstr "Video list: "
 
-#: source/gui/playlist_dialog.py:31
-msgid "رجوع"
-msgstr "Back"
-
-#: source/gui/playlist_dialog.py:64
+#: source/gui/playlist_dialog.py:69
 msgid "جاري عرض قائمة التشغيل"
 msgstr "Displaying playlist..."
 
-#: source/gui/playlist_dialog.py:82
+#: source/gui/playlist_dialog.py:83
+msgid "لا توجد فيديوهات متاحة"
+msgstr "No videos available"
+
+#: source/gui/playlist_dialog.py:91
 msgid "حدث خطأ ما أثناء محاولة فتح قائمة التشغيل"
 msgstr "An error occurred while opening the playlist"
 
@@ -774,8 +906,8 @@ msgstr "Select the audio quality you want to download:"
 msgid "جودة الصوت"
 msgstr "Audio Quality"
 
-#: source/gui/quality_selection.py:15 source/media_player/media_gui.py:228
-#: source/media_player/media_gui.py:235
+#: source/gui/quality_selection.py:15 source/media_player/media_gui.py:399
+#: source/media_player/media_gui.py:412
 msgid "ك.ب/ث"
 msgstr "kbps"
 
@@ -795,7 +927,7 @@ msgstr "Filter: "
 msgid "بلا فلتر"
 msgstr "No Filter"
 
-#: source/gui/search_dialog.py:19 source/youtube_browser/search_handler.py:250
+#: source/gui/search_dialog.py:19 source/youtube_browser/search_handler.py:727
 msgid "بث مباشر"
 msgstr "Live Stream"
 
@@ -807,192 +939,227 @@ msgstr "Upload Date"
 msgid "عدد المشاهدات"
 msgstr "View Count"
 
-#: source/gui/search_dialog.py:26
+#: source/gui/search_dialog.py:23
+msgid "قنوات"
+msgstr "Channels"
+
+#: source/gui/search_dialog.py:27
 msgid "ابحث"
 msgstr "Search"
 
-#: source/gui/settings_dialog.py:17
+#: source/gui/settings_dialog.py:20
+msgid "افتراضي النظام"
+msgstr "System Default"
+
+#: source/gui/settings_dialog.py:21
+msgid "فاتح"
+msgstr "Light"
+
+#: source/gui/settings_dialog.py:22
+msgid "داكن"
+msgstr "Dark"
+
+#: source/gui/settings_dialog.py:23
+msgid "تباين عال داكن"
+msgstr "High Contrast Dark"
+
+#: source/gui/settings_dialog.py:37 source/media_player/media_gui.py:35
+msgid "جهاز إخراج الصوت الافتراضي"
+msgstr "Default audio output device"
+
+#: source/gui/settings_dialog.py:57
 msgid "الإعدادات"
 msgstr "Settings"
 
-#: source/gui/settings_dialog.py:22
+#: source/gui/settings_dialog.py:67
 msgid "لغة البرنامج: "
 msgstr "Application Language: "
 
-#: source/gui/settings_dialog.py:37
+#: source/gui/settings_dialog.py:81
 msgid "&تغيير المسار"
 msgstr "Change path"
 
-#: source/gui/settings_dialog.py:38
-msgid "مسار ملف الكوكيز: "
-msgstr "Cookies file path: "
-
-#: source/gui/settings_dialog.py:46
+#: source/gui/settings_dialog.py:89
 msgid "تغيير"
 msgstr "Change"
 
-#: source/gui/settings_dialog.py:47
+#: source/gui/settings_dialog.py:90
 msgid "حذف"
 msgstr "Delete"
 
-#: source/gui/settings_dialog.py:48
+#: source/gui/settings_dialog.py:91
 msgid "التفضيلات العامة"
 msgstr "General Preferences"
 
-#: source/gui/settings_dialog.py:52
+#: source/gui/settings_dialog.py:95
 msgid "اكتشاف الروابط تلقائيًا عند فتح البرنامج"
 msgstr "Auto-detect links when the program starts"
 
-#: source/gui/settings_dialog.py:58
+#: source/gui/settings_dialog.py:101
 msgid "الكشف عن التحديثات الجديدة تلقائيًا عند فتح البرنامج"
 msgstr "Check for updates automatically on startup"
 
-#: source/gui/settings_dialog.py:65
+#: source/gui/settings_dialog.py:108
 msgid "تحميل المزيد من نتائج البحث عند الوصول إلى نهاية قائمة الفيديوهات المعروضة"
 msgstr "Load more search results when reaching the end of the list"
 
-#: source/gui/settings_dialog.py:72
+#: source/gui/settings_dialog.py:115
 msgid "تفعيل رسائل تصحيح الأخطاء للمطورين فقط"
 msgstr "Enable debug messages for developers only"
 
-#: source/gui/settings_dialog.py:78
+#: source/gui/settings_dialog.py:121
 msgid "التشغيل في الخلفية ومراقبة الحافظة عند بدء تشغيل النظام"
 msgstr "Run in background and monitor clipboard on system startup"
 
-#: source/gui/settings_dialog.py:84
+#: source/gui/settings_dialog.py:127
 msgid "تفعيل التكامل الآمن مع إضافة المتصفح"
 msgstr "Enable safe browser extension integration"
 
-#: source/gui/settings_dialog.py:86
-#, fuzzy
+#: source/gui/settings_dialog.py:138
 msgid "مظهر البرنامج: "
-msgstr "Show Program"
+msgstr "Theme: "
 
-#: source/gui/settings_dialog.py:91
+#: source/gui/settings_dialog.py:152
 msgid "إعدادات التنزيل"
 msgstr "Download Settings"
 
-#: source/gui/settings_dialog.py:92
+#: source/gui/settings_dialog.py:153
 msgid "صيغة التحميل المباشر: "
 msgstr "Direct download format: "
 
-#: source/gui/settings_dialog.py:96
+#: source/gui/settings_dialog.py:157
 msgid "فيديو (mp4)"
 msgstr "Video (mp4)"
 
-#: source/gui/settings_dialog.py:96
+#: source/gui/settings_dialog.py:157
 msgid "صوت (m4a)"
 msgstr "Audio (m4a)"
 
-#: source/gui/settings_dialog.py:96
+#: source/gui/settings_dialog.py:157
 msgid "صوت (mp3)"
 msgstr "Audio (mp3)"
 
-#: source/gui/settings_dialog.py:99
+#: source/gui/settings_dialog.py:160
 msgid "جودة تحويل ملفات mp3: "
 msgstr "MP3 conversion quality: "
 
-#: source/gui/settings_dialog.py:103
+#: source/gui/settings_dialog.py:164
 msgid "96 ك.ب/ث"
 msgstr "96 kbps"
 
-#: source/gui/settings_dialog.py:103
+#: source/gui/settings_dialog.py:164
 msgid "128 ك.ب/ث"
 msgstr "128 kbps"
 
-#: source/gui/settings_dialog.py:103
+#: source/gui/settings_dialog.py:164
 msgid "192 ك.ب/ث"
 msgstr "192 kbps"
 
-#: source/gui/settings_dialog.py:107
+#: source/gui/settings_dialog.py:168
 msgid "إعدادات المشغل"
 msgstr "Player Settings"
 
-#: source/gui/settings_dialog.py:109
+#: source/gui/settings_dialog.py:170
 msgid "جودة الفيديو الافتراضية: "
 msgstr "Default video quality: "
 
-#: source/gui/settings_dialog.py:115
+#: source/gui/settings_dialog.py:176
 msgid "144ب"
 msgstr "144p"
 
-#: source/gui/settings_dialog.py:116
+#: source/gui/settings_dialog.py:177
 msgid "240ب"
 msgstr "240p"
 
-#: source/gui/settings_dialog.py:117
+#: source/gui/settings_dialog.py:178
 msgid "360ب"
 msgstr "360p"
 
-#: source/gui/settings_dialog.py:118
+#: source/gui/settings_dialog.py:179
 msgid "480ب"
 msgstr "480p"
 
-#: source/gui/settings_dialog.py:119
+#: source/gui/settings_dialog.py:180
 msgid "720ب"
 msgstr "720p"
 
-#: source/gui/settings_dialog.py:120
+#: source/gui/settings_dialog.py:181
 msgid "1080ب"
 msgstr "1080p"
 
-#: source/gui/settings_dialog.py:121
+#: source/gui/settings_dialog.py:182
 msgid "1440ب"
 msgstr "1440p"
 
-#: source/gui/settings_dialog.py:122
+#: source/gui/settings_dialog.py:183
 msgid "2160ب"
 msgstr "2160p"
 
-#: source/gui/settings_dialog.py:127
+#: source/gui/settings_dialog.py:188
 msgid "جودة الصوت الافتراضية: "
 msgstr "Default audio quality: "
 
-#: source/gui/settings_dialog.py:132
+#: source/gui/settings_dialog.py:193
 msgid "منخفضة"
 msgstr "Low"
 
-#: source/gui/settings_dialog.py:132
+#: source/gui/settings_dialog.py:193
 msgid "متوسطة"
 msgstr "Medium"
 
-#: source/gui/settings_dialog.py:132
+#: source/gui/settings_dialog.py:193
 msgid "عالية"
 msgstr "High"
 
-#: source/gui/settings_dialog.py:138
+#: source/gui/settings_dialog.py:198 source/media_player/media_gui.py:39
+msgid "جهاز إخراج الصوت: "
+msgstr "Audio output device: "
+
+#: source/gui/settings_dialog.py:211
 msgid "متابعة المشاهدة بعد إغلاق الفيديو وتشغيله من جديد"
 msgstr "Resume playback from where you left off"
 
-#: source/gui/settings_dialog.py:145
+#: source/gui/settings_dialog.py:218
 msgid "إعادة تشغيل المقطع تلقائيًا عند انتهائه"
 msgstr "Auto-repeat clip when it ends"
 
-#: source/gui/settings_dialog.py:151
+#: source/gui/settings_dialog.py:224
 msgid "الانتقال إلى المقطع التالي تلقائيًا عند انتهاء المقطع الحالي"
 msgstr "Automatically play the next clip"
 
-#: source/gui/settings_dialog.py:156
+#: source/gui/settings_dialog.py:229
 msgid "إعدادات المعادل..."
 msgstr "Equalizer Settings..."
 
-#: source/gui/settings_dialog.py:158
+#: source/gui/settings_dialog.py:231
 msgid "مقدار تغيير سرعة التشغيل: "
 msgstr "Playback speed step: "
 
-#: source/gui/settings_dialog.py:168
+#: source/gui/settings_dialog.py:241 source/media_player/media_gui.py:46
 msgid "مواف&ق"
 msgstr "OK"
 
-#: source/gui/settings_dialog.py:170
+#: source/gui/settings_dialog.py:243 source/media_player/media_gui.py:48
 msgid "إل&غاء"
 msgstr "Cancel"
 
-#: source/gui/settings_dialog.py:280
+#: source/gui/settings_dialog.py:267
+msgid "مسار ملف الكوكيز: "
+msgstr "Cookies file path: "
+
+#: source/gui/settings_dialog.py:382
+msgid "ملفات نصية (*.txt)|*.txt"
+msgstr "Text files (*.txt)|*.txt"
+
+#: source/gui/settings_dialog.py:385
 msgid "اختر ملف الكوكيز"
 msgstr "Select cookies file"
 
-#: source/gui/settings_dialog.py:314
+#: source/gui/settings_dialog.py:415
+msgid "تعذر تحديث تكامل المتصفح في Windows."
+msgstr "Could not update browser integration in Windows."
+
+#: source/gui/settings_dialog.py:438
 #, python-brace-format
 msgid ""
 "لقد قمت بتغيير لغة البرنامج إلى {}, مما يعني أنه ينبغي عليك إعادة تشغيل "
@@ -1000,10 +1167,6 @@ msgid ""
 msgstr ""
 "You have changed the language to {}. The program must be restarted to "
 "apply changes. Restart now?"
-
-#: source/gui/settings_dialog.py:366
-msgid "تعذر تحديث تكامل المتصفح في Windows."
-msgstr "Could not update browser integration in Windows."
 
 #: source/gui/tray_icon.py:11
 msgid "HexPlayer"
@@ -1067,6 +1230,10 @@ msgstr "An error occurred while extracting the file"
 msgid "اكتمل تنزيل الملف بنجاح"
 msgstr "File downloaded successfully"
 
+#: source/gui/update_dialog.py:118 source/gui/update_dialog.py:125
+msgid "نجاح"
+msgstr "Success"
+
 #: source/gui/update_dialog.py:123
 msgid "اكتمل تنزيل التحديث بنجاح. يرجى الضغط على موافق للشروع في عملية التثبيت"
 msgstr "Update downloaded successfully. Click OK to start the installation."
@@ -1083,279 +1250,360 @@ msgstr ""
 "An error occurred while opening the installation file. Please try "
 "updating again or contact the developer."
 
-#: source/media_player/media_gui.py:63
+#: source/media_player/media_gui.py:32
+msgid "جهاز إخراج الصوت"
+msgstr "Audio output device"
+
+#: source/media_player/media_gui.py:114
 msgid "المقطع السابق"
 msgstr "Previous clip"
 
-#: source/media_player/media_gui.py:65 source/media_player/media_gui.py:320
+#: source/media_player/media_gui.py:116 source/media_player/media_gui.py:496
 msgid "بداية المقطع"
 msgstr "Start of clip"
 
-#: source/media_player/media_gui.py:66
+#: source/media_player/media_gui.py:117
 msgid "إرجاع المقطع <"
 msgstr "Rewind <"
 
-#: source/media_player/media_gui.py:67
+#: source/media_player/media_gui.py:118
 msgid "تشغيل\\إيقاف"
 msgstr "Play/Pause"
 
-#: source/media_player/media_gui.py:68
+#: source/media_player/media_gui.py:119
 msgid "تقديم المقطع >"
 msgstr "Fast Forward >"
 
-#: source/media_player/media_gui.py:69
+#: source/media_player/media_gui.py:120
 msgid "المقطع التالي"
 msgstr "Next clip"
 
-#: source/media_player/media_gui.py:92 source/media_player/media_gui.py:635
+#: source/media_player/media_gui.py:143 source/media_player/media_gui.py:148
+#: source/media_player/media_gui.py:884 source/media_player/media_gui.py:888
 msgid "جاري التحميل..."
 msgstr "Loading..."
 
-#: source/media_player/media_gui.py:94
+#: source/media_player/media_gui.py:145
 msgid "جودة التشغيل"
 msgstr "Playback Quality"
 
-#: source/media_player/media_gui.py:97
+#: source/media_player/media_gui.py:150
+msgid "الفصول"
+msgstr "Chapters"
+
+#: source/media_player/media_gui.py:153
 msgid "وصف الفيديو\tctrl+shift+d"
 msgstr "Video Description\tctrl+shift+d"
 
-#: source/media_player/media_gui.py:98
-#, fuzzy
+#: source/media_player/media_gui.py:154
 msgid "المعادل... \tctrl+e"
-msgstr "Settings...\talt+s"
+msgstr "Equalizer... \tctrl+e"
 
-#: source/media_player/media_gui.py:99
+#: source/media_player/media_gui.py:156
+msgid "جهاز إخراج الصوت...\tf12"
+msgstr "Audio output device...\tf12"
+
+#: source/media_player/media_gui.py:158
 msgid "إعجاب (L)"
-msgstr ""
+msgstr "Like (L)"
 
-#: source/media_player/media_gui.py:100
+#: source/media_player/media_gui.py:159
 msgid "عدم إعجاب (D)"
-msgstr ""
+msgstr "Dislike (D)"
 
-#: source/media_player/media_gui.py:101
+#: source/media_player/media_gui.py:160
 msgid "نسخ رابط المقطع\tctrl+l"
 msgstr "Copy clip link\tctrl+l"
 
-#: source/media_player/media_gui.py:102
+#: source/media_player/media_gui.py:161
 msgid "الفتح من خلال متصفح الإنترنت\tctrl+b"
 msgstr "Open in Web Browser\tctrl+b"
 
-#: source/media_player/media_gui.py:115
+#: source/media_player/media_gui.py:162
+msgid "الانتقال إلى القناة\tctrl+shift+c"
+msgstr "Go to channel\tctrl+shift+c"
+
+#: source/media_player/media_gui.py:177
 msgid "خيارات المقطع"
 msgstr "Clip Options"
 
-#: source/media_player/media_gui.py:224
+#: source/media_player/media_gui.py:328
+msgid "لا توجد فصول متاحة"
+msgstr "No chapters available"
+
+#: source/media_player/media_gui.py:332
+msgid "فصل بدون عنوان"
+msgstr "Untitled chapter"
+
+#: source/media_player/media_gui.py:351
+#, python-brace-format
+msgid "الانتقال إلى {} في {}"
+msgstr "Jumping to {} at {}"
+
+#: source/media_player/media_gui.py:395
 msgid "لا توجد جودات متاحة"
 msgstr "No qualities available"
 
-#: source/media_player/media_gui.py:228 source/media_player/media_gui.py:235
+#: source/media_player/media_gui.py:399 source/media_player/media_gui.py:412
 msgid "ب"
 msgstr "p"
 
-#: source/media_player/media_gui.py:236
+#: source/media_player/media_gui.py:413
 #, python-brace-format
 msgid "جاري تغيير الجودة إلى {}"
 msgstr "Changing quality to {}"
 
-#: source/media_player/media_gui.py:264
+#: source/media_player/media_gui.py:441
 msgid "تعذر تغيير الجودة"
 msgstr "Could not change quality"
 
-#: source/media_player/media_gui.py:315 source/media_player/media_gui.py:451
+#: source/media_player/media_gui.py:491 source/media_player/media_gui.py:659
 #, python-brace-format
 msgid "الوقت المنقضي: {}"
 msgstr "Elapsed time: {}"
 
-#: source/media_player/media_gui.py:371 source/media_player/media_gui.py:384
+#: source/media_player/media_gui.py:576 source/media_player/media_gui.py:589
 msgid "تمت إزالة التقييم"
-msgstr ""
+msgstr "Rating removed"
 
-#: source/media_player/media_gui.py:375
+#: source/media_player/media_gui.py:580
 msgid "تم الإعجاب"
-msgstr ""
+msgstr "Liked"
 
-#: source/media_player/media_gui.py:388
+#: source/media_player/media_gui.py:593
 msgid "تم عدم الإعجاب"
-msgstr ""
+msgstr "Disliked"
 
-#: source/media_player/media_gui.py:440
+#: source/media_player/media_gui.py:648
 #, python-brace-format
 msgid "{} إعجاب"
-msgstr ""
+msgstr "{} likes"
 
-#: source/media_player/media_gui.py:442
+#: source/media_player/media_gui.py:650
 msgid "معلومات الإعجابات غير متوفرة بعد"
-msgstr ""
+msgstr "Like information is not available yet"
 
-#: source/media_player/media_gui.py:449 source/media_player/media_gui.py:487
-#: source/media_player/media_gui.py:495 source/media_player/media_gui.py:503
-#: source/media_player/media_gui.py:511 source/media_player/media_gui.py:540
-#, fuzzy
+#: source/media_player/media_gui.py:657 source/media_player/media_gui.py:695
+#: source/media_player/media_gui.py:703 source/media_player/media_gui.py:711
+#: source/media_player/media_gui.py:719 source/media_player/media_gui.py:748
 msgid "جاري جلب المعلومات..."
-msgstr "Fetching available qualities..."
+msgstr "Fetching information..."
 
-#: source/media_player/media_gui.py:458 source/media_player/media_gui.py:468
+#: source/media_player/media_gui.py:666 source/media_player/media_gui.py:676
 msgid "تحريك المقطع"
 msgstr "Move clip"
 
-#: source/media_player/media_gui.py:458 source/media_player/media_gui.py:468
+#: source/media_player/media_gui.py:666 source/media_player/media_gui.py:676
 msgid "ثانية/ثواني"
 msgstr "second(s)"
 
-#: source/media_player/media_gui.py:476
+#: source/media_player/media_gui.py:684
 msgid "التكرار متوقف"
 msgstr "Repeat off"
 
-#: source/media_player/media_gui.py:480
+#: source/media_player/media_gui.py:688
 msgid "التكرار مفعل"
 msgstr "Repeat on"
 
-#: source/media_player/media_gui.py:489
+#: source/media_player/media_gui.py:697
 #, python-brace-format
 msgid "المتبقي: {}"
 msgstr "Remaining: {}"
 
-#: source/media_player/media_gui.py:497
+#: source/media_player/media_gui.py:705
 #, python-brace-format
 msgid "المنقضي: {}"
 msgstr "Elapsed: {}"
 
-#: source/media_player/media_gui.py:505
+#: source/media_player/media_gui.py:713
 #, python-brace-format
 msgid "الإجمالي: {}"
 msgstr "Total: {}"
 
-#: source/media_player/media_gui.py:513
+#: source/media_player/media_gui.py:721
 #, python-brace-format
 msgid "{} بالمائة"
 msgstr "{} percent"
 
-#: source/media_player/media_gui.py:519
+#: source/media_player/media_gui.py:727
 msgid "تشغيل المقطع التالي تلقائيًا متوقف"
 msgstr "Auto-play next clip off"
 
-#: source/media_player/media_gui.py:523
+#: source/media_player/media_gui.py:731
 msgid "تشغيل المقطع التالي تلقائيًا مفعل"
 msgstr "Auto-play next clip on"
 
-#: source/media_player/media_gui.py:561
+#: source/media_player/media_gui.py:777
+#, python-brace-format
+msgid "تم تغيير جهاز إخراج الصوت إلى {}"
+msgstr "Audio output device changed to {}"
+
+#: source/media_player/media_gui.py:784 source/media_player/media_gui.py:794
+msgid "جهاز إخراج الصوت المحدد غير متاح. سيتم استخدام جهاز إخراج الصوت الافتراضي"
+msgstr ""
+"The selected audio output device is unavailable. The default audio output"
+" device will be used."
+
+#: source/media_player/media_gui.py:801
 msgid "وضع ملء الشاشة مفعل"
 msgstr "Full screen mode on"
 
-#: source/media_player/media_gui.py:563
+#: source/media_player/media_gui.py:803
 msgid "وضع ملء الشاشة متوقف"
 msgstr "Full screen mode off"
 
-#: source/media_player/media_gui.py:577
+#: source/media_player/media_gui.py:819
 #, python-brace-format
 msgid "جاري تشغيل {}"
 msgstr "Playing {}"
 
-#: source/media_player/media_gui.py:595
+#: source/media_player/media_gui.py:841
 msgid "تعذر جلب رابط التشغيل لهذا المقطع"
 msgstr "Could not get playback link for this clip"
 
-#: source/media_player/media_gui.py:606
+#: source/media_player/media_gui.py:852
 msgid "حدث خطأ أثناء محاولة جلب رابط التشغيل"
 msgstr "An error occurred while trying to get playback link"
 
-#: source/media_player/media_gui.py:663
+#: source/media_player/media_gui.py:918
 msgid "نهاية القائمة"
 msgstr "End of list"
 
-#: source/media_player/media_gui.py:709
+#: source/media_player/media_gui.py:966
 msgid "بداية القائمة"
 msgstr "Start of list"
 
-#: source/media_player/media_gui.py:721
+#: source/media_player/media_gui.py:978
 msgid "جاري الفتح"
 msgstr "Opening"
 
-#: source/media_player/media_gui.py:762
+#: source/media_player/media_gui.py:984
+msgid "رابط القناة غير متوفر"
+msgstr "Channel link is not available"
+
+#: source/media_player/media_gui.py:1030
 msgid "يتم الآن جلب وصف الفيديو"
 msgstr "Fetching video description"
 
-#: source/media_player/media_gui.py:768
+#: source/media_player/media_gui.py:1036
 msgid "تعذر جلب وصف الفيديو"
 msgstr "Could not fetch video description"
 
-#: source/media_player/media_gui.py:775
+#: source/media_player/media_gui.py:1043
 msgid "هناك خطأ ما أدى إلى منع جلب وصف الفيديو"
 msgstr "Something went wrong, preventing fetching video description"
 
-#: source/youtube_browser/browser.py:60
+#: source/youtube_browser/browser.py:64
 msgid "نتائج البحث: "
 msgstr "Search results: "
 
-#: source/youtube_browser/browser.py:62
+#: source/youtube_browser/browser.py:66
 msgid "تحميل المزيد من النتائج"
 msgstr "Load more results"
 
-#: source/youtube_browser/browser.py:70
+#: source/youtube_browser/browser.py:74
 msgid "بحث... (ctrl+f)"
 msgstr "Search... (ctrl+f)"
 
-#: source/youtube_browser/browser.py:115
+#: source/youtube_browser/browser.py:119
 msgid "خيارات"
 msgstr "Options"
 
-#: source/youtube_browser/browser.py:233
+#: source/youtube_browser/browser.py:240
 msgid "جاري البحث..."
 msgstr "Searching..."
 
-#: source/youtube_browser/browser.py:248
+#: source/youtube_browser/browser.py:255
 msgid "تعذر إجراء عملية البحث بسبب وجود خلل ما في الاتصال بالشبكة."
 msgstr "Search could not be performed due to a network connection issue."
 
-#: source/youtube_browser/browser.py:264
+#: source/youtube_browser/browser.py:272
 msgid "اكتمل البحث"
 msgstr "Search completed"
 
-#: source/youtube_browser/browser.py:436
-msgid "جاري تحميل المزيد من النتائج"
-msgstr "Loading more results..."
-
-#: source/youtube_browser/browser.py:446
+#: source/youtube_browser/browser.py:478
 msgid "لم يتمكن البرنامج من تحميل المزيد من النتائج."
 msgstr "The program could not load more results."
 
-#: source/youtube_browser/browser.py:449 source/youtube_browser/browser.py:455
+#: source/youtube_browser/browser.py:481 source/youtube_browser/browser.py:487
 msgid "لم يتمكن البرنامج من تحميل المزيد من النتائج"
 msgstr "The program could not load more results"
 
-#: source/youtube_browser/browser.py:460
-msgid "تم تحميل المزيد من نتائج البحث"
-msgstr "More search results loaded"
+#: source/youtube_browser/search_handler.py:33
+msgid "الرئيسية"
+msgstr "Home"
 
-#: source/youtube_browser/browser.py:517
-msgid "فتح"
-msgstr "Open"
+#: source/youtube_browser/search_handler.py:34
+msgid "الفيديوهات"
+msgstr "Videos"
 
-#: source/youtube_browser/search_handler.py:64
-#: source/youtube_browser/search_handler.py:194
-#: source/youtube_browser/search_handler.py:201
+#: source/youtube_browser/search_handler.py:35
+msgid "المقاطع القصيرة"
+msgstr "Shorts"
+
+#: source/youtube_browser/search_handler.py:36
+msgid "البث المباشر"
+msgstr "Live streams"
+
+#: source/youtube_browser/search_handler.py:37
+msgid "قوائم التشغيل"
+msgstr "Playlists"
+
+#: source/youtube_browser/search_handler.py:38
+msgid "المجتمع"
+msgstr "Community"
+
+#: source/youtube_browser/search_handler.py:39
+msgid "القنوات"
+msgstr "Channels"
+
+#: source/youtube_browser/search_handler.py:249
+#: source/youtube_browser/search_handler.py:488
+#: source/youtube_browser/search_handler.py:496
+#: source/youtube_browser/search_handler.py:663
+#: source/youtube_browser/search_handler.py:670
 msgid "بواسطة"
 msgstr "by"
 
-#: source/youtube_browser/search_handler.py:202
+#: source/youtube_browser/search_handler.py:349
+msgid "yt-dlp is not installed"
+msgstr "yt-dlp is not installed"
+
+#: source/youtube_browser/search_handler.py:404
+#, python-brace-format
+msgid "القناة: {}"
+msgstr "Channel: {}"
+
+#: source/youtube_browser/search_handler.py:405
+#, python-brace-format
+msgid "الرابط: {}"
+msgstr "Link: {}"
+
+#: source/youtube_browser/search_handler.py:408
+#, python-brace-format
+msgid "عدد المشتركين: {}"
+msgstr "Subscribers: {}"
+
+#: source/youtube_browser/search_handler.py:409
+#, python-brace-format
+msgid "عدد المشاهدات: {}"
+msgstr "Views: {}"
+
+#: source/youtube_browser/search_handler.py:410
+#, python-brace-format
+msgid "الوصف: {}"
+msgstr "Description: {}"
+
+#: source/youtube_browser/search_handler.py:497
+#: source/youtube_browser/search_handler.py:671
+#: source/youtube_browser/search_handler.py:677
 #, python-brace-format
 msgid "تحتوي على {} من الفيديوهات"
 msgstr "Contains {} videos"
 
-#: source/youtube_browser/search_handler.py:248
+#: source/youtube_browser/search_handler.py:548
+#: source/youtube_browser/search_handler.py:725
 #, python-brace-format
 msgid "عدد المشاهدات {}"
 msgstr "{} views"
-
-#~ msgid "System Default"
-#~ msgstr "System Default"
-
-#~ msgid "Light"
-#~ msgstr "Light"
-
-#~ msgid "Dark"
-#~ msgstr "Dark"
-
-#~ msgid "High Contrast Dark"
-#~ msgstr "High Contrast Dark"
 

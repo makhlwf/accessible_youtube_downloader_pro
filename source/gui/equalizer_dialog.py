@@ -1,15 +1,28 @@
 import wx
+from language_handler import _
 from settings_handler import config_get, config_set
 from media_player.equalizer import EqualizerService
 from media_player.media_gui import MediaGui
 from theme_handler import apply_theme
 
 
+def _preset_labels():
+    return {
+        "Flat": _("مستو"),
+        "Rock": _("روك"),
+        "Pop": _("بوب"),
+        "Classical": _("كلاسيكي"),
+        "Jazz": _("جاز"),
+    }
+
+
 class EqualizerDialog(wx.Dialog):
     def __init__(self, parent, equalizer_service: EqualizerService):
-        super().__init__(parent, title="Equalizer Settings", size=(600, 450))
+        super().__init__(parent, title=_("إعدادات المعادل"), size=(640, 480))
         self.equalizer_service = equalizer_service
         self.equalizer_service.load_settings()
+        self.preset_labels = _preset_labels()
+        self.preset_keys = list(self.preset_labels.keys())
 
         self.update_timer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.on_update_timer, self.update_timer)
@@ -18,18 +31,23 @@ class EqualizerDialog(wx.Dialog):
 
         # Presets
         preset_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        preset_sizer.Add(wx.StaticText(self, label="Preset:"), 0, wx.ALL | wx.CENTER, 5)
+        preset_sizer.Add(
+            wx.StaticText(self, label=_("الإعداد المسبق:")),
+            0,
+            wx.ALL | wx.CENTER,
+            5,
+        )
         self.preset_choice = wx.Choice(
-            self, choices=["Flat", "Rock", "Pop", "Classical", "Jazz"]
+            self, choices=[self.preset_labels[key] for key in self.preset_keys]
         )
         current_preset = config_get("eq_preset") or "Flat"
-        if current_preset not in self.preset_choice.GetStrings():
+        if current_preset not in self.preset_keys:
             current_preset = "Flat"
-        self.preset_choice.SetStringSelection(current_preset)
+        self.preset_choice.Selection = self.preset_keys.index(current_preset)
         self.preset_choice.Bind(wx.EVT_CHOICE, self.on_preset_change)
         preset_sizer.Add(self.preset_choice, 1, wx.ALL, 5)
 
-        reset_btn = wx.Button(self, label="Reset")
+        reset_btn = wx.Button(self, label=_("إعادة ضبط"))
         reset_btn.Bind(wx.EVT_BUTTON, self.on_reset)
         preset_sizer.Add(reset_btn, 0, wx.ALL, 5)
 
@@ -44,7 +62,7 @@ class EqualizerDialog(wx.Dialog):
         frequencies = [60, 170, 310, 600, 1000, 3000, 6000, 12000, 14000, 16000]
 
         # Preamp
-        self.add_slider(bands_sizer, self, "Preamp", "preamp", -20, 20)
+        self.add_slider(bands_sizer, self, _("مضخم الصوت"), "preamp", -20, 20)
 
         for i, freq in enumerate(frequencies):
             self.add_slider(bands_sizer, self, f"{freq}Hz", f"band_{i}", -20, 20)
@@ -119,7 +137,7 @@ class EqualizerDialog(wx.Dialog):
                     break
 
     def on_preset_change(self, event):
-        preset = self.preset_choice.GetStringSelection()
+        preset = self.preset_keys[self.preset_choice.Selection]
         config_set("eq_preset", preset)
         self.equalizer_service.apply_preset(preset)
         self.update_ui_from_service()
@@ -127,7 +145,7 @@ class EqualizerDialog(wx.Dialog):
 
     def on_reset(self, event):
         self.equalizer_service.reset()
-        self.preset_choice.SetStringSelection("Flat")
+        self.preset_choice.Selection = self.preset_keys.index("Flat")
         config_set("eq_preset", "Flat")
         self.update_ui_from_service()
         self.on_update_timer(None)

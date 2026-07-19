@@ -219,17 +219,17 @@ class HomeScreen(wx.Frame):
 
         # Layout
         sizer = wx.BoxSizer(wx.VERTICAL)
-        btnSizer = wx.BoxSizer(wx.HORIZONTAL)
+        btnSizer = wx.BoxSizer(wx.VERTICAL)
 
         for child in panel.GetChildren():
             if child.Name == "tab":
-                btnSizer.Add(child, 1, wx.EXPAND | wx.ALL, 5)
+                btnSizer.Add(child, 0, wx.EXPAND | wx.ALL, 5)
 
         sizer.Add(self.instruction, 0, wx.ALL, 10)
         sizer.Add(self.home_feed_list, 1, wx.EXPAND | wx.ALL, 5)
         sizer.Add(self.load_more_home_button, 0, wx.ALIGN_CENTER | wx.ALL, 5)
         sizer.AddStretchSpacer()
-        sizer.Add(btnSizer, 0, wx.EXPAND)
+        sizer.Add(btnSizer, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 5)
 
         panel.SetSizer(sizer)
 

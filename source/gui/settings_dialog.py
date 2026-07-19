@@ -15,6 +15,15 @@ languages = {
 DEFAULT_AUDIO_OUTPUT_DEVICE = ""
 
 
+def _theme_labels():
+    return {
+        "System Default": _("افتراضي النظام"),
+        "Light": _("فاتح"),
+        "Dark": _("داكن"),
+        "High Contrast Dark": _("تباين عال داكن"),
+    }
+
+
 def _normalise_audio_output_device(device_id):
     if device_id is None or device_id == "None":
         return DEFAULT_AUDIO_OUTPUT_DEVICE
@@ -25,7 +34,7 @@ def _get_audio_output_device_choices():
     devices = [
         {
             "id": DEFAULT_AUDIO_OUTPUT_DEVICE,
-            "description": _("default audio output device"),
+            "description": _("جهاز إخراج الصوت الافتراضي"),
         }
     ]
     try:
@@ -46,10 +55,15 @@ def _get_audio_output_device_choices():
 class SettingsDialog(wx.Dialog):
     def __init__(self, parent):
         wx.Dialog.__init__(self, parent, title=_("الإعدادات"))
-        self.SetSize(500, 500)
+        self.SetMinSize((560, 520))
+        self.SetSize((760, 680))
         self.Centre()
         self.preferences = {}
-        panel = wx.Panel(self)
+        self.theme_keys = list(THEMES.keys())
+        self.theme_labels = _theme_labels()
+        panel = wx.ScrolledWindow(self)
+        panel.SetScrollRate(8, 8)
+
         lbl = wx.StaticText(panel, -1, _("لغة البرنامج: "), name="language")
         self.languageBox = wx.Choice(panel, -1, name="language")
         self.languageBox.Set(list(supported_languages.keys()))
@@ -57,7 +71,6 @@ class SettingsDialog(wx.Dialog):
             self.languageBox.Selection = languages[config_get("lang")]
         except KeyError:
             self.languageBox.Selection = 0
-        wx.StaticText(panel, -1, _("مسار مجلد التنزيل: "), name="path")
         self.pathField = wx.TextCtrl(
             panel,
             -1,
@@ -66,7 +79,6 @@ class SettingsDialog(wx.Dialog):
             style=wx.TE_READONLY | wx.TE_MULTILINE | wx.HSCROLL,
         )
         changeButton = wx.Button(panel, -1, _("&تغيير المسار"), name="path")
-        wx.StaticText(panel, -1, _("مسار ملف الكوكيز: "), name="cookies")
         self.cookiesPathField = wx.TextCtrl(
             panel,
             -1,
@@ -123,11 +135,20 @@ class SettingsDialog(wx.Dialog):
         self.browserIntegration.SetValue(config_get("browser_integration"))
         if sys.platform != "win32":
             self.browserIntegration.Disable()
-        wx.StaticText(preferencesBox, -1, _("مظهر البرنامج: "), name="theme")
+        theme_label = wx.StaticText(preferencesBox, -1, _("مظهر البرنامج: "))
         self.themeBox = wx.Choice(
-            preferencesBox, -1, name="theme", choices=list(THEMES.keys())
+            preferencesBox,
+            -1,
+            name="theme",
+            choices=[
+                self.theme_labels.get(theme, theme) for theme in self.theme_keys
+            ],
         )
-        self.themeBox.SetStringSelection(config_get("theme"))
+        try:
+            self.themeBox.Selection = self.theme_keys.index(config_get("theme"))
+        except ValueError:
+            self.themeBox.Selection = 0
+
         downloadPreferencesBox = wx.StaticBox(panel, -1, _("إعدادات التنزيل"))
         lbl2 = wx.StaticText(downloadPreferencesBox, -1, _("صيغة التحميل المباشر: "))
         self.formats = wx.Choice(
@@ -174,7 +195,7 @@ class SettingsDialog(wx.Dialog):
         self.audioQuality.Selection = int(config_get("defaultaudioquality"))
         self.audioOutputDevices = _get_audio_output_device_choices()
         self.audioOutputDeviceLabel = wx.StaticText(
-            playerOptions, -1, _("audio output device: ")
+            playerOptions, -1, _("جهاز إخراج الصوت: ")
         )
         self.audioOutputDevice = wx.Choice(
             playerOptions,
@@ -220,63 +241,84 @@ class SettingsDialog(wx.Dialog):
         okButton = wx.Button(panel, wx.ID_OK, _("مواف&ق"), name="ok_cancel")
         okButton.SetDefault()
         wx.Button(panel, wx.ID_CANCEL, _("إل&غاء"), name="ok_cancel")
-        sizer = wx.BoxSizer(wx.VERTICAL)
-        sizer1 = wx.BoxSizer(wx.HORIZONTAL)
-        sizer2 = wx.BoxSizer(wx.HORIZONTAL)
-        sizer3 = wx.BoxSizer(wx.HORIZONTAL)
-        sizer4 = wx.BoxSizer(wx.VERTICAL)
-        sizer5 = wx.BoxSizer(wx.HORIZONTAL)
-        sizer6 = wx.BoxSizer(wx.HORIZONTAL)
-        cookiesSizer = wx.BoxSizer(wx.HORIZONTAL)
+
+        def add_row(sizer, label, control):
+            sizer.Add(label, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
+            sizer.Add(control, 1, wx.EXPAND | wx.ALL, 5)
+
+        main_sizer = wx.BoxSizer(wx.VERTICAL)
+
+        general_grid = wx.FlexGridSizer(0, 2, 6, 8)
+        general_grid.AddGrowableCol(1, 1)
+        add_row(general_grid, lbl, self.languageBox)
+
+        path_controls = wx.BoxSizer(wx.HORIZONTAL)
+        self.pathField.SetMinSize((-1, 56))
+        path_controls.Add(self.pathField, 1, wx.EXPAND | wx.RIGHT, 5)
+        path_controls.Add(changeButton, 0, wx.EXPAND)
+        path_label = wx.StaticText(panel, -1, _("مسار مجلد التنزيل: "))
+        add_row(general_grid, path_label, path_controls)
+
+        cookies_controls = wx.BoxSizer(wx.HORIZONTAL)
+        self.cookiesPathField.SetMinSize((-1, 56))
+        cookies_controls.Add(self.cookiesPathField, 1, wx.EXPAND | wx.RIGHT, 5)
+        cookies_controls.Add(changeCookiesButton, 0, wx.EXPAND | wx.RIGHT, 5)
+        cookies_controls.Add(clearCookiesButton, 0, wx.EXPAND)
+        cookies_label = wx.StaticText(panel, -1, _("مسار ملف الكوكيز: "))
+        add_row(general_grid, cookies_label, cookies_controls)
+        main_sizer.Add(general_grid, 0, wx.EXPAND | wx.ALL, 8)
+
+        preferencesSizer = wx.BoxSizer(wx.VERTICAL)
+        for item in (
+            self.autoDetectItem,
+            self.autoCheckForUpdates,
+            self.autoLoadItem,
+            self.debugMode,
+            self.backgroundMonitoring,
+            self.browserIntegration,
+        ):
+            preferencesSizer.Add(item, 0, wx.EXPAND | wx.ALL, 5)
+        theme_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        theme_sizer.Add(theme_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
+        theme_sizer.Add(self.themeBox, 1, wx.EXPAND)
+        preferencesSizer.Add(theme_sizer, 0, wx.EXPAND | wx.ALL, 5)
+        preferencesBox.SetSizer(preferencesSizer)
+        main_sizer.Add(preferencesBox, 0, wx.EXPAND | wx.ALL, 8)
+
+        download_grid = wx.FlexGridSizer(0, 2, 6, 8)
+        download_grid.AddGrowableCol(1, 1)
+        add_row(download_grid, lbl2, self.formats)
+        add_row(download_grid, lbl3, self.mp3Quality)
+        downloadPreferencesBox.SetSizer(download_grid)
+        main_sizer.Add(downloadPreferencesBox, 0, wx.EXPAND | wx.ALL, 8)
+
+        playerOptionsSizer = wx.BoxSizer(wx.VERTICAL)
+        player_grid = wx.FlexGridSizer(0, 2, 6, 8)
+        player_grid.AddGrowableCol(1, 1)
+        add_row(player_grid, self.videoQualityLabel, self.videoQuality)
+        add_row(player_grid, self.audioQualityLabel, self.audioQuality)
+        add_row(player_grid, self.audioOutputDeviceLabel, self.audioOutputDevice)
+        add_row(player_grid, self.playbackSpeedStepLabel, self.playbackSpeedStep)
+        playerOptionsSizer.Add(player_grid, 0, wx.EXPAND | wx.ALL, 5)
+        playerOptionsSizer.Add(self.continueWatching, 0, wx.EXPAND | wx.ALL, 5)
+        playerOptionsSizer.Add(self.repeateTracks, 0, wx.EXPAND | wx.ALL, 5)
+        playerOptionsSizer.Add(self.autoPlayNext, 0, wx.EXPAND | wx.ALL, 5)
+        playerOptionsSizer.Add(self.eqButton, 0, wx.EXPAND | wx.ALL, 5)
+        playerOptions.SetSizer(playerOptionsSizer)
+        main_sizer.Add(playerOptions, 0, wx.EXPAND | wx.ALL, 8)
+
         okCancelSizer = wx.BoxSizer(wx.HORIZONTAL)
-        sizer1.Add(lbl, 1)
-        sizer1.Add(self.languageBox, 1, wx.EXPAND)
         for control in panel.GetChildren():
             if control.Name == "ok_cancel":
-                okCancelSizer.Add(control, 1)
-            elif control.Name == "path":
-                sizer2.Add(control, 1)
-            elif control.Name == "cookies":
-                cookiesSizer.Add(control, 1)
-        for item in preferencesBox.GetChildren():
-            sizer3.Add(item, 1)
-        preferencesBox.SetSizer(sizer3)
-        sizer5.Add(lbl3, 1)
-        sizer5.Add(self.mp3Quality, 1)
-        sizer6.Add(lbl2, 1)
-        sizer6.Add(self.formats, 1)
-        sizer4.Add(sizer5)
-        sizer4.Add(sizer6)
-        downloadPreferencesBox.SetSizer(sizer4)
-        playerOptionsSizer = wx.BoxSizer(wx.VERTICAL)
-        videoQualitySizer = wx.BoxSizer(wx.HORIZONTAL)
-        audioQualitySizer = wx.BoxSizer(wx.HORIZONTAL)
-        audioOutputDeviceSizer = wx.BoxSizer(wx.HORIZONTAL)
-        playbackSpeedStepSizer = wx.BoxSizer(wx.HORIZONTAL)
-        playbackSpeedStepSizer.Add(self.playbackSpeedStepLabel, 1)
-        playbackSpeedStepSizer.Add(self.playbackSpeedStep, 1)
-        videoQualitySizer.Add(self.videoQualityLabel, 1)
-        videoQualitySizer.Add(self.videoQuality, 1)
-        audioQualitySizer.Add(self.audioQualityLabel, 1)
-        audioQualitySizer.Add(self.audioQuality, 1)
-        audioOutputDeviceSizer.Add(self.audioOutputDeviceLabel, 1)
-        audioOutputDeviceSizer.Add(self.audioOutputDevice, 1)
-        playerOptionsSizer.Add(videoQualitySizer, 0, wx.EXPAND | wx.ALL, 5)
-        playerOptionsSizer.Add(audioQualitySizer, 0, wx.EXPAND | wx.ALL, 5)
-        playerOptionsSizer.Add(audioOutputDeviceSizer, 0, wx.EXPAND | wx.ALL, 5)
-        playerOptionsSizer.Add(playbackSpeedStepSizer, 0, wx.EXPAND | wx.ALL, 5)
-        playerOptionsSizer.Add(self.continueWatching, 0, wx.ALL, 5)
-        playerOptionsSizer.Add(self.repeateTracks, 0, wx.ALL, 5)
-        playerOptionsSizer.Add(self.autoPlayNext, 0, wx.ALL, 5)
-        playerOptions.SetSizer(playerOptionsSizer)
-        sizer.Add(sizer1, 1, wx.EXPAND)
-        sizer.Add(sizer2, 1, wx.EXPAND)
-        sizer.Add(cookiesSizer, 1, wx.EXPAND)
-        sizer.Add(preferencesBox, 1, wx.EXPAND)
-        sizer.Add(downloadPreferencesBox, 1, wx.EXPAND)
-        sizer.Add(playerOptions, 1, wx.EXPAND)
-        sizer.Add(okCancelSizer, 1, wx.EXPAND)
-        panel.SetSizer(sizer)
+                okCancelSizer.Add(control, 1, wx.EXPAND | wx.ALL, 5)
+        main_sizer.Add(okCancelSizer, 0, wx.EXPAND | wx.ALL, 8)
+
+        panel.SetSizer(main_sizer)
+        root_sizer = wx.BoxSizer(wx.VERTICAL)
+        root_sizer.Add(panel, 1, wx.EXPAND)
+        self.SetSizer(root_sizer)
+        self.Layout()
+        panel.FitInside()
         changeButton.Bind(wx.EVT_BUTTON, self.onChange)
         changeCookiesButton.Bind(wx.EVT_BUTTON, self.onChangeCookies)
         clearCookiesButton.Bind(wx.EVT_BUTTON, self.onClearCookies)
@@ -303,7 +345,7 @@ class SettingsDialog(wx.Dialog):
         return 0
 
     def onThemeChange(self, event):
-        new_theme = self.themeBox.GetStringSelection()
+        new_theme = self.theme_keys[self.themeBox.Selection]
         apply_theme(self, theme_name=new_theme)
 
     def onEqualizer(self, event):
@@ -338,7 +380,7 @@ class SettingsDialog(wx.Dialog):
             self.pathField.SetFocus()
 
     def onChangeCookies(self, event):
-        wildcard = "Text Files (*.txt)|*.txt"
+        wildcard = _("ملفات نصية (*.txt)|*.txt")
         dlg = wx.FileDialog(
             self,
             message=_("اختر ملف الكوكيز"),
@@ -388,7 +430,7 @@ class SettingsDialog(wx.Dialog):
             self.audioOutputDevices[self.audioOutputDevice.Selection]["id"],
         )
         config_set("playback_speed_step", self.playbackSpeedStep.Value)
-        config_set("theme", self.themeBox.GetStringSelection())
+        config_set("theme", self.theme_keys[self.themeBox.Selection])
         lang = {value: key for key, value in languages.items()}
         if not lang[self.languageBox.Selection] == config_get("lang"):
             config_set("lang", lang[self.languageBox.Selection])
