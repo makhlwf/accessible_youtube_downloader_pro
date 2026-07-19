@@ -5,7 +5,11 @@ const refreshButton = document.getElementById("refresh");
 const copyButton = document.getElementById("copy");
 const clearButton = document.getElementById("clear");
 const testButton = document.getElementById("test");
+const extensionVersion = document.getElementById("extension-version");
 const TEST_URL = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
+
+const manifest = chrome.runtime.getManifest();
+extensionVersion.textContent = `Version ${manifest.version}`;
 
 chrome.storage.sync.get({interceptYoutubeClicks: false}, (items) => {
   intercept.checked = Boolean(items.interceptYoutubeClicks);

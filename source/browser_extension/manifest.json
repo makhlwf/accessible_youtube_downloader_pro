@@ -2,8 +2,9 @@
   "manifest_version": 3,
   "name": "HexPlayer Link Helper",
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEApmOHZnVWwaMyuHaRH6/CNfIXhPQQXpMAy1h+qKzzXF3PmI2Zui5k0SE+q9ScNkKbhcRlubBELca2AS/6EBx5Wezq4zDGmKND6qOQ5JfC/3dcAbdmsQ7Pr0zre6RfeXVcYMNHQNdmqu9k0ITUpN8O5Zq/VIyzy4KmwHZ3aqdTPTtXs1g/bTykp51uf+u0XTXLVpoKYcyQ7jcT2fmQPtdnDqYnA4UfDoMA7LTyg00fJsDUA1QVtrfQ3gvIWFKx/z9rYX+cK3DcfK/uRG5Oicst4azNxMm1Z+M2o42t4CDxaSzeWQqKfqezr1hZlBNV7JmVLt7zxgVNn3k9fV7X4JHh7QIDAQAB",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Open supported YouTube links in HexPlayer without changing browser defaults.",
+  "homepage_url": "https://github.com/makhlwf/accessible_youtube_downloader_pro",
   "permissions": ["contextMenus", "storage", "activeTab", "scripting", "nativeMessaging"],
   "optional_host_permissions": ["<all_urls>"],
   "background": {

@@ -25,6 +25,26 @@
         color: #374151;
       }
 
+      a {
+        color: #0f766e;
+      }
+
+      dl {
+        display: grid;
+        gap: 8px 16px;
+        grid-template-columns: max-content 1fr;
+        margin: 0 0 24px;
+      }
+
+      dt {
+        color: #4b5563;
+        font-weight: 600;
+      }
+
+      dd {
+        margin: 0;
+      }
+
       #status {
         min-height: 1.5em;
       }
@@ -57,6 +77,23 @@
       HexPlayer settings must have safe browser integration enabled for direct
       Native Messaging launch.
     </p>
+    <h2>About</h2>
+    <dl>
+      <dt>App</dt>
+      <dd>HexPlayer</dd>
+      <dt>Developer</dt>
+      <dd>makhlwf</dd>
+      <dt>Source</dt>
+      <dd>
+        <a
+          href="https://github.com/makhlwf/accessible_youtube_downloader_pro"
+          rel="noopener noreferrer"
+          target="_blank"
+        >GitHub repository</a>
+      </dd>
+      <dt>Extension</dt>
+      <dd id="extension-version">Version</dd>
+    </dl>
     <h2>Diagnostics</h2>
     <div class="buttons">
       <button id="test" type="button">Open test video in HexPlayer</button>

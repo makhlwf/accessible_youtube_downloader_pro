@@ -5,6 +5,10 @@ Native Messaging. If the native host is not registered, it falls back to the
 `hexplayer://` custom protocol. It does not register HexPlayer as the handler
 for normal `http://` or `https://` links.
 
+Developer: makhlwf
+
+Source code: https://github.com/makhlwf/accessible_youtube_downloader_pro
+
 ## Install for development
 
 1. In HexPlayer, enable the safe browser integration setting. This registers
