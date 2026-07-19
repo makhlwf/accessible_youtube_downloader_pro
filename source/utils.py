@@ -27,6 +27,128 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 
+def _coerce_bool(value):
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        return value.strip().lower() in {"1", "true", "yes", "like", "liked"}
+    return bool(value)
+
+
+def _coerce_count(value):
+    if value is None:
+        return None
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, int):
+        return value
+    if isinstance(value, float):
+        return int(value) if value == value else None
+
+    text = str(value).strip()
+    if not text:
+        return None
+
+    match = re.search(r"([\d,.]+)\s*([kmb])?", text, re.IGNORECASE)
+    if not match:
+        return None
+
+    try:
+        number = float(match.group(1).replace(",", ""))
+    except ValueError:
+        return None
+
+    suffix = (match.group(2) or "").lower()
+    multiplier = {"k": 1000, "m": 1000000, "b": 1000000000}.get(suffix, 1)
+    return int(round(number * multiplier))
+
+
+def _normalize_like_info(result):
+    if not isinstance(result, dict) or "error" in result:
+        return {
+            "likes": None,
+            "rating": None,
+            "is_liked": False,
+            "is_disliked": False,
+        }
+
+    rating = result.get("rating")
+    is_liked = _coerce_bool(result.get("is_liked"))
+    is_disliked = _coerce_bool(result.get("is_disliked"))
+
+    if rating not in {"like", "dislike"}:
+        if is_liked:
+            rating = "like"
+        elif is_disliked:
+            rating = "dislike"
+        else:
+            rating = None
+
+    likes = _coerce_count(result.get("likes"))
+    if likes is None:
+        likes = _coerce_count(result.get("like_count"))
+
+    return {
+        "likes": likes,
+        "rating": rating,
+        "is_liked": rating == "like",
+        "is_disliked": rating == "dislike",
+    }
+
+
+def _chapter_time_ms(chapter):
+    for key in (
+        "time_ms",
+        "time_range_start_millis",
+        "timeRangeStartMillis",
+        "start_millis",
+        "startMillis",
+        "start_time_ms",
+    ):
+        if key in chapter and chapter[key] is not None:
+            try:
+                return max(0, int(float(chapter[key])))
+            except (TypeError, ValueError):
+                continue
+
+    for key in ("start_time", "startTime"):
+        if key in chapter and chapter[key] is not None:
+            try:
+                return max(0, int(float(chapter[key]) * 1000))
+            except (TypeError, ValueError):
+                continue
+
+    return None
+
+
+def _normalize_video_chapters(value):
+    if isinstance(value, dict):
+        value = value.get("chapters", [])
+    if not isinstance(value, list):
+        return []
+
+    chapters = []
+    for chapter in value:
+        if not isinstance(chapter, dict):
+            continue
+        time_ms = _chapter_time_ms(chapter)
+        if time_ms is None:
+            continue
+        title = str(chapter.get("title") or _("فصل بدون عنوان")).strip()
+        chapters.append({"title": title, "time_ms": time_ms})
+
+    chapters.sort(key=lambda chapter: chapter["time_ms"])
+    normalized = []
+    seen = set()
+    for chapter in chapters:
+        key = (chapter["time_ms"], chapter["title"])
+        if key in seen:
+            continue
+        seen.add(key)
+        normalized.append(chapter)
+    return normalized
+
+
 class InfoCache:
     def __init__(self, default_ttl=300):
         self.cache = {}
@@ -962,11 +1084,18 @@ def get_video_likes(url):
     """
     Fetches the like count for a video.
     """
+    return get_video_like_info(url)["likes"]
+
+
+def get_video_like_info(url):
+    """
+    Fetches the like count and current like/dislike status for a video.
+    """
     cookies_path = config_get("cookiespath")
     match = youtube_regexp(url)
     if not match:
         logger.error(f"Failed to match URL: {url}")
-        return None
+        return _normalize_like_info(None)
     video_id = match.group(5)
     logger.info(f"Fetching likes for video_id: {video_id} with cookies: {cookies_path}")
 
@@ -976,13 +1105,58 @@ def get_video_likes(url):
             {"cookiesPath": cookies_path, "videoId": video_id},
         )
         logger.info(f"Deno service result for likes: {result}")
-        if isinstance(result, dict) and "likes" in result:
-            return result["likes"]
-        logger.warning(f"Result missing 'likes' key or invalid: {result}")
-        return None
+        if isinstance(result, dict) and "error" in result:
+            logger.warning(f"Deno service returned like info error: {result['error']}")
+        info = _normalize_like_info(result)
+        if info["likes"] is None:
+            fallback_info = _get_video_like_info_with_yt_dlp(url, cookies_path)
+            if fallback_info["likes"] is not None:
+                info["likes"] = fallback_info["likes"]
+        return info
     except Exception as e:
         logger.error(f"Failed to perform like interaction: {e}")
-        return None
+        return _get_video_like_info_with_yt_dlp(url, cookies_path)
+
+
+def _get_video_like_info_with_yt_dlp(url, cookies_path=None):
+    info = _normalize_like_info(None)
+    if not YoutubeDL:
+        return info
+
+    opts = PLAYER_OPTS.copy()
+    opts["skip_download"] = True
+    opts["extract_flat"] = False
+    if cookies_path and os.path.exists(cookies_path):
+        opts["cookiefile"] = cookies_path
+
+    try:
+        with YoutubeDL(opts) as ydl:
+            video_info = ydl.extract_info(url, download=False)
+        info["likes"] = _coerce_count(
+            video_info.get("like_count") if video_info else None
+        )
+    except Exception as e:
+        logger.error(f"Failed to fetch like count with yt-dlp fallback: {e}")
+    return info
+
+
+def _get_video_chapters_with_yt_dlp(url, cookies_path=None):
+    if not YoutubeDL:
+        return []
+
+    opts = PLAYER_OPTS.copy()
+    opts["skip_download"] = True
+    opts["extract_flat"] = False
+    if cookies_path and os.path.exists(cookies_path):
+        opts["cookiefile"] = cookies_path
+
+    try:
+        with YoutubeDL(opts) as ydl:
+            info = ydl.extract_info(url, download=False)
+        return _normalize_video_chapters(info.get("chapters") if info else [])
+    except Exception as e:
+        logger.error(f"Failed to fetch chapters with yt-dlp fallback: {e}")
+        return []
 
 
 def get_video_chapters(url):
@@ -1002,12 +1176,15 @@ def get_video_chapters(url):
             "get_video_chapters",
             {"cookiesPath": cookies_path, "videoId": video_id},
         )
-        if isinstance(result, dict) and "chapters" in result:
-            return result["chapters"]
-        return []
+        chapters = _normalize_video_chapters(result)
+        if chapters:
+            return chapters
+        if isinstance(result, dict) and "error" in result:
+            logger.warning(f"Deno service returned chapters error: {result['error']}")
+        return _get_video_chapters_with_yt_dlp(url, cookies_path)
     except Exception as e:
         logger.error(f"Failed to fetch chapters: {e}")
-        return []
+        return _get_video_chapters_with_yt_dlp(url, cookies_path)
 
 
 def time_formatting(total_seconds):

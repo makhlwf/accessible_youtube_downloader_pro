@@ -234,6 +234,7 @@ class MediaGui(wx.Frame):
             return
         Thread(target=self.fetch_qualities, daemon=True).start()
         Thread(target=self.fetch_chapters, daemon=True).start()
+        self.fetch_like_count()
         if self.url in Continue.get_all() and config_get("continue"):
             self.player.media.set_position(Continue.get_all()[url])
         Thread(target=self.extract_description, daemon=True).start()
@@ -373,11 +374,14 @@ class MediaGui(wx.Frame):
 
             logger = logging.getLogger(__name__)
             logger.info(f"Fetching likes for {self.url}")
-            likes = utils.get_video_likes(self.url)
-            logger.info(f"Fetched likes: {likes}")
+            like_info = utils.get_video_like_info(self.url)
+            logger.info(f"Fetched like info: {like_info}")
+            likes = like_info.get("likes")
             if likes is not None:
                 self.like_count = likes
                 logger.info(f"Updated self.like_count to {self.like_count}")
+            self.rating = like_info.get("rating")
+            logger.info(f"Updated self.rating to {self.rating}")
 
         Thread(target=_task, daemon=True).start()
 
@@ -572,27 +576,41 @@ class MediaGui(wx.Frame):
         if self.rating == "like":
             action = "remove_like"
             msg = _("تمت إزالة التقييم")
-            self.rating = None
+            new_rating = None
         else:
             action = "like"
             msg = _("تم الإعجاب")
-            self.rating = "like"
+            new_rating = "like"
 
-        Thread(target=utils.like_video, args=(self.url, action), daemon=True).start()
-        speak(msg)
+        self._submit_rating_change(action, new_rating, msg)
 
     def onDislike(self, event=None):
         if self.rating == "dislike":
             action = "remove_like"
             msg = _("تمت إزالة التقييم")
-            self.rating = None
+            new_rating = None
         else:
             action = "dislike"
             msg = _("تم عدم الإعجاب")
-            self.rating = "dislike"
+            new_rating = "dislike"
 
-        Thread(target=utils.like_video, args=(self.url, action), daemon=True).start()
-        speak(msg)
+        self._submit_rating_change(action, new_rating, msg)
+
+    def _submit_rating_change(self, action, new_rating, success_message):
+        previous_rating = self.rating
+        self.rating = new_rating
+        speak(success_message)
+
+        def _task():
+            success = utils.like_video(self.url, action)
+            if success:
+                self.fetch_like_count()
+                return
+            if self.rating == new_rating:
+                self.rating = previous_rating
+            wx.CallAfter(speak, _("تعذر تحديث التقييم"))
+
+        Thread(target=_task, daemon=True).start()
 
     def onKeyDown(self, event):
         event.Skip()
@@ -871,6 +889,7 @@ class MediaGui(wx.Frame):
         self.current_channel = self._resolve_channel(stream, url, index)
         self.SetTitle(f"{title} - {application.name}")
         self.like_count = None
+        self.rating = None
         self.fetch_like_count()
         self.player.media.play()
         self.player.media.audio_set_volume(self.player.volume)

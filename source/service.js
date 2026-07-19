@@ -34,6 +34,153 @@ function parseCookies(filePath) {
 let yt = null;
 let currentCookiesPath = null;
 
+function textValue(value) {
+    if (value === null || value === undefined) return '';
+    if (typeof value === 'string') return value;
+    if (typeof value === 'number') return String(value);
+    if (Array.isArray(value)) return value.map(textValue).join('');
+
+    if (value.simpleText) return textValue(value.simpleText);
+    if (value.text) return textValue(value.text);
+    if (value.runs) return value.runs.map(run => textValue(run.text || run)).join('');
+
+    if (typeof value.toString === 'function' && value.toString !== Object.prototype.toString) {
+        const text = value.toString();
+        if (text && text !== '[object Object]') return text;
+    }
+
+    return '';
+}
+
+function parseCount(value) {
+    if (value === null || value === undefined) return null;
+    if (typeof value === 'number') return Number.isFinite(value) ? value : null;
+
+    const text = textValue(value).trim();
+    if (!text) return null;
+
+    const match = text.match(/([\d.,]+)\s*([kmb])?/i);
+    if (!match) return null;
+
+    const numberText = match[1].replace(/,/g, '');
+    const number = Number.parseFloat(numberText);
+    if (!Number.isFinite(number)) return null;
+
+    const suffix = (match[2] || '').toLowerCase();
+    const multiplier =
+        suffix === 'k' ? 1000 : suffix === 'm' ? 1000000 : suffix === 'b' ? 1000000000 : 1;
+    return Math.round(number * multiplier);
+}
+
+function extractLikeInfo(info) {
+    info = info || {};
+    const basicInfo = info.basic_info || {};
+    const buttons = info.primary_info?.menu?.top_level_buttons || [];
+    const buttonItems = Array.isArray(buttons) || typeof buttons?.[Symbol.iterator] === 'function'
+        ? Array.from(buttons)
+        : [];
+    const segmentedButton = buttonItems.find(button =>
+        button?.type === 'SegmentedLikeDislikeButtonView' ||
+        (button?.like_button && button?.dislike_button)
+    );
+
+    let likes = parseCount(basicInfo.like_count);
+    if (likes === null) likes = parseCount(info.likes);
+    if (likes === null) likes = parseCount(info.like_count);
+    if (likes === null) likes = parseCount(segmentedButton?.like_count);
+    if (likes === null) likes = parseCount(segmentedButton?.short_like_count);
+
+    const likeStatus =
+        basicInfo.like_status ||
+        segmentedButton?.like_button?.like_status_entity?.like_status ||
+        info.actions?.like_button?.status ||
+        null;
+    const isLiked =
+        basicInfo.is_liked === true || info.is_liked === true || likeStatus === 'LIKE';
+    const isDisliked =
+        basicInfo.is_disliked === true || info.is_disliked === true || likeStatus === 'DISLIKE';
+    const rating = isLiked ? 'like' : isDisliked ? 'dislike' : null;
+
+    return {
+        likes,
+        is_liked: isLiked,
+        is_disliked: isDisliked,
+        rating
+    };
+}
+
+function chapterTimeMs(chapter) {
+    const millisecondKeys = [
+        'time_ms',
+        'time_range_start_millis',
+        'timeRangeStartMillis',
+        'start_millis',
+        'startMillis',
+        'start_time_ms'
+    ];
+    for (const key of millisecondKeys) {
+        const milliseconds = Number(chapter?.[key]);
+        if (Number.isFinite(milliseconds)) return Math.max(0, Math.floor(milliseconds));
+    }
+
+    for (const key of ['start_time', 'startTime']) {
+        const seconds = Number(chapter?.[key]);
+        if (Number.isFinite(seconds)) return Math.max(0, Math.floor(seconds * 1000));
+    }
+
+    return null;
+}
+
+function normalizeChapter(chapter) {
+    const timeMs = chapterTimeMs(chapter);
+    if (timeMs === null) return null;
+
+    const title = textValue(chapter?.title || chapter?.name).trim() || 'Untitled chapter';
+    return { title, time_ms: timeMs };
+}
+
+function extractChapters(info) {
+    info = info || {};
+    const candidates = [
+        info.basic_info?.chapters,
+        info.chapters,
+        info.player_overlays?.decorated_player_bar?.player_bar?.markers_map
+    ];
+    const chapters = [];
+
+    for (const candidate of candidates) {
+        if (!candidate) continue;
+
+        const items =
+            Array.isArray(candidate) || typeof candidate?.[Symbol.iterator] === 'function'
+                ? Array.from(candidate)
+                : [];
+        if (items.length > 0 && !items[0]?.value) {
+            chapters.push(...items);
+            continue;
+        }
+
+        for (const marker of items) {
+            if (marker?.value?.chapters) {
+                chapters.push(...marker.value.chapters);
+            }
+        }
+    }
+
+    const normalized = chapters
+        .map(normalizeChapter)
+        .filter(chapter => chapter !== null)
+        .sort((a, b) => a.time_ms - b.time_ms);
+
+    const seen = new Set();
+    return normalized.filter(chapter => {
+        const key = `${chapter.time_ms}:${chapter.title}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+    });
+}
+
 async function getYT(cookiesPath) {
     if (yt && currentCookiesPath === cookiesPath) {
         return yt;
@@ -312,7 +459,9 @@ async function handleLikeInteraction(params) {
         } else if (action === 'dislike') {
             await yt.interact.dislike(videoId);
         } else if (action === 'remove_like') {
-            await yt.interact.removeLike(videoId);
+            await yt.interact.removeRating(videoId);
+        } else {
+            throw new Error(`Unknown interaction action: ${action}`);
         }
         return { success: true };
     } catch (error) {
@@ -325,22 +474,11 @@ async function handleGetVideoLikes(params) {
     try {
         const info = await yt.getInfo(videoId);
         const basic_info = info.basic_info || {};
-
-        // Check like status if available
-        const likeStatus = info.actions?.like_button?.status; // Check if this is the correct path for likes
-
-        let likes = null;
-        if (basic_info.like_count !== undefined) {
-            likes = basic_info.like_count;
-        } else if (info.likes !== undefined) {
-            likes = info.likes;
-        }
+        const likeInfo = extractLikeInfo(info);
 
         return {
-            likes: likes,
-            title: basic_info.title || info.title || "Unknown",
-            is_liked: info.is_liked || false,
-            is_disliked: info.is_disliked || false
+            ...likeInfo,
+            title: textValue(basic_info.title || info.title) || "Unknown",
         };
     } catch (error) {
         console.error(JSON.stringify({ debug: "handleGetVideoLikes error", error: error.message, stack: error.stack }));
@@ -353,20 +491,7 @@ async function handleGetVideoChapters(params) {
     const { videoId } = params;
     try {
         const info = await yt.getInfo(videoId);
-        const markers_map = info.player_overlays?.decorated_player_bar?.player_bar?.markers_map;
-        
-        let chapters = [];
-        if (markers_map) {
-            const chapters_marker = markers_map.find(m => m.marker_key === 'MARKERS_KEY_CHAPTERS' || (m.value && m.value.chapters));
-            if (chapters_marker && chapters_marker.value && chapters_marker.value.chapters) {
-                chapters = chapters_marker.value.chapters.map(c => ({
-                    title: c.title.toString(),
-                    time_ms: c.time_range_start_millis
-                }));
-            }
-        }
-        
-        return { chapters };
+        return { chapters: extractChapters(info) };
     } catch (error) {
         console.error(JSON.stringify({ debug: "handleGetVideoChapters error", error: error.message }));
         throw new Error(`Failed to fetch chapters: ${error.message}`);
@@ -430,7 +555,11 @@ async function main() {
     }
 }
 
-main().catch(err => {
-    console.error(JSON.stringify({ error: err.message }));
-    Deno.exit(1);
-});
+export { extractChapters, extractLikeInfo, normalizeChapter, parseCount };
+
+if (import.meta.main) {
+    main().catch(err => {
+        console.error(JSON.stringify({ error: err.message }));
+        Deno.exit(1);
+    });
+}
