@@ -1,9 +1,3 @@
-> [!WARNING]
-> Following the release of version 2.0.0, the repository has been archived, and project maintenance has been permanently discontinued due to a decline in interest.
->
-> You are permitted to fork the repository and utilize it as desired, provided that you comply with the project license.
->
-> Thank you for your support.
 <h1 align="center">HexPlayer</h1>
 
 <p align="center">
@@ -34,124 +28,204 @@
 </p>
 
 <p align="center">
-  <b>HexPlayer</b> is a powerful, lightweight, and highly accessible Windows application designed for browsing, watching, and downloading YouTube content. Built with a focus on blind and visually impaired users, it provides a seamless experience without the complexities of a web browser.
+  <b>HexPlayer</b> is an accessible Windows application for searching, browsing, watching, and downloading YouTube content with a keyboard-first interface.
 </p>
+
 ---
 
-## Privacy Policy
-HexPlayer respects your privacy. We do not collect or transmit any of your personal information. Read our full [Privacy Policy](PRIVACY_POLICY.md) for more details.
+## Overview
+
+HexPlayer is the current continuation of Accessible YouTube Downloader Pro. It is designed for blind and visually impaired Windows users who want a screen-reader friendly way to use YouTube without relying on the YouTube web interface.
+
+The current application version is **3.0.0**. The app is intended for modern 64-bit Windows systems, especially Windows 10 and Windows 11.
 
 ---
 
 ## Key Features
 
-- **Direct Search:** Search for videos, playlists, and live streams directly within the app.
-- **Dedicated Media Player:** An accessible built-in player that supports audio and video modes.
-- **Advanced Downloading:** Download content in various formats (MP4, MP3, M4A) with `yt-dlp` integration.
-- **Smart Clipboard Detection:** Automatically detects YouTube links from your clipboard on startup.
-- **Auto-Organization:** Automatically creates folders for playlists and channels during downloads.
-- **Background Tasks:** Watch your favorite videos while downloading others in the background.
-- **Multilingual:** Full support for **Arabic** and **English** with automatic system language detection.
-- **Performance:** Optimized for Windows 10/11 (64-bit).
+- **YouTube search and browsing:** Search videos, playlists, channels, and live content directly inside the app.
+- **Playlist and channel views:** Open playlists and browse channel tabs such as videos, shorts, live streams, playlists, community, channels, and about.
+- **Accessible media player:** Play content as video or audio-only with keyboard shortcuts, volume boost, playback speed control, chapters, quality switching, equalizer, and audio output device selection.
+- **Downloads:** Download videos, playlists, channels, and supported YouTube links as MP4, M4A, or MP3 using `yt-dlp`.
+- **Quality selection:** Choose available video quality before video downloads, and configure default playback quality.
+- **Favorites:** Save local favorite videos and quickly play or download them later.
+- **Watch history:** Use a YouTube cookies file to show recent watch history and home recommendations.
+- **Resume playback:** Continue videos from the last saved local position.
+- **Clipboard detection:** Detect supported YouTube links at startup or continuously when background monitoring is enabled.
+- **Browser integration:** Use the included Chromium-compatible extension to send supported YouTube links to HexPlayer through Native Messaging or the `hexplayer://` fallback protocol.
+- **External tools management:** Check and update `yt-dlp` and Deno from the app.
+- **Localization and themes:** Arabic and English interfaces, automatic language detection, and system, light, dark, and high contrast dark themes.
+
+---
+
+## Privacy
+
+HexPlayer does not collect or transmit personal information to the developer. A cookies file is optional and is used locally by the app and its tools for YouTube features that require your signed-in session, such as watch history, recommendations, likes, chapters, and restricted content.
+
+Read the full [Privacy Policy](PRIVACY_POLICY.md) for details.
 
 ---
 
 ## Essential Keyboard Shortcuts
 
-HexPlayer is designed to be fully navigable via keyboard.
+HexPlayer is designed to be fully navigable from the keyboard.
 
 | Shortcut | Action |
 | :--- | :--- |
-| **`Ctrl + F`** | Search YouTube |
-| **`Ctrl + D`** | Download from Link / Direct Download |
-| **`Ctrl + Y`** | Play YouTube Link |
-| **`Ctrl + Shift + F`** | Open Favorites |
-| **`Ctrl + P`** | Open Download Folder |
-| **`Alt + S`** | Open Settings |
-| **`F1`** | User Guide |
-| **`Space`** | Play / Pause (Player) |
-| **`Arrows`** | Volume and Seeking (Player) |
-| **`Shift + Up / Down Arrows`** | Playback Speed (Player) |
+| `Ctrl + F` | Search YouTube |
+| `Ctrl + D` | Download from link or direct download |
+| `Ctrl + Y` | Play YouTube link |
+| `Ctrl + Shift + F` | Open Favorites |
+| `Ctrl + H` | Open Watch History, when cookies are configured |
+| `Ctrl + P` | Open download folder |
+| `Alt + S` | Open settings |
+| `F1` | Open user guide |
+| `Enter` | Play selected list item as audio |
+| `Ctrl + Enter` | Play selected list item as video |
+| `Space` | Play or pause in the player |
+| Arrow keys | Volume and seeking in the player |
+| `Shift + Up / Down` | Change playback speed |
+| `Ctrl + E` | Open equalizer in the player |
+| `F12` | Choose audio output device in the player |
+
+The full English and Arabic guides are available inside the app with `F1` and in:
+
+- `source/docs/en/guide.txt`
+- `source/docs/ar/guide.txt`
 
 ---
 
-## Getting Started
+## Installation
 
-### Installation
-#### from GitHub releases
-1. Download the latest version from the [Releases Page](https://github.com/makhlwf/accessible_youtube_downloader_pro/releases).
-2. Run the `HexPlayer.exe` installer.
-3. Follow the on-screen instructions (it will optionally download `yt-dlp` for you).
+### From GitHub Releases
 
-#### Using WinGet
-run your CMD or Powershell and Run
-```
+1. Download the latest installer from the [Releases page](https://github.com/makhlwf/accessible_youtube_downloader_pro/releases).
+2. Run `HexPlayer.exe`.
+3. Follow the installer prompts. The installer can optionally download required external components.
+
+### Using WinGet
+
+Run the following command in Command Prompt or PowerShell:
+
+```powershell
 winget install HexPlayer
 ```
 
-#### Silent Installation
-For system administrators and automated deployments, the installer supports the following command-line arguments:
-- **`/VERYSILENT`**: Perform a fully silent installation (no UI).
-- **`/SILENT`**: Perform a silent installation with a progress bar.
-- **`/DOWNLOADCOMPONENTS=1`**: Force the download of required components (yt-dlp and Deno) during a silent installation.
-- **`/DIR="C:\Path\To\Install"`**: Specify a custom installation directory.
+### Silent Installation
 
-Example (Fully silent with components):
+The installer supports command-line arguments for automated deployments:
+
+- `/VERYSILENT`: fully silent installation.
+- `/SILENT`: silent installation with a progress window.
+- `/DOWNLOADCOMPONENTS=1`: force download of required external components such as `yt-dlp` and Deno during silent installation.
+- `/DIR="C:\Path\To\Install"`: custom installation directory.
+
+Examples:
+
 ```cmd
 HexPlayer.exe /VERYSILENT /NORESTART /DOWNLOADCOMPONENTS=1
-```
-
-Example (Silent with progress):
-```cmd
 HexPlayer.exe /SILENT /NORESTART /DOWNLOADCOMPONENTS=1
 ```
 
-### Running from Source (For Developers)
-1. **Clone the repo:**
-   ```bash
+---
+
+## Browser Extension
+
+HexPlayer includes a Chromium-compatible helper extension in `source/browser_extension`.
+
+To use it:
+
+1. Enable **Safe browser integration** in HexPlayer settings.
+2. Open **External Tools > Open Browser Extension Folder** from HexPlayer.
+3. Open your browser extensions page, such as `chrome://extensions`, `edge://extensions`, or `brave://extensions`.
+4. Enable Developer mode.
+5. Choose **Load unpacked** and select the folder opened by HexPlayer.
+
+The extension can open supported YouTube links in HexPlayer from a context menu or toolbar button. Its options page includes diagnostics and a test link.
+
+---
+
+## Running From Source
+
+1. Clone the repository:
+
+   ```powershell
    git clone https://github.com/makhlwf/accessible_youtube_downloader_pro.git
    cd accessible_youtube_downloader_pro
    ```
-2. **Setup Virtual Environment:**
-   ```bash
+
+2. Create and activate a virtual environment:
+
+   ```powershell
    python -m venv .venv
    .venv\Scripts\activate
    ```
-3. **Install Dependencies:**
-   ```bash
+
+3. Install dependencies:
+
+   ```powershell
    pip install -r requirements.txt
    ```
-4. **Run the App:**
-   ```bash
+
+4. Run the app:
+
+   ```powershell
    cd source
    python accessible_youtube_downloader_pro.py
    ```
 
+HexPlayer may prompt to download `yt-dlp` or Deno when a feature needs them and they are missing.
+
 ---
 
-## 🛠️ Building the Executable
-To create your own standalone executable:
-1. Ensure you are in the root directory and your venv is active.
-2. Install PyInstaller: `pip install pyinstaller`
-3. Run the build script: `python build.py`
-4. Find your app in the `dist/HexPlayer` folder.
+## Building
+
+To create a standalone build:
+
+1. Activate your virtual environment from the repository root.
+2. Install PyInstaller if needed:
+
+   ```powershell
+   pip install pyinstaller
+   ```
+
+3. Run the build script:
+
+   ```powershell
+   python build.py
+   ```
+
+4. Find the output in `dist/HexPlayer`.
+
+---
+
+## Project Structure
+
+- `source/accessible_youtube_downloader_pro.py`: main application entry point.
+- `source/media_player/`: MPV-backed media player and equalizer logic.
+- `source/youtube_browser/`: search, playlist, and channel browsing logic.
+- `source/gui/`: wxPython dialogs and windows.
+- `source/download_handler/`: download handling through `yt-dlp`.
+- `source/browser_extension/`: Chromium-compatible link helper extension.
+- `source/docs/`: English and Arabic in-app user guides.
+- `tests/`: unit tests for core helpers and dialogs.
 
 ---
 
 ## Acknowledgements
-- **Original Developer:** Suleiman Al Qusaimi.
-- **Maintainer & Fork Author:** [Makhlwf](https://github.com/makhlwf).
-- **Core Engine:** Powered by [yt-dlp](https://github.com/yt-dlp/yt-dlp) and [wxPython](https://www.wxpython.org/).
+
+- **Original developer:** Suleiman Al Qusaimi.
+- **Maintainer and fork author:** [Makhlwf](https://github.com/makhlwf).
+- **Core tools:** [yt-dlp](https://github.com/yt-dlp/yt-dlp), [wxPython](https://www.wxpython.org/), [MPV](https://mpv.io/), and [Deno](https://deno.com/).
 
 ---
 
 ## License
-This project is licensed under the **GNU General Public License v3.0**. See the [LICENSE](LICENSE) file for details.
+
+This project is licensed under the **GNU General Public License v3.0**. See [LICENSE](LICENSE) for details.
 
 ---
 
 ## Disclaimer
-This project is a fork of the original "Accessible YouTube Downloader Pro". It is provided "as is" without warranty of any kind. Please ensure you comply with YouTube's Terms of Service when using this application.
 
----
-<p align="center">Made with ❤️ for the accessibility community.</p>
+This project is a fork of the original Accessible YouTube Downloader Pro. It is provided as is, without warranty of any kind. Make sure your use complies with YouTube's Terms of Service and any applicable laws.

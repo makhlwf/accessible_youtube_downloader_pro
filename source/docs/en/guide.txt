@@ -1,265 +1,363 @@
 HexPlayer User Guide
-About the Program
 
-Program Name: {name}
+About HexPlayer
 
+Program name: {name}
 Version: {version}
-
 Developed by: {author}
 
-Description:
+{name} is the current continuation of Accessible YouTube Downloader Pro. It is a Windows application built for keyboard and screen-reader users who want to search, browse, play, and download YouTube content without depending on the YouTube web interface.
 
-{name} is a modified version of "Accessible YouTube Downloader Pro," originally developed by Suleiman Al-Qasimi. It is an evolution of its predecessor, "Accessible YouTube Downloader," specifically designed to meet the needs of blind Windows users. It provides a comprehensive and accessible experience for YouTube by offering a simple interface compatible with screen readers, filling the gap left by the lack of an official YouTube desktop application for Windows.
+The program focuses on accessibility first. Most actions are available from menus, buttons, context menus, and keyboard shortcuts. It can play either audio-only or video, download MP4, M4A, and MP3 files, browse playlists and channels, and keep common actions reachable from the keyboard.
 
-Note: The program may not perform well on older versions of Windows (such as Windows 8 and earlier) or 32-bit systems, as modern Python versions have dropped support for those environments.
+Supported environment
 
-Key Features:
+HexPlayer is intended for modern 64-bit Windows systems, especially Windows 10 and Windows 11. Older Windows releases and 32-bit systems may not work well because the current Python runtime, yt-dlp, Deno, MPV, and related components no longer target those environments reliably.
 
-YouTube Search Support: Search for content directly within the app.
+Main features
 
-Search Filters: Use filters like "Playlists" to narrow down search results.
+- Search YouTube from inside the app.
+- Browse videos, playlists, and channels without opening a browser.
+- Open playlist contents and channel tabs inside HexPlayer.
+- Play videos as video or as audio-only.
+- Use an accessible media player with keyboard shortcuts, volume boost, speed control, chapters, quality selection, equalizer, and audio output device selection.
+- Download single videos, playlists, channels, Shorts, live pages where supported, and other supported YouTube links.
+- Download as MP4 video, M4A audio, or MP3 audio.
+- Choose video quality before downloading video when available.
+- Organize playlist and channel downloads into separate folders.
+- Detect YouTube links from the clipboard at startup, or continuously when background monitoring is enabled.
+- Open supported YouTube links from the browser extension or from external launch links.
+- Save local favorites.
+- Resume playback from the last saved position.
+- Optionally use a YouTube cookies file for authenticated features such as home recommendations, watch history, likes, chapters, and some restricted content.
+- Check for HexPlayer updates and update external tools such as yt-dlp and Deno.
+- Use Arabic or English, with automatic language selection on first run.
+- Use system, light, dark, or high contrast dark themes.
 
-In-App Browsing: Browse videos without leaving the program.
+Main window
 
-Dedicated Accessible Player: A built-in player optimized for accessibility; no web browser required.
+When HexPlayer starts, press Alt to open the menu bar, or use Tab to move through the main buttons.
 
-Live Stream Support: Play live broadcasts within the app.
+Main buttons:
 
-Audio/Video Toggle: Play content as an audio track or view the video.
+- YouTube Search, Ctrl + F.
+- Download from Link, Ctrl + D.
+- Play YouTube Link, Ctrl + Y.
+- Favorites, Ctrl + Shift + F.
+- Watch History, Ctrl + H. This is enabled only when a valid cookies file is configured.
 
-Download Capabilities: Download search results in both audio and video formats.
+If a valid cookies file is configured, the main window may also show home recommendations from YouTube. Use Enter to play a recommendation as audio, Ctrl + Enter to play it as video, and the Load More button to fetch more recommendations.
 
-Play Links: Open and play YouTube links directly through the program.
+Main menu
 
-Link Downloading: Download videos, channels, and playlists via URLs.
+The Main menu contains:
 
-Folder Organization: Automatically creates separate folders for playlists and channels during download.
+- YouTube Search, Ctrl + F.
+- Download from Link, Ctrl + D.
+- Play YouTube Link, Ctrl + Y.
+- Favorites, Ctrl + Shift + F.
+- Watch History, Ctrl + H. This is disabled until cookies are configured.
+- Open Download Folder, Ctrl + P.
+- Settings, Alt + S.
+- Exit, Ctrl + W.
 
-Simultaneous Action: Download and watch clips at the same time.
+External tools menu
 
-Clipboard Detection: Automatically detects YouTube links from the clipboard upon startup.
+The External Tools menu contains:
 
-Multilingual Support: Supports several languages for the user interface.
+- Show yt-dlp version.
+- Check for yt-dlp update.
+- Show Deno version.
+- Check for Deno update.
+- Open Browser Extension Folder.
 
-Auto-Language Detection: Automatically detects the system language on the first run.
+yt-dlp is the download and extraction engine. Deno is used by several YouTube interaction features, including watch history, home feed, likes, and chapters. If one of these tools is missing, HexPlayer may offer to download it.
 
-Update Checker: Built-in feature to check for program updates.
+About menu
 
-Privacy Policy: Dedicated section explaining how your data and cookies are handled.
+The About menu contains:
 
-Resume Playback: Option to continue watching from where you last stopped.
+- User Guide, F1.
+- Check for Updates.
+- Privacy Policy.
+- About.
+- Contact Me, with email and Telegram entries.
 
-Playlist Browsing: Browse the contents of playlists within the application.
+Settings
 
-Comment Browsing: View comments from within the app.
+Open settings from the Main menu or with Alt + S.
 
-And various other refinements.
+General settings:
 
-Main Interface
+- Program language: Arabic or English. Restart the app when asked after changing language.
+- Download folder: the default download location. The default is the HexPlayer folder inside your Windows Downloads folder.
+- Cookies file path: optional Netscape HTTP cookies file. Use Change to select it or Delete to clear it.
+- Auto-detect links at startup: checks the clipboard once when the program opens.
+- Auto-check for updates at startup.
+- Auto-load more results: automatically loads more search results and channel items when you reach the end of a supported list.
+- Debug messages: for developer troubleshooting.
+- Background monitoring: starts HexPlayer with Windows, keeps it available in the system tray, and watches the clipboard for YouTube links. Closing the main window hides the app instead of exiting while this option is enabled.
+- Safe browser integration: Windows only. Registers the HexPlayer Native Messaging host and the hexplayer protocol for the browser extension. It does not take over normal http or https links.
+- Theme: System Default, Light, Dark, or High Contrast Dark.
 
-Upon opening the program, a hint will guide you to press the Alt key to view the main menus. You can also navigate using the Tab key to quickly access essential buttons: Search, Download, and Play.
+Download settings:
 
-The program contains two main menus:
+- Direct download format: Video MP4, Audio M4A, or Audio MP3. This controls Direct Download from lists and the player.
+- MP3 conversion quality: 96, 128, or 192 kbps.
 
-Main Menu:
+Player settings:
 
-Includes options for: YouTube Search, Download YouTube Link, Play YouTube Link, Settings, and Exit.
+- Default video quality: 144p through 2160p.
+- Default audio quality: Low, Medium, or High.
+- Audio output device: system default or another available device.
+- Continue watching: resumes a video from the last saved position.
+- Repeat track: restarts the current track when it ends.
+- Auto-next: plays the next item in the current list when the current item ends.
+- Equalizer settings: presets and manual band controls.
+- Playback speed step: how much Shift + Up or Shift + Down changes speed each time.
 
-Shortcuts: Most options have keyboard shortcuts. For example, Ctrl + F opens the Search dialog, and Ctrl + D opens the Download dialog.
+Repeat and auto-next cannot both stay enabled. Turning one on turns the other off.
 
-YT-DLP Menu:
+Cookies file
 
-Dedicated to the tool used for downloading videos:
+Cookies are optional. Without cookies, normal search, playback, and many downloads still work.
 
-View YT-DLP Version: Shows the current version of the tool.
+With a valid cookies file, HexPlayer can:
 
-Update YT-DLP: Updates the downloading engine (useful if downloading stops working).
+- Show home recommendations in the main window.
+- Enable Watch History.
+- Update YouTube watch history while you play videos.
+- Fetch YouTube like counts when available.
+- Like or dislike videos from the player.
+- Fetch chapters when available.
+- Access videos that require your signed-in YouTube session.
 
-About Menu:
+The cookies file should be in Netscape HTTP format. Keep it private because it represents your browser session. If cookie-based downloading fails, HexPlayer retries downloads without cookies when possible.
 
-User Guide: The manual you are currently reading (can also be accessed via F1).
+Search and browsing
 
-Check for Updates: Check for and download new versions of the application.
+Open search with Ctrl + F, from the Main menu, or from the YouTube Search button.
 
-About the Program: A brief message with information about the software.
+The search dialog contains a search field and a filter box. Filter choices are:
 
-Privacy Policy: View the program's privacy policy.
+- No Filter.
+- Live.
+- Upload Date.
+- View Count.
+- Playlist.
+- Channels.
 
-Contact Me: A sub-menu with various ways to reach the developer.
+Playlist results open a playlist view. Channel results open a channel view. Video results can be played or downloaded directly.
 
-Program Preferences (Settings)
+Search results window
 
-Access settings via the Main Menu or by pressing Alt + S.
-Adjustable Options:
+Use the arrow keys to move through results.
 
-Program Language.
+Common shortcuts in result lists:
 
-Download Path.
+- Enter: play the selected video as audio.
+- Ctrl + Enter: play the selected video as video.
+- Space: add or remove a video from favorites when the search results list has focus.
+- Ctrl + F: search again.
+- Ctrl + D: direct download.
+- Ctrl + L: copy the selected link.
+- Backspace: return to the main window.
+- Application key or Shift + F10: open the context menu.
 
-Auto-Detect Links: Automatically checks clipboard on startup.
+The context menu can contain:
 
-Auto-Check for Updates: Checks for updates on startup.
+- Play.
+- Play as Audio.
+- Download, with Video, Audio M4A, and Audio MP3 choices.
+- Direct Download.
+- Go to Channel, with Open in App and Open in Browser choices.
+- Download Channel.
+- Copy Link.
+- Open in Web Browser.
 
-Auto-Load More Results: Automatically loads more results when reaching the end of the list. (Can be disabled to save data).
+Some actions are disabled when they do not apply. For example, live videos can usually be played but may not be downloadable from the results list.
 
-Default Download Format: Choose your preferred format for "Direct Download."
+Loading more results
 
-MP3 Conversion Quality.
+If Auto-load More Results is enabled, HexPlayer loads more results when you reach the end of a list. If it is disabled, use the Load More button.
 
-Enable/Disable Resume Playback.
+Playlist browsing
 
-Auto-Loop: Automatically restarts the clip (Off by default).
+When you open a playlist, HexPlayer shows the playlist videos in a list.
 
-Auto-Next: Automatically plays the next video (Off by default).
+Playlist shortcuts:
 
-Cookies File Path: Path to a Netscape HTTP cookies file to be used for viewing and downloading (Optional).
+- Enter: play selected video as audio.
+- Ctrl + Enter: play selected video as video.
+- Ctrl + D: direct download.
+- Ctrl + L: copy link.
+- Escape: return to the previous window.
+- Application key or Shift + F10: context menu.
 
-Note: Auto-Loop and Auto-Next cannot be enabled at the same time.
+Downloads started from a playlist view are saved inside a folder named after the playlist.
 
-Search & Browsing
-Accessing Search:
+Channel browsing
 
-Method 1: Press Alt, navigate to "YouTube Search," and press Enter.
+Channel pages open inside HexPlayer and include tabs such as Home, Videos, Shorts, Live, Playlists, Community, Channels, and About.
 
-Method 2: Tab to the "YouTube Search" button on the main interface and press Enter.
+Use the tab control to move between channel sections. Use the Load More button when more items are available. Video items can be played or downloaded. Playlist and channel items open the related view. The About tab shows informational rows and is not playable.
 
-Method 3: Use the shortcut Ctrl + F.
+Download from Link
 
-Search Filters:
+Open the download dialog from the Main menu, the Download from Link button, or Ctrl + D.
 
-In the search dialog, press Tab to access the filter box:
+The dialog contains:
 
-No Filter: Unrestricted search.
+- Link field. HexPlayer fills this automatically from the clipboard when it detects a supported YouTube link.
+- Type: Audio or Video.
+- Audio format: M4A or MP3. This appears when Audio is selected.
+- Download button.
+- Download folder button. This changes the folder for the current download only and does not change your saved default folder.
 
-Live: Displays only live broadcasts.
+Supported links include YouTube videos, playlists, channels, handles, user pages, Shorts, live pages, clips, and youtu.be links where the underlying tools can process them.
 
-Upload Date: Sorts by the most recent uploads.
+For playlist and channel downloads, HexPlayer saves files into a dedicated folder. A progress window shows percent, total size, downloaded size, remaining time, and speed when this information is available. Closing the progress window asks whether you want to cancel the download. When a download finishes, HexPlayer can play the downloaded file, show it in File Explorer, or open the download folder.
 
-View Count: Sorts by the most viewed videos.
+Play YouTube Link
 
-Playlist: Limits results to playlists only.
+Open this dialog with Ctrl + Y or from the Main menu. Paste a YouTube video link, or let HexPlayer fill it from the clipboard, then choose Audio or Video. The media player opens with the same controls and download options used for search results.
 
-Note: Use arrow keys to navigate filters. Press Enter in the search field to start the search.
+Automatic link detection
 
-Results Window:
+When startup clipboard detection is enabled, HexPlayer checks the clipboard once when it opens.
 
-Results appear in a list. Use arrow keys to navigate. Press Enter to play the selected video.
-Context Menu (Application Key or Shift + F10):
+When background monitoring is enabled, HexPlayer can run in the background, start with Windows, monitor the clipboard, and show a dialog when it finds a supported YouTube link.
 
-Play: Starts the video.
+The detection dialog offers:
 
-Play as Audio: Plays without video (Shortcut: Ctrl + Space).
+- Download.
+- Play for videos.
+- Open for playlists.
+- Cancel.
 
-Download: Sub-menu for Video (MP4) or Audio (M4A or MP3). M4A is faster/lighter than MP3.
+Channel links can be downloaded from the detection dialog, but playback is disabled because a channel is a collection, not a single playable item.
 
-Direct Download: Downloads using your default setting (Shortcut: Ctrl + D).
+Browser integration
 
-Go to Channel: Opens the uploader's channel in your web browser.
+HexPlayer includes a browser extension folder. Open it from External Tools, then load it as an unpacked extension in Chrome, Edge, Brave, or another compatible Chromium browser.
 
-Download Channel: Downloads the entire channel based on your direct download settings.
+To use the extension:
 
-Copy Link: Copies the video URL to the clipboard (Shortcut: Ctrl + L).
+- Enable Safe browser integration in HexPlayer settings.
+- Open the browser extension folder from HexPlayer.
+- In the browser extensions page, enable Developer mode and choose Load unpacked.
+- Select the folder opened by HexPlayer.
 
-Open in Web Browser: Opens the link in your default browser.
+The extension can send supported YouTube links to HexPlayer from a right-click context menu or the toolbar button. Its options page includes diagnostics, a test link, log refresh, log copy, and log clear actions. Optional click interception can be enabled from the extension options page.
 
-Playlist Browsing
+Media player
 
-When using the "Playlist" filter, the results window will show playlists. Instead of a Play button, there is an Open button to view the videos within that specific playlist. Downloads from this view are automatically organized into a folder named after the playlist.
+The media player opens after playing a search result, playlist item, channel video, favorite, history item, home recommendation, or pasted link.
 
-The Media Player
+On-screen buttons are available for previous, beginning, rewind, play or pause, fast forward, and next. Screen-reader users can use the keyboard shortcuts below.
 
-The player appears when playing a search result or a pasted link.
+Player menu
 
-For Sighted Users: There are on-screen buttons for Previous, Rewind, Play/Pause, Fast Forward, and Next.
+Press Alt in the player to open the Track Options menu.
 
-For Screen Reader Users: Use the keyboard shortcuts listed below.
+Player menu items include:
 
-Player Menu Bar (Alt):
+- Download, with Video, Audio M4A, and Audio MP3 choices.
+- Direct Download, Ctrl + D.
+- Playback Quality. Change the current stream quality when qualities are available.
+- Chapters. Jump to a chapter when chapters are available.
+- Video Description, Ctrl + Shift + D.
+- Equalizer, Ctrl + E.
+- Audio Output Device, F12.
+- Like, L.
+- Dislike, D.
+- Copy Link, Ctrl + L.
+- Open in Web Browser, Ctrl + B.
+- Go to Channel, Ctrl + Shift + C.
+- Settings, Alt + S.
 
-Download: Same options as the search results window.
+Description dialog
 
-Copy Link: Copies the current video URL (Ctrl + L).
+The description dialog lets you read the description, open links by pressing Enter on a line that contains a link, copy the description, export it as TXT, or export it as HTML.
 
-Video Description: View the uploader's description (Ctrl + Shift + D).
+Player keyboard shortcuts
 
-In the description dialog, you can read text with arrows, press Enter on links, copy text, or export to .txt or .html.
+- Space or Pause: play or pause.
+- Up Arrow: increase volume. Volume can boost above 100 percent, up to 350 percent.
+- Down Arrow: decrease volume.
+- Right Arrow: seek forward.
+- Left Arrow: seek backward.
+- Home: jump to the beginning.
+- Numbers 1 through 9: jump to 10 percent through 90 percent of the video.
+- Ctrl + Right Arrow: next item.
+- Ctrl + Left Arrow: previous item.
+- Shift + Up Arrow: increase playback speed.
+- Shift + Down Arrow: decrease playback speed.
+- R: announce remaining time.
+- E: announce elapsed time.
+- T: announce total duration.
+- P: announce current position percentage.
+- Ctrl + Shift + T: announce elapsed time.
+- Ctrl + Shift + L: announce duration.
+- L: like the video.
+- D: dislike the video.
+- Shift + L: announce like count when available.
+- Ctrl + R: toggle repeat.
+- N: toggle auto-next.
+- Enter: toggle full screen.
+- Alt: leave full screen and show the menu bar when full screen is active.
+- Minus or Numpad Minus: reduce the seek step by one second.
+- Equals or Numpad Plus: increase the seek step by one second.
+- F12: choose audio output device.
+- Ctrl + E: equalizer.
+- Ctrl + D: direct download.
+- Ctrl + Shift + D: video description.
+- Ctrl + L: copy link.
+- Ctrl + B: open in web browser.
+- Ctrl + Shift + C: go to channel.
+- Alt + S: settings.
+- Escape: close the player and return to the previous window.
 
-Comments: View comments (Ctrl + Shift + J).
+The seek step defaults to 5 seconds and can be changed between 1 and 10 seconds. The value is saved.
 
-Open in Browser: Opens the video in your web browser (Ctrl + B).
-
-Player Keyboard Shortcuts:
-
-Space: Play/Pause.
-
-Up Arrow: Increase volume (Supports boosting above 100%).
-
-Down Arrow: Decrease volume.
-
-Right Arrow: Fast forward.
-
-Left Arrow: Rewind.
-
-Home: Jump to the beginning.
-
-Numbers 1-9: Jump to percentages of the video (e.g., 5 = 50%).
-
-Ctrl + Right Arrow: Next video.
-
-Ctrl + Left Arrow: Previous video.
-
-Ctrl + Shift + T: Hear current playback time.
-
-Ctrl + Shift + L: Hear total duration.
-
-S: Increase playback speed.
-
-D: Reset playback speed to normal.
-
-F: Decrease playback speed.
-
-Shift + R: Toggle Loop.
-
-N: Toggle Auto-Next.
-
-Enter: Toggle Fullscreen.
-
-Ctrl + D: Direct Download.
-
-Alt + S: Open Settings.
-
-Note 1: The default seek time is 5 seconds. Use - (minus) or = (equals) on the keyboard (or Numpad + / -) to adjust the seek interval between 1 and 10 seconds.
-Note 2: You can watch and download simultaneously. Use Alt + Tab to switch between the player and the download progress window.
-Note 3: Multimedia keys on your keyboard (Play/Pause/Next/Prev) work even if the application window is not focused.
-
-Download via Link
-
-Access this dialog via the Main Menu, the "Download Link" button, or Ctrl + D.
-
-Link Field: Automatically detects links from the clipboard.
-
-Type: Choose Audio or Video.
-
-Format: Choose M4A or MP3 (for audio).
-
-Download Button: Press Enter to start.
-
-Custom Path: You can temporarily change the download folder for the current session without affecting your permanent settings.
-
-Default Location: Downloads\accessible youtube downloader.
-
-Play via Link
-
-To play a link from an email or external source, press Ctrl + Y. Paste the link, choose Audio or Video mode, and the player will open. All player features and download options remain available.
+Multimedia keyboard keys for Play/Pause, Next, and Previous work while the player is running.
 
 Favorites
 
-The Favorites window allows quick access to saved videos.
+Open Favorites with Ctrl + Shift + F or from the main window.
 
-It functions similarly to the Search Results window.
+Add or remove favorites from the search results window with the Favorite checkbox or Space when the results list has focus. Favorites are stored locally.
 
-Delete Button: Removes a video from favorites (Shortcut: Delete).
+In Favorites:
 
-Navigation: When playing from Favorites, the "Next/Previous" shortcuts will cycle through your saved favorite videos.
+- Enter plays the selected video as audio.
+- Ctrl + Enter plays it as video.
+- Delete removes it from favorites.
+- Ctrl + D direct downloads.
+- Ctrl + L copies the link.
+- Backspace returns to the main window.
+- The context menu includes play, download, channel, copy, and browser actions.
 
-End of Guide
+When playing from Favorites, next and previous move through the favorites list.
+
+Watch history
+
+Watch History is available when a valid cookies file is configured. Open it with Ctrl + H or from the Main menu.
+
+The history window lists recently watched videos from YouTube. You can play, download, favorite, copy links, open in the browser, and load more history. Enter plays audio, and Ctrl + Enter plays video.
+
+HexPlayer also saves local resume positions when Continue Watching is enabled. YouTube watch history updates require cookies and Deno.
+
+Troubleshooting
+
+If playback or downloads stop working:
+
+- Use External Tools, Check for yt-dlp update.
+- Use External Tools, Check for Deno update if history, likes, chapters, or home feed features fail.
+- Check that your cookies file still exists and is current if authenticated features fail.
+- Try the same link without cookies by clearing the cookies path if cookie errors continue.
+- Verify the download folder exists and that Windows allows HexPlayer to write to it.
+- Use Open Download Folder, Ctrl + P, to confirm where downloads are saved.
+- For browser integration, re-enable Safe browser integration, reload the extension, and check the extension options logs.
+
+End of guide.
