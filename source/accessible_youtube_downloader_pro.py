@@ -260,6 +260,15 @@ class HomeScreen(wx.Frame):
         )
         self.showDenoVer = toolsMenu.Append(-1, _("عرض إصدار دينو"))
         self.updateDeno = toolsMenu.Append(-1, _("التحقق من وجود تحديث لـ دينو"))
+        self.showYoutubeiVer = toolsMenu.Append(
+            -1, _("عرض إصدار YouTube.js (Innertube)")
+        )
+        self.updateYoutubei = toolsMenu.Append(
+            -1, _("التحقق من وجود تحديث لـ YouTube.js (Innertube)")
+        )
+        self.refreshYoutubeiCache = toolsMenu.Append(
+            -1, _("تحديث ذاكرة YouTube.js (Innertube) المؤقتة")
+        )
         self.openBrowserExtensionFolder = toolsMenu.Append(
             -1, _("فتح مجلد إضافة المتصفح")
         )
@@ -312,6 +321,13 @@ class HomeScreen(wx.Frame):
         self.Bind(wx.EVT_MENU, self.on_update_yt_dlp, self.updateYtdlp)
         self.Bind(wx.EVT_MENU, self.on_show_deno_version, self.showDenoVer)
         self.Bind(wx.EVT_MENU, self.on_update_deno, self.updateDeno)
+        self.Bind(wx.EVT_MENU, self.on_show_youtubei_version, self.showYoutubeiVer)
+        self.Bind(wx.EVT_MENU, self.on_update_youtubei, self.updateYoutubei)
+        self.Bind(
+            wx.EVT_MENU,
+            self.on_refresh_youtubei_cache,
+            self.refreshYoutubeiCache,
+        )
         self.Bind(
             wx.EVT_MENU,
             self.onOpenBrowserExtensionFolder,
@@ -425,6 +441,18 @@ class HomeScreen(wx.Frame):
             return
         wx.MessageBox(version, _("إصدار دينو"), parent=self)
 
+    def on_show_youtubei_version(self, event):
+        version = utils.get_youtubei_version()
+        if not version:
+            utils.show_error(
+                _(
+                    "لم يتم العثور على مكتبة YouTube.js (Innertube) أو تعذر الحصول على إصدارها"
+                ),
+                parent=self,
+            )
+            return
+        wx.MessageBox(version, _("إصدار YouTube.js (Innertube)"), parent=self)
+
     def load_home_feed(self, load_more=False):
         if not load_more:
             self.home_feed_list.Set([_("جاري تحميل الاقتراحات... يرجى الانتظار")])
@@ -524,6 +552,12 @@ class HomeScreen(wx.Frame):
 
     def on_update_yt_dlp(self, event):
         utils.update_yt_dlp()
+
+    def on_update_youtubei(self, event):
+        utils.update_youtubei(parent=self)
+
+    def on_refresh_youtubei_cache(self, event):
+        utils.refresh_youtubei_cache(parent=self)
 
     def onOpenBrowserExtensionFolder(self, event):
         try:

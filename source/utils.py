@@ -1,5 +1,6 @@
 import sys
 import re
+import json
 import requests
 import wx
 import application
@@ -288,6 +289,9 @@ PLAYER_OPTS = {
     "lazy_extractors": True,
 }
 
+YOUTUBEI_PACKAGE = "youtubei.js"
+YOUTUBEI_IMPORT_SPECIFIER = "youtubei.js"
+
 
 def get_ydl_instance(client, cookies_path=None):
     """Returns a fresh YoutubeDL instance for thread-safe extraction."""
@@ -368,6 +372,224 @@ def get_latest_github_release(repo):
     except Exception as e:
         logger.error(f"Failed to get latest release for {repo}: {e}")
     return None
+
+
+def get_latest_npm_package_version(package):
+    url = f"https://registry.npmjs.org/{package}/latest"
+    try:
+        r = requests.get(url, timeout=10)
+        if r.status_code == 200:
+            return r.json().get("version")
+    except Exception as e:
+        logger.error(f"Failed to get latest npm version for {package}: {e}")
+    return None
+
+
+def _read_json_file(path):
+    try:
+        with open(path, "r", encoding="utf-8") as file:
+            return json.load(file)
+    except Exception:
+        return None
+
+
+def _version_from_youtubei_specifier(specifier):
+    if not specifier:
+        return None
+    match = re.search(r"(?:npm:)?youtubei\.js@([^\s\"',}]+)", str(specifier))
+    if not match:
+        return None
+    version = match.group(1).strip()
+    return version.lstrip("^~<>= ")
+
+
+def _read_youtubei_lock_version(lock_path):
+    data = _read_json_file(lock_path)
+    if not isinstance(data, dict):
+        return None
+
+    npm_entries = data.get("npm", {})
+    if isinstance(npm_entries, dict):
+        for name in npm_entries:
+            match = re.fullmatch(r"youtubei\.js@(.+)", name)
+            if match:
+                return match.group(1)
+
+    specifiers = data.get("specifiers", {})
+    if isinstance(specifiers, dict):
+        for key, value in specifiers.items():
+            if str(key).startswith("npm:youtubei.js@"):
+                version = str(value).strip()
+                if version:
+                    return version
+
+    return None
+
+
+def _read_youtubei_config_version(config_path):
+    data = _read_json_file(config_path)
+    if not isinstance(data, dict):
+        return None
+
+    imports = data.get("imports", {})
+    if not isinstance(imports, dict):
+        return None
+    return _version_from_youtubei_specifier(imports.get(YOUTUBEI_IMPORT_SPECIFIER))
+
+
+def get_youtubei_version():
+    version = _read_youtubei_lock_version(paths.get_js_runtime_lock_path())
+    if version:
+        return version
+    return _read_youtubei_config_version(paths.get_js_runtime_config_path())
+
+
+def _semver_key(version):
+    match = re.match(r"^v?(\d+)(?:\.(\d+))?(?:\.(\d+))?", str(version or ""))
+    if not match:
+        return None
+    return tuple(int(part or 0) for part in match.groups())
+
+
+def _is_newer_version(latest, current):
+    if not latest:
+        return False
+    if not current:
+        return True
+    latest_key = _semver_key(latest)
+    current_key = _semver_key(current)
+    if latest_key and current_key:
+        return latest_key > current_key
+    return latest != current
+
+
+def _write_youtubei_runtime_config(version):
+    config_path = paths.get_writable_js_runtime_file("deno.json")
+    config = {
+        "imports": {YOUTUBEI_IMPORT_SPECIFIER: f"npm:{YOUTUBEI_PACKAGE}@{version}"}
+    }
+    temp_path = f"{config_path}.tmp"
+    with open(temp_path, "w", encoding="utf-8") as file:
+        json.dump(config, file, ensure_ascii=False, indent=2)
+        file.write("\n")
+    os.replace(temp_path, config_path)
+    return config_path
+
+
+def _deno_cache_command(config_path, lock_path, reload_package=False):
+    command = [
+        paths.deno_path,
+        "cache",
+        "--config",
+        config_path,
+        "--lock",
+        lock_path,
+    ]
+    if reload_package:
+        command.append(f"--reload=npm:{YOUTUBEI_PACKAGE}")
+    command.append(paths.get_js_runtime_service_script())
+    return command
+
+
+def _run_deno_cache(config_path, lock_path, reload_package=False):
+    env = os.environ.copy()
+    env["PATH"] = paths.main_path + os.pathsep + env.get("PATH", "")
+    return subprocess.run(
+        _deno_cache_command(config_path, lock_path, reload_package=reload_package),
+        creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+        env=env,
+        cwd=paths.main_path,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        timeout=180,
+    )
+
+
+def install_youtubei_version(version, parent=None, success_message=None):
+    if not os.path.exists(paths.deno_path):
+        show_error(
+            _(
+                "لم يتم العثور على أداة deno.exe, وهي مطلوبة لتحديث مكتبة YouTube.js (Innertube)."
+            ),
+            parent=parent,
+        )
+        return False
+
+    try:
+        config_path = _write_youtubei_runtime_config(version)
+        lock_path = paths.get_writable_js_runtime_file("deno.lock")
+        result = _run_deno_cache(config_path, lock_path, reload_package=True)
+        if result.returncode != 0:
+            detail = result.stderr.strip() or result.stdout.strip()
+            show_error(
+                _("تعذر تحديث مكتبة YouTube.js (Innertube)"),
+                Exception(detail),
+                parent=parent,
+            )
+            return False
+
+        deno_service.stop()
+        wx.MessageBox(
+            success_message
+            or _("تم تحديث مكتبة YouTube.js (Innertube) إلى الإصدار {}").format(
+                version
+            ),
+            _("اكتمل التحديث"),
+            parent=parent or wx.GetApp().GetTopWindow(),
+        )
+        return True
+    except Exception as e:
+        show_error(_("تعذر تحديث مكتبة YouTube.js (Innertube)"), e, parent=parent)
+        return False
+
+
+def update_youtubei(parent=None):
+    current = get_youtubei_version()
+    latest = get_latest_npm_package_version(YOUTUBEI_PACKAGE)
+    if not latest:
+        show_error(
+            _("تعذر الحصول على معلومات تحديث مكتبة YouTube.js (Innertube) من npm"),
+            parent=parent,
+        )
+        return False
+
+    if not _is_newer_version(latest, current):
+        wx.MessageBox(
+            _(
+                "أنت تستخدم بالفعل أحدث إصدار من مكتبة YouTube.js (Innertube) ({})"
+            ).format(current or latest),
+            _("لا يوجد تحديث"),
+            parent=parent or wx.GetApp().GetTopWindow(),
+        )
+        return True
+
+    msg = wx.MessageBox(
+        _(
+            "هناك إصدار جديد متوفر من مكتبة YouTube.js (Innertube)\nالإصدار الحالي: {}\nالإصدار الأحدث: {}\nهل تريد التحديث الآن؟"
+        ).format(current or _("غير معروف"), latest),
+        _("تحديث متوفر"),
+        style=wx.YES_NO | wx.ICON_INFORMATION,
+        parent=parent or wx.GetApp().GetTopWindow(),
+    )
+    if msg == wx.YES:
+        return install_youtubei_version(latest, parent=parent)
+    return False
+
+
+def refresh_youtubei_cache(parent=None):
+    version = get_youtubei_version()
+    if not version:
+        show_error(
+            _("تعذر تحديد إصدار مكتبة YouTube.js (Innertube) الحالي"),
+            parent=parent,
+        )
+        return False
+    return install_youtubei_version(
+        version,
+        parent=parent,
+        success_message=_("تم تحديث ذاكرة مكتبة YouTube.js (Innertube) المؤقتة"),
+    )
 
 
 def get_yt_dlp_version():
@@ -509,34 +731,32 @@ def ensure_js_dependencies():
     if not os.path.exists(paths.deno_path):
         return
 
-    bundled_path = paths.get_bundled_data_path()
-    service_script = os.path.join(bundled_path, "service.js")
-    config_path = os.path.join(bundled_path, "deno.json")
-
-    # If not in bundled path, try main path
-    if not os.path.exists(service_script):
-        service_script = os.path.join(paths.main_path, "service.js")
-        config_path = os.path.join(paths.main_path, "deno.json")
+    service_script = paths.get_js_runtime_service_script()
+    config_path = paths.get_js_runtime_config_path()
+    lock_path = paths.get_js_runtime_lock_path()
 
     if not os.path.exists(service_script) or not os.path.exists(config_path):
         return
 
     def _cache_task():
         try:
-            env = os.environ.copy()
-            env["PATH"] = paths.main_path + os.pathsep + env.get("PATH", "")
-            subprocess.run(
-                [
-                    paths.deno_path,
-                    "cache",
-                    "--config",
-                    config_path,
-                    service_script,
-                ],
-                creationflags=subprocess.CREATE_NO_WINDOW,
-                env=env,
-                cwd=paths.main_path,
-            )
+            if os.path.exists(lock_path):
+                _run_deno_cache(config_path, lock_path)
+            else:
+                env = os.environ.copy()
+                env["PATH"] = paths.main_path + os.pathsep + env.get("PATH", "")
+                subprocess.run(
+                    [
+                        paths.deno_path,
+                        "cache",
+                        "--config",
+                        config_path,
+                        service_script,
+                    ],
+                    creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+                    env=env,
+                    cwd=paths.main_path,
+                )
         except Exception:
             pass
 

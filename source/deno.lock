@@ -1,21 +1,23 @@
 {
   "version": "5",
   "specifiers": {
-    "npm:youtubei.js@*": "17.0.1",
-    "npm:youtubei.js@17.0.1": "17.0.1",
-    "npm:youtubei.js@^17.0.1": "17.0.1"
+    "npm:youtubei.js@17.2.0": "17.2.0"
   },
   "npm": {
     "@bufbuild/protobuf@2.11.0": {
       "integrity": "sha512-sBXGT13cpmPR5BMgHE6UEEfEaShh5Ror6rfN3yEK5si7QVrtZg8LEPQb0VVhiLRUslD2yLnXtnRzG035J/mZXQ=="
     },
+    "fflate@0.8.3": {
+      "integrity": "sha512-tbZNuJrLwGUp3zshBtdy4W+ORxZuIh8a5ilyIEQDC5rY1f3U20JMry0Ll3WBzU58EZKsEuJFXhb5gwv8CsPvgA=="
+    },
     "meriyah@6.1.4": {
       "integrity": "sha512-Sz8FzjzI0kN13GK/6MVEsVzMZEPvOhnmmI1lU5+/1cGOiK3QUahntrNNtdVeihrO7t9JpoH75iMNXg6R6uWflQ=="
     },
-    "youtubei.js@17.0.1": {
-      "integrity": "sha512-1lO4b8UqMDzE0oh2qEGzbBOd4UYRdxn/4PdpRM7BGTHxM6ddsEsKZTu90jp8V9FHVgC2h1UirQyqoqLiKwl+Zg==",
+    "youtubei.js@17.2.0": {
+      "integrity": "sha512-XLNsgRKO1h7t4i9tIMWSQSeWdD7Ujkk5v1m5YCaumaHMhu/xuLqtO3M0Hq7CXNup9HlJ1NGrT1Y+HLIHnL6Ujg==",
       "dependencies": [
         "@bufbuild/protobuf",
+        "fflate",
         "meriyah"
       ]
     }
@@ -25,7 +27,7 @@
   },
   "workspace": {
     "dependencies": [
-      "npm:youtubei.js@^17.0.1"
+      "npm:youtubei.js@17.2.0"
     ]
   }
 }

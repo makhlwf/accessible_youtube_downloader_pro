@@ -19,14 +19,9 @@ class DenoService:
             return
 
         try:
-            service_script = os.path.join(paths.main_path, "service.js")
-            config_path = os.path.join(paths.main_path, "deno.json")
-
-            # If not in main_path, try bundled path
-            if not os.path.exists(service_script):
-                bundled_path = paths.get_bundled_data_path()
-                service_script = os.path.join(bundled_path, "service.js")
-                config_path = os.path.join(bundled_path, "deno.json")
+            service_script = paths.get_js_runtime_service_script()
+            config_path = paths.get_js_runtime_config_path()
+            lock_path = paths.get_js_runtime_lock_path()
 
             env = os.environ.copy()
             env["PATH"] = paths.main_path + os.pathsep + env.get("PATH", "")
@@ -37,8 +32,10 @@ class DenoService:
                 "--allow-all",
                 "--config",
                 config_path,
-                service_script,
             ]
+            if os.path.exists(lock_path):
+                command.extend(["--lock", lock_path])
+            command.append(service_script)
 
             self.process = subprocess.Popen(
                 command,
@@ -58,6 +55,16 @@ class DenoService:
             logger.info("Deno service started.")
         except Exception as e:
             logger.error(f"Failed to start Deno service: {e}")
+            self.process = None
+
+    def stop(self):
+        with self.lock:
+            if not self.process:
+                return
+            try:
+                self.process.kill()
+            except Exception:
+                pass
             self.process = None
 
     def _log_stderr(self):

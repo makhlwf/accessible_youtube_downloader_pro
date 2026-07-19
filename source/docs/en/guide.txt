@@ -69,9 +69,12 @@ The External Tools menu contains:
 - Check for yt-dlp update.
 - Show Deno version.
 - Check for Deno update.
+- Show YouTube.js (Innertube) version.
+- Check for YouTube.js (Innertube) update.
+- Refresh YouTube.js (Innertube) cache.
 - Open Browser Extension Folder.
 
-yt-dlp is the download and extraction engine. Deno is used by several YouTube interaction features, including watch history, home feed, likes, and chapters. If one of these tools is missing, HexPlayer may offer to download it.
+yt-dlp is the download and extraction engine. Deno runs JavaScript helpers for several YouTube interaction features, including watch history, home feed, likes, comments, and chapters. YouTube.js (Innertube) is the library used by those helpers to talk to YouTube's internal API. If yt-dlp or Deno is missing, HexPlayer may offer to download it. YouTube.js updates are saved in HexPlayer's user data folder and are used by the Deno service on the next request.
 
 About menu
 
@@ -354,6 +357,8 @@ If playback or downloads stop working:
 
 - Use External Tools, Check for yt-dlp update.
 - Use External Tools, Check for Deno update if history, likes, chapters, or home feed features fail.
+- Use External Tools, Check for YouTube.js (Innertube) update if YouTube interaction features fail after YouTube changes.
+- Use External Tools, Refresh YouTube.js (Innertube) cache if Deno reports dependency or cache errors.
 - Check that your cookies file still exists and is current if authenticated features fail.
 - Try the same link without cookies by clearing the cookies path if cookie errors continue.
 - Verify the download folder exists and that Windows allows HexPlayer to write to it.

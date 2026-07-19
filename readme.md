@@ -53,7 +53,7 @@ The current application version is **3.0.0**. The app is intended for modern 64-
 - **Resume playback:** Continue videos from the last saved local position.
 - **Clipboard detection:** Detect supported YouTube links at startup or continuously when background monitoring is enabled.
 - **Browser integration:** Use the included Chromium-compatible extension to send supported YouTube links to HexPlayer through Native Messaging or the `hexplayer://` fallback protocol.
-- **External tools management:** Check and update `yt-dlp` and Deno from the app.
+- **External tools management:** Check and update `yt-dlp`, Deno, and the YouTube.js/Innertube library from the app.
 - **Localization and themes:** Arabic and English interfaces, automatic language detection, and system, light, dark, and high contrast dark themes.
 
 ---
@@ -174,7 +174,7 @@ The extension can open supported YouTube links in HexPlayer from a context menu 
    python accessible_youtube_downloader_pro.py
    ```
 
-HexPlayer may prompt to download `yt-dlp` or Deno when a feature needs them and they are missing.
+HexPlayer may prompt to download `yt-dlp` or Deno when a feature needs them and they are missing. The External Tools menu can also check for YouTube.js/Innertube updates and refresh its Deno cache when YouTube interaction features need repair.
 
 ---
 
@@ -216,7 +216,7 @@ To create a standalone build:
 
 - **Original developer:** Suleiman Al Qusaimi.
 - **Maintainer and fork author:** [Makhlwf](https://github.com/makhlwf).
-- **Core tools:** [yt-dlp](https://github.com/yt-dlp/yt-dlp), [wxPython](https://www.wxpython.org/), [MPV](https://mpv.io/), and [Deno](https://deno.com/).
+- **Core tools:** [yt-dlp](https://github.com/yt-dlp/yt-dlp), [YouTube.js](https://ytjs.dev/), [wxPython](https://www.wxpython.org/), [MPV](https://mpv.io/), and [Deno](https://deno.com/).
 
 ---
 

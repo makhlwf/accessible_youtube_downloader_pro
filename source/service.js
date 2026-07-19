@@ -1,4 +1,4 @@
-import { Innertube, UniversalCache, YTNodes, YT } from 'npm:youtubei.js@17.0.1';
+import { Innertube, UniversalCache, YTNodes, YT } from 'youtubei.js';
 import { readFileSync } from 'node:fs';
 import { TextLineStream } from "https://deno.land/std@0.224.0/streams/text_line_stream.ts";
 
