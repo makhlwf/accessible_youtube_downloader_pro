@@ -152,9 +152,7 @@ class MediaGui(wx.Frame):
 
         descriptionItem = trackOptions.Append(-1, _("وصف الفيديو\tctrl+shift+d"))
         equalizerItem = trackOptions.Append(-1, _("المعادل... \tctrl+e"))
-        audioOutputDeviceItem = trackOptions.Append(
-            -1, _("جهاز إخراج الصوت...\tf12")
-        )
+        audioOutputDeviceItem = trackOptions.Append(-1, _("جهاز إخراج الصوت...\tf12"))
         self.likeItem = trackOptions.Append(-1, _("إعجاب (L)"))
         self.dislikeItem = trackOptions.Append(-1, _("عدم إعجاب (D)"))
         copyItem = trackOptions.Append(-1, _("نسخ رابط المقطع\tctrl+l"))
@@ -774,9 +772,7 @@ class MediaGui(wx.Frame):
             device = dlg.get_selected_device()
             if self.player.select_audio_output_device(device["id"]):
                 speak(
-                    _("تم تغيير جهاز إخراج الصوت إلى {}").format(
-                        device["description"]
-                    )
+                    _("تم تغيير جهاز إخراج الصوت إلى {}").format(device["description"])
                 )
             else:
                 speak(

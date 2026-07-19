@@ -61,7 +61,7 @@ def get_open_command():
 
 
 def get_application_icon():
-    return f'{sys.executable},0'
+    return f"{sys.executable},0"
 
 
 def get_native_host_executable_path():

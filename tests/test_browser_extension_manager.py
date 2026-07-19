@@ -12,7 +12,9 @@ def test_sync_browser_extension_files_refreshes_user_copy(tmp_path, monkeypatch)
     (user_extension / "background.js").write_text("old", encoding="utf-8")
     (user_extension / "removed.js").write_text("stale", encoding="utf-8")
 
-    monkeypatch.setattr(manager.paths, "get_bundled_data_path", lambda: str(tmp_path / "bundled"))
+    monkeypatch.setattr(
+        manager.paths, "get_bundled_data_path", lambda: str(tmp_path / "bundled")
+    )
     monkeypatch.setattr(manager.paths, "settings_path", str(user_settings))
 
     assert manager.sync_browser_extension_files() == str(user_extension)

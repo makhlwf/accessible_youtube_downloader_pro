@@ -140,9 +140,7 @@ class SettingsDialog(wx.Dialog):
             preferencesBox,
             -1,
             name="theme",
-            choices=[
-                self.theme_labels.get(theme, theme) for theme in self.theme_keys
-            ],
+            choices=[self.theme_labels.get(theme, theme) for theme in self.theme_keys],
         )
         try:
             self.themeBox.Selection = self.theme_keys.index(config_get("theme"))

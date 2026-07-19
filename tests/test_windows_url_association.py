@@ -138,9 +138,13 @@ def test_cleanup_legacy_http_url_handler_removes_registered_keys(fake_registry):
         association.REGISTERED_APPLICATIONS_PATH,
         association.APP_REG_NAME,
     ) not in fake_registry.values
-    assert all(path != association.CAPABILITIES_PATH for _root, path in fake_registry.keys)
+    assert all(
+        path != association.CAPABILITIES_PATH for _root, path in fake_registry.keys
+    )
     assert all(path != association.PROG_ID_PATH for _root, path in fake_registry.keys)
-    assert all(path != association.APPLICATION_PATH for _root, path in fake_registry.keys)
+    assert all(
+        path != association.APPLICATION_PATH for _root, path in fake_registry.keys
+    )
 
 
 def test_cleanup_legacy_http_url_handler_is_idempotent(fake_registry):
@@ -154,8 +158,12 @@ def test_is_legacy_http_url_handler_registered_reads_registered_app(fake_registr
 
 
 def test_register_hexplayer_protocol_writes_custom_scheme(fake_registry, monkeypatch):
-    monkeypatch.setattr(association, "get_open_command", lambda: '"C:\\HexPlayer.exe" "%1"')
-    monkeypatch.setattr(association, "get_application_icon", lambda: "C:\\HexPlayer.exe,0")
+    monkeypatch.setattr(
+        association, "get_open_command", lambda: '"C:\\HexPlayer.exe" "%1"'
+    )
+    monkeypatch.setattr(
+        association, "get_application_icon", lambda: "C:\\HexPlayer.exe,0"
+    )
 
     assert association.register_hexplayer_protocol() is True
 
@@ -164,7 +172,12 @@ def test_register_hexplayer_protocol_writes_custom_scheme(fake_registry, monkeyp
         fake_registry.values[(root, association.HEXPLAYER_PROTOCOL_PATH, "")]
         == "URL:HexPlayer Browser Integration"
     )
-    assert fake_registry.values[(root, association.HEXPLAYER_PROTOCOL_PATH, "URL Protocol")] == ""
+    assert (
+        fake_registry.values[
+            (root, association.HEXPLAYER_PROTOCOL_PATH, "URL Protocol")
+        ]
+        == ""
+    )
     assert (
         fake_registry.values[
             (root, rf"{association.HEXPLAYER_PROTOCOL_PATH}\shell\open\command", "")
@@ -173,21 +186,32 @@ def test_register_hexplayer_protocol_writes_custom_scheme(fake_registry, monkeyp
     )
 
 
-def test_unregister_hexplayer_protocol_removes_custom_scheme(fake_registry, monkeypatch):
-    monkeypatch.setattr(association, "get_open_command", lambda: '"C:\\HexPlayer.exe" "%1"')
-    monkeypatch.setattr(association, "get_application_icon", lambda: "C:\\HexPlayer.exe,0")
+def test_unregister_hexplayer_protocol_removes_custom_scheme(
+    fake_registry, monkeypatch
+):
+    monkeypatch.setattr(
+        association, "get_open_command", lambda: '"C:\\HexPlayer.exe" "%1"'
+    )
+    monkeypatch.setattr(
+        association, "get_application_icon", lambda: "C:\\HexPlayer.exe,0"
+    )
     association.register_hexplayer_protocol()
 
     assert association.unregister_hexplayer_protocol() is True
 
     assert all(
-        path != association.HEXPLAYER_PROTOCOL_PATH for _root, path in fake_registry.keys
+        path != association.HEXPLAYER_PROTOCOL_PATH
+        for _root, path in fake_registry.keys
     )
 
 
 def test_is_hexplayer_protocol_registered_checks_command(fake_registry, monkeypatch):
-    monkeypatch.setattr(association, "get_open_command", lambda: '"C:\\HexPlayer.exe" "%1"')
-    monkeypatch.setattr(association, "get_application_icon", lambda: "C:\\HexPlayer.exe,0")
+    monkeypatch.setattr(
+        association, "get_open_command", lambda: '"C:\\HexPlayer.exe" "%1"'
+    )
+    monkeypatch.setattr(
+        association, "get_application_icon", lambda: "C:\\HexPlayer.exe,0"
+    )
 
     assert association.is_hexplayer_protocol_registered() is False
     association.register_hexplayer_protocol()

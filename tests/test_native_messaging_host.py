@@ -62,7 +62,9 @@ def test_launch_or_forward_external_url_starts_gui_when_ipc_fails(monkeypatch):
         "send_ipc_message",
         lambda *_args: (_ for _ in ()).throw(OSError),
     )
-    monkeypatch.setattr(host, "get_gui_launch_command", lambda url: ["HexPlayer.exe", url])
+    monkeypatch.setattr(
+        host, "get_gui_launch_command", lambda url: ["HexPlayer.exe", url]
+    )
     monkeypatch.setattr(host, "start_gui_process", started_commands.append)
 
     assert (
@@ -83,7 +85,9 @@ def test_launch_or_forward_external_url_rejects_non_youtube(monkeypatch):
         lambda *_args: (_ for _ in ()).throw(AssertionError),
     )
 
-    assert host.launch_or_forward_external_url("https://example.com/watch?v=test") is False
+    assert (
+        host.launch_or_forward_external_url("https://example.com/watch?v=test") is False
+    )
 
 
 def test_start_gui_process_detaches_from_native_messaging_pipe(monkeypatch):

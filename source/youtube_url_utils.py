@@ -49,7 +49,16 @@ def is_supported_youtube_url(value):
     first_segment = segments[0]
     if first_segment.startswith("@"):
         return len(first_segment) > 1
-    if first_segment in {"shorts", "embed", "v", "live", "clip", "channel", "c", "user"}:
+    if first_segment in {
+        "shorts",
+        "embed",
+        "v",
+        "live",
+        "clip",
+        "channel",
+        "c",
+        "user",
+    }:
         return len(segments) > 1
 
     return youtube_regexp(value) is not None

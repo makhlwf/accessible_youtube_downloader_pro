@@ -56,8 +56,7 @@ def test_youtube_regexp():
         is not None
     )
     assert (
-        youtube_regexp("https://m.youtube.com/shorts/dQw4w9WgXcQ?si=test")
-        is not None
+        youtube_regexp("https://m.youtube.com/shorts/dQw4w9WgXcQ?si=test") is not None
     )
     assert youtube_regexp("not a youtube link") is None
 
@@ -86,13 +85,22 @@ def test_extract_supported_youtube_url():
 
 
 def test_extract_launch_youtube_url():
-    assert extract_launch_youtube_url(
-        "hexplayer://open?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DdQw4w9WgXcQ"
-    ) == "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-    assert extract_launch_youtube_url(
-        "hexplayer://open/https%3A%2F%2Fyoutu.be%2FdQw4w9WgXcQ"
-    ) == "https://youtu.be/dQw4w9WgXcQ"
-    assert extract_launch_youtube_url("hexplayer://open?url=https%3A%2F%2Fexample.com") == ""
+    assert (
+        extract_launch_youtube_url(
+            "hexplayer://open?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DdQw4w9WgXcQ"
+        )
+        == "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+    )
+    assert (
+        extract_launch_youtube_url(
+            "hexplayer://open/https%3A%2F%2Fyoutu.be%2FdQw4w9WgXcQ"
+        )
+        == "https://youtu.be/dQw4w9WgXcQ"
+    )
+    assert (
+        extract_launch_youtube_url("hexplayer://open?url=https%3A%2F%2Fexample.com")
+        == ""
+    )
 
 
 def test_format_duration():

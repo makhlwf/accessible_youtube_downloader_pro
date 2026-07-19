@@ -43,9 +43,7 @@ def configure_dll_search_path(extra_roots: Iterable[Path | str] = ()) -> list[Pa
     path_entries = os.environ.get("PATH", "").split(os.pathsep)
     known_entries = {entry.casefold() for entry in path_entries if entry}
     prepend_entries = [
-        str(root)
-        for root in roots
-        if str(root).casefold() not in known_entries
+        str(root) for root in roots if str(root).casefold() not in known_entries
     ]
     if prepend_entries:
         os.environ["PATH"] = os.pathsep.join(prepend_entries + path_entries)
