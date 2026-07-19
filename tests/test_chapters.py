@@ -99,9 +99,7 @@ class TestVideoChapters(unittest.TestCase):
         mock_deno_service.send_command.return_value = {"chapters": []}
 
         with patch.object(utils, "YoutubeDL", FakeYoutubeDL):
-            chapters = get_video_chapters(
-                "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-            )
+            chapters = get_video_chapters("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
 
         self.assertEqual(chapters, [{"title": "Fallback", "time_ms": 12500}])
         self.assertEqual(calls["download"], False)

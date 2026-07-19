@@ -4,9 +4,10 @@ from unittest.mock import patch
 def test_get_video_comments_normalizes_response():
     from utils import get_video_comments
 
-    with patch("utils.config_get", return_value="cookies.txt"), patch(
-        "utils.deno_service"
-    ) as mock_deno_service:
+    with (
+        patch("utils.config_get", return_value="cookies.txt"),
+        patch("utils.deno_service") as mock_deno_service,
+    ):
         mock_deno_service.send_command.return_value = {
             "comments": [
                 {
@@ -111,9 +112,10 @@ def test_get_comment_replies_falls_back_to_yt_dlp_parent_filter(monkeypatch):
             }
 
     monkeypatch.setattr(utils, "YoutubeDL", FakeYoutubeDL)
-    with patch("utils.config_get", return_value=""), patch(
-        "utils.deno_service"
-    ) as mock_deno_service:
+    with (
+        patch("utils.config_get", return_value=""),
+        patch("utils.deno_service") as mock_deno_service,
+    ):
         mock_deno_service.send_command.return_value = {"comments": []}
 
         result = get_comment_replies(
@@ -179,7 +181,9 @@ def test_copy_comment_copies_selected_content(monkeypatch):
         "copy",
         lambda content: copied.setdefault("content", content),
     )
-    monkeypatch.setattr(comments_dialog, "speak", lambda message: spoken.append(message))
+    monkeypatch.setattr(
+        comments_dialog, "speak", lambda message: spoken.append(message)
+    )
 
     dialog.onCopyComment()
 
