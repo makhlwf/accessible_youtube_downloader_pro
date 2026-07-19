@@ -1187,6 +1187,150 @@ def get_video_chapters(url):
         return _get_video_chapters_with_yt_dlp(url, cookies_path)
 
 
+def _normalize_comment_item(comment):
+    if not isinstance(comment, dict):
+        return None
+
+    return {
+        "id": str(comment.get("id") or ""),
+        "parent_id": str(comment.get("parent_id") or comment.get("parent") or ""),
+        "author": str(comment.get("author") or _("غير معروف")),
+        "content": str(comment.get("content") or ""),
+        "published_time": str(comment.get("published_time") or ""),
+        "likes": _coerce_count(comment.get("likes")) or 0,
+        "replies": _coerce_count(comment.get("replies")) or 0,
+        "has_replies": bool(comment.get("has_replies") or comment.get("reply_token")),
+        "reply_token": comment.get("reply_token"),
+    }
+
+
+def _normalize_comments_response(result):
+    if not isinstance(result, dict) or "error" in result:
+        return {"comments": [], "continuation": None}
+
+    comments = []
+    for comment in result.get("comments", []):
+        normalized = _normalize_comment_item(comment)
+        if normalized is not None:
+            comments.append(normalized)
+
+    return {"comments": comments, "continuation": result.get("continuation")}
+
+
+def _normalize_yt_dlp_comment(comment):
+    text = comment.get("text") or comment.get("content") or ""
+    return _normalize_comment_item(
+        {
+            "id": comment.get("id"),
+            "parent_id": comment.get("parent"),
+            "author": comment.get("author"),
+            "content": text,
+            "published_time": comment.get("_time_text") or comment.get("time_text"),
+            "likes": comment.get("like_count"),
+            "replies": 0,
+            "has_replies": False,
+            "reply_token": None,
+        }
+    )
+
+
+def _get_comments_with_yt_dlp(url, parent_id=None, max_comments=200):
+    if not YoutubeDL:
+        return {"comments": [], "continuation": None}
+
+    opts = PLAYER_OPTS.copy()
+    opts["skip_download"] = True
+    opts["getcomments"] = True
+    opts["extract_flat"] = False
+    opts["extractor_args"] = {"youtube": {"max_comments": [str(max_comments)]}}
+
+    cookies_path = config_get("cookiespath")
+    if cookies_path and os.path.exists(cookies_path):
+        opts["cookiefile"] = cookies_path
+
+    try:
+        with YoutubeDL(opts) as ydl:
+            info = ydl.extract_info(url, download=False)
+    except Exception as e:
+        logger.error(f"Failed to fetch comments with yt-dlp fallback: {e}")
+        return {"comments": [], "continuation": None}
+
+    comments = []
+    for comment in info.get("comments", []) if info else []:
+        parent = comment.get("parent")
+        if parent_id:
+            if parent != parent_id:
+                continue
+        elif parent not in (None, "", "root"):
+            continue
+        normalized = _normalize_yt_dlp_comment(comment)
+        if normalized is not None:
+            comments.append(normalized)
+
+    return {"comments": comments, "continuation": None}
+
+
+def get_video_comments(url, continuation=None, sort_by="TOP_COMMENTS"):
+    """
+    Fetches video comments.
+    """
+    cookies_path = config_get("cookiespath")
+    match = youtube_regexp(url)
+    if not match:
+        logger.error(f"Failed to match URL for comments: {url}")
+        return {"comments": [], "continuation": None}
+    video_id = match.group(5)
+
+    try:
+        result = deno_service.send_command(
+            "get_video_comments",
+            {
+                "cookiesPath": cookies_path,
+                "videoId": video_id,
+                "continuationToken": continuation,
+                "sortBy": sort_by,
+            },
+        )
+        if isinstance(result, dict) and "error" in result:
+            logger.warning(f"Deno service returned comments error: {result['error']}")
+        data = _normalize_comments_response(result)
+        if not data["comments"] and not continuation:
+            return _get_comments_with_yt_dlp(url)
+        return data
+    except Exception as e:
+        logger.error(f"Failed to fetch comments: {e}")
+        if not continuation:
+            return _get_comments_with_yt_dlp(url)
+        return {"comments": [], "continuation": None}
+
+
+def get_comment_replies(reply_token, continuation=None, video_url=None, parent_id=None):
+    """
+    Fetches replies for a comment returned by get_video_comments.
+    """
+    if not reply_token and not continuation:
+        return {"comments": [], "continuation": None}
+
+    try:
+        result = deno_service.send_command(
+            "get_comment_replies",
+            {"replyToken": reply_token, "continuationToken": continuation},
+        )
+        if isinstance(result, dict) and "error" in result:
+            logger.warning(
+                f"Deno service returned comment replies error: {result['error']}"
+            )
+        data = _normalize_comments_response(result)
+        if not data["comments"] and video_url and parent_id and not continuation:
+            return _get_comments_with_yt_dlp(video_url, parent_id=parent_id)
+        return data
+    except Exception as e:
+        logger.error(f"Failed to fetch comment replies: {e}")
+        if video_url and parent_id and not continuation:
+            return _get_comments_with_yt_dlp(video_url, parent_id=parent_id)
+        return {"comments": [], "continuation": None}
+
+
 def time_formatting(total_seconds):
     if total_seconds is None:
         return ""

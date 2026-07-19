@@ -18,6 +18,7 @@ from download_handler.downloader import (
 )
 from gui.settings_dialog import SettingsDialog
 from gui.description import DescriptionDialog
+from gui.comments_dialog import CommentsDialog
 from gui.custom_controls import CustomButton
 from gui.quality_selection import QualitySelectionDialog
 from threading import Thread
@@ -152,6 +153,7 @@ class MediaGui(wx.Frame):
         )
 
         descriptionItem = trackOptions.Append(-1, _("وصف الفيديو\tctrl+shift+d"))
+        commentsItem = trackOptions.Append(-1, _("تعليقات الفيديو\tctrl+shift+m"))
         equalizerItem = trackOptions.Append(-1, _("المعادل... \tctrl+e"))
         audioOutputDeviceItem = trackOptions.Append(-1, _("جهاز إخراج الصوت...\tf12"))
         self.likeItem = trackOptions.Append(-1, _("إعجاب (L)"))
@@ -164,6 +166,7 @@ class MediaGui(wx.Frame):
             [
                 (wx.ACCEL_CTRL, ord("D"), directDownloadItem.GetId()),
                 (wx.ACCEL_CTRL | wx.ACCEL_SHIFT, ord("D"), descriptionItem.GetId()),
+                (wx.ACCEL_CTRL | wx.ACCEL_SHIFT, ord("M"), commentsItem.GetId()),
                 (wx.ACCEL_CTRL, ord("E"), equalizerItem.GetId()),
                 (wx.ACCEL_NORMAL, wx.WXK_F12, audioOutputDeviceItem.GetId()),
                 (wx.ACCEL_CTRL, ord("L"), copyItem.GetId()),
@@ -180,6 +183,7 @@ class MediaGui(wx.Frame):
         self.Bind(wx.EVT_MENU, self.onMp3Download, mp3Item)
         self.Bind(wx.EVT_MENU, self.onDirect, directDownloadItem)
         self.Bind(wx.EVT_MENU, self.onDescription, descriptionItem)
+        self.Bind(wx.EVT_MENU, self.onComments, commentsItem)
         self.Bind(wx.EVT_MENU, self.onEqualizer, equalizerItem)
         self.Bind(wx.EVT_MENU, self.onAudioOutputDevice, audioOutputDeviceItem)
         self.Bind(wx.EVT_MENU, self.onLike, self.likeItem)
@@ -1067,6 +1071,9 @@ class MediaGui(wx.Frame):
                 speak(_("هناك خطأ ما أدى إلى منع جلب وصف الفيديو"))
 
         Thread(target=extract_description_sync, daemon=True).start()
+
+    def onComments(self, event):
+        CommentsDialog(self, video_url=self.url, title=self.title)
 
     def onEqualizer(self, event):
         from gui.equalizer_dialog import EqualizerDialog

@@ -33,6 +33,14 @@ function parseCookies(filePath) {
 
 let yt = null;
 let currentCookiesPath = null;
+let tokenCounter = 0;
+const commentsPages = new Map();
+const replyThreads = new Map();
+
+function makeToken(prefix) {
+    tokenCounter += 1;
+    return `${prefix}-${tokenCounter}`;
+}
 
 function textValue(value) {
     if (value === null || value === undefined) return '';
@@ -179,6 +187,67 @@ function extractChapters(info) {
         seen.add(key);
         return true;
     });
+}
+
+function normalizeComment(comment, thread = null) {
+    const replyCount = parseCount(comment?.reply_count) || 0;
+    const hasReplies = !!thread?.has_replies || replyCount > 0;
+    let replyToken = null;
+
+    if (thread && hasReplies) {
+        replyToken = makeToken('replies');
+        replyThreads.set(replyToken, thread);
+    }
+
+    return {
+        id: comment?.comment_id || '',
+        parent_id: comment?.parent || comment?.parent_id || '',
+        author: textValue(comment?.author?.name) || 'Unknown',
+        content: textValue(comment?.content),
+        published_time: textValue(comment?.published_time),
+        likes: parseCount(comment?.like_count) || 0,
+        replies: replyCount,
+        has_replies: hasReplies,
+        reply_token: replyToken
+    };
+}
+
+function normalizeCommentThreads(threads) {
+    return Array.from(threads || [])
+        .map(thread => thread?.comment ? normalizeComment(thread.comment, thread) : null)
+        .filter(comment => comment !== null);
+}
+
+function normalizeReplyComments(comments) {
+    return Array.from(comments || [])
+        .map(comment => normalizeComment(comment))
+        .filter(comment => comment !== null);
+}
+
+function commentsPageResponse(page) {
+    let continuation = null;
+    if (page?.has_continuation) {
+        continuation = makeToken('comments');
+        commentsPages.set(continuation, page);
+    }
+
+    return {
+        comments: normalizeCommentThreads(page?.contents || []),
+        continuation
+    };
+}
+
+function repliesResponse(thread) {
+    let continuation = null;
+    if (thread?.replies && thread.has_continuation) {
+        continuation = makeToken('replies-more');
+        replyThreads.set(continuation, thread);
+    }
+
+    return {
+        comments: normalizeReplyComments(thread?.replies || []),
+        continuation
+    };
 }
 
 async function getYT(cookiesPath) {
@@ -498,6 +567,57 @@ async function handleGetVideoChapters(params) {
     }
 }
 
+async function handleGetVideoComments(params) {
+    const yt = await getYT(params.cookiesPath);
+    const { videoId, sortBy = 'TOP_COMMENTS', continuationToken } = params;
+    try {
+        if (continuationToken) {
+            const page = commentsPages.get(continuationToken);
+            if (!page) {
+                throw new Error("Comments continuation expired");
+            }
+            commentsPages.delete(continuationToken);
+            const nextPage = await page.getContinuation();
+            return commentsPageResponse(nextPage);
+        }
+
+        const page = await yt.getComments(videoId, sortBy);
+        return commentsPageResponse(page);
+    } catch (error) {
+        console.error(JSON.stringify({
+            debug: "handleGetVideoComments error",
+            error: error.message
+        }));
+        throw new Error(`Failed to fetch comments: ${error.message}`);
+    }
+}
+
+async function handleGetCommentReplies(params) {
+    const { replyToken, continuationToken } = params;
+    const token = continuationToken || replyToken;
+    try {
+        const thread = replyThreads.get(token);
+        if (!thread) {
+            throw new Error("Replies token expired");
+        }
+        replyThreads.delete(token);
+
+        if (continuationToken) {
+            await thread.getContinuation();
+        } else {
+            await thread.getReplies();
+        }
+
+        return repliesResponse(thread);
+    } catch (error) {
+        console.error(JSON.stringify({
+            debug: "handleGetCommentReplies error",
+            error: error.message
+        }));
+        throw new Error(`Failed to fetch replies: ${error.message}`);
+    }
+}
+
 async function handleGetPlaylist(params) {
     const yt = await getYT(params.cookiesPath);
     const { playlistId } = params;
@@ -543,6 +663,10 @@ async function main() {
                 result = await handleGetVideoLikes(params);
             } else if (command === 'get_video_chapters') {
                 result = await handleGetVideoChapters(params);
+            } else if (command === 'get_video_comments') {
+                result = await handleGetVideoComments(params);
+            } else if (command === 'get_comment_replies') {
+                result = await handleGetCommentReplies(params);
             } else if (command === 'get_playlist') {
                 result = await handleGetPlaylist(params);
             } else {
@@ -555,7 +679,16 @@ async function main() {
     }
 }
 
-export { extractChapters, extractLikeInfo, normalizeChapter, parseCount };
+export {
+    commentsPageResponse,
+    extractChapters,
+    extractLikeInfo,
+    normalizeChapter,
+    normalizeComment,
+    normalizeCommentThreads,
+    normalizeReplyComments,
+    parseCount
+};
 
 if (import.meta.main) {
     main().catch(err => {
