@@ -110,6 +110,7 @@ class MediaGui(wx.Frame):
         self.url = url
         self.current_channel = self._resolve_channel(stream, url)
         self.rating = None
+        self.rating_request_pending = False
         self.like_count = None
         previousButton = CustomButton(self, -1, _("المقطع السابق"), name="controls")
         previousButton.Show() if self.results is not None else previousButton.Hide()
@@ -380,8 +381,9 @@ class MediaGui(wx.Frame):
             if likes is not None:
                 self.like_count = likes
                 logger.info(f"Updated self.like_count to {self.like_count}")
-            self.rating = like_info.get("rating")
-            logger.info(f"Updated self.rating to {self.rating}")
+            if not self.rating_request_pending:
+                self.rating = like_info.get("rating")
+                logger.info(f"Updated self.rating to {self.rating}")
 
         Thread(target=_task, daemon=True).start()
 
@@ -597,12 +599,18 @@ class MediaGui(wx.Frame):
         self._submit_rating_change(action, new_rating, msg)
 
     def _submit_rating_change(self, action, new_rating, success_message):
+        if self.rating_request_pending:
+            speak(_("جاري تحديث التقييم"))
+            return
+
         previous_rating = self.rating
+        self.rating_request_pending = True
         self.rating = new_rating
         speak(success_message)
 
         def _task():
             success = utils.like_video(self.url, action)
+            self.rating_request_pending = False
             if success:
                 self.fetch_like_count()
                 return
@@ -890,6 +898,7 @@ class MediaGui(wx.Frame):
         self.SetTitle(f"{title} - {application.name}")
         self.like_count = None
         self.rating = None
+        self.rating_request_pending = False
         self.fetch_like_count()
         self.player.media.play()
         self.player.media.audio_set_volume(self.player.volume)
