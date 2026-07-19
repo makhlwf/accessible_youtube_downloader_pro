@@ -1672,7 +1672,7 @@ def check_for_updates(quiet=False):
                     UpdateDialog(
                         wx.GetApp().GetTopWindow(),
                         url,
-                        _("جاري تنزيل التحديث"),
+                        title=_("جاري تنزيل التحديث"),
                     )
                 dlg.Destroy()
 
