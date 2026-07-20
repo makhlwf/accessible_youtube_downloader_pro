@@ -24,6 +24,7 @@ from gui.download_progress import DownloadProgress
 from gui.quality_selection import QualitySelectionDialog
 from gui.activity_dialog import LoadingDialog
 from settings_handler import config_get
+from theme_handler import apply_theme
 import webbrowser
 
 
@@ -73,6 +74,7 @@ class Favorites(wx.Frame):
         self.Bind(wx.EVT_CHAR_HOOK, self.onHook)
         p.SetSizer(sizer)
         sizer.Fit(p)
+        apply_theme(self)
         self.Show()
 
     def _download_media(

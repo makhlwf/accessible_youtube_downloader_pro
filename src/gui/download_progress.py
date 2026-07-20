@@ -1,5 +1,6 @@
 import wx
 from language_handler import _
+from theme_handler import apply_theme
 
 
 class DownloadProgress(wx.Frame):
@@ -32,6 +33,7 @@ class DownloadProgress(wx.Frame):
         panel.SetSizer(sizer)
         self.Fit()
         self.Bind(wx.EVT_CLOSE, self.onClose)
+        apply_theme(self)
 
     def set_cancel_callback(self, callback):
         self.cancel_callback = callback

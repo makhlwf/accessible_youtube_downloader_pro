@@ -11,6 +11,7 @@ from gui.quality_selection import QualitySelectionDialog
 from media_player.media_gui import MediaGui
 from nvda_client.client import speak
 from settings_handler import config_get
+from theme_handler import apply_theme
 import utils
 from youtube_browser.scraper import Scraper
 from youtube_browser.search_handler import SimpleResult
@@ -57,6 +58,7 @@ class HistoryDialog(wx.Frame):
         sizer.Add(sizer2, 0, wx.EXPAND | wx.ALL, 5)
 
         self.panel.SetSizer(sizer)
+        apply_theme(self)
         self.contextSetup()
 
         results_shortcuts = wx.AcceleratorTable(

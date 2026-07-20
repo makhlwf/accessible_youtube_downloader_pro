@@ -8,6 +8,7 @@ from gui.download_progress import DownloadProgress
 from gui.activity_dialog import LoadingDialog
 from nvda_client.client import speak
 from settings_handler import config_get, config_set
+from theme_handler import apply_theme
 import application
 import utils
 from utils import get_playable_stream
@@ -60,6 +61,7 @@ class AudioOutputDeviceDialog(wx.Dialog):
         sizer.Add(deviceSizer, 1, wx.EXPAND)
         sizer.Add(buttonSizer, 1, wx.EXPAND)
         panel.SetSizer(sizer)
+        apply_theme(self)
 
     def get_selection_for_device(self, selected_device):
         for index, device in enumerate(self.devices):
@@ -139,6 +141,9 @@ class MediaGui(wx.Frame):
         sizer.AddStretchSpacer()
         sizer.Add(sizer1)
         self.SetSizer(sizer)
+        apply_theme(self)
+        if not self.audio_mode:
+            self.SetBackgroundColour(wx.BLACK)
         menuBar = wx.MenuBar()
         trackOptions = wx.Menu()
         downloadMenu = wx.Menu()
@@ -274,6 +279,10 @@ class MediaGui(wx.Frame):
             else 0
         )
         self._report_watch_history(watched_seconds)
+
+    def on_theme_applied(self, theme_name=None):
+        if not self.audio_mode:
+            self.SetBackgroundColour(wx.BLACK)
 
     def _resolve_channel(self, stream=None, url=None, index=None):
         channel_name = getattr(stream, "channel_name", "") if stream else ""

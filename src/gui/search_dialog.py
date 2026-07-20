@@ -1,5 +1,6 @@
 import wx
 from language_handler import _
+from theme_handler import apply_theme
 
 
 class SearchDialog(wx.Dialog):
@@ -10,6 +11,7 @@ class SearchDialog(wx.Dialog):
         sizer = wx.BoxSizer(wx.VERTICAL)
         lbl = wx.StaticText(panel, -1, _("ابحث في youtube: "))
         self.searchField = wx.TextCtrl(panel, -1, value=value)
+        self.searchField.SetName(_("ابحث في youtube"))
         lbl1 = wx.StaticText(panel, -1, _("فلتر: "))
         self.filterBox = wx.Choice(
             panel,
@@ -41,6 +43,7 @@ class SearchDialog(wx.Dialog):
         sizer.Add(sizer2, 1, wx.EXPAND)
         sizer.Add(sizer3, 1, wx.EXPAND)
         panel.SetSizer(sizer)
+        self.filterBox.SetName(_("فلتر"))
         self.searchField.Bind(
             wx.EVT_TEXT,
             lambda event: (
@@ -51,6 +54,7 @@ class SearchDialog(wx.Dialog):
         )
         searchButton.Bind(wx.EVT_BUTTON, self.onSearch)
         closeButton.Bind(wx.EVT_BUTTON, self.onClose)
+        apply_theme(self)
         self.ShowModal()
 
     def onSearch(self, event):

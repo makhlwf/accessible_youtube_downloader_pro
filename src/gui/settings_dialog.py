@@ -4,7 +4,7 @@ import sys
 import wx
 from language_handler import _, supported_languages
 from settings_handler import config_get, config_set
-from theme_handler import THEMES, apply_theme
+from theme_handler import THEMES, apply_theme, apply_theme_to_all_windows
 import windows_url_association
 
 
@@ -52,6 +52,16 @@ def _get_audio_output_device_choices():
     return devices
 
 
+def _accessible_name(label):
+    return str(label).replace("&", "").strip().rstrip(":：").strip()
+
+
+def _set_accessible_name(control, label):
+    name = _accessible_name(label)
+    if name:
+        control.SetName(name)
+
+
 class SettingsDialog(wx.Dialog):
     def __init__(self, parent):
         wx.Dialog.__init__(self, parent, title=_("الإعدادات"))
@@ -64,9 +74,11 @@ class SettingsDialog(wx.Dialog):
         panel = wx.ScrolledWindow(self)
         panel.SetScrollRate(8, 8)
 
-        lbl = wx.StaticText(panel, -1, _("لغة البرنامج: "), name="language")
+        language_label_text = _("لغة البرنامج: ")
+        lbl = wx.StaticText(panel, -1, language_label_text, name="language")
         self.languageBox = wx.Choice(panel, -1, name="language")
         self.languageBox.Set(list(supported_languages.keys()))
+        _set_accessible_name(self.languageBox, language_label_text)
         try:
             self.languageBox.Selection = languages[config_get("lang")]
         except KeyError:
@@ -90,19 +102,19 @@ class SettingsDialog(wx.Dialog):
         clearCookiesButton = wx.Button(panel, -1, _("حذف"), name="cookies")
         preferencesBox = wx.StaticBox(panel, -1, _("التفضيلات العامة"))
         self.autoDetectItem = wx.CheckBox(
-            preferencesBox,
+            panel,
             -1,
             _("اكتشاف الروابط تلقائيًا عند فتح البرنامج"),
             name="autodetect",
         )
         self.autoCheckForUpdates = wx.CheckBox(
-            preferencesBox,
+            panel,
             -1,
             _("الكشف عن التحديثات الجديدة تلقائيًا عند فتح البرنامج"),
             name="checkupdates",
         )
         self.autoLoadItem = wx.CheckBox(
-            preferencesBox,
+            panel,
             -1,
             _(
                 "تحميل المزيد من نتائج البحث عند الوصول إلى نهاية قائمة الفيديوهات المعروضة"
@@ -110,19 +122,19 @@ class SettingsDialog(wx.Dialog):
             name="autoload",
         )
         self.debugMode = wx.CheckBox(
-            preferencesBox,
+            panel,
             -1,
             _("تفعيل رسائل تصحيح الأخطاء للمطورين فقط"),
             name="debug",
         )
         self.backgroundMonitoring = wx.CheckBox(
-            preferencesBox,
+            panel,
             -1,
             _("التشغيل في الخلفية ومراقبة الحافظة عند بدء تشغيل النظام"),
             name="background_monitoring",
         )
         self.browserIntegration = wx.CheckBox(
-            preferencesBox,
+            panel,
             -1,
             _("تفعيل التكامل الآمن مع إضافة المتصفح"),
             name="browser_integration",
@@ -135,40 +147,45 @@ class SettingsDialog(wx.Dialog):
         self.browserIntegration.SetValue(config_get("browser_integration"))
         if sys.platform != "win32":
             self.browserIntegration.Disable()
-        theme_label = wx.StaticText(preferencesBox, -1, _("مظهر البرنامج: "))
+        theme_label_text = _("مظهر البرنامج: ")
+        theme_label = wx.StaticText(panel, -1, theme_label_text)
         self.themeBox = wx.Choice(
-            preferencesBox,
+            panel,
             -1,
             name="theme",
             choices=[self.theme_labels.get(theme, theme) for theme in self.theme_keys],
         )
+        _set_accessible_name(self.themeBox, theme_label_text)
         try:
             self.themeBox.Selection = self.theme_keys.index(config_get("theme"))
         except ValueError:
             self.themeBox.Selection = 0
 
         downloadPreferencesBox = wx.StaticBox(panel, -1, _("إعدادات التنزيل"))
-        lbl2 = wx.StaticText(downloadPreferencesBox, -1, _("صيغة التحميل المباشر: "))
+        format_label_text = _("صيغة التحميل المباشر: ")
+        lbl2 = wx.StaticText(panel, -1, format_label_text)
         self.formats = wx.Choice(
-            downloadPreferencesBox,
+            panel,
             -1,
             choices=[_("فيديو (mp4)"), _("صوت (m4a)"), _("صوت (mp3)")],
         )
+        _set_accessible_name(self.formats, format_label_text)
         self.formats.Selection = int(config_get("defaultformat"))
-        lbl3 = wx.StaticText(downloadPreferencesBox, -1, _("جودة تحويل ملفات mp3: "))
+        mp3_quality_label_text = _("جودة تحويل ملفات mp3: ")
+        lbl3 = wx.StaticText(panel, -1, mp3_quality_label_text)
         self.mp3Quality = wx.Choice(
-            downloadPreferencesBox,
+            panel,
             -1,
             choices=[_("96 ك.ب/ث"), _("128 ك.ب/ث"), _("192 ك.ب/ث")],
             name="conversion",
         )
+        _set_accessible_name(self.mp3Quality, mp3_quality_label_text)
         self.mp3Quality.Selection = int(config_get("conversion"))
         playerOptions = wx.StaticBox(panel, -1, _("إعدادات المشغل"))
-        self.videoQualityLabel = wx.StaticText(
-            playerOptions, -1, _("جودة الفيديو الافتراضية: ")
-        )
+        video_quality_label_text = _("جودة الفيديو الافتراضية: ")
+        self.videoQualityLabel = wx.StaticText(panel, -1, video_quality_label_text)
         self.videoQuality = wx.Choice(
-            playerOptions,
+            panel,
             -1,
             choices=[
                 _("144ب"),
@@ -181,61 +198,64 @@ class SettingsDialog(wx.Dialog):
                 _("2160ب"),
             ],
         )
+        _set_accessible_name(self.videoQuality, video_quality_label_text)
         self.videoQuality.Selection = int(config_get("defaultvideoquality"))
-        self.audioQualityLabel = wx.StaticText(
-            playerOptions, -1, _("جودة الصوت الافتراضية: ")
-        )
+        audio_quality_label_text = _("جودة الصوت الافتراضية: ")
+        self.audioQualityLabel = wx.StaticText(panel, -1, audio_quality_label_text)
         self.audioQuality = wx.Choice(
-            playerOptions,
+            panel,
             -1,
             choices=[_("منخفضة"), _("متوسطة"), _("عالية")],
         )
+        _set_accessible_name(self.audioQuality, audio_quality_label_text)
         self.audioQuality.Selection = int(config_get("defaultaudioquality"))
         self.audioOutputDevices = _get_audio_output_device_choices()
-        self.audioOutputDeviceLabel = wx.StaticText(
-            playerOptions, -1, _("جهاز إخراج الصوت: ")
-        )
+        audio_output_label_text = _("جهاز إخراج الصوت: ")
+        self.audioOutputDeviceLabel = wx.StaticText(panel, -1, audio_output_label_text)
         self.audioOutputDevice = wx.Choice(
-            playerOptions,
+            panel,
             -1,
             choices=[device["description"] for device in self.audioOutputDevices],
         )
+        _set_accessible_name(self.audioOutputDevice, audio_output_label_text)
         self.audioOutputDevice.Selection = self.getAudioOutputDeviceSelection(
             config_get("audiooutputdevice")
         )
         self.continueWatching = wx.CheckBox(
-            playerOptions,
+            panel,
             -1,
             _("متابعة المشاهدة بعد إغلاق الفيديو وتشغيله من جديد"),
             name="continue",
         )
         self.continueWatching.Value = config_get("continue")
         self.repeateTracks = wx.CheckBox(
-            playerOptions,
+            panel,
             -1,
             _("إعادة تشغيل المقطع تلقائيًا عند انتهائه"),
             name="repeatTracks",
         )
         self.autoPlayNext = wx.CheckBox(
-            playerOptions,
+            panel,
             -1,
             _("الانتقال إلى المقطع التالي تلقائيًا عند انتهاء المقطع الحالي"),
             name="autonext",
         )
         self.autoPlayNext.Value = config_get("autonext")
         self.repeateTracks.Value = config_get("repeatTracks")
-        self.eqButton = wx.Button(playerOptions, -1, _("إعدادات المعادل..."))
+        self.eqButton = wx.Button(panel, -1, _("إعدادات المعادل..."))
+        playback_speed_label_text = _("مقدار تغيير سرعة التشغيل: ")
         self.playbackSpeedStepLabel = wx.StaticText(
-            playerOptions, -1, _("مقدار تغيير سرعة التشغيل: ")
+            panel, -1, playback_speed_label_text
         )
         self.playbackSpeedStep = wx.SpinCtrlDouble(
-            playerOptions,
+            panel,
             -1,
             value=str(config_get("playback_speed_step")),
             min=0.01,
             max=1.0,
             inc=0.01,
         )
+        _set_accessible_name(self.playbackSpeedStep, playback_speed_label_text)
         okButton = wx.Button(panel, wx.ID_OK, _("مواف&ق"), name="ok_cancel")
         okButton.SetDefault()
         wx.Button(panel, wx.ID_CANCEL, _("إل&غاء"), name="ok_cancel")
@@ -254,7 +274,9 @@ class SettingsDialog(wx.Dialog):
         self.pathField.SetMinSize((-1, 56))
         path_controls.Add(self.pathField, 1, wx.EXPAND | wx.RIGHT, 5)
         path_controls.Add(changeButton, 0, wx.EXPAND)
-        path_label = wx.StaticText(panel, -1, _("مسار مجلد التنزيل: "))
+        path_label_text = _("مسار مجلد التنزيل: ")
+        path_label = wx.StaticText(panel, -1, path_label_text)
+        _set_accessible_name(self.pathField, path_label_text)
         add_row(general_grid, path_label, path_controls)
 
         cookies_controls = wx.BoxSizer(wx.HORIZONTAL)
@@ -262,11 +284,13 @@ class SettingsDialog(wx.Dialog):
         cookies_controls.Add(self.cookiesPathField, 1, wx.EXPAND | wx.RIGHT, 5)
         cookies_controls.Add(changeCookiesButton, 0, wx.EXPAND | wx.RIGHT, 5)
         cookies_controls.Add(clearCookiesButton, 0, wx.EXPAND)
-        cookies_label = wx.StaticText(panel, -1, _("مسار ملف الكوكيز: "))
+        cookies_label_text = _("مسار ملف الكوكيز: ")
+        cookies_label = wx.StaticText(panel, -1, cookies_label_text)
+        _set_accessible_name(self.cookiesPathField, cookies_label_text)
         add_row(general_grid, cookies_label, cookies_controls)
         main_sizer.Add(general_grid, 0, wx.EXPAND | wx.ALL, 8)
 
-        preferencesSizer = wx.BoxSizer(wx.VERTICAL)
+        preferencesSizer = wx.StaticBoxSizer(preferencesBox, wx.VERTICAL)
         for item in (
             self.autoDetectItem,
             self.autoCheckForUpdates,
@@ -280,17 +304,19 @@ class SettingsDialog(wx.Dialog):
         theme_sizer.Add(theme_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
         theme_sizer.Add(self.themeBox, 1, wx.EXPAND)
         preferencesSizer.Add(theme_sizer, 0, wx.EXPAND | wx.ALL, 5)
-        preferencesBox.SetSizer(preferencesSizer)
-        main_sizer.Add(preferencesBox, 0, wx.EXPAND | wx.ALL, 8)
+        main_sizer.Add(preferencesSizer, 0, wx.EXPAND | wx.ALL, 8)
 
         download_grid = wx.FlexGridSizer(0, 2, 6, 8)
         download_grid.AddGrowableCol(1, 1)
         add_row(download_grid, lbl2, self.formats)
         add_row(download_grid, lbl3, self.mp3Quality)
-        downloadPreferencesBox.SetSizer(download_grid)
-        main_sizer.Add(downloadPreferencesBox, 0, wx.EXPAND | wx.ALL, 8)
+        downloadPreferencesSizer = wx.StaticBoxSizer(
+            downloadPreferencesBox, wx.VERTICAL
+        )
+        downloadPreferencesSizer.Add(download_grid, 0, wx.EXPAND | wx.ALL, 5)
+        main_sizer.Add(downloadPreferencesSizer, 0, wx.EXPAND | wx.ALL, 8)
 
-        playerOptionsSizer = wx.BoxSizer(wx.VERTICAL)
+        playerOptionsSizer = wx.StaticBoxSizer(playerOptions, wx.VERTICAL)
         player_grid = wx.FlexGridSizer(0, 2, 6, 8)
         player_grid.AddGrowableCol(1, 1)
         add_row(player_grid, self.videoQualityLabel, self.videoQuality)
@@ -302,8 +328,7 @@ class SettingsDialog(wx.Dialog):
         playerOptionsSizer.Add(self.repeateTracks, 0, wx.EXPAND | wx.ALL, 5)
         playerOptionsSizer.Add(self.autoPlayNext, 0, wx.EXPAND | wx.ALL, 5)
         playerOptionsSizer.Add(self.eqButton, 0, wx.EXPAND | wx.ALL, 5)
-        playerOptions.SetSizer(playerOptionsSizer)
-        main_sizer.Add(playerOptions, 0, wx.EXPAND | wx.ALL, 8)
+        main_sizer.Add(playerOptionsSizer, 0, wx.EXPAND | wx.ALL, 8)
 
         okCancelSizer = wx.BoxSizer(wx.HORIZONTAL)
         for control in panel.GetChildren():
@@ -428,7 +453,9 @@ class SettingsDialog(wx.Dialog):
             self.audioOutputDevices[self.audioOutputDevice.Selection]["id"],
         )
         config_set("playback_speed_step", self.playbackSpeedStep.Value)
-        config_set("theme", self.theme_keys[self.themeBox.Selection])
+        selected_theme = self.theme_keys[self.themeBox.Selection]
+        config_set("theme", selected_theme)
+        apply_theme_to_all_windows(selected_theme)
         lang = {value: key for key, value in languages.items()}
         if not lang[self.languageBox.Selection] == config_get("lang"):
             config_set("lang", lang[self.languageBox.Selection])

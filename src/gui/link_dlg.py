@@ -2,6 +2,7 @@ import wx
 import pyperclip
 from utils import youtube_regexp
 from language_handler import _
+from theme_handler import apply_theme
 
 
 class LinkDlg(wx.Dialog):
@@ -16,6 +17,7 @@ class LinkDlg(wx.Dialog):
         sizer = wx.BoxSizer(wx.VERTICAL)
         lbl = wx.StaticText(panel, -1, _("رابط المقطع"))
         self.link = wx.TextCtrl(panel, -1, value="")
+        self.link.SetName(_("رابط المقطع"))
         self.mode = wx.RadioBox(
             panel, -1, _("التشغيل ك: "), choices=[_("مقطع فيديو"), _("مقطع صوتي")]
         )
@@ -36,6 +38,7 @@ class LinkDlg(wx.Dialog):
         self.okButton.Bind(wx.EVT_BUTTON, self.onOk)
         self.link.Bind(wx.EVT_TEXT, self.onText)
         self.detectFromClipboard()
+        apply_theme(self)
         self.ShowModal()
 
     def onOk(self, event):

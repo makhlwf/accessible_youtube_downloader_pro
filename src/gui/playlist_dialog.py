@@ -15,6 +15,7 @@ import pyperclip
 from gui.download_progress import DownloadProgress
 from gui.quality_selection import QualitySelectionDialog
 from settings_handler import config_get
+from theme_handler import apply_theme
 import webbrowser
 import os
 from gui.activity_dialog import LoadingDialog
@@ -61,6 +62,7 @@ class PlaylistDialog(wx.Dialog):
         backButton.Bind(wx.EVT_BUTTON, lambda e: self.back())
         self.Bind(wx.EVT_CHAR_HOOK, self.onHook)
         self.Bind(wx.EVT_CLOSE, lambda e: wx.Exit())
+        apply_theme(self)
         try:
             # Instantiate PlaylistResult
             playlist_result_obj = PlaylistResult(self.url)

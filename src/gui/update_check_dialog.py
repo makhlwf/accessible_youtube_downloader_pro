@@ -1,6 +1,7 @@
 import wx
 from language_handler import _
 import application
+from theme_handler import apply_theme
 
 
 class UpdateCheckDialog(wx.Dialog):
@@ -10,6 +11,7 @@ class UpdateCheckDialog(wx.Dialog):
         self.whats_new = whats_new
         self.InitUI()
         self.Center()
+        apply_theme(self)
 
     def InitUI(self):
         panel = wx.Panel(self)
@@ -34,6 +36,7 @@ class UpdateCheckDialog(wx.Dialog):
             style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2 | wx.HSCROLL,
             size=(400, 200),
         )
+        self.whats_new_text.SetName(_("ما الجديد"))
         vbox.Add(self.whats_new_text, 1, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
 
         hbox = wx.BoxSizer(wx.HORIZONTAL)

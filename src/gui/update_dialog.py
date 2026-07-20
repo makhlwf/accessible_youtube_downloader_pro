@@ -10,6 +10,7 @@ import shutil
 import subprocess
 import sys
 from urllib.parse import unquote, urlparse
+from theme_handler import apply_theme
 
 
 ProgressChangedEvent, EVT_PROGRESS_CHANGED = NewEvent()
@@ -38,12 +39,20 @@ class UpdateDialog(wx.Dialog):
             value=_("في انتظار بدء التحميل..."),
             style=wx.TE_READONLY | wx.TE_MULTILINE | wx.HSCROLL,
         )
+        self.status.SetName(_("حالة تنزيل التحديث"))
         cancelButton = wx.Button(panel, wx.ID_CANCEL, _("إيقاف التحميل"))
         self.progress = wx.Gauge(panel, -1, range=100)
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(self.status, 1, wx.EXPAND | wx.ALL, 8)
+        sizer.Add(self.progress, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 8)
+        sizer.Add(cancelButton, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 8)
+        panel.SetSizer(sizer)
+        self.Fit()
         self.progress.Bind(EVT_PROGRESS_CHANGED, self.onChanged)
         self.Bind(EVT_DOWNLOAD_FINISHED, self.onFinished)
         cancelButton.Bind(wx.EVT_BUTTON, self.onCancel)
         self.Bind(wx.EVT_CLOSE, self.onClose)
+        apply_theme(self)
         Thread(target=self.updateDownload, args=[url], daemon=True).start()
         self.ShowModal()
         self.Destroy()

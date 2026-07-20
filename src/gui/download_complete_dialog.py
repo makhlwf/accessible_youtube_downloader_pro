@@ -3,6 +3,7 @@ import subprocess
 
 import wx
 from language_handler import _
+from theme_handler import apply_theme
 
 
 class DownloadCompleteDialog(wx.Dialog):
@@ -41,6 +42,7 @@ class DownloadCompleteDialog(wx.Dialog):
         panel.SetSizer(sizer)
         self.Fit()
         self.Bind(wx.EVT_CHAR_HOOK, self.on_hook)
+        apply_theme(self)
 
     def on_play(self, event):
         os.startfile(self.file_path)

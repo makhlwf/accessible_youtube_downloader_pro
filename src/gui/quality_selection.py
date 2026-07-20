@@ -1,5 +1,6 @@
 import wx
 from language_handler import _
+from theme_handler import apply_theme
 import utils
 
 
@@ -16,6 +17,7 @@ class QualitySelectionDialog(wx.SingleChoiceDialog):
 
         super().__init__(parent, message, title, choices)
         self.qualities = qualities
+        apply_theme(self)
 
     def get_selected_quality(self):
         selection = self.GetSelection()
