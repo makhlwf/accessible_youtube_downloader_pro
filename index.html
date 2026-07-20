@@ -3,189 +3,1434 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="HexPlayer - The fully accessible YouTube browser and downloader exclusively for NVDA screen reader users on Windows.">
-    <title>HexPlayer - Accessible YouTube Client for Microsoft Windows</title>
+    <meta name="description" content="HexPlayer is an accessible Windows app for searching, browsing, playing, and downloading YouTube content with a keyboard-first interface.">
+    <meta name="theme-color" content="#f7f4ec">
+    <title>HexPlayer - Accessible YouTube Client for Windows</title>
     <style>
-        /* Base styles prioritizing high contrast and readability */
         :root {
-            --primary-color: #0056b3;
-            --primary-hover: #003d82;
-            --secondary-color: #5c6bc0;
-            --secondary-hover: #3f51b5;
-            --background: #fdfdfd;
-            --text-color: #1a1a1a;
-            --focus-outline: #ffbf47;
+            color-scheme: light;
+            --bg: #f7f4ec;
+            --surface: #ffffff;
+            --surface-strong: #171717;
+            --surface-muted: #ece5d7;
+            --text: #171717;
+            --text-muted: #59514a;
+            --text-on-dark: #fdfbf6;
+            --border: #d8cdbd;
+            --accent: #c8212d;
+            --accent-strong: #9f1721;
+            --accent-soft: #ffe5e7;
+            --teal: #047e78;
+            --teal-strong: #005f5a;
+            --gold: #9b6a00;
+            --blue: #2456a6;
+            --focus: #ffbf47;
+            --shadow: 0 20px 60px rgba(24, 20, 17, 0.16);
+            --page-wash: rgba(255, 255, 255, 0.72);
+            --radius: 8px;
+            --max-width: 1180px;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                color-scheme: dark;
+                --bg: #11100e;
+                --surface: #1d1b18;
+                --surface-strong: #f6efe2;
+                --surface-muted: #2a2620;
+                --text: #fbf7ef;
+                --text-muted: #d2c6b6;
+                --text-on-dark: #15120f;
+                --border: #443b31;
+                --accent: #ff6b75;
+                --accent-strong: #ff8790;
+                --accent-soft: #32191b;
+                --teal: #46c9bf;
+                --teal-strong: #73ded6;
+                --gold: #e5b84d;
+                --blue: #8eb3ff;
+                --shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+                --page-wash: rgba(255, 255, 255, 0.04);
+            }
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            html {
+                scroll-behavior: auto;
+            }
+
+            *, *::before, *::after {
+                animation-duration: 0.001ms !important;
+                animation-iteration-count: 1 !important;
+                scroll-behavior: auto !important;
+                transition-duration: 0.001ms !important;
+            }
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            line-height: 1.6;
-            color: var(--text-color);
-            background-color: var(--background);
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 2rem;
+            min-width: 320px;
+            margin: 0;
+            color: var(--text);
+            background:
+                linear-gradient(180deg, var(--page-wash), rgba(255, 255, 255, 0) 360px),
+                var(--bg);
+            font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+            font-size: 18px;
+            line-height: 1.65;
+            text-rendering: optimizeLegibility;
         }
 
-        /* Semantic Typography */
-        h1, h2, h3 {
-            color: #000;
-            line-height: 1.2;
+        body::selection {
+            color: #111;
+            background: var(--focus);
+        }
+
+        a {
+            color: var(--blue);
+            text-underline-offset: 0.18em;
+            text-decoration-thickness: 0.09em;
+        }
+
+        a:hover {
+            color: var(--accent-strong);
+        }
+
+        a:focus-visible,
+        button:focus-visible,
+        summary:focus-visible {
+            outline: 4px solid var(--focus);
+            outline-offset: 4px;
+        }
+
+        img,
+        svg {
+            max-width: 100%;
+        }
+
+        .skip-link {
+            position: absolute;
+            top: 0.75rem;
+            left: 0.75rem;
+            z-index: 10;
+            transform: translateY(-180%);
+            padding: 0.75rem 1rem;
+            color: #111;
+            background: var(--focus);
+            border: 2px solid #111;
+            border-radius: var(--radius);
+            font-weight: 800;
+            transition: transform 0.15s ease;
+        }
+
+        .skip-link:focus {
+            transform: translateY(0);
+        }
+
+        .site-header {
+            position: sticky;
+            top: 0;
+            z-index: 5;
+            border-bottom: 1px solid color-mix(in srgb, var(--border), transparent 20%);
+            background: color-mix(in srgb, var(--bg), transparent 8%);
+            backdrop-filter: blur(18px);
+        }
+
+        .nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            width: min(100% - 2rem, var(--max-width));
+            margin: 0 auto;
+            padding: 0.85rem 0;
+        }
+
+        .brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.7rem;
+            min-width: max-content;
+            color: var(--text);
+            font-size: 1rem;
+            font-weight: 900;
+            text-decoration: none;
+        }
+
+        .brand-mark {
+            display: grid;
+            width: 2.25rem;
+            height: 2.25rem;
+            place-items: center;
+            color: #fff;
+            background: var(--accent);
+            border-radius: var(--radius);
+            box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.22);
+            font-size: 0.95rem;
+            line-height: 1;
+            letter-spacing: 0;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 0.25rem;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .nav-links a {
+            display: inline-flex;
+            min-height: 44px;
+            align-items: center;
+            padding: 0 0.75rem;
+            color: var(--text);
+            border-radius: var(--radius);
+            font-size: 0.95rem;
+            font-weight: 750;
+            text-decoration: none;
+        }
+
+        .nav-links a:hover {
+            background: var(--surface-muted);
+        }
+
+        .hero {
+            width: min(100% - 2rem, var(--max-width));
+            margin: 0 auto;
+            padding: clamp(2rem, 6vw, 5rem) 0 2rem;
+        }
+
+        .hero-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(320px, 0.92fr);
+            gap: clamp(2rem, 5vw, 4rem);
+            align-items: center;
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.55rem;
+            margin: 0 0 1rem;
+            color: var(--accent-strong);
+            font-size: 0.88rem;
+            font-weight: 900;
+            letter-spacing: 0;
+            text-transform: uppercase;
+        }
+
+        .eyebrow::before {
+            width: 0.75rem;
+            height: 0.75rem;
+            content: "";
+            background: var(--teal);
+            border-radius: 50%;
+            box-shadow: 0 0 0 4px color-mix(in srgb, var(--teal), transparent 82%);
+        }
+
+        h1,
+        h2,
+        h3 {
+            margin-top: 0;
+            color: var(--text);
+            line-height: 1.12;
+            letter-spacing: 0;
         }
 
         h1 {
-            font-size: 2.5rem;
-            border-bottom: 2px solid var(--primary-color);
-            padding-bottom: 0.5rem;
-            margin-bottom: 0.5rem;
+            max-width: 12ch;
+            margin-bottom: 1rem;
+            font-size: clamp(3rem, 8vw, 6.6rem);
+            font-weight: 950;
         }
 
-        .tagline {
+        h2 {
+            margin-bottom: 1rem;
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 920;
+        }
+
+        h3 {
+            margin-bottom: 0.5rem;
             font-size: 1.2rem;
-            font-weight: bold;
-            margin-top: 0;
-            margin-bottom: 2rem;
+            font-weight: 860;
         }
 
-        /* Accessible Lists */
-        ul {
-            padding-left: 1.5rem;
-            margin-bottom: 2rem;
+        .lead {
+            max-width: 64ch;
+            margin: 0 0 1.25rem;
+            color: var(--text-muted);
+            font-size: clamp(1.15rem, 2vw, 1.35rem);
         }
 
-        li {
-            margin-bottom: 0.5rem;
-        }
-
-        /* High Visibility Buttons */
-        .button-group {
+        .hero-actions,
+        .button-row {
             display: flex;
             flex-wrap: wrap;
-            gap: 1rem;
-            margin: 1.5rem 0;
+            gap: 0.85rem;
+            align-items: center;
+            margin: 1.75rem 0 1rem;
         }
 
-        .btn {
-            display: inline-block;
-            padding: 0.8rem 1.5rem;
-            font-size: 1.1rem;
-            font-weight: bold;
-            color: #ffffff;
-            background-color: var(--primary-color);
-            text-decoration: none;
-            border-radius: 6px;
+        .button {
+            display: inline-flex;
+            min-height: 48px;
+            align-items: center;
+            justify-content: center;
+            gap: 0.55rem;
+            padding: 0.8rem 1.05rem;
+            color: #fff;
+            background: var(--accent);
             border: 2px solid transparent;
-            transition: background-color 0.2s ease;
-        }
-
-        .btn-beta {
-            background-color: var(--secondary-color);
-        }
-
-        /* Crucial: Extremely clear focus states for keyboard navigation */
-        .btn:hover, .btn:focus {
-            background-color: var(--primary-hover);
-            outline: 4px solid var(--focus-outline);
-            outline-offset: 2px;
-        }
-
-        .btn-beta:hover, .btn-beta:focus {
-            background-color: var(--secondary-hover);
-            outline: 4px solid var(--focus-outline);
-            outline-offset: 2px;
-        }
-
-        /* Section Styling */
-        section {
-            margin-bottom: 3rem;
-        }
-
-        .tech-specs {
-            background-color: #f4f4f4;
-            padding: 1.5rem;
-            border-radius: 8px;
-            border-left: 5px solid #333;
-        }
-
-        footer {
-            margin-top: 4rem;
-            padding-top: 1rem;
-            border-top: 1px solid #ccc;
+            border-radius: var(--radius);
+            box-shadow: 0 10px 26px rgba(159, 23, 33, 0.22);
+            font-weight: 850;
+            line-height: 1.2;
             text-align: center;
+            text-decoration: none;
+        }
+
+        .button:hover {
+            color: #fff;
+            background: var(--accent-strong);
+        }
+
+        .button.secondary {
+            color: var(--text);
+            background: var(--surface);
+            border-color: var(--border);
+            box-shadow: none;
+        }
+
+        .button.secondary:hover {
+            color: var(--text);
+            background: var(--surface-muted);
+        }
+
+        .button.beta {
+            background: var(--teal);
+            box-shadow: 0 10px 26px rgba(4, 126, 120, 0.2);
+        }
+
+        .button.beta:hover {
+            background: var(--teal-strong);
+        }
+
+        .meta-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.7rem;
+            margin: 1.2rem 0 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .meta-list li {
+            display: inline-flex;
+            min-height: 38px;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.3rem 0.7rem;
+            color: var(--text);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 0.94rem;
+            font-weight: 750;
+        }
+
+        .meta-list li::before {
+            width: 0.55rem;
+            height: 0.55rem;
+            content: "";
+            background: currentColor;
+            border-radius: 50%;
+        }
+
+        .mockup-wrap {
+            position: relative;
+        }
+
+        .mockup {
+            overflow: hidden;
+            color: #fdfbf6;
+            background: #191612;
+            border: 1px solid #41352b;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+        }
+
+        .mockup-topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            min-height: 3.1rem;
+            padding: 0 1rem;
+            background: #241f1a;
+            border-bottom: 1px solid #44382e;
+        }
+
+        .window-controls {
+            display: flex;
+            gap: 0.45rem;
+            align-items: center;
+        }
+
+        .window-controls span {
+            width: 0.78rem;
+            height: 0.78rem;
+            border-radius: 50%;
+            background: #fb665d;
+        }
+
+        .window-controls span:nth-child(2) {
+            background: #e5b84d;
+        }
+
+        .window-controls span:nth-child(3) {
+            background: #46c9bf;
+        }
+
+        .mockup-title {
+            margin: 0;
+            color: #fdfbf6;
+            font-size: 0.95rem;
+            font-weight: 800;
+        }
+
+        .mockup-body {
+            display: grid;
+            grid-template-columns: 11rem minmax(0, 1fr);
+            min-height: 440px;
+        }
+
+        .mockup-side {
+            padding: 1rem;
+            background: #12100e;
+            border-right: 1px solid #44382e;
+        }
+
+        .mockup-side p,
+        .mockup-main p {
+            margin: 0;
+        }
+
+        .side-label {
+            color: #cfc2ad;
+            font-size: 0.78rem;
+            font-weight: 850;
+            letter-spacing: 0;
+            text-transform: uppercase;
+        }
+
+        .mock-list {
+            display: grid;
+            gap: 0.55rem;
+            margin: 0.75rem 0 1.25rem;
+            padding: 0;
+            list-style: none;
+        }
+
+        .mock-list li {
+            padding: 0.55rem 0.65rem;
+            color: #fdfbf6;
+            background: #211d18;
+            border: 1px solid #3d332a;
+            border-radius: var(--radius);
+            font-size: 0.83rem;
+            font-weight: 750;
+        }
+
+        .mock-list li.active {
+            background: #40191d;
+            border-color: #ff6b75;
+        }
+
+        .mockup-main {
+            display: grid;
+            align-content: start;
+            gap: 1rem;
+            padding: 1rem;
+        }
+
+        .search-bar {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            min-height: 3.4rem;
+            padding: 0 0.9rem;
+            color: #fdfbf6;
+            background: #28231d;
+            border: 1px solid #58483b;
+            border-radius: var(--radius);
+            font-weight: 700;
+        }
+
+        .search-bar::before {
+            width: 1rem;
+            height: 1rem;
+            content: "";
+            border: 3px solid #46c9bf;
+            border-radius: 50%;
+            box-shadow: 9px 9px 0 -6px #46c9bf;
+        }
+
+        .result-stack {
+            display: grid;
+            gap: 0.75rem;
+        }
+
+        .result {
+            display: grid;
+            grid-template-columns: 4.75rem minmax(0, 1fr);
+            gap: 0.8rem;
+            align-items: center;
+            min-height: 5.6rem;
+            padding: 0.75rem;
+            background: #211d18;
+            border: 1px solid #40362d;
+            border-radius: var(--radius);
+        }
+
+        .thumb {
+            display: grid;
+            aspect-ratio: 16 / 10;
+            place-items: center;
+            background:
+                linear-gradient(135deg, #c8212d 0 42%, #9b6a00 42% 68%, #047e78 68% 100%);
+            border-radius: 6px;
+        }
+
+        .thumb::before {
+            width: 0;
+            height: 0;
+            content: "";
+            border-top: 0.55rem solid transparent;
+            border-bottom: 0.55rem solid transparent;
+            border-left: 0.85rem solid #fff;
+            transform: translateX(0.08rem);
+        }
+
+        .result strong {
+            display: block;
+            color: #fff;
+            font-size: 0.95rem;
+            line-height: 1.25;
+        }
+
+        .result span {
+            display: block;
+            margin-top: 0.25rem;
+            color: #cfc2ad;
+            font-size: 0.82rem;
+            line-height: 1.3;
+        }
+
+        .player-strip {
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            gap: 0.8rem;
+            align-items: center;
+            min-height: 4rem;
+            padding: 0.75rem;
+            background: #12100e;
+            border: 1px solid #44382e;
+            border-radius: var(--radius);
+        }
+
+        .play-button {
+            display: grid;
+            width: 2.5rem;
+            height: 2.5rem;
+            place-items: center;
+            background: #ff6b75;
+            border-radius: 50%;
+        }
+
+        .play-button::before {
+            width: 0;
+            height: 0;
+            content: "";
+            border-top: 0.48rem solid transparent;
+            border-bottom: 0.48rem solid transparent;
+            border-left: 0.75rem solid #111;
+            transform: translateX(0.07rem);
+        }
+
+        .progress {
+            overflow: hidden;
+            height: 0.75rem;
+            background: #342b24;
+            border-radius: 999px;
+        }
+
+        .progress span {
+            display: block;
+            width: 62%;
+            height: 100%;
+            background: #46c9bf;
+            border-radius: inherit;
+        }
+
+        .time {
+            color: #fdfbf6;
+            font-size: 0.82rem;
+            font-weight: 800;
+        }
+
+        .quick-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            width: min(100% - 2rem, var(--max-width));
+            margin: 1rem auto 0;
+            padding-bottom: 2rem;
+        }
+
+        .stat {
+            padding: 1rem;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+        }
+
+        .stat strong {
+            display: block;
+            color: var(--accent-strong);
+            font-size: 1.8rem;
+            line-height: 1.1;
+        }
+
+        .stat span {
+            display: block;
+            margin-top: 0.25rem;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-weight: 700;
+        }
+
+        main section {
+            width: min(100% - 2rem, var(--max-width));
+            margin: 0 auto;
+            padding: clamp(2.5rem, 6vw, 4.75rem) 0;
+        }
+
+        .section-kicker {
+            margin: 0 0 0.4rem;
+            color: var(--teal-strong);
+            font-size: 0.85rem;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+
+        .section-intro {
+            max-width: 70ch;
+            margin: 0 0 1.6rem;
+            color: var(--text-muted);
+            font-size: 1.08rem;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+        }
+
+        .feature-card,
+        .download-panel,
+        .privacy-panel,
+        .shortcut-panel,
+        .tech-panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+        }
+
+        .feature-card {
+            min-height: 15rem;
+            padding: 1.15rem;
+        }
+
+        .feature-icon {
+            display: grid;
+            width: 2.65rem;
+            height: 2.65rem;
+            margin-bottom: 1rem;
+            place-items: center;
+            color: #fff;
+            background: var(--accent);
+            border-radius: var(--radius);
+            font-size: 0.95rem;
+            font-weight: 950;
+        }
+
+        .feature-card:nth-child(2n) .feature-icon {
+            background: var(--teal);
+        }
+
+        .feature-card:nth-child(3n) .feature-icon {
+            background: var(--gold);
+        }
+
+        .feature-card p {
+            margin: 0;
+            color: var(--text-muted);
+        }
+
+        .workflow {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            counter-reset: workflow;
+        }
+
+        .step {
+            position: relative;
+            padding: 1rem;
+            background: var(--surface-muted);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            counter-increment: workflow;
+        }
+
+        .step::before {
+            display: grid;
+            width: 2.2rem;
+            height: 2.2rem;
+            margin-bottom: 0.9rem;
+            place-items: center;
+            color: #fff;
+            background: var(--surface-strong);
+            border-radius: var(--radius);
+            content: counter(workflow);
+            font-size: 1rem;
+            font-weight: 900;
+        }
+
+        .step p {
+            margin: 0;
+            color: var(--text-muted);
+        }
+
+        .download-section {
+            width: 100%;
+            max-width: none;
+            padding: 0;
+            background: var(--surface-strong);
+            color: var(--text-on-dark);
+        }
+
+        .download-inner {
+            display: grid;
+            grid-template-columns: minmax(0, 0.95fr) minmax(320px, 1.05fr);
+            gap: clamp(1.5rem, 4vw, 3rem);
+            width: min(100% - 2rem, var(--max-width));
+            margin: 0 auto;
+            padding: clamp(2.5rem, 6vw, 4.75rem) 0;
+        }
+
+        .download-section h2,
+        .download-section h3 {
+            color: var(--text-on-dark);
+        }
+
+        .download-section .section-kicker,
+        .download-section .section-intro {
+            color: color-mix(in srgb, var(--text-on-dark), transparent 20%);
+        }
+
+        .download-panel {
+            padding: 1.25rem;
+            color: var(--text);
+            box-shadow: var(--shadow);
+        }
+
+        .release-note {
+            padding: 1rem;
+            margin: 1rem 0 0;
+            background: var(--accent-soft);
+            border: 1px solid color-mix(in srgb, var(--accent), transparent 50%);
+            border-radius: var(--radius);
+        }
+
+        .release-note strong {
+            display: block;
+            margin-bottom: 0.25rem;
+        }
+
+        .release-note p {
+            margin: 0;
+            color: var(--text-muted);
+        }
+
+        .download-list {
+            display: grid;
+            gap: 0.65rem;
+            margin: 1rem 0 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .download-list li {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 0.7rem 0;
+            border-top: 1px solid var(--border);
+        }
+
+        .download-list strong {
+            font-weight: 850;
+        }
+
+        .download-list span {
+            color: var(--text-muted);
+            text-align: right;
+        }
+
+        .shortcut-grid {
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            gap: 1rem;
+            align-items: start;
+        }
+
+        .shortcut-panel {
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        caption {
+            padding: 1rem 1rem 0.35rem;
+            color: var(--text-muted);
+            font-weight: 800;
+            text-align: left;
+        }
+
+        th,
+        td {
+            padding: 0.82rem 1rem;
+            border-top: 1px solid var(--border);
+            text-align: left;
+            vertical-align: top;
+        }
+
+        th {
+            color: var(--text);
+            background: var(--surface-muted);
+            font-size: 0.92rem;
+        }
+
+        kbd {
+            display: inline-block;
+            min-width: 2.15rem;
+            padding: 0.14rem 0.4rem;
+            color: var(--text);
+            background: var(--surface-muted);
+            border: 1px solid var(--border);
+            border-bottom-width: 3px;
+            border-radius: 6px;
+            font-family: "Cascadia Mono", "Consolas", monospace;
             font-size: 0.9rem;
+            font-weight: 800;
+            line-height: 1.35;
+            text-align: center;
+        }
+
+        .privacy-panel,
+        .tech-panel {
+            padding: 1.15rem;
+        }
+
+        .privacy-panel p,
+        .tech-panel p {
+            margin: 0;
+            color: var(--text-muted);
+        }
+
+        .privacy-panel ul,
+        .tech-panel ul {
+            margin: 1rem 0 0;
+            padding-left: 1.2rem;
+        }
+
+        .privacy-panel li,
+        .tech-panel li {
+            margin: 0.35rem 0;
+        }
+
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        details {
+            padding: 1rem;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+        }
+
+        summary {
+            min-height: 44px;
+            cursor: pointer;
+            font-weight: 850;
+        }
+
+        details p {
+            margin: 0.4rem 0 0;
+            color: var(--text-muted);
+        }
+
+        .site-footer {
+            color: var(--text-on-dark);
+            background: var(--surface-strong);
+        }
+
+        .footer-inner {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            width: min(100% - 2rem, var(--max-width));
+            margin: 0 auto;
+            padding: 1.5rem 0;
+        }
+
+        .footer-inner p {
+            margin: 0;
+        }
+
+        .footer-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .footer-links a {
+            color: var(--text-on-dark);
+            font-weight: 750;
+        }
+
+        .status-text {
+            min-height: 1.5rem;
+            margin: 0.7rem 0 0;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-weight: 700;
+        }
+
+        @media (max-width: 980px) {
+            .hero-grid,
+            .download-inner,
+            .shortcut-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .feature-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .workflow,
+            .quick-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            h1 {
+                max-width: 11ch;
+            }
+        }
+
+        @media (max-width: 760px) {
+            body {
+                font-size: 17px;
+            }
+
+            .site-header {
+                position: static;
+            }
+
+            .nav {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .nav-links {
+                width: 100%;
+                justify-content: flex-start;
+                overflow-x: auto;
+                padding-bottom: 0.2rem;
+            }
+
+            .hero {
+                padding-top: 2rem;
+            }
+
+            h1 {
+                max-width: 100%;
+                font-size: clamp(2.6rem, 16vw, 4.3rem);
+            }
+
+            .mockup-body {
+                grid-template-columns: 1fr;
+                min-height: auto;
+            }
+
+            .mockup-side {
+                border-right: 0;
+                border-bottom: 1px solid #44382e;
+            }
+
+            .mock-list {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .feature-grid,
+            .workflow,
+            .quick-stats,
+            .details-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .result {
+                grid-template-columns: 1fr;
+            }
+
+            .thumb {
+                width: min(100%, 12rem);
+            }
+        }
+
+        @media (forced-colors: active) {
+            .button,
+            .feature-icon,
+            .step::before,
+            .brand-mark {
+                border: 2px solid ButtonText;
+            }
+
+            .mockup,
+            .mockup * {
+                forced-color-adjust: none;
+            }
         }
     </style>
 </head>
 <body>
+    <a class="skip-link" href="#main">Skip to main content</a>
 
-    <header>
-        <h1>HexPlayer</h1>
-        <p class="tagline">The ultimate accessible YouTube browser and downloader for Microsoft Windows users.</p>
+    <header class="site-header">
+        <nav class="nav" aria-label="Primary navigation">
+            <a class="brand" href="#" aria-label="HexPlayer home">
+                <span class="brand-mark" aria-hidden="true">HP</span>
+                <span>HexPlayer</span>
+            </a>
+            <ul class="nav-links">
+                <li><a href="#features">Features</a></li>
+                <li><a href="#download">Download</a></li>
+                <li><a href="#shortcuts">Shortcuts</a></li>
+                <li><a href="#privacy">Privacy</a></li>
+            </ul>
+        </nav>
     </header>
 
-    <main>
-        <section id="about">
-            <h2>About HexPlayer</h2>
-            <p>HexPlayer is a dedicated desktop application designed specifically from the ground up for visually impaired users utilizing the NVDA screen reader. It allows you to seamlessly browse, view, and download YouTube content without dealing with cluttered web interfaces.</p>
-        </section>
+    <main id="main">
+        <section class="hero" aria-labelledby="hero-title">
+            <div class="hero-grid">
+                <div>
+                    <p class="eyebrow">Accessible YouTube for Windows</p>
+                    <h1 id="hero-title">HexPlayer</h1>
+                    <p class="lead">Search, browse, play, and download YouTube content in a fast Windows app built around keyboard access and screen-reader clarity.</p>
+                    <div class="hero-actions" aria-label="Primary actions">
+                        <a id="hero-download" class="button" href="https://github.com/makhlwf/accessible_youtube_downloader_pro/releases/download/v3.0.0/HexPlayer.exe" aria-label="Download HexPlayer stable version 3.0.0 for Windows">
+                            Download Stable <span id="hero-version">v3.0.0</span>
+                        </a>
+                        <a class="button secondary" href="https://github.com/makhlwf/accessible_youtube_downloader_pro" aria-label="View HexPlayer source code on GitHub">View Source</a>
+                    </div>
+                    <ul class="meta-list" aria-label="Project highlights">
+                        <li>Windows 10 and 11</li>
+                        <li>NVDA friendly</li>
+                        <li>English and Arabic</li>
+                        <li>GPLv3 open source</li>
+                    </ul>
+                </div>
 
-        <section id="features">
-            <h2>Key Features</h2>
-            <ul>
-                <li><strong>Comprehensive Downloading:</strong> Download individual videos or entire playlists. Supports all available video and audio formats.</li>
-                <li><strong>Personalized YouTube Feed:</strong> With secure cookie support, you can view your own personalized YouTube feed directly within the app.</li>
-                <li><strong>Favorites System:</strong> Easily save and manage your favorite videos for quick access later.</li>
-                <li><strong>Accessibility First:</strong> Engineered exclusively for the NVDA screen reader to ensure perfectly read menus, progress bars, and navigation.</li>
-                <li><strong>Bilingual Support:</strong> The interface currently fully supports English and Arabic languages.</li>
-            </ul>
-        </section>
-
-        <section id="download">
-            <h2>Download HexPlayer</h2>
-            <p>Choose the version that best suits your needs. HexPlayer requires Windows 10 or Windows 11. (64bit Windows is recommended)</p>
-            
-            <div class="button-group">
-                <a id="stable-download" href="https://github.com/makhlwf/accessible_youtube_downloader_pro/releases/latest/download/HexPlayer.exe" class="btn" aria-label="Download HexPlayer stable version 2.0.0 executable">
-                    Download Stable (v2.0.0)
-                </a>
-                <a href="https://github.com/makhlwf/accessible_youtube_downloader_pro/releases/download/beta/HexPlayer.exe" class="btn btn-beta" aria-label="Download HexPlayer beta version executable">
-                    Download Beta
-                </a>
+                <figure class="mockup-wrap" aria-labelledby="mockup-caption">
+                    <div class="mockup" role="img" aria-label="A visual mockup of HexPlayer showing search results, navigation, and a media playback bar.">
+                        <div class="mockup-topbar">
+                            <div class="window-controls" aria-hidden="true">
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                            </div>
+                            <p class="mockup-title">HexPlayer - YouTube Search</p>
+                        </div>
+                        <div class="mockup-body">
+                            <aside class="mockup-side" aria-hidden="true">
+                                <p class="side-label">Main actions</p>
+                                <ul class="mock-list">
+                                    <li class="active">Search</li>
+                                    <li>Download</li>
+                                    <li>Play link</li>
+                                    <li>Favorites</li>
+                                    <li>History</li>
+                                    <li>Settings</li>
+                                </ul>
+                                <p class="side-label">Theme</p>
+                                <ul class="mock-list">
+                                    <li>System</li>
+                                    <li>High contrast</li>
+                                </ul>
+                            </aside>
+                            <div class="mockup-main" aria-hidden="true">
+                                <div class="search-bar">Search videos, playlists, channels, and live content</div>
+                                <div class="result-stack">
+                                    <div class="result">
+                                        <div class="thumb"></div>
+                                        <p><strong>Accessible media player demo</strong><span>Enter plays audio, Ctrl + Enter plays video</span></p>
+                                    </div>
+                                    <div class="result">
+                                        <div class="thumb"></div>
+                                        <p><strong>Keyboard-first YouTube browsing</strong><span>Favorites, channels, playlists, chapters</span></p>
+                                    </div>
+                                    <div class="result">
+                                        <div class="thumb"></div>
+                                        <p><strong>Download as MP4, M4A, or MP3</strong><span>Quality selection and playlist folders</span></p>
+                                    </div>
+                                </div>
+                                <div class="player-strip">
+                                    <div class="play-button"></div>
+                                    <div class="progress"><span></span></div>
+                                    <span class="time">02:48</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <figcaption id="mockup-caption" class="status-text">Visual preview of the HexPlayer desktop experience.</figcaption>
+                </figure>
             </div>
         </section>
 
-        <section id="tech-specs" class="tech-specs">
-            <h2>Under the Hood</h2>
-            <p>For those interested in the technical details, HexPlayer is built for performance and accessibility using modern tools:</p>
-            <ul>
-                <li><strong>OS:</strong> Windows 10 and Windows 11(64BIT)</li>
-                <li><strong>Core Engine:</strong> <a href="https://python.org">Python</a> 3.14</li>
-                <li><strong>GUI Framework:</strong> <a href="https://wxpython.org/index.html">wxPython</a> (Ensuring native Windows accessibility APIs are utilized)</li>
-                <li><strong>Download Engine:</strong> <a href="https://github.com/yt-dlp/yt-dlp">yt-dlp</a></li>
-                <li><strong>YouTube Interactions:</strong> <a href="https://deno.com/">Deno JS</a></li>
-            </ul>
+        <div class="quick-stats" aria-label="HexPlayer capabilities">
+            <div class="stat">
+                <strong>3</strong>
+                <span>Download formats: MP4, M4A, MP3</span>
+            </div>
+            <div class="stat">
+                <strong>4</strong>
+                <span>Theme modes including high contrast</span>
+            </div>
+            <div class="stat">
+                <strong>2</strong>
+                <span>Localized interfaces: English and Arabic</span>
+            </div>
+        </div>
+
+        <section id="features" aria-labelledby="features-title">
+            <p class="section-kicker">What It Does</p>
+            <h2 id="features-title">Built for the way keyboard users actually move</h2>
+            <p class="section-intro">HexPlayer is the continuation of Accessible YouTube Downloader Pro. It keeps YouTube search, playback, downloads, history, favorites, and browser handoff inside one Windows-native workflow.</p>
+
+            <div class="feature-grid">
+                <article class="feature-card">
+                    <span class="feature-icon" aria-hidden="true">01</span>
+                    <h3>Search and Browse</h3>
+                    <p>Search videos, playlists, channels, and live content. Open playlist contents and channel tabs without switching to the YouTube web interface.</p>
+                </article>
+                <article class="feature-card">
+                    <span class="feature-icon" aria-hidden="true">02</span>
+                    <h3>Accessible Player</h3>
+                    <p>Play audio-only or video with shortcuts for seeking, volume boost, playback speed, chapters, quality, equalizer, and output device selection.</p>
+                </article>
+                <article class="feature-card">
+                    <span class="feature-icon" aria-hidden="true">03</span>
+                    <h3>Flexible Downloads</h3>
+                    <p>Download videos, playlists, channels, Shorts, and supported YouTube links as MP4 video, M4A audio, or MP3 audio using yt-dlp.</p>
+                </article>
+                <article class="feature-card">
+                    <span class="feature-icon" aria-hidden="true">04</span>
+                    <h3>Local Favorites</h3>
+                    <p>Save favorite videos locally, resume playback from saved positions, and quickly play or download saved items later.</p>
+                </article>
+                <article class="feature-card">
+                    <span class="feature-icon" aria-hidden="true">05</span>
+                    <h3>Browser Integration</h3>
+                    <p>Send supported YouTube links from Chromium-compatible browsers through the included extension and Windows integration helpers.</p>
+                </article>
+                <article class="feature-card">
+                    <span class="feature-icon" aria-hidden="true">06</span>
+                    <h3>Account Features</h3>
+                    <p>Optionally use a local cookies file for recommendations, watch history, likes, chapters, and restricted content that requires your session.</p>
+                </article>
+            </div>
+        </section>
+
+        <section aria-labelledby="workflow-title">
+            <p class="section-kicker">Workflow</p>
+            <h2 id="workflow-title">From link to playback or download</h2>
+            <p class="section-intro">The app is organized around a few direct actions, so common tasks stay reachable from menus, buttons, context menus, and shortcuts.</p>
+            <div class="workflow">
+                <article class="step">
+                    <h3>Find</h3>
+                    <p>Search YouTube, open a playlist, browse a channel, or let HexPlayer detect a supported link from the clipboard.</p>
+                </article>
+                <article class="step">
+                    <h3>Choose</h3>
+                    <p>Play as audio, play as video, save to favorites, copy the link, open the channel, or start a direct download.</p>
+                </article>
+                <article class="step">
+                    <h3>Control</h3>
+                    <p>Use keyboard shortcuts for volume, seeking, speed, chapters, equalizer, quality, repeat, and auto-next.</p>
+                </article>
+                <article class="step">
+                    <h3>Keep</h3>
+                    <p>Download the media, resume later, organize playlist folders, or return from favorites and watch history.</p>
+                </article>
+            </div>
+        </section>
+
+        <section id="download" class="download-section" aria-labelledby="download-title">
+            <div class="download-inner">
+                <div>
+                    <p class="section-kicker">Download</p>
+                    <h2 id="download-title">Install HexPlayer for Windows</h2>
+                    <p class="section-intro">Use the stable build for normal installation. Windows 10 or Windows 11 on a modern 64-bit system is recommended.</p>
+                </div>
+                <div class="download-panel">
+                    <h3>Latest stable release</h3>
+                    <p id="release-status" class="status-text" role="status">Version 3.0.0 is ready to download.</p>
+                    <div class="button-row">
+                        <a id="stable-download" class="button" href="https://github.com/makhlwf/accessible_youtube_downloader_pro/releases/download/v3.0.0/HexPlayer.exe" aria-label="Download HexPlayer stable version 3.0.0 executable">Download Stable <span id="stable-version">v3.0.0</span></a>
+                        <a class="button beta" href="https://github.com/makhlwf/accessible_youtube_downloader_pro/releases/download/beta/HexPlayer.exe" aria-label="Download HexPlayer beta executable">Download Beta</a>
+                    </div>
+                    <ul class="download-list">
+                        <li><strong>Platform</strong><span>Windows 10 / 11</span></li>
+                        <li><strong>Architecture</strong><span>64-bit recommended</span></li>
+                        <li><strong>Install method</strong><span>Executable installer</span></li>
+                    </ul>
+                    <div class="release-note">
+                        <strong>Also available through WinGet</strong>
+                        <p>Run <code>winget install HexPlayer</code> from Command Prompt or PowerShell.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="shortcuts" aria-labelledby="shortcuts-title">
+            <p class="section-kicker">Keyboard First</p>
+            <h2 id="shortcuts-title">Common shortcuts</h2>
+            <p class="section-intro">These shortcuts are part of the core workflow. The full English and Arabic guides are available inside the app with F1.</p>
+            <div class="shortcut-grid">
+                <div class="shortcut-panel">
+                    <table>
+                        <caption>Main window shortcuts</caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">Shortcut</th>
+                                <th scope="col">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><kbd>Ctrl</kbd> + <kbd>F</kbd></td>
+                                <td>Search YouTube</td>
+                            </tr>
+                            <tr>
+                                <td><kbd>Ctrl</kbd> + <kbd>D</kbd></td>
+                                <td>Download from link or direct download</td>
+                            </tr>
+                            <tr>
+                                <td><kbd>Ctrl</kbd> + <kbd>Y</kbd></td>
+                                <td>Play a YouTube link</td>
+                            </tr>
+                            <tr>
+                                <td><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>F</kbd></td>
+                                <td>Open favorites</td>
+                            </tr>
+                            <tr>
+                                <td><kbd>Ctrl</kbd> + <kbd>H</kbd></td>
+                                <td>Open watch history when cookies are configured</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="shortcut-panel">
+                    <table>
+                        <caption>Player shortcuts</caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">Shortcut</th>
+                                <th scope="col">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><kbd>Space</kbd></td>
+                                <td>Play or pause</td>
+                            </tr>
+                            <tr>
+                                <td><kbd>Arrow</kbd> keys</td>
+                                <td>Change volume or seek</td>
+                            </tr>
+                            <tr>
+                                <td><kbd>Ctrl</kbd> + <kbd>E</kbd></td>
+                                <td>Open equalizer</td>
+                            </tr>
+                            <tr>
+                                <td><kbd>F12</kbd></td>
+                                <td>Choose audio output device</td>
+                            </tr>
+                            <tr>
+                                <td><kbd>Esc</kbd></td>
+                                <td>Close player and return</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section id="privacy" aria-labelledby="privacy-title">
+            <p class="section-kicker">Privacy</p>
+            <h2 id="privacy-title">Local-first by design</h2>
+            <div class="details-grid">
+                <article class="privacy-panel">
+                    <h3>No analytics or tracking scripts</h3>
+                    <p>HexPlayer does not include telemetry, advertising trackers, or developer-operated analytics. Settings, favorites, downloads, and resume positions stay on your Windows device.</p>
+                    <ul>
+                        <li>Cookies are optional and stored as a local file path.</li>
+                        <li>Favorites are saved in a local SQLite database.</li>
+                        <li>Downloaded files go to the folder you choose.</li>
+                    </ul>
+                </article>
+                <article class="privacy-panel">
+                    <h3>Third-party services are transparent</h3>
+                    <p>When you search, play, browse, or download, HexPlayer and its tools may contact YouTube, GitHub, Deno sources, or yt-dlp supported endpoints to complete that action.</p>
+                    <ul>
+                        <li>YouTube cookies may be sent to Google/YouTube for authenticated features.</li>
+                        <li>GitHub may be used for app and tool updates.</li>
+                        <li>The full privacy policy is included with the project.</li>
+                    </ul>
+                </article>
+            </div>
+        </section>
+
+        <section aria-labelledby="tech-title">
+            <p class="section-kicker">Under The Hood</p>
+            <h2 id="tech-title">Native Windows accessibility, modern media tooling</h2>
+            <div class="details-grid">
+                <article class="tech-panel">
+                    <h3>Core stack</h3>
+                    <ul>
+                        <li><strong>Python 3.14+</strong> application runtime.</li>
+                        <li><strong>wxPython</strong> for native Windows interface controls.</li>
+                        <li><strong>MPV</strong> powered playback with audio and video controls.</li>
+                    </ul>
+                </article>
+                <article class="tech-panel">
+                    <h3>YouTube tooling</h3>
+                    <ul>
+                        <li><strong>yt-dlp</strong> for extraction and downloads.</li>
+                        <li><strong>Deno</strong> for JavaScript-based YouTube interaction helpers.</li>
+                        <li><strong>YouTube.js / Innertube</strong> for features such as history, likes, comments, and chapters.</li>
+                    </ul>
+                </article>
+            </div>
+        </section>
+
+        <section aria-labelledby="faq-title">
+            <p class="section-kicker">Answers</p>
+            <h2 id="faq-title">Quick questions</h2>
+            <div class="details-grid">
+                <details>
+                    <summary>Does HexPlayer require a YouTube cookies file?</summary>
+                    <p>No. Search, playback, and many downloads work without cookies. Cookies enable account-based features such as home recommendations, watch history, likes, chapters, and some restricted content.</p>
+                </details>
+                <details>
+                    <summary>Can HexPlayer download playlists and channels?</summary>
+                    <p>Yes. HexPlayer can download individual videos, playlists, channels, Shorts, live pages where supported, and other supported YouTube links through yt-dlp.</p>
+                </details>
+                <details>
+                    <summary>Is the app only for NVDA users?</summary>
+                    <p>HexPlayer is engineered around NVDA and Windows accessibility APIs, with keyboard-first controls that also help other users who prefer non-mouse workflows.</p>
+                </details>
+                <details>
+                    <summary>Where can I read the guide?</summary>
+                    <p>Press F1 inside the app. The repository also includes English and Arabic guide files under <code>source/docs</code>.</p>
+                </details>
+            </div>
         </section>
     </main>
 
-    <footer>
-        <p>&copy; 2026 HexPlayer. Open source and built for the visually impaired community.</p>
+    <footer class="site-footer">
+        <div class="footer-inner">
+            <p>&copy; 2026 HexPlayer. Open source and built for keyboard and screen-reader users.</p>
+            <ul class="footer-links">
+                <li><a href="PRIVACY_POLICY.md">Privacy Policy</a></li>
+                <li><a href="https://github.com/makhlwf/accessible_youtube_downloader_pro/releases">Releases</a></li>
+                <li><a href="https://github.com/makhlwf/accessible_youtube_downloader_pro/issues">Issues</a></li>
+            </ul>
+        </div>
     </footer>
 
     <script>
-        // Dynamically update version from update.json
-        fetch('update.json')
-            .then(response => response.json())
-            .then(data => {
-                if (data && data.version) {
-                    const stableBtn = document.getElementById('stable-download');
-                    if (stableBtn) {
-                        stableBtn.textContent = `Download Stable (v${data.version})`;
-                        stableBtn.setAttribute('aria-label', `Download HexPlayer stable version ${data.version} executable`);
-                    }
-                }
-            })
-            .catch(error => console.warn('Could not fetch version from update.json:', error));
-    </script>
+        const stableDownload = document.getElementById("stable-download");
+        const heroDownload = document.getElementById("hero-download");
+        const stableVersion = document.getElementById("stable-version");
+        const heroVersion = document.getElementById("hero-version");
+        const releaseStatus = document.getElementById("release-status");
 
+        function updateDownloadInfo(data) {
+            if (!data || !data.version) {
+                return;
+            }
+
+            const versionLabel = `v${data.version}`;
+            const downloadUrl = data.url || stableDownload.href;
+            stableDownload.href = downloadUrl;
+            heroDownload.href = downloadUrl;
+            stableVersion.textContent = versionLabel;
+            heroVersion.textContent = versionLabel;
+            stableDownload.setAttribute("aria-label", `Download HexPlayer stable version ${data.version} executable`);
+            heroDownload.setAttribute("aria-label", `Download HexPlayer stable version ${data.version} for Windows`);
+            releaseStatus.textContent = data.whats_new
+                ? `Version ${data.version}: ${data.whats_new}`
+                : `Version ${data.version} is ready to download.`;
+        }
+
+        fetch("update.json", { cache: "no-store" })
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(updateDownloadInfo)
+            .catch(() => {
+                releaseStatus.textContent = "Version 3.0.0 is ready to download.";
+            });
+    </script>
 </body>
 </html>
