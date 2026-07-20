@@ -1,3 +1,8 @@
+ci:
+  skip:
+    - ruff-check
+    - ruff-format
+
 repos:
 - repo: local
   hooks:
