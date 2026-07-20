@@ -12,7 +12,7 @@ jobs:
     steps:
       - name: Fetch metadata
         id: metadata
-        uses: alexwilson/dependabot-github-action@v2
+        uses: dependabot/fetch-metadata@v3
       - name: Auto-merge
         if: steps.metadata.outputs.update-type == 'version-update:semver-patch'
         run: gh pr merge --auto --merge "$PR_URL"
