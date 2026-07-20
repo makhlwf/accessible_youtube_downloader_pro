@@ -1,6 +1,0 @@
-beautifulsoup4==4.15.0
-requests==2.34.2
-httpx==0.28.1
-pyperclip==1.11.0
-py-yt-search==0.7.2
-wxpython==4.2.5

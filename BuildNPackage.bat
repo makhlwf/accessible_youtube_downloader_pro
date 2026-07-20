@@ -1,9 +1,9 @@
 @echo off
 REM quick build + package script
 
-call .venv\Scripts\activate.bat || exit /b
+cd /d "%~dp0" || exit /b
 
-uv run scripts\build.py || exit /b
+uv run --no-dev --group build python scripts\build.py || exit /b
 
 REM build installer
 iscc packaging\windows\inno.iss

@@ -391,5 +391,5 @@ except RuntimeError as e:
     exit(1)
 except FileNotFoundError:
     print("Error: pyinstaller is not installed or not in the system's PATH.")
-    print("Please install it using: pip install pyinstaller")
+    print("Please install it using: uv sync --no-dev --group build")
     exit(1)

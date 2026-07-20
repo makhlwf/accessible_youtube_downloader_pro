@@ -16,18 +16,19 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v7
 
-      - name: Set up Python
-        uses: actions/setup-python@v6
+      - name: Install uv
+        uses: astral-sh/setup-uv@v8.3.2
         with:
-          python-version: "3.14"
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install
 
       - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
-          pip install pyinstaller
+        run: uv sync --locked --no-dev --group build
 
       - name: Build Application
-        run: python scripts/build.py
+        run: uv run --no-dev --group build python scripts/build.py
 
       - name: Install Inno Setup
         run: choco install innosetup -y

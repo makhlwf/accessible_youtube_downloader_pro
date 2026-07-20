@@ -1,6 +1,5 @@
 @echo off
 REM quick run script for fast development
 
-call .venv\Scripts\activate.bat || exit /b
-cd /d "%~dp0src" || exit /b
-uv run accessible_youtube_downloader_pro.py
+cd /d "%~dp0" || exit /b
+uv run python src\accessible_youtube_downloader_pro.py

@@ -51,7 +51,7 @@ def main():
     print("\n".join(diff))
     print(
         "\nmessages.pot is out of date. Run "
-        "`pybabel extract -F babel.cfg -k _ -o messages.pot .` "
+        "`uv run pybabel extract -F babel.cfg -k _ -o messages.pot .` "
         "and commit the changes."
     )
     return 1

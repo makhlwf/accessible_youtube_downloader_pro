@@ -154,27 +154,31 @@ The extension can open supported YouTube links in HexPlayer from a context menu 
    cd accessible_youtube_downloader_pro
    ```
 
-2. Create and activate a virtual environment:
+2. Install UV if it is not already available:
 
    ```powershell
-   python -m venv .venv
-   .venv\Scripts\activate
+   winget install astral-sh.uv
    ```
 
-3. Install dependencies:
+3. Sync the locked project environment:
 
    ```powershell
-   pip install -r requirements.txt
+   uv sync
    ```
 
 4. Run the app:
 
    ```powershell
-   cd src
-   python accessible_youtube_downloader_pro.py
+   uv run python src\accessible_youtube_downloader_pro.py
    ```
 
 HexPlayer may prompt to download `yt-dlp` or Deno when a feature needs them and they are missing. The External Tools menu can also check for YouTube.js/Innertube updates and refresh its Deno cache when YouTube interaction features need repair.
+
+To run the unit tests:
+
+```powershell
+uv run pytest tests/
+```
 
 ---
 
@@ -182,20 +186,19 @@ HexPlayer may prompt to download `yt-dlp` or Deno when a feature needs them and 
 
 To create a standalone build:
 
-1. Activate your virtual environment from the repository root.
-2. Install PyInstaller if needed:
+1. Sync the runtime and build dependencies:
 
    ```powershell
-   pip install pyinstaller
+   uv sync --no-dev --group build
    ```
 
-3. Run the build script:
+2. Run the build script:
 
    ```powershell
-   python scripts/build.py
+   uv run --no-dev --group build python scripts/build.py
    ```
 
-4. Find the output in `dist/HexPlayer`.
+3. Find the output in `dist/HexPlayer`.
 
 ---
 

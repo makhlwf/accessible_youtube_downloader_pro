@@ -1,35 +1,33 @@
 repos:
-- repo: https://github.com/astral-sh/ruff-pre-commit
-  # Ruff version.
-  rev: v0.15.4
-  hooks:
-    # Run the linter.
-    - id: ruff-check
-      args: [ --fix ]
-      stages: [pre-commit]
-    # Run the formatter.
-    - id: ruff-format
-      stages: [pre-commit]
 - repo: local
   hooks:
+    - id: ruff-check
+      name: Ruff check
+      entry: uv run --locked ruff check --fix
+      language: system
+      types_or: [python, pyi]
+      stages: [pre-commit]
+    - id: ruff-format
+      name: Ruff format
+      entry: uv run --locked ruff format
+      language: system
+      types_or: [python, pyi]
+      stages: [pre-commit]
     - id: ruff-check-ci
       name: Ruff check (CI)
-      entry: ruff check .
-      language: python
-      additional_dependencies: [ruff==0.15.4]
+      entry: uv run --locked ruff check .
+      language: system
       pass_filenames: false
       stages: [pre-push]
     - id: ruff-format-ci
       name: Ruff format check (CI)
-      entry: ruff format --check .
-      language: python
-      additional_dependencies: [ruff==0.15.4]
+      entry: uv run --locked ruff format --check .
+      language: system
       pass_filenames: false
       stages: [pre-push]
     - id: translations-check
       name: Translations template check
-      entry: python scripts/check_translations.py
-      language: python
-      additional_dependencies: [babel==2.18.0]
+      entry: uv run --locked python scripts/check_translations.py
+      language: system
       pass_filenames: false
       stages: [pre-push]

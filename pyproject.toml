@@ -1,3 +1,35 @@
+[project]
+name = "accessible-youtube-downloader-pro"
+version = "3.0.0"
+description = "Accessible Windows YouTube browser, player, and downloader."
+readme = "readme.md"
+requires-python = ">=3.14"
+license = "GPL-3.0-only"
+authors = [{ name = "Makhlwf" }]
+dependencies = [
+    "beautifulsoup4==4.15.0",
+    "httpx==0.28.1",
+    "py-yt-search==0.7.2",
+    "pyperclip==1.11.0",
+    "requests==2.34.2",
+    "wxpython==4.2.5; sys_platform == 'win32'",
+]
+
+[dependency-groups]
+dev = [
+    "babel==2.18.0",
+    "pre-commit>=4.5.0,<5",
+    "pytest>=9.0.2,<10",
+    "pytest-asyncio>=1.3.0,<2",
+    "ruff==0.15.4",
+]
+build = [
+    "pyinstaller>=6.17.0,<7",
+]
+
+[tool.uv]
+package = false
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
