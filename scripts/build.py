@@ -4,13 +4,17 @@ import subprocess
 import sys
 import zipfile
 
-# It's better to run this from the repo root.
-if not os.path.exists("source"):
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+SRC_DIR = os.path.join(ROOT, "src")
+DIST_DIR = os.path.join(ROOT, "dist")
+BUILD_DIR = os.path.join(ROOT, "build")
+
+if not os.path.isdir(SRC_DIR):
     print("Error: This script should be run from the root of the repository.")
     exit(1)
 
-mpv_dll = os.path.join("source", "libmpv-2.dll")
-mpv_archive = os.path.join("source", "libmpv-2.dll.zip")
+mpv_dll = os.path.join(SRC_DIR, "libmpv-2.dll")
+mpv_archive = os.path.join(SRC_DIR, "libmpv-2.dll.zip")
 
 
 def ensure_mpv_runtime():
@@ -37,20 +41,18 @@ def ensure_mpv_runtime():
 
 ensure_mpv_runtime()
 
-# Clean up previous builds
-if os.path.exists("dist"):
-    shutil.rmtree("dist")
-if os.path.exists("build"):
-    shutil.rmtree("build")
+for build_output_dir in (DIST_DIR, BUILD_DIR):
+    if os.path.exists(build_output_dir):
+        shutil.rmtree(build_output_dir)
 
 # The entry point of the application
-entry_point = os.path.join("source", "accessible_youtube_downloader_pro.py")
-native_host_entry_point = os.path.join("source", "native_messaging_host.py")
+entry_point = os.path.join(SRC_DIR, "accessible_youtube_downloader_pro.py")
+native_host_entry_point = os.path.join(SRC_DIR, "native_messaging_host.py")
 
 # Name of the output executable
 app_name = "HexPlayer"
 native_host_name = "HexPlayerNativeHost"
-package_dir = os.path.join("dist", app_name)
+package_dir = os.path.join(DIST_DIR, app_name)
 
 # Native runtime files must be added as binaries so PyInstaller handles them
 # with the same layout and loader semantics as extension modules.
@@ -91,8 +93,8 @@ data_to_add = [
 ]
 
 
-def source_item_path(item):
-    return os.path.normpath(os.path.join("source", item))
+def src_item_path(item):
+    return os.path.normpath(os.path.join(SRC_DIR, item))
 
 
 def find_system_dll(name):
@@ -254,7 +256,7 @@ command = [
     "--name",
     app_name,
     "--distpath",
-    "dist",
+    DIST_DIR,
     "--noconsole",
     # Clean build
     "--clean",
@@ -280,7 +282,7 @@ command.extend(
 
 # Add binary files
 for item in binary_files:
-    source_path = source_item_path(item)
+    source_path = src_item_path(item)
     if not os.path.isfile(source_path):
         raise RuntimeError(f"Required runtime file is missing: {source_path}")
     command.extend(["--add-binary", f"{source_path}{os.pathsep}."])
@@ -298,7 +300,7 @@ for dll_name in system_binary_files:
 
 # Add data files
 for item in data_to_add:
-    source_path = source_item_path(item)
+    source_path = src_item_path(item)
 
     if os.path.isdir(source_path):
         command.extend(["--add-data", f"{source_path}{os.pathsep}{item}"])
@@ -321,9 +323,9 @@ native_host_command = [
     "--distpath",
     package_dir,
     "--workpath",
-    os.path.join("build", native_host_name),
+    os.path.join(BUILD_DIR, native_host_name),
     "--specpath",
-    os.path.join("build", native_host_name),
+    os.path.join(BUILD_DIR, native_host_name),
     native_host_entry_point,
 ]
 
@@ -346,8 +348,8 @@ def normalize_main_build_output():
         os.rmdir(nested_dir)
         return
 
-    root_exe = os.path.join("dist", f"{app_name}.exe")
-    root_internal = os.path.join("dist", "_internal")
+    root_exe = os.path.join(DIST_DIR, f"{app_name}.exe")
+    root_internal = os.path.join(DIST_DIR, "_internal")
     if os.path.exists(root_exe) and os.path.isdir(root_internal):
         os.makedirs(package_dir, exist_ok=True)
         shutil.move(root_exe, expected_exe)
@@ -375,9 +377,9 @@ def validate_package_layout():
 
 # Run the command
 try:
-    subprocess.run(command, check=True)
+    subprocess.run(command, cwd=ROOT, check=True)
     normalize_main_build_output()
-    subprocess.run(native_host_command, check=True)
+    subprocess.run(native_host_command, cwd=ROOT, check=True)
     validate_package_layout()
     print("Build completed successfully!")
     print(f"The package directory is: {package_dir}")

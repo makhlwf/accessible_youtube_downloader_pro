@@ -112,14 +112,14 @@ def _chapter_time_ms(chapter):
         if key in chapter and chapter[key] is not None:
             try:
                 return max(0, int(float(chapter[key])))
-            except (TypeError, ValueError):
+            except TypeError, ValueError:
                 continue
 
     for key in ("start_time", "startTime"):
         if key in chapter and chapter[key] is not None:
             try:
                 return max(0, int(float(chapter[key]) * 1000))
-            except (TypeError, ValueError):
+            except TypeError, ValueError:
                 continue
 
     return None
@@ -273,7 +273,7 @@ def _parse_subtitle_timestamp(value, numeric_unit="seconds"):
         if numeric_unit == "milliseconds":
             return max(0, int(number))
         return max(0, int(number * 1000))
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return None
 
 
@@ -286,7 +286,7 @@ def _normalize_subtitle_cues(cues):
         try:
             start_ms = int(cue.get("start_ms"))
             end_ms = int(cue.get("end_ms"))
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             continue
         if end_ms <= start_ms:
             end_ms = start_ms + 1500
@@ -309,7 +309,7 @@ def _normalize_subtitle_cues(cues):
 def _parse_json3_subtitles(text):
     try:
         data = json.loads(text)
-    except (TypeError, json.JSONDecodeError):
+    except TypeError, json.JSONDecodeError:
         return []
 
     events = data.get("events") if isinstance(data, dict) else None
@@ -328,17 +328,17 @@ def _parse_json3_subtitles(text):
         duration_ms = event.get("dDurationMs")
         try:
             start_ms = int(start_ms)
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             continue
         try:
             end_ms = start_ms + int(duration_ms)
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             next_start = None
             for next_event in events[index + 1 :]:
                 if isinstance(next_event, dict) and next_event.get("tStartMs"):
                     try:
                         next_start = int(next_event["tStartMs"])
-                    except (TypeError, ValueError):
+                    except TypeError, ValueError:
                         next_start = None
                     break
             end_ms = next_start if next_start is not None else start_ms + 1500
@@ -1107,7 +1107,7 @@ def pick_best_format(formats, preferred_index, is_video=True, target_height=None
                         if v >= preferred_val or i == len(target_list) - 1
                     )
                 )
-            except (ValueError, StopIteration):
+            except ValueError, StopIteration:
                 pref_idx = preferred_index
 
             for i in range(pref_idx, -1, -1):
@@ -1551,7 +1551,7 @@ def get_watch_history(continuation=None):
 def _local_watch_history_response(continuation=None, page_size=50):
     try:
         offset = int(continuation or 0)
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         offset = 0
     offset = max(0, offset)
 
@@ -1956,7 +1956,7 @@ def time_formatting(total_seconds):
         return ""
     try:
         total_seconds = int(total_seconds)
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         return ""
 
     hours, remainder = divmod(total_seconds, 3600)

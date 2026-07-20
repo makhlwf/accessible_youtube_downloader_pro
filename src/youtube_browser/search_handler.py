@@ -272,7 +272,7 @@ class PlaylistResult:
     def get_stream(self, n, audio_mode=False):
         try:
             return self.videos[n].get(stream_key(audio_mode))
-        except (IndexError, KeyError):
+        except IndexError, KeyError:
             return None
 
     def set_stream(self, n, stream, audio_mode=False):
@@ -585,7 +585,7 @@ class Search:
                 video_count_str = item.get("videoCount", "0")
                 try:
                     video_count = int(video_count_str.split(" ")[0])
-                except (ValueError, IndexError):
+                except ValueError, IndexError:
                     video_count = 0
                 self.count += 1
                 self.results[self.count] = {

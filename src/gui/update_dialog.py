@@ -67,7 +67,7 @@ class UpdateDialog(wx.Dialog):
                 size_str = r.headers.get("content-length")
                 try:
                     size = int(size_str) if size_str else None
-                except (ValueError, TypeError):
+                except ValueError, TypeError:
                     size = None
                 recieved = 0
                 progress = 0

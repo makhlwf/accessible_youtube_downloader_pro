@@ -1,23 +1,23 @@
 gui:
   - changed-files:
-    - any-glob-to-any-file: source/gui/**/*
+    - any-glob-to-any-file: src/gui/**/*
 
 media-player:
   - changed-files:
-    - any-glob-to-any-file: source/media_player/**/*
+    - any-glob-to-any-file: src/media_player/**/*
 
 youtube-browser:
   - changed-files:
-    - any-glob-to-any-file: source/youtube_browser/**/*
+    - any-glob-to-any-file: src/youtube_browser/**/*
 
 downloader:
   - changed-files:
-    - any-glob-to-any-file: source/download_handler/**/*
+    - any-glob-to-any-file: src/download_handler/**/*
 
 translations:
   - changed-files:
     - any-glob-to-any-file:
-      - source/languages/**/*
+      - src/languages/**/*
       - messages.pot
       - babel.cfg
 

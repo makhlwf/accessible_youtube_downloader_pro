@@ -4,9 +4,9 @@ import ctypes
 import builtins
 from unittest.mock import MagicMock
 
-# Add source to sys.path
+# Add application source to sys.path
 sys.path.insert(
-    0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "source"))
+    0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src"))
 )
 
 

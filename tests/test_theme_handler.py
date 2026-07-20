@@ -2,10 +2,8 @@ from unittest.mock import patch
 import os
 import sys
 
-# Add source directory to path
-sys.path.append(
-    os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "source"))
-)
+# Add application source directory to path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src")))
 
 # We need to import wx AFTER the mock is set up by conftest
 import wx

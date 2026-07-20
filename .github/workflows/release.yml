@@ -65,7 +65,7 @@ jobs:
           pip install pyinstaller
 
       # NEW: Determine the version to use
-      # If Stable: Use input. If Beta: Extract from source code.
+      # If Stable: Use input. If Beta: Extract from src/application.py.
       - name: Determine Version
         id: get_version
         shell: pwsh
@@ -74,7 +74,7 @@ jobs:
             $version = "${{ github.event.inputs.version }}"
           } else {
             # Extract version from application.py for Beta
-            $content = Get-Content "source/application.py" -Raw
+            $content = Get-Content "src/application.py" -Raw
             if ($content -match 'version = "(.*?)"') {
                 $version = $matches[1]
             } else {
@@ -90,29 +90,20 @@ jobs:
         run: |
           $version = "${{ steps.get_version.outputs.VERSION }}"
           
-          # Update source/application.py
-          (Get-Content "source/application.py") -replace 'version = ".*"', "version = `"$version`"" | Set-Content "source/application.py"
+          # Update src/application.py
+          (Get-Content "src/application.py") -replace 'version = ".*"', "version = `"$version`"" | Set-Content "src/application.py"
           
-          # Update inno.iss
-          (Get-Content "inno.iss") -replace '#define MyAppVersion ".*"', "#define MyAppVersion `"$version`"" | Set-Content "inno.iss"
+          # Update packaging/windows/inno.iss
+          (Get-Content "packaging/windows/inno.iss") -replace '#define MyAppVersion ".*"', "#define MyAppVersion `"$version`"" | Set-Content "packaging/windows/inno.iss"
 
       - name: Build Application
-        run: python build.py
-
-      - name: Update Inno Setup script for CI
-        shell: pwsh
-        run: |
-          $innoContent = Get-Content "inno.iss" -Raw
-          # Fix paths for CI environment
-          $innoContent = $innoContent -replace 'Source: ".*\\dist\\HexPlayer.exe"', 'Source: "dist\HexPlayer\HexPlayer.exe"'
-          $innoContent = $innoContent -replace 'Source: ".*\\dist\\_internal\\\*"', 'Source: "dist\HexPlayer\_internal\*"'
-          $innoContent | Set-Content "inno_ci.iss"
+        run: python scripts/build.py
 
       - name: Install Inno Setup
         run: choco install innosetup -y
 
       - name: Compile Installer
-        run: iscc "inno_ci.iss"
+        run: iscc "packaging\windows\inno.iss"
 
       - name: Handle Beta Release
         if: ${{ github.event.inputs.release_type == 'beta' }}
@@ -129,12 +120,7 @@ jobs:
           # Use input message if provided, otherwise default
           if (-not $inputMsg) { $inputMsg = "Automated Beta Build for version $ver" }
 
-          $installerPath = "HexPlayer\HexPlayer.exe" # Ensure this path matches Output in Inno Script
-
-          # Note: Inno Setup output usually goes to a specific folder defined in .iss (OutputBaseFilename)
-          # Assuming Output is in root or Output folder. You might need to adjust path below:
-          # If iscc outputs to 'Output' folder:
-          if (Test-Path "Output\HexPlayer.exe") { $installerPath = "Output\HexPlayer.exe" }
+          $installerPath = "HexPlayer\HexPlayer.exe"
           
           gh release create beta $installerPath `
             --title "Beta: $ver" `
@@ -151,9 +137,7 @@ jobs:
           $ver = "${{ steps.get_version.outputs.VERSION }}"
           $tag = "v$ver"
           
-          # Check for installer in Output folder (standard Inno Setup) or root
           $installerPath = "HexPlayer\HexPlayer.exe"
-          if (Test-Path "Output\HexPlayer.exe") { $installerPath = "Output\HexPlayer.exe" }
 
           # Create GitHub Release
           gh release create $tag $installerPath `
@@ -181,6 +165,6 @@ jobs:
           # Commit changes
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add source/application.py inno.iss update.json update_info.json
+          git add src/application.py packaging/windows/inno.iss update.json update_info.json
           git commit -m "Release version $ver"
           git push origin HEAD:${{ github.ref }}

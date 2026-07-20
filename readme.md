@@ -90,8 +90,8 @@ HexPlayer is designed to be fully navigable from the keyboard.
 
 The full English and Arabic guides are available inside the app with `F1` and in:
 
-- `source/docs/en/guide.txt`
-- `source/docs/ar/guide.txt`
+- `src/docs/en/guide.txt`
+- `src/docs/ar/guide.txt`
 
 ---
 
@@ -131,7 +131,7 @@ HexPlayer.exe /SILENT /NORESTART /DOWNLOADCOMPONENTS=1
 
 ## Browser Extension
 
-HexPlayer includes a Chromium-compatible helper extension in `source/browser_extension`.
+HexPlayer includes a Chromium-compatible helper extension in `src/browser_extension`.
 
 To use it:
 
@@ -170,7 +170,7 @@ The extension can open supported YouTube links in HexPlayer from a context menu 
 4. Run the app:
 
    ```powershell
-   cd source
+   cd src
    python accessible_youtube_downloader_pro.py
    ```
 
@@ -192,7 +192,7 @@ To create a standalone build:
 3. Run the build script:
 
    ```powershell
-   python build.py
+   python scripts/build.py
    ```
 
 4. Find the output in `dist/HexPlayer`.
@@ -201,13 +201,15 @@ To create a standalone build:
 
 ## Project Structure
 
-- `source/accessible_youtube_downloader_pro.py`: main application entry point.
-- `source/media_player/`: MPV-backed media player and equalizer logic.
-- `source/youtube_browser/`: search, playlist, and channel browsing logic.
-- `source/gui/`: wxPython dialogs and windows.
-- `source/download_handler/`: download handling through `yt-dlp`.
-- `source/browser_extension/`: Chromium-compatible link helper extension.
-- `source/docs/`: English and Arabic in-app user guides.
+- `src/accessible_youtube_downloader_pro.py`: main application entry point.
+- `src/media_player/`: MPV-backed media player and equalizer logic.
+- `src/youtube_browser/`: search, playlist, and channel browsing logic.
+- `src/gui/`: wxPython dialogs and windows.
+- `src/download_handler/`: download handling through `yt-dlp`.
+- `src/browser_extension/`: Chromium-compatible link helper extension.
+- `src/docs/`: English and Arabic in-app user guides.
+- `scripts/`: local maintenance and build utilities.
+- `packaging/windows/`: Windows installer definition.
 - `tests/`: unit tests for core helpers and dialogs.
 
 ---

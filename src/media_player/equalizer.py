@@ -95,7 +95,7 @@ class EqualizerService:
         if preamp is not None:
             try:
                 self.set_preamp(float(preamp))
-            except (ValueError, TypeError):
+            except ValueError, TypeError:
                 pass
 
         bands_str = settings_handler.config_get("eq_bands")
@@ -105,7 +105,7 @@ class EqualizerService:
                 for i, value in enumerate(band_values):
                     if i < 10:
                         self.set_band(i, value)
-            except (ValueError, TypeError):
+            except ValueError, TypeError:
                 pass
 
     def save_settings(self) -> None:

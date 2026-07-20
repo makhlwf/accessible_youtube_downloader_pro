@@ -7,20 +7,20 @@ import runtime_dlls
 def test_runtime_roots_include_frozen_locations(tmp_path, monkeypatch):
     exe_dir = tmp_path / "HexPlayer"
     internal_dir = exe_dir / "_internal"
-    source_dir = tmp_path / "source"
+    src_dir = tmp_path / "src"
     internal_dir.mkdir(parents=True)
-    source_dir.mkdir()
+    src_dir.mkdir()
 
     monkeypatch.setattr(sys, "frozen", True, raising=False)
     monkeypatch.setattr(sys, "executable", str(exe_dir / "HexPlayer.exe"))
     monkeypatch.setattr(sys, "_MEIPASS", str(internal_dir), raising=False)
-    monkeypatch.setattr(runtime_dlls, "__file__", str(source_dir / "runtime_dlls.py"))
+    monkeypatch.setattr(runtime_dlls, "__file__", str(src_dir / "runtime_dlls.py"))
 
     roots = runtime_dlls.runtime_roots()
 
     assert exe_dir.resolve() in roots
     assert internal_dir.resolve() in roots
-    assert source_dir.resolve() in roots
+    assert src_dir.resolve() in roots
     assert len(roots) == len(set(roots))
 
 

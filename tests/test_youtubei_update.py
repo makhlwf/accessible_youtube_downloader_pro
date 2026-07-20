@@ -50,7 +50,7 @@ def test_get_youtubei_version_falls_back_to_config(tmp_path, monkeypatch):
 
 def test_js_runtime_lock_path_stays_with_override_config(tmp_path, monkeypatch):
     runtime_dir = tmp_path / "js_runtime"
-    main_dir = tmp_path / "source"
+    main_dir = tmp_path / "src"
     runtime_dir.mkdir()
     main_dir.mkdir()
     (runtime_dir / "deno.json").write_text(

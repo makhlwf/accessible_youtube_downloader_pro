@@ -3,6 +3,7 @@
 #define MyAppVersion "3.0.0"
 #define MyAppPublisher "makhlwf"
 #define MyAppURL "https://github.com/makhlwf/accessible_youtube_downloader_pro"
+#define RepoRoot "..\..\"
 
 [Setup]
 AppId={{08A53112-0E98-433F-8E55-2D92C3120947}
@@ -25,7 +26,7 @@ ArchitecturesInstallIn64BitMode=x64compatible
 DisableProgramGroupPage=yes
 PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
-OutputDir=HexPlayer
+OutputDir={#RepoRoot}HexPlayer
 OutputBaseFilename=HexPlayer
 Compression=lzma2/ultra64
 SolidCompression=yes
@@ -33,7 +34,7 @@ LZMANumBlockThreads=2
 LZMAUseSeparateProcess=yes
 InternalCompressLevel=ultra
 WizardStyle=modern dark polar includetitlebar
-LicenseFile=PRIVACY_POLICY.md
+LicenseFile={#RepoRoot}PRIVACY_POLICY.md
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
@@ -76,8 +77,8 @@ Name: "download_ytdlp"; Description: "{cm:DownloadYtDlp}"; Flags: unchecked
 Name: "download_deno"; Description: "{cm:DownloadDeno}"; Flags: unchecked
 
 [Files]
-Source: "dist\HexPlayer\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "dist\HexPlayer\_internal\browser_extension\*"; DestDir: "{userappdata}\HexPlayer\browser_extension"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#RepoRoot}dist\HexPlayer\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#RepoRoot}dist\HexPlayer\_internal\browser_extension\*"; DestDir: "{userappdata}\HexPlayer\browser_extension"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [InstallDelete]
 Type: filesandordirs; Name: "{app}\browser_extension"

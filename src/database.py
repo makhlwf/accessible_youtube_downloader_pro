@@ -173,7 +173,7 @@ class WatchHistory:
         watched_seconds = data.get("watched_seconds") or 0
         try:
             watched_seconds = max(0, float(watched_seconds))
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             watched_seconds = 0
 
         query = """
