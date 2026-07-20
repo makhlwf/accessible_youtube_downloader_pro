@@ -6,5 +6,30 @@ repos:
     # Run the linter.
     - id: ruff-check
       args: [ --fix ]
+      stages: [pre-commit]
     # Run the formatter.
     - id: ruff-format
+      stages: [pre-commit]
+- repo: local
+  hooks:
+    - id: ruff-check-ci
+      name: Ruff check (CI)
+      entry: ruff check .
+      language: python
+      additional_dependencies: [ruff==0.15.4]
+      pass_filenames: false
+      stages: [pre-push]
+    - id: ruff-format-ci
+      name: Ruff format check (CI)
+      entry: ruff format --check .
+      language: python
+      additional_dependencies: [ruff==0.15.4]
+      pass_filenames: false
+      stages: [pre-push]
+    - id: translations-check
+      name: Translations template check
+      entry: python scripts/check_translations.py
+      language: python
+      additional_dependencies: [babel==2.18.0]
+      pass_filenames: false
+      stages: [pre-push]
