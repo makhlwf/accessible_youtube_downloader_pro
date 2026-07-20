@@ -47,7 +47,9 @@ If you use cookies and account-based features, HexPlayer may request or update d
 
 - YouTube home feed and recommendations.
 - YouTube watch history.
+- Video comments you choose to post.
 - Video chapters and metadata.
+- Like and dislike actions.
 - Watch-history updates when media is played.
 
 These requests are sent to Google/YouTube and are subject to Google's privacy policy and YouTube's terms.
@@ -56,7 +58,7 @@ These requests are sent to Google/YouTube and are subject to Google's privacy po
 
 HexPlayer may connect to the following third-party services:
 
-- **Google/YouTube:** For search, browsing, playback metadata, streams, channels, playlists, recommendations, watch history, and downloads.
+- **Google/YouTube:** For search, browsing, playback metadata, streams, channels, playlists, recommendations, watch history, video comments, likes, dislikes, and downloads.
 - **GitHub:** For checking app updates and downloading or updating external components such as `yt-dlp`.
 - **Deno release sources:** For downloading or updating Deno when needed.
 - **Deno module and package hosts:** Deno or YouTube-related helper code may download modules from sources such as `deno.land`, `jsr.io`, or the npm registry.

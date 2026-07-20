@@ -618,6 +618,39 @@ async function handleGetCommentReplies(params) {
     }
 }
 
+async function handlePostVideoComment(params) {
+    if (!params.cookiesPath) {
+        throw new Error("Cookies path is required");
+    }
+    const yt = await getYT(params.cookiesPath);
+    if (!yt.session.logged_in) {
+        throw new Error("Not logged in");
+    }
+
+    const { videoId } = params;
+    const text = textValue(params.text).trim();
+    if (!videoId) {
+        throw new Error("Video ID is required");
+    }
+    if (!text) {
+        throw new Error("Comment text is required");
+    }
+
+    try {
+        const response = await yt.interact.comment(videoId, text);
+        return {
+            success: response?.success === true,
+            status_code: response?.status_code || null
+        };
+    } catch (error) {
+        console.error(JSON.stringify({
+            debug: "handlePostVideoComment error",
+            error: error.message
+        }));
+        throw new Error(`Failed to post comment: ${error.message}`);
+    }
+}
+
 async function handleGetPlaylist(params) {
     const yt = await getYT(params.cookiesPath);
     const { playlistId } = params;
@@ -667,6 +700,8 @@ async function main() {
                 result = await handleGetVideoComments(params);
             } else if (command === 'get_comment_replies') {
                 result = await handleGetCommentReplies(params);
+            } else if (command === 'post_video_comment') {
+                result = await handlePostVideoComment(params);
             } else if (command === 'get_playlist') {
                 result = await handleGetPlaylist(params);
             } else {

@@ -77,6 +77,50 @@ def test_get_comment_replies_sends_reply_token_and_continuation():
     )
 
 
+def test_post_video_comment_sends_text_with_configured_cookies():
+    from utils import post_video_comment
+
+    with (
+        patch("utils.config_get", return_value="cookies.txt"),
+        patch("utils.os.path.exists", return_value=True),
+        patch("utils.deno_service") as mock_deno_service,
+    ):
+        mock_deno_service.send_command.return_value = {"success": True}
+
+        result = post_video_comment(
+            "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+            "  Great video  ",
+        )
+
+    assert result == {"success": True, "error": None}
+    mock_deno_service.send_command.assert_called_once_with(
+        "post_video_comment",
+        {
+            "cookiesPath": "cookies.txt",
+            "videoId": "dQw4w9WgXcQ",
+            "text": "Great video",
+        },
+    )
+
+
+def test_post_video_comment_requires_valid_cookies():
+    from utils import post_video_comment
+
+    with (
+        patch("utils.config_get", return_value="cookies.txt"),
+        patch("utils.os.path.exists", return_value=False),
+        patch("utils.deno_service") as mock_deno_service,
+    ):
+        result = post_video_comment(
+            "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+            "Great video",
+        )
+
+    assert result["success"] is False
+    assert "كوكيز" in result["error"]
+    mock_deno_service.send_command.assert_not_called()
+
+
 def test_get_comment_replies_falls_back_to_yt_dlp_parent_filter(monkeypatch):
     import utils
     from utils import get_comment_replies
@@ -189,3 +233,35 @@ def test_copy_comment_copies_selected_content(monkeypatch):
 
     assert copied["content"] == "Original\ncomment content"
     assert spoken == ["تم نسخ نص التعليق"]
+
+
+def test_prepend_posted_comment_updates_accessible_list():
+    from gui.comments_dialog import CommentsDialog
+
+    dialog = CommentsDialog.__new__(CommentsDialog)
+    dialog.comments = []
+
+    class FakeList:
+        def __init__(self):
+            self.items = []
+            self.selection = None
+            self.focused = False
+
+        def Set(self, items):
+            self.items = items
+
+        def SetSelection(self, selection):
+            self.selection = selection
+
+        def SetFocus(self):
+            self.focused = True
+
+    dialog.commentsList = FakeList()
+
+    dialog._prepend_posted_comment("Posted from cookies")
+
+    assert dialog.comments[0]["content"] == "Posted from cookies"
+    assert dialog.comments[0]["author"] == "أنت"
+    assert dialog.commentsList.selection == 0
+    assert dialog.commentsList.focused is True
+    assert "Posted from cookies" in dialog.commentsList.items[0]

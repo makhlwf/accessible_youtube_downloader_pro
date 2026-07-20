@@ -132,6 +132,7 @@ With a valid cookies file, HexPlayer can:
 - Update YouTube watch history while you play videos.
 - Fetch YouTube like counts when available.
 - Like or dislike videos from the player.
+- Post top-level comments on videos from the comments dialog.
 - Fetch chapters when available.
 - Access videos that require your signed-in YouTube session.
 
@@ -270,6 +271,7 @@ Player menu items include:
 - Playback Quality. Change the current stream quality when qualities are available.
 - Chapters. Jump to a chapter when chapters are available.
 - Video Description, Ctrl + Shift + D.
+- Video Comments, Ctrl + Shift + M.
 - Equalizer, Ctrl + E.
 - Audio Output Device, F12.
 - Like, L.
@@ -282,6 +284,12 @@ Player menu items include:
 Description dialog
 
 The description dialog lets you read the description, open links by pressing Enter on a line that contains a link, copy the description, export it as TXT, or export it as HTML.
+
+Comments dialog
+
+Open video comments from the player menu with Ctrl + Shift + M. The dialog lists comments and replies when available. Double-click a comment or press Enter on it to open replies. Use Copy Comment Text from the context menu to copy the selected comment.
+
+When a valid cookies file is configured and the account is signed in, use the New comment field to post a top-level comment on the video. Press the Post Comment button or Ctrl + Enter while focused in the comment field.
 
 Player keyboard shortcuts
 
@@ -315,6 +323,7 @@ Player keyboard shortcuts
 - Ctrl + E: equalizer.
 - Ctrl + D: direct download.
 - Ctrl + Shift + D: video description.
+- Ctrl + Shift + M: video comments.
 - Ctrl + L: copy link.
 - Ctrl + B: open in web browser.
 - Ctrl + Shift + C: go to channel.

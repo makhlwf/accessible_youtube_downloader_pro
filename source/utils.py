@@ -1865,6 +1865,56 @@ def get_comment_replies(reply_token, continuation=None, video_url=None, parent_i
         return {"comments": [], "continuation": None}
 
 
+def _post_comment_error_message(error=None):
+    text = str(error or "").lower()
+    if "comment text" in text:
+        return _("يرجى كتابة تعليق قبل النشر")
+    if "cookies path" in text or "cookie" in text:
+        return _("تحتاج إلى ضبط ملف كوكيز صالح قبل نشر التعليقات")
+    if "not logged" in text or "signed in" in text:
+        return _("ملف الكوكيز لا يحتوي على جلسة يوتيوب مسجلة الدخول")
+    return _("تعذر نشر التعليق")
+
+
+def post_video_comment(url, text):
+    """
+    Posts a top-level comment on a YouTube video using configured cookies.
+    """
+    comment_text = str(text or "").strip()
+    if not comment_text:
+        return {"success": False, "error": _post_comment_error_message("comment text")}
+
+    cookies_path = config_get("cookiespath")
+    if not cookies_path or not os.path.exists(cookies_path):
+        return {"success": False, "error": _post_comment_error_message("cookies path")}
+
+    match = youtube_regexp(url)
+    if not match:
+        logger.error(f"Failed to match URL for comment posting: {url}")
+        return {"success": False, "error": _("رابط الفيديو غير صالح")}
+    video_id = match.group(5)
+
+    try:
+        result = deno_service.send_command(
+            "post_video_comment",
+            {
+                "cookiesPath": cookies_path,
+                "videoId": video_id,
+                "text": comment_text,
+            },
+        )
+        if isinstance(result, dict) and result.get("success"):
+            return {"success": True, "error": None}
+
+        error = result.get("error") if isinstance(result, dict) else None
+        if error:
+            logger.warning(f"Deno service returned comment post error: {error}")
+        return {"success": False, "error": _post_comment_error_message(error)}
+    except Exception as e:
+        logger.error(f"Failed to post video comment: {e}")
+        return {"success": False, "error": _post_comment_error_message(e)}
+
+
 def time_formatting(total_seconds):
     if total_seconds is None:
         return ""
