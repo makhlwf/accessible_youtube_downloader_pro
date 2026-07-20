@@ -265,3 +265,22 @@ def test_prepend_posted_comment_updates_accessible_list():
     assert dialog.commentsList.selection == 0
     assert dialog.commentsList.focused is True
     assert "Posted from cookies" in dialog.commentsList.items[0]
+
+
+def test_activate_comment_with_timestamp_calls_seek_callback():
+    from gui.comments_dialog import CommentsDialog
+
+    dialog = CommentsDialog.__new__(CommentsDialog)
+    dialog.comments = [{"content": "The 2:47 thing was cool"}]
+    calls = []
+    dialog.timestamp_callback = lambda seconds, label: calls.append((seconds, label))
+
+    class FakeList:
+        def GetSelection(self):
+            return 0
+
+    dialog.commentsList = FakeList()
+
+    dialog.onActivateComment()
+
+    assert calls == [(167, "2:47")]

@@ -5,6 +5,7 @@ import wx
 
 import utils
 from language_handler import _
+from media_player.timecodes import extract_timecodes
 from nvda_client.client import speak
 from theme_handler import apply_theme
 
@@ -38,6 +39,7 @@ class CommentsDialog(wx.Dialog):
         title=None,
         reply_token=None,
         parent_comment_id=None,
+        timestamp_callback=None,
     ):
         dialog_title = _("ردود التعليق") if reply_token else _("تعليقات الفيديو")
         wx.Dialog.__init__(self, parent, title=dialog_title, size=(800, 500))
@@ -46,6 +48,7 @@ class CommentsDialog(wx.Dialog):
         self.source_title = title or ""
         self.reply_token = reply_token
         self.parent_comment_id = parent_comment_id
+        self.timestamp_callback = timestamp_callback
         self.comments = []
         self.continuation = None
         self.loading = False
@@ -57,6 +60,10 @@ class CommentsDialog(wx.Dialog):
             label_text = _("تعليقات {}:").format(self.source_title)
         self.label = wx.StaticText(panel, -1, label_text)
         self.commentsList = wx.ListBox(panel, -1)
+        self.timestampsPanel = wx.Panel(panel)
+        self.timestampsSizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.timestampsPanel.SetSizer(self.timestampsSizer)
+        self.timestampsPanel.Hide()
         self.commentLabel = None
         self.commentTextCtrl = None
         self.postCommentButton = None
@@ -82,6 +89,12 @@ class CommentsDialog(wx.Dialog):
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(self.label, 0, wx.ALL, 5)
         sizer.Add(self.commentsList, 1, wx.EXPAND | wx.ALL, 5)
+        sizer.Add(
+            self.timestampsPanel,
+            0,
+            wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM,
+            5,
+        )
         if self.commentTextCtrl:
             sizer.Add(self.commentLabel, 0, wx.LEFT | wx.RIGHT | wx.TOP, 5)
             sizer.Add(self.commentTextCtrl, 0, wx.EXPAND | wx.ALL, 5)
@@ -92,7 +105,8 @@ class CommentsDialog(wx.Dialog):
         if self.postCommentButton:
             self.postCommentButton.Bind(wx.EVT_BUTTON, self.onPostComment)
         self.closeButton.Bind(wx.EVT_BUTTON, lambda event: self.Destroy())
-        self.commentsList.Bind(wx.EVT_LISTBOX_DCLICK, self.onOpenReplies)
+        self.commentsList.Bind(wx.EVT_LISTBOX, self.onCommentSelectionChanged)
+        self.commentsList.Bind(wx.EVT_LISTBOX_DCLICK, self.onActivateComment)
         self.commentsList.Bind(wx.EVT_CONTEXT_MENU, self.onContextMenu)
         self.Bind(wx.EVT_CHAR_HOOK, self.onCharHook)
         self.Bind(wx.EVT_CLOSE, lambda event: self.Destroy())
@@ -149,6 +163,7 @@ class CommentsDialog(wx.Dialog):
                 else _("لا توجد تعليقات متاحة")
             )
             self.commentsList.Set([message])
+        self.update_timestamp_buttons()
 
         if self.continuation:
             self.loadMoreButton.Show()
@@ -220,7 +235,13 @@ class CommentsDialog(wx.Dialog):
         self.comments.insert(0, comment)
         self.commentsList.Set([format_comment_item(item) for item in self.comments])
         self.commentsList.SetSelection(0)
+        self.update_timestamp_buttons()
         self.commentsList.SetFocus()
+
+    def onCommentSelectionChanged(self, event=None):
+        self.update_timestamp_buttons()
+        if event:
+            event.Skip()
 
     def onOpenReplies(self, event=None):
         selection = self.commentsList.GetSelection()
@@ -238,14 +259,88 @@ class CommentsDialog(wx.Dialog):
             title=comment.get("author"),
             reply_token=comment["reply_token"],
             parent_comment_id=comment.get("id"),
+            timestamp_callback=self.timestamp_callback,
         )
+
+    def _selected_comment(self):
+        selection = self.commentsList.GetSelection()
+        if selection == wx.NOT_FOUND or selection >= len(self.comments):
+            return None
+        return self.comments[selection]
+
+    def _comment_timestamps(self, comment):
+        return extract_timecodes(comment.get("content") if comment else "")
+
+    def update_timestamp_buttons(self):
+        if not hasattr(self, "timestampsPanel"):
+            return
+
+        for child in self.timestampsPanel.GetChildren():
+            child.Destroy()
+        self.timestampsSizer.Clear()
+
+        timestamps = self._comment_timestamps(self._selected_comment())
+        if not timestamps:
+            self.timestampsPanel.Hide()
+            self.Layout()
+            return
+
+        for timestamp in timestamps:
+            button = wx.Button(self.timestampsPanel, -1, timestamp["label"])
+            button.SetName(_("وقت في التعليق"))
+            button.Bind(
+                wx.EVT_BUTTON,
+                lambda event, value=timestamp: self.onJumpToTimestamp(
+                    event, timestamp=value
+                ),
+            )
+            self.timestampsSizer.Add(button, 0, wx.RIGHT, 5)
+        self.timestampsPanel.Show()
+        self.Layout()
+
+    def onActivateComment(self, event=None):
+        comment = self._selected_comment()
+        timestamps = self._comment_timestamps(comment)
+        if timestamps:
+            self.onJumpToTimestamp(timestamp=timestamps[0])
+            return
+        self.onOpenReplies()
+
+    def onJumpToTimestamp(self, event=None, timestamp=None):
+        if timestamp is None:
+            comment = self._selected_comment()
+            timestamps = self._comment_timestamps(comment)
+            timestamp = timestamps[0] if timestamps else None
+
+        if timestamp is None:
+            speak(_("لا توجد أوقات في هذا التعليق"))
+            return
+
+        if not self.timestamp_callback:
+            speak(_("لا يوجد مشغل متاح للانتقال إلى الوقت"))
+            return
+
+        self.timestamp_callback(timestamp["seconds"], timestamp["label"])
 
     def onContextMenu(self, event):
         selection = self.commentsList.GetSelection()
         if selection == wx.NOT_FOUND or selection >= len(self.comments):
             return
 
+        comment = self.comments[selection]
         menu = wx.Menu()
+        for timestamp in self._comment_timestamps(comment):
+            item = menu.Append(-1, _("الانتقال إلى {}").format(timestamp["label"]))
+            self.Bind(
+                wx.EVT_MENU,
+                lambda event, value=timestamp: self.onJumpToTimestamp(
+                    event, timestamp=value
+                ),
+                item,
+            )
+        if comment.get("has_replies") and comment.get("reply_token"):
+            replies_item = menu.Append(-1, _("فتح الردود"))
+            self.Bind(wx.EVT_MENU, self.onOpenReplies, replies_item)
         copy_item = menu.Append(-1, _("نسخ نص التعليق"))
         self.Bind(wx.EVT_MENU, self.onCopyComment, copy_item)
         self.commentsList.PopupMenu(menu)
@@ -271,6 +366,6 @@ class CommentsDialog(wx.Dialog):
             event.Skip()
             return
         if key == wx.WXK_RETURN:
-            self.onOpenReplies()
+            self.onActivateComment()
             return
         event.Skip()

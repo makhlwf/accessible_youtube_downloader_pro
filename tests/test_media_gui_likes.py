@@ -75,3 +75,60 @@ def test_rating_change_ignores_second_request_while_pending(monkeypatch):
 
     assert gui.rating == "like"
     assert calls == ["جاري تحديث التقييم"]
+
+
+def test_seek_to_timecode_sets_player_time(monkeypatch):
+    gui = media_gui.MediaGui.__new__(media_gui.MediaGui)
+    gui.last_spoken_subtitle_index = 3
+    calls = []
+    spoken = []
+
+    class FakeMedia:
+        def set_time(self, milliseconds):
+            calls.append(milliseconds)
+
+    class FakePlayer:
+        media = FakeMedia()
+
+    gui.player = FakePlayer()
+    monkeypatch.setattr(media_gui, "speak", lambda message: spoken.append(message))
+
+    assert gui.seek_to_timecode("2:47") is True
+
+    assert calls == [167000]
+    assert gui.last_spoken_subtitle_index == -1
+    assert spoken == ["الانتقال إلى 2:47"]
+
+
+def test_toggle_repeat_turns_off_autoplay(monkeypatch):
+    gui = media_gui.MediaGui.__new__(media_gui.MediaGui)
+    state = {"repeatTracks": False, "autonext": True}
+    spoken = []
+
+    monkeypatch.setattr(media_gui, "config_get", lambda key: state[key])
+    monkeypatch.setattr(
+        media_gui, "config_set", lambda key, value: state.__setitem__(key, value)
+    )
+    monkeypatch.setattr(media_gui, "speak", lambda message: spoken.append(message))
+
+    gui.toggleRepeatTracks()
+
+    assert state == {"repeatTracks": True, "autonext": False}
+    assert spoken == ["التكرار مفعل"]
+
+
+def test_toggle_autoplay_turns_off_repeat(monkeypatch):
+    gui = media_gui.MediaGui.__new__(media_gui.MediaGui)
+    state = {"repeatTracks": True, "autonext": False}
+    spoken = []
+
+    monkeypatch.setattr(media_gui, "config_get", lambda key: state[key])
+    monkeypatch.setattr(
+        media_gui, "config_set", lambda key, value: state.__setitem__(key, value)
+    )
+    monkeypatch.setattr(media_gui, "speak", lambda message: spoken.append(message))
+
+    gui.toggleAutoNext()
+
+    assert state == {"repeatTracks": False, "autonext": True}
+    assert spoken == ["تشغيل المقطع التالي تلقائيًا مفعل"]

@@ -25,6 +25,7 @@ from gui.quality_selection import QualitySelectionDialog
 from threading import Thread
 from database import Continue
 from media_player.player import Player, State
+from media_player.timecodes import format_timecode, parse_timecode
 
 logger = logging.getLogger(__name__)
 
@@ -96,6 +97,7 @@ class MediaGui(wx.Frame):
         wx.Frame.__init__(self, parent, title=f"{title} - {application.name}")
         self.title = title
         self.is_live = not can_download
+        self.can_download = can_download
         self.seek = int(config_get("seek"))
         self.results = results
         self.audio_mode = audio_mode
@@ -133,6 +135,16 @@ class MediaGui(wx.Frame):
         forwardButton = CustomButton(self, -1, _("تقديم المقطع >"), name="controls")
         nextButton = CustomButton(self, -1, _("المقطع التالي"), name="controls")
         nextButton.Show() if self.results is not None else nextButton.Hide()
+        self._previous_button = previousButton
+        self._next_button = nextButton
+        self._player_controls = [
+            previousButton,
+            beginingButton,
+            rewindButton,
+            playButton,
+            forwardButton,
+            nextButton,
+        ]
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer1 = wx.BoxSizer(wx.HORIZONTAL)
         for control in self.GetChildren():
@@ -177,6 +189,8 @@ class MediaGui(wx.Frame):
 
         descriptionItem = trackOptions.Append(-1, _("وصف الفيديو\tctrl+shift+d"))
         commentsItem = trackOptions.Append(-1, _("تعليقات الفيديو\tctrl+shift+m"))
+        jumpToTimeItem = trackOptions.Append(-1, _("الانتقال إلى وقت...\tctrl+g"))
+        fullScreenItem = trackOptions.Append(-1, _("ملء الشاشة\tf11"))
         equalizerItem = trackOptions.Append(-1, _("المعادل... \tctrl+e"))
         audioOutputDeviceItem = trackOptions.Append(-1, _("جهاز إخراج الصوت...\tf12"))
         self.likeItem = trackOptions.Append(-1, _("إعجاب (L)"))
@@ -185,12 +199,15 @@ class MediaGui(wx.Frame):
         browserItem = trackOptions.Append(-1, _("الفتح من خلال متصفح الإنترنت\tctrl+b"))
         channelItem = trackOptions.Append(-1, _("الانتقال إلى القناة\tctrl+shift+c"))
         settingsItem = trackOptions.Append(-1, _("الإعدادات...\talt+s"))
+        self.trackOptionsMenu = trackOptions
         hotKeys = wx.AcceleratorTable(
             [
                 (wx.ACCEL_CTRL, ord("D"), directDownloadItem.GetId()),
                 (wx.ACCEL_CTRL | wx.ACCEL_SHIFT, ord("D"), descriptionItem.GetId()),
                 (wx.ACCEL_CTRL | wx.ACCEL_SHIFT, ord("M"), commentsItem.GetId()),
+                (wx.ACCEL_CTRL, ord("G"), jumpToTimeItem.GetId()),
                 (wx.ACCEL_CTRL, ord("E"), equalizerItem.GetId()),
+                (wx.ACCEL_NORMAL, wx.WXK_F11, fullScreenItem.GetId()),
                 (wx.ACCEL_NORMAL, wx.WXK_F12, audioOutputDeviceItem.GetId()),
                 (wx.ACCEL_CTRL, ord("L"), copyItem.GetId()),
                 (wx.ACCEL_CTRL, ord("B"), browserItem.GetId()),
@@ -208,6 +225,8 @@ class MediaGui(wx.Frame):
         self.Bind(wx.EVT_MENU, self.onToggleSubtitles, self.subtitlesEnableItem)
         self.Bind(wx.EVT_MENU, self.onDescription, descriptionItem)
         self.Bind(wx.EVT_MENU, self.onComments, commentsItem)
+        self.Bind(wx.EVT_MENU, self.onJumpToTime, jumpToTimeItem)
+        self.Bind(wx.EVT_MENU, lambda event: self.toggleFullScreen(), fullScreenItem)
         self.Bind(wx.EVT_MENU, self.onEqualizer, equalizerItem)
         self.Bind(wx.EVT_MENU, self.onAudioOutputDevice, audioOutputDeviceItem)
         self.Bind(wx.EVT_MENU, self.onLike, self.likeItem)
@@ -218,6 +237,7 @@ class MediaGui(wx.Frame):
         self.Bind(wx.EVT_MENU, lambda event: SettingsDialog(self), settingsItem)
         self.Bind(wx.EVT_KEY_DOWN, self.onKeyDown)
         self.Bind(wx.EVT_CHAR_HOOK, self.onCharHook)
+        self.Bind(wx.EVT_CONTEXT_MENU, self.onContextMenu)
         self.prev_id = 100
         self.play_pause_id = 150
         self.next_id = 200
@@ -226,6 +246,7 @@ class MediaGui(wx.Frame):
             self.Bind(wx.EVT_HOTKEY, self.onHot, id=hot_id)
         for control in self.GetChildren():
             control.Bind(wx.EVT_KEY_DOWN, self.onKeyDown)
+            control.Bind(wx.EVT_CONTEXT_MENU, self.onContextMenu)
         previousButton.Bind(wx.EVT_BUTTON, lambda event: self.previous())
         beginingButton.Bind(wx.EVT_BUTTON, lambda event: self.beginingAction())
         rewindButton.Bind(wx.EVT_BUTTON, lambda event: self.rewindAction())
@@ -261,6 +282,8 @@ class MediaGui(wx.Frame):
             utils.show_error(_("لا يمكن تشغيل الرابط"), e, parent=self)
             self.closeAction()
             return
+        if config_get("player_fullscreen_default"):
+            wx.CallAfter(self.toggleFullScreen, True)
         Thread(target=self.fetch_qualities, daemon=True).start()
         Thread(target=self.fetch_chapters, daemon=True).start()
         Thread(target=self.fetch_subtitles, daemon=True).start()
@@ -778,12 +801,62 @@ class MediaGui(wx.Frame):
         ):
             self.player.media.play()
 
+    @has_player
+    def seek_to_seconds(self, seconds, label=None):
+        try:
+            seconds = max(0, int(seconds))
+        except TypeError, ValueError:
+            speak(_("صيغة الوقت غير صحيحة"))
+            return False
+
+        milliseconds = seconds * 1000
+        self.player.media.set_time(milliseconds)
+        self.last_spoken_subtitle_index = -1
+        label = label or format_timecode(seconds)
+        speak(_("الانتقال إلى {}").format(label))
+        return True
+
+    @has_player
+    def seek_to_timecode(self, value):
+        seconds = parse_timecode(value)
+        if seconds is None:
+            speak(_("صيغة الوقت غير صحيحة. استخدم مثلًا 2:47 أو 1:02:03"))
+            return False
+        return self.seek_to_seconds(seconds, format_timecode(seconds))
+
+    @has_player
+    def onJumpToTime(self, event=None):
+        current_value = ""
+        try:
+            current_ms = self.player.media.get_time()
+            if current_ms >= 0:
+                current_value = format_timecode(current_ms // 1000)
+        except Exception:
+            current_value = ""
+
+        dlg = wx.TextEntryDialog(
+            self,
+            _("أدخل الوقت بصيغة 2:47 أو 1:02:03"),
+            _("الانتقال إلى وقت"),
+            current_value,
+        )
+        try:
+            if dlg.ShowModal() != wx.ID_OK:
+                return
+            self.seek_to_timecode(dlg.GetValue())
+        finally:
+            dlg.Destroy()
+
     def onClose(self, event):
         self.closeAction()
 
     def onCharHook(self, event):
         if event.GetKeyCode() == wx.WXK_ESCAPE:
             self.closeAction()
+            return
+        if self._is_context_menu_key(event):
+            event.Skip(False)
+            self.onContextMenu(event)
             return
         event.Skip()
 
@@ -850,6 +923,41 @@ class MediaGui(wx.Frame):
         elif event.Id == self.next_id:
             self.next()
 
+    def onContextMenu(self, event=None):
+        if hasattr(self, "trackOptionsMenu"):
+            self.PopupMenu(self.trackOptionsMenu)
+
+    def toggleRepeatTracks(self, event=None):
+        if config_get("repeatTracks"):
+            config_set("repeatTracks", False)
+            speak(_("التكرار متوقف"))
+            return
+
+        config_set("repeatTracks", True)
+        config_set("autonext", False)
+        speak(_("التكرار مفعل"))
+
+    def toggleAutoNext(self, event=None):
+        if config_get("autonext"):
+            config_set("autonext", False)
+            speak(_("تشغيل المقطع التالي تلقائيًا متوقف"))
+            return
+
+        config_set("autonext", True)
+        config_set("repeatTracks", False)
+        speak(_("تشغيل المقطع التالي تلقائيًا مفعل"))
+
+    def _is_context_menu_key(self, event):
+        key = event.GetKeyCode()
+        f10_key = getattr(wx, "WXK_F10", None)
+        if isinstance(f10_key, int) and key == f10_key and event.ShiftDown():
+            return True
+        for key_name in ("WXK_MENU", "WXK_WINDOWS_MENU"):
+            key_code = getattr(wx, key_name, None)
+            if isinstance(key_code, int) and key == key_code:
+                return True
+        return False
+
     def onLike(self, event=None):
         if self.rating == "like":
             action = "remove_like"
@@ -898,7 +1006,10 @@ class MediaGui(wx.Frame):
 
     def onKeyDown(self, event):
         event.Skip()
-        if event.GetKeyCode() in (wx.WXK_SPACE, wx.WXK_PAUSE):
+        if self._is_context_menu_key(event):
+            event.Skip(False)
+            self.onContextMenu(event)
+        elif event.GetKeyCode() in (wx.WXK_SPACE, wx.WXK_PAUSE):
             self.playAction()
         elif event.GetKeyCode() == wx.WXK_RIGHT and not event.HasAnyModifiers():
             self.forwardAction()
@@ -915,6 +1026,16 @@ class MediaGui(wx.Frame):
         elif event.GetKeyCode() == wx.WXK_F12:
             event.Skip(False)
             self.onAudioOutputDevice(event)
+        elif event.GetKeyCode() == wx.WXK_F11:
+            event.Skip(False)
+            self.toggleFullScreen()
+        elif (
+            event.ControlDown()
+            and not event.ShiftDown()
+            and event.GetKeyCode() == ord("G")
+        ):
+            event.Skip(False)
+            self.onJumpToTime(event)
         elif event.GetKeyCode() == ord("L") and not event.HasAnyModifiers():
             self.onLike()
         elif event.GetKeyCode() == ord("D") and not event.HasAnyModifiers():
@@ -978,15 +1099,7 @@ class MediaGui(wx.Frame):
             config_set("seek", self.seek)
 
         elif event.GetKeyCode() == ord("R") and event.ControlDown():
-            if config_get("repeatTracks"):
-                config_set("repeatTracks", False)
-
-                speak(_("التكرار متوقف"))
-            else:
-                config_set("repeatTracks", True)
-
-                speak(_("التكرار مفعل"))
-                config_set("autonext", False)
+            self.toggleRepeatTracks()
 
         elif event.GetKeyCode() == ord("R"):
             if self.player is not None:
@@ -1021,22 +1134,14 @@ class MediaGui(wx.Frame):
                     speak(_("{} بالمائة").format(percentage))
 
         elif event.GetKeyCode() == ord("N"):
-            if config_get("autonext"):
-                config_set("autonext", False)
-
-                speak(_("تشغيل المقطع التالي تلقائيًا متوقف"))
-            else:
-                config_set("autonext", True)
-
-                speak(_("تشغيل المقطع التالي تلقائيًا مفعل"))
-                config_set("repeatTracks", False)
+            self.toggleAutoNext()
 
         elif event.GetKeyCode() in (wx.WXK_RETURN, wx.WXK_NUMPAD_ENTER):
             self.toggleFullScreen()
 
         elif event.GetKeyCode() == wx.WXK_ALT:
             if self.IsFullScreen():
-                self.ShowFullScreen(False)
+                self.toggleFullScreen(False)
 
         elif event.GetKeyCode() == wx.WXK_ESCAPE:
             self.closeAction()
@@ -1093,8 +1198,28 @@ class MediaGui(wx.Frame):
             ),
         )
 
-    def toggleFullScreen(self):
-        self.ShowFullScreen(not self.IsFullScreen())
+    def _set_player_controls_visible(self, visible):
+        for control in getattr(self, "_player_controls", []):
+            show = bool(visible)
+            if control in (self._previous_button, self._next_button):
+                show = show and self.results is not None
+            try:
+                control.Show(show)
+            except RuntimeError:
+                logger.debug("Could not update fullscreen controls", exc_info=True)
+        try:
+            self.Layout()
+        except RuntimeError:
+            logger.debug("Could not lay out fullscreen controls", exc_info=True)
+
+    def toggleFullScreen(self, show=None):
+        if show is None:
+            show = not self.IsFullScreen()
+        try:
+            self.ShowFullScreen(show, wx.FULLSCREEN_ALL)
+        except TypeError:
+            self.ShowFullScreen(show)
+        self._set_player_controls_visible(not show)
         if self.IsFullScreen():
             speak(_("وضع ملء الشاشة مفعل"))
         else:
@@ -1342,7 +1467,12 @@ class MediaGui(wx.Frame):
         Thread(target=extract_description_sync, daemon=True).start()
 
     def onComments(self, event):
-        CommentsDialog(self, video_url=self.url, title=self.title)
+        CommentsDialog(
+            self,
+            video_url=self.url,
+            title=self.title,
+            timestamp_callback=self.seek_to_seconds,
+        )
 
     def onEqualizer(self, event):
         from gui.equalizer_dialog import EqualizerDialog

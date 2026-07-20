@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-07-20 21:06+0200\n"
+"POT-Creation-Date: 2026-07-20 22:35+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -57,7 +57,7 @@ msgid "فتح مجلد التنزيل\tctrl+p"
 msgstr ""
 
 #: src/accessible_youtube_downloader_pro.py:248
-#: src/media_player/media_gui.py:187 src/youtube_browser/browser.py:107
+#: src/media_player/media_gui.py:201 src/youtube_browser/browser.py:107
 msgid "الإعدادات...\talt+s"
 msgstr ""
 
@@ -181,7 +181,7 @@ msgstr ""
 #: src/accessible_youtube_downloader_pro.py:520
 #: src/accessible_youtube_downloader_pro.py:585 src/gui/channel_dialog.py:372
 #: src/gui/channel_dialog.py:395 src/gui/history.py:167
-#: src/media_player/media_gui.py:238 src/media_player/media_gui.py:261
+#: src/media_player/media_gui.py:259 src/media_player/media_gui.py:282
 msgid "لا يمكن تشغيل الرابط"
 msgstr ""
 
@@ -221,12 +221,12 @@ msgstr ""
 msgid "البرنامج قيد التشغيل بالفعل."
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:776 src/gui/settings_dialog.py:466
+#: src/accessible_youtube_downloader_pro.py:776 src/gui/settings_dialog.py:541
 #: src/utils.py:986 src/utils.py:1003
 msgid "تنبيه"
 msgstr ""
 
-#: src/media_player/media_gui.py:386 src/utils.py:141
+#: src/media_player/media_gui.py:409 src/utils.py:141
 msgid "فصل بدون عنوان"
 msgstr ""
 
@@ -321,7 +321,7 @@ msgid ""
 "هل تريد التحديث الآن؟"
 msgstr ""
 
-#: src/gui/comments_dialog.py:13 src/utils.py:855 src/utils.py:910
+#: src/gui/comments_dialog.py:14 src/utils.py:855 src/utils.py:910
 #: src/utils.py:973 src/utils.py:1767 src/utils.py:2010
 #: src/youtube_browser/search_handler.py:110
 #: src/youtube_browser/search_handler.py:208
@@ -388,7 +388,7 @@ msgid ""
 "تنزيلها الآن؟"
 msgstr ""
 
-#: src/gui/comments_dialog.py:172 src/utils.py:1907
+#: src/gui/comments_dialog.py:187 src/utils.py:1907
 msgid "يرجى كتابة تعليق قبل النشر"
 msgstr ""
 
@@ -400,7 +400,7 @@ msgstr ""
 msgid "ملف الكوكيز لا يحتوي على جلسة يوتيوب مسجلة الدخول"
 msgstr ""
 
-#: src/gui/comments_dialog.py:201 src/utils.py:1912
+#: src/gui/comments_dialog.py:216 src/utils.py:1912
 msgid "تعذر نشر التعليق"
 msgstr ""
 
@@ -474,7 +474,7 @@ msgstr ""
 msgid "مباشر"
 msgstr ""
 
-#: src/media_player/media_gui.py:1050 src/utils.py:2011
+#: src/media_player/media_gui.py:1155 src/utils.py:2011
 #, python-brace-format
 msgid "المدة: {}"
 msgstr ""
@@ -497,7 +497,7 @@ msgstr ""
 msgid "أنت تعمل الآن على آخر تحديث متوفر من التطبيق"
 msgstr ""
 
-#: src/gui/settings_dialog.py:440 src/utils.py:2107
+#: src/gui/settings_dialog.py:515 src/utils.py:2107
 msgid "خطأ"
 msgstr ""
 
@@ -564,8 +564,8 @@ msgid "قائمة تشغيل"
 msgstr ""
 
 #: src/gui/auto_detect_dialog.py:14 src/gui/channel_dialog.py:31
-#: src/media_player/media_gui.py:291 src/media_player/media_gui.py:302
-#: src/media_player/media_gui.py:308 src/media_player/media_gui.py:1285
+#: src/media_player/media_gui.py:314 src/media_player/media_gui.py:325
+#: src/media_player/media_gui.py:331 src/media_player/media_gui.py:1410
 #: src/youtube_browser/search_handler.py:357
 #: src/youtube_browser/search_handler.py:367
 #: src/youtube_browser/search_handler.py:401
@@ -579,7 +579,7 @@ msgstr ""
 #: src/gui/download_dialog.py:29 src/gui/favorites.py:164
 #: src/gui/favorites.py:295 src/gui/history.py:208 src/gui/history.py:246
 #: src/gui/playlist_dialog.py:141 src/gui/playlist_dialog.py:354
-#: src/media_player/media_gui.py:150 src/youtube_browser/browser.py:130
+#: src/media_player/media_gui.py:162 src/youtube_browser/browser.py:130
 #: src/youtube_browser/browser.py:402
 msgid "فيديو"
 msgstr ""
@@ -601,7 +601,7 @@ msgstr ""
 #: src/gui/download_dialog.py:36 src/gui/favorites.py:41
 #: src/gui/favorites.py:170 src/gui/history.py:40 src/gui/history.py:214
 #: src/gui/playlist_dialog.py:36 src/gui/playlist_dialog.py:147
-#: src/gui/update_check_dialog.py:43 src/media_player/media_gui.py:155
+#: src/gui/update_check_dialog.py:43 src/media_player/media_gui.py:167
 #: src/youtube_browser/browser.py:71 src/youtube_browser/browser.py:137
 msgid "تنزيل"
 msgstr ""
@@ -626,7 +626,7 @@ msgstr ""
 msgid "العناصر: "
 msgstr ""
 
-#: src/gui/channel_dialog.py:55 src/gui/comments_dialog.py:73
+#: src/gui/channel_dialog.py:55 src/gui/comments_dialog.py:80
 msgid "تحميل المزيد"
 msgstr ""
 
@@ -644,13 +644,13 @@ msgstr ""
 #: src/gui/download_dialog.py:29 src/gui/favorites.py:168
 #: src/gui/favorites.py:299 src/gui/history.py:212 src/gui/history.py:250
 #: src/gui/playlist_dialog.py:145 src/gui/playlist_dialog.py:358
-#: src/media_player/media_gui.py:154 src/youtube_browser/browser.py:134
+#: src/media_player/media_gui.py:166 src/youtube_browser/browser.py:134
 #: src/youtube_browser/browser.py:406
 msgid "صوت"
 msgstr ""
 
 #: src/gui/channel_dialog.py:163 src/gui/favorites.py:173
-#: src/gui/playlist_dialog.py:150 src/media_player/media_gui.py:157
+#: src/gui/playlist_dialog.py:150 src/media_player/media_gui.py:169
 #: src/youtube_browser/browser.py:140
 msgid "التنزيل المباشر...\tctrl+d"
 msgstr ""
@@ -718,19 +718,19 @@ msgstr ""
 
 #: src/gui/channel_dialog.py:423 src/gui/favorites.py:279
 #: src/gui/history.py:302 src/gui/playlist_dialog.py:268
-#: src/media_player/media_gui.py:1300 src/youtube_browser/browser.py:445
+#: src/media_player/media_gui.py:1425 src/youtube_browser/browser.py:445
 msgid "جاري جلب الجودات المتاحة..."
 msgstr ""
 
 #: src/gui/channel_dialog.py:507 src/gui/favorites.py:245
 #: src/gui/history.py:320 src/gui/playlist_dialog.py:202
-#: src/media_player/media_gui.py:1272 src/youtube_browser/browser.py:463
+#: src/media_player/media_gui.py:1397 src/youtube_browser/browser.py:463
 msgid "تم نسخ رابط المقطع بنجاح"
 msgstr ""
 
 #: src/gui/channel_dialog.py:507 src/gui/favorites.py:245
 #: src/gui/history.py:320 src/gui/playlist_dialog.py:202
-#: src/media_player/media_gui.py:1272 src/youtube_browser/browser.py:463
+#: src/media_player/media_gui.py:1397 src/youtube_browser/browser.py:463
 msgid "اكتمال"
 msgstr ""
 
@@ -738,104 +738,125 @@ msgstr ""
 msgid "فتح"
 msgstr ""
 
-#: src/gui/comments_dialog.py:14
+#: src/gui/comments_dialog.py:15
 msgid "تاريخ غير معروف"
 msgstr ""
 
-#: src/gui/comments_dialog.py:19
+#: src/gui/comments_dialog.py:20
 msgid "تعليق فارغ"
 msgstr ""
 
-#: src/gui/comments_dialog.py:22
+#: src/gui/comments_dialog.py:23
 #, python-brace-format
 msgid ""
 "التعليق: {content}، المستخدم: {author}، التاريخ: {published_time}، "
 "الإعجابات: {likes}، الردود: {replies}"
 msgstr ""
 
-#: src/gui/comments_dialog.py:42
+#: src/gui/comments_dialog.py:44
 msgid "ردود التعليق"
 msgstr ""
 
-#: src/gui/comments_dialog.py:42
+#: src/gui/comments_dialog.py:44
 msgid "تعليقات الفيديو"
 msgstr ""
 
-#: src/gui/comments_dialog.py:55
+#: src/gui/comments_dialog.py:58
 msgid "الردود:"
 msgstr ""
 
-#: src/gui/comments_dialog.py:55
+#: src/gui/comments_dialog.py:58
 msgid "التعليقات:"
 msgstr ""
 
-#: src/gui/comments_dialog.py:57
+#: src/gui/comments_dialog.py:60
 #, python-brace-format
 msgid "تعليقات {}:"
 msgstr ""
 
-#: src/gui/comments_dialog.py:64
+#: src/gui/comments_dialog.py:71
 msgid "تعليق جديد:"
 msgstr ""
 
-#: src/gui/comments_dialog.py:72
+#: src/gui/comments_dialog.py:79
 msgid "نشر التعليق"
 msgstr ""
 
-#: src/gui/comments_dialog.py:74 src/gui/description.py:34
+#: src/gui/comments_dialog.py:81 src/gui/description.py:34
 #: src/gui/link_dlg.py:26 src/gui/search_dialog.py:32 src/gui/text_viewer.py:20
 msgid "إغلاق"
 msgstr ""
 
-#: src/gui/comments_dialog.py:109
+#: src/gui/comments_dialog.py:123
 msgid "جاري تحميل التعليقات..."
 msgstr ""
 
-#: src/gui/comments_dialog.py:110
+#: src/gui/comments_dialog.py:124
 msgid "جاري تحميل التعليقات"
 msgstr ""
 
-#: src/gui/comments_dialog.py:112
+#: src/gui/comments_dialog.py:126
 msgid "جاري تحميل المزيد من التعليقات"
 msgstr ""
 
-#: src/gui/comments_dialog.py:147
+#: src/gui/comments_dialog.py:161
 msgid "لا توجد ردود متاحة"
 msgstr ""
 
-#: src/gui/comments_dialog.py:149
+#: src/gui/comments_dialog.py:163
 msgid "لا توجد تعليقات متاحة"
 msgstr ""
 
-#: src/gui/comments_dialog.py:160
+#: src/gui/comments_dialog.py:175
 msgid "تم تحميل التعليقات"
 msgstr ""
 
-#: src/gui/comments_dialog.py:179
+#: src/gui/comments_dialog.py:194
 msgid "جاري نشر التعليق"
 msgstr ""
 
-#: src/gui/comments_dialog.py:195
+#: src/gui/comments_dialog.py:210
 msgid "تم نشر التعليق"
 msgstr ""
 
-#: src/gui/comments_dialog.py:212
+#: src/gui/comments_dialog.py:227
 msgid "أنت"
 msgstr ""
 
-#: src/gui/comments_dialog.py:214
+#: src/gui/comments_dialog.py:229
 msgid "الآن"
 msgstr ""
 
-#: src/gui/comments_dialog.py:232
+#: src/gui/comments_dialog.py:253
 msgid "لا توجد ردود لهذا التعليق"
 msgstr ""
 
-#: src/gui/comments_dialog.py:249
+#: src/gui/comments_dialog.py:290
+msgid "وقت في التعليق"
+msgstr ""
+
+#: src/gui/comments_dialog.py:316
+msgid "لا توجد أوقات في هذا التعليق"
+msgstr ""
+
+#: src/gui/comments_dialog.py:320
+msgid "لا يوجد مشغل متاح للانتقال إلى الوقت"
+msgstr ""
+
+#: src/gui/comments_dialog.py:333 src/media_player/media_gui.py:816
+#, python-brace-format
+msgid "الانتقال إلى {}"
+msgstr ""
+
+#: src/gui/comments_dialog.py:342
+msgid "فتح الردود"
+msgstr ""
+
+#: src/gui/comments_dialog.py:344
 msgid "نسخ نص التعليق"
 msgstr ""
 
-#: src/gui/comments_dialog.py:260
+#: src/gui/comments_dialog.py:355
 msgid "تم نسخ نص التعليق"
 msgstr ""
 
@@ -892,11 +913,11 @@ msgid "صيغة المقطع"
 msgstr ""
 
 #: src/gui/download_dialog.py:39 src/gui/download_dialog.py:91
-#: src/gui/settings_dialog.py:277
+#: src/gui/settings_dialog.py:340
 msgid "مسار مجلد التنزيل: "
 msgstr ""
 
-#: src/gui/download_dialog.py:84 src/gui/settings_dialog.py:396
+#: src/gui/download_dialog.py:84 src/gui/settings_dialog.py:471
 msgid "اختر مجلد التنزيل"
 msgstr ""
 
@@ -1076,8 +1097,8 @@ msgstr ""
 msgid "جودة الصوت"
 msgstr ""
 
-#: src/gui/quality_selection.py:16 src/media_player/media_gui.py:676
-#: src/media_player/media_gui.py:689
+#: src/gui/quality_selection.py:16 src/media_player/media_gui.py:699
+#: src/media_player/media_gui.py:712
 msgid "ك.ب/ث"
 msgstr ""
 
@@ -1141,203 +1162,207 @@ msgstr ""
 msgid "تباين عال داكن"
 msgstr ""
 
-#: src/gui/settings_dialog.py:37 src/media_player/media_gui.py:37
+#: src/gui/settings_dialog.py:37 src/media_player/media_gui.py:38
 msgid "جهاز إخراج الصوت الافتراضي"
 msgstr ""
 
-#: src/gui/settings_dialog.py:67
+#: src/gui/settings_dialog.py:123
 msgid "الإعدادات"
 msgstr ""
 
-#: src/gui/settings_dialog.py:77
+#: src/gui/settings_dialog.py:133
 msgid "لغة البرنامج: "
 msgstr ""
 
-#: src/gui/settings_dialog.py:93
+#: src/gui/settings_dialog.py:149
 msgid "&تغيير المسار"
 msgstr ""
 
-#: src/gui/settings_dialog.py:101
+#: src/gui/settings_dialog.py:157
 msgid "تغيير"
 msgstr ""
 
-#: src/gui/settings_dialog.py:102
+#: src/gui/settings_dialog.py:158
 msgid "حذف"
 msgstr ""
 
-#: src/gui/settings_dialog.py:103
+#: src/gui/settings_dialog.py:159
 msgid "التفضيلات العامة"
 msgstr ""
 
-#: src/gui/settings_dialog.py:107
+#: src/gui/settings_dialog.py:163
 msgid "اكتشاف الروابط تلقائيًا عند فتح البرنامج"
 msgstr ""
 
-#: src/gui/settings_dialog.py:113
+#: src/gui/settings_dialog.py:169
 msgid "الكشف عن التحديثات الجديدة تلقائيًا عند فتح البرنامج"
 msgstr ""
 
-#: src/gui/settings_dialog.py:120
+#: src/gui/settings_dialog.py:176
 msgid "تحميل المزيد من نتائج البحث عند الوصول إلى نهاية قائمة الفيديوهات المعروضة"
 msgstr ""
 
-#: src/gui/settings_dialog.py:127
+#: src/gui/settings_dialog.py:183
 msgid "تفعيل رسائل تصحيح الأخطاء للمطورين فقط"
 msgstr ""
 
-#: src/gui/settings_dialog.py:133
+#: src/gui/settings_dialog.py:189
 msgid "التشغيل في الخلفية ومراقبة الحافظة عند بدء تشغيل النظام"
 msgstr ""
 
-#: src/gui/settings_dialog.py:139
+#: src/gui/settings_dialog.py:195
 msgid "تفعيل التكامل الآمن مع إضافة المتصفح"
 msgstr ""
 
-#: src/gui/settings_dialog.py:150
+#: src/gui/settings_dialog.py:206
 msgid "مظهر البرنامج: "
 msgstr ""
 
-#: src/gui/settings_dialog.py:164
+#: src/gui/settings_dialog.py:220
 msgid "إعدادات التنزيل"
 msgstr ""
 
-#: src/gui/settings_dialog.py:165
+#: src/gui/settings_dialog.py:221
 msgid "صيغة التحميل المباشر: "
 msgstr ""
 
-#: src/gui/settings_dialog.py:170
+#: src/gui/settings_dialog.py:226
 msgid "فيديو (mp4)"
 msgstr ""
 
-#: src/gui/settings_dialog.py:170
+#: src/gui/settings_dialog.py:226
 msgid "صوت (m4a)"
 msgstr ""
 
-#: src/gui/settings_dialog.py:170
+#: src/gui/settings_dialog.py:226
 msgid "صوت (mp3)"
 msgstr ""
 
-#: src/gui/settings_dialog.py:174
+#: src/gui/settings_dialog.py:230
 msgid "جودة تحويل ملفات mp3: "
 msgstr ""
 
-#: src/gui/settings_dialog.py:179
+#: src/gui/settings_dialog.py:235
 msgid "96 ك.ب/ث"
 msgstr ""
 
-#: src/gui/settings_dialog.py:179
+#: src/gui/settings_dialog.py:235
 msgid "128 ك.ب/ث"
 msgstr ""
 
-#: src/gui/settings_dialog.py:179
+#: src/gui/settings_dialog.py:235
 msgid "192 ك.ب/ث"
 msgstr ""
 
-#: src/gui/settings_dialog.py:184
+#: src/gui/settings_dialog.py:240
 msgid "إعدادات المشغل"
 msgstr ""
 
-#: src/gui/settings_dialog.py:185
+#: src/gui/settings_dialog.py:241
 msgid "جودة الفيديو الافتراضية: "
 msgstr ""
 
-#: src/gui/settings_dialog.py:191
+#: src/gui/settings_dialog.py:247
 msgid "144ب"
 msgstr ""
 
-#: src/gui/settings_dialog.py:192
+#: src/gui/settings_dialog.py:248
 msgid "240ب"
 msgstr ""
 
-#: src/gui/settings_dialog.py:193
+#: src/gui/settings_dialog.py:249
 msgid "360ب"
 msgstr ""
 
-#: src/gui/settings_dialog.py:194
+#: src/gui/settings_dialog.py:250
 msgid "480ب"
 msgstr ""
 
-#: src/gui/settings_dialog.py:195
+#: src/gui/settings_dialog.py:251
 msgid "720ب"
 msgstr ""
 
-#: src/gui/settings_dialog.py:196
+#: src/gui/settings_dialog.py:252
 msgid "1080ب"
 msgstr ""
 
-#: src/gui/settings_dialog.py:197
+#: src/gui/settings_dialog.py:253
 msgid "1440ب"
 msgstr ""
 
-#: src/gui/settings_dialog.py:198
+#: src/gui/settings_dialog.py:254
 msgid "2160ب"
 msgstr ""
 
-#: src/gui/settings_dialog.py:203
+#: src/gui/settings_dialog.py:259
 msgid "جودة الصوت الافتراضية: "
 msgstr ""
 
-#: src/gui/settings_dialog.py:208
+#: src/gui/settings_dialog.py:264
 msgid "منخفضة"
 msgstr ""
 
-#: src/gui/settings_dialog.py:208
+#: src/gui/settings_dialog.py:264
 msgid "متوسطة"
 msgstr ""
 
-#: src/gui/settings_dialog.py:208
+#: src/gui/settings_dialog.py:264
 msgid "عالية"
 msgstr ""
 
-#: src/gui/settings_dialog.py:213 src/media_player/media_gui.py:41
+#: src/gui/settings_dialog.py:269 src/media_player/media_gui.py:42
 msgid "جهاز إخراج الصوت: "
 msgstr ""
 
-#: src/gui/settings_dialog.py:227
+#: src/gui/settings_dialog.py:283
 msgid "متابعة المشاهدة بعد إغلاق الفيديو وتشغيله من جديد"
 msgstr ""
 
-#: src/gui/settings_dialog.py:234
+#: src/gui/settings_dialog.py:290
+msgid "فتح مشغل الوسائط في وضع ملء الشاشة افتراضيًا"
+msgstr ""
+
+#: src/gui/settings_dialog.py:297
 msgid "إعادة تشغيل المقطع تلقائيًا عند انتهائه"
 msgstr ""
 
-#: src/gui/settings_dialog.py:240
+#: src/gui/settings_dialog.py:303
 msgid "الانتقال إلى المقطع التالي تلقائيًا عند انتهاء المقطع الحالي"
 msgstr ""
 
-#: src/gui/settings_dialog.py:245
+#: src/gui/settings_dialog.py:308
 msgid "إعدادات المعادل..."
 msgstr ""
 
-#: src/gui/settings_dialog.py:246
+#: src/gui/settings_dialog.py:309
 msgid "مقدار تغيير سرعة التشغيل: "
 msgstr ""
 
-#: src/gui/settings_dialog.py:259 src/media_player/media_gui.py:48
+#: src/gui/settings_dialog.py:322 src/media_player/media_gui.py:49
 msgid "مواف&ق"
 msgstr ""
 
-#: src/gui/settings_dialog.py:261 src/media_player/media_gui.py:50
+#: src/gui/settings_dialog.py:324 src/media_player/media_gui.py:51
 msgid "إل&غاء"
 msgstr ""
 
-#: src/gui/settings_dialog.py:287
+#: src/gui/settings_dialog.py:350
 msgid "مسار ملف الكوكيز: "
 msgstr ""
 
-#: src/gui/settings_dialog.py:406
+#: src/gui/settings_dialog.py:481
 msgid "ملفات نصية (*.txt)|*.txt"
 msgstr ""
 
-#: src/gui/settings_dialog.py:409
+#: src/gui/settings_dialog.py:484
 msgid "اختر ملف الكوكيز"
 msgstr ""
 
-#: src/gui/settings_dialog.py:439
+#: src/gui/settings_dialog.py:514
 msgid "تعذر تحديث تكامل المتصفح في Windows."
 msgstr ""
 
-#: src/gui/settings_dialog.py:464
+#: src/gui/settings_dialog.py:539
 #, python-brace-format
 msgid ""
 "لقد قمت بتغيير لغة البرنامج إلى {}, مما يعني أنه ينبغي عليك إعادة تشغيل "
@@ -1430,300 +1455,324 @@ msgid ""
 "أو تواصل مع المطور للإبلاغ بالمشكلة"
 msgstr ""
 
-#: src/media_player/media_gui.py:34
+#: src/media_player/media_gui.py:35
 msgid "جهاز إخراج الصوت"
 msgstr ""
 
-#: src/media_player/media_gui.py:128
+#: src/media_player/media_gui.py:130
 msgid "المقطع السابق"
 msgstr ""
 
-#: src/media_player/media_gui.py:130 src/media_player/media_gui.py:773
+#: src/media_player/media_gui.py:132 src/media_player/media_gui.py:796
 msgid "بداية المقطع"
 msgstr ""
 
-#: src/media_player/media_gui.py:131
+#: src/media_player/media_gui.py:133
 msgid "إرجاع المقطع <"
 msgstr ""
 
-#: src/media_player/media_gui.py:132
+#: src/media_player/media_gui.py:134
 msgid "تشغيل\\إيقاف"
 msgstr ""
 
-#: src/media_player/media_gui.py:133
+#: src/media_player/media_gui.py:135
 msgid "تقديم المقطع >"
 msgstr ""
 
-#: src/media_player/media_gui.py:134
+#: src/media_player/media_gui.py:136
 msgid "المقطع التالي"
 msgstr ""
 
-#: src/media_player/media_gui.py:160 src/media_player/media_gui.py:165
-#: src/media_player/media_gui.py:174 src/media_player/media_gui.py:624
-#: src/media_player/media_gui.py:1185 src/media_player/media_gui.py:1189
+#: src/media_player/media_gui.py:172 src/media_player/media_gui.py:177
+#: src/media_player/media_gui.py:186 src/media_player/media_gui.py:647
+#: src/media_player/media_gui.py:1310 src/media_player/media_gui.py:1314
 msgid "جاري التحميل..."
 msgstr ""
 
-#: src/media_player/media_gui.py:162
+#: src/media_player/media_gui.py:174
 msgid "جودة التشغيل"
 msgstr ""
 
-#: src/media_player/media_gui.py:167
+#: src/media_player/media_gui.py:179
 msgid "الفصول"
 msgstr ""
 
-#: src/media_player/media_gui.py:171
+#: src/media_player/media_gui.py:183
 msgid "تشغيل الترجمة"
 msgstr ""
 
-#: src/media_player/media_gui.py:175
+#: src/media_player/media_gui.py:187
 msgid "لغة الترجمة"
 msgstr ""
 
-#: src/media_player/media_gui.py:176 src/media_player/media_gui.py:523
+#: src/media_player/media_gui.py:188 src/media_player/media_gui.py:546
 msgid "الترجمة"
 msgstr ""
 
-#: src/media_player/media_gui.py:178
+#: src/media_player/media_gui.py:190
 msgid "وصف الفيديو\tctrl+shift+d"
 msgstr ""
 
-#: src/media_player/media_gui.py:179
+#: src/media_player/media_gui.py:191
 msgid "تعليقات الفيديو\tctrl+shift+m"
 msgstr ""
 
-#: src/media_player/media_gui.py:180
+#: src/media_player/media_gui.py:192
+msgid "الانتقال إلى وقت...\tctrl+g"
+msgstr ""
+
+#: src/media_player/media_gui.py:193
+msgid "ملء الشاشة\tf11"
+msgstr ""
+
+#: src/media_player/media_gui.py:194
 msgid "المعادل... \tctrl+e"
 msgstr ""
 
-#: src/media_player/media_gui.py:181
+#: src/media_player/media_gui.py:195
 msgid "جهاز إخراج الصوت...\tf12"
 msgstr ""
 
-#: src/media_player/media_gui.py:182
+#: src/media_player/media_gui.py:196
 msgid "إعجاب (L)"
 msgstr ""
 
-#: src/media_player/media_gui.py:183
+#: src/media_player/media_gui.py:197
 msgid "عدم إعجاب (D)"
 msgstr ""
 
-#: src/media_player/media_gui.py:184
+#: src/media_player/media_gui.py:198
 msgid "نسخ رابط المقطع\tctrl+l"
 msgstr ""
 
-#: src/media_player/media_gui.py:185
+#: src/media_player/media_gui.py:199
 msgid "الفتح من خلال متصفح الإنترنت\tctrl+b"
 msgstr ""
 
-#: src/media_player/media_gui.py:186
+#: src/media_player/media_gui.py:200
 msgid "الانتقال إلى القناة\tctrl+shift+c"
 msgstr ""
 
-#: src/media_player/media_gui.py:202
+#: src/media_player/media_gui.py:219
 msgid "خيارات المقطع"
 msgstr ""
 
-#: src/media_player/media_gui.py:382
+#: src/media_player/media_gui.py:405
 msgid "لا توجد فصول متاحة"
 msgstr ""
 
-#: src/media_player/media_gui.py:405
+#: src/media_player/media_gui.py:428
 #, python-brace-format
 msgid "الانتقال إلى {} في {}"
 msgstr ""
 
-#: src/media_player/media_gui.py:418 src/media_player/media_gui.py:467
+#: src/media_player/media_gui.py:441 src/media_player/media_gui.py:490
 msgid "لا توجد ترجمات متاحة"
 msgstr ""
 
-#: src/media_player/media_gui.py:475
+#: src/media_player/media_gui.py:498
 msgid "اختر لغة الترجمة من القائمة"
 msgstr ""
 
-#: src/media_player/media_gui.py:484 src/media_player/media_gui.py:510
+#: src/media_player/media_gui.py:507 src/media_player/media_gui.py:533
 #, python-brace-format
 msgid "جاري تحميل الترجمة: {}"
 msgstr ""
 
-#: src/media_player/media_gui.py:497
+#: src/media_player/media_gui.py:520
 msgid "لغة الترجمة غير متاحة"
 msgstr ""
 
-#: src/media_player/media_gui.py:524
+#: src/media_player/media_gui.py:547
 #, python-brace-format
 msgid "الترجمة مفعلة: {}"
 msgstr ""
 
-#: src/media_player/media_gui.py:526
+#: src/media_player/media_gui.py:549
 msgid "الترجمة متوقفة"
 msgstr ""
 
-#: src/media_player/media_gui.py:578
+#: src/media_player/media_gui.py:601
 msgid "تعذر تحميل نص الترجمة"
 msgstr ""
 
-#: src/media_player/media_gui.py:581
+#: src/media_player/media_gui.py:604
 #, python-brace-format
 msgid "تم تفعيل الترجمة: {}"
 msgstr ""
 
-#: src/media_player/media_gui.py:672
+#: src/media_player/media_gui.py:695
 msgid "لا توجد جودات متاحة"
 msgstr ""
 
-#: src/media_player/media_gui.py:676 src/media_player/media_gui.py:689
+#: src/media_player/media_gui.py:699 src/media_player/media_gui.py:712
 msgid "ب"
 msgstr ""
 
-#: src/media_player/media_gui.py:690
+#: src/media_player/media_gui.py:713
 #, python-brace-format
 msgid "جاري تغيير الجودة إلى {}"
 msgstr ""
 
-#: src/media_player/media_gui.py:718
+#: src/media_player/media_gui.py:741
 msgid "تعذر تغيير الجودة"
 msgstr ""
 
-#: src/media_player/media_gui.py:768 src/media_player/media_gui.py:959
+#: src/media_player/media_gui.py:791 src/media_player/media_gui.py:1080
 #, python-brace-format
 msgid "الوقت المنقضي: {}"
 msgstr ""
 
-#: src/media_player/media_gui.py:856 src/media_player/media_gui.py:868
-msgid "تمت إزالة التقييم"
+#: src/media_player/media_gui.py:809
+msgid "صيغة الوقت غير صحيحة"
 msgstr ""
 
-#: src/media_player/media_gui.py:860
-msgid "تم الإعجاب"
+#: src/media_player/media_gui.py:823
+msgid "صيغة الوقت غير صحيحة. استخدم مثلًا 2:47 أو 1:02:03"
 msgstr ""
 
-#: src/media_player/media_gui.py:872
-msgid "تم عدم الإعجاب"
+#: src/media_player/media_gui.py:839
+msgid "أدخل الوقت بصيغة 2:47 أو 1:02:03"
 msgstr ""
 
-#: src/media_player/media_gui.py:879
-msgid "جاري تحديث التقييم"
+#: src/media_player/media_gui.py:840
+msgid "الانتقال إلى وقت"
 msgstr ""
 
-#: src/media_player/media_gui.py:895
-msgid "تعذر تحديث التقييم"
+#: src/media_player/media_gui.py:933
+msgid "التكرار متوقف"
+msgstr ""
+
+#: src/media_player/media_gui.py:938
+msgid "التكرار مفعل"
+msgstr ""
+
+#: src/media_player/media_gui.py:943
+msgid "تشغيل المقطع التالي تلقائيًا متوقف"
 msgstr ""
 
 #: src/media_player/media_gui.py:948
+msgid "تشغيل المقطع التالي تلقائيًا مفعل"
+msgstr ""
+
+#: src/media_player/media_gui.py:964 src/media_player/media_gui.py:976
+msgid "تمت إزالة التقييم"
+msgstr ""
+
+#: src/media_player/media_gui.py:968
+msgid "تم الإعجاب"
+msgstr ""
+
+#: src/media_player/media_gui.py:980
+msgid "تم عدم الإعجاب"
+msgstr ""
+
+#: src/media_player/media_gui.py:987
+msgid "جاري تحديث التقييم"
+msgstr ""
+
+#: src/media_player/media_gui.py:1003
+msgid "تعذر تحديث التقييم"
+msgstr ""
+
+#: src/media_player/media_gui.py:1069
 #, python-brace-format
 msgid "{} إعجاب"
 msgstr ""
 
-#: src/media_player/media_gui.py:950
+#: src/media_player/media_gui.py:1071
 msgid "معلومات الإعجابات غير متوفرة بعد"
 msgstr ""
 
-#: src/media_player/media_gui.py:957 src/media_player/media_gui.py:995
-#: src/media_player/media_gui.py:1003 src/media_player/media_gui.py:1011
-#: src/media_player/media_gui.py:1019 src/media_player/media_gui.py:1048
+#: src/media_player/media_gui.py:1078 src/media_player/media_gui.py:1108
+#: src/media_player/media_gui.py:1116 src/media_player/media_gui.py:1124
+#: src/media_player/media_gui.py:1132 src/media_player/media_gui.py:1153
 msgid "جاري جلب المعلومات..."
 msgstr ""
 
-#: src/media_player/media_gui.py:966 src/media_player/media_gui.py:976
+#: src/media_player/media_gui.py:1087 src/media_player/media_gui.py:1097
 msgid "تحريك المقطع"
 msgstr ""
 
-#: src/media_player/media_gui.py:966 src/media_player/media_gui.py:976
+#: src/media_player/media_gui.py:1087 src/media_player/media_gui.py:1097
 msgid "ثانية/ثواني"
 msgstr ""
 
-#: src/media_player/media_gui.py:984
-msgid "التكرار متوقف"
-msgstr ""
-
-#: src/media_player/media_gui.py:988
-msgid "التكرار مفعل"
-msgstr ""
-
-#: src/media_player/media_gui.py:997
+#: src/media_player/media_gui.py:1110
 #, python-brace-format
 msgid "المتبقي: {}"
 msgstr ""
 
-#: src/media_player/media_gui.py:1005
+#: src/media_player/media_gui.py:1118
 #, python-brace-format
 msgid "المنقضي: {}"
 msgstr ""
 
-#: src/media_player/media_gui.py:1013
+#: src/media_player/media_gui.py:1126
 #, python-brace-format
 msgid "الإجمالي: {}"
 msgstr ""
 
-#: src/media_player/media_gui.py:1021
+#: src/media_player/media_gui.py:1134
 #, python-brace-format
 msgid "{} بالمائة"
 msgstr ""
 
-#: src/media_player/media_gui.py:1027
-msgid "تشغيل المقطع التالي تلقائيًا متوقف"
-msgstr ""
-
-#: src/media_player/media_gui.py:1031
-msgid "تشغيل المقطع التالي تلقائيًا مفعل"
-msgstr ""
-
-#: src/media_player/media_gui.py:1077
+#: src/media_player/media_gui.py:1182
 #, python-brace-format
 msgid "تم تغيير جهاز إخراج الصوت إلى {}"
 msgstr ""
 
-#: src/media_player/media_gui.py:1082 src/media_player/media_gui.py:1092
+#: src/media_player/media_gui.py:1187 src/media_player/media_gui.py:1197
 msgid "جهاز إخراج الصوت المحدد غير متاح. سيتم استخدام جهاز إخراج الصوت الافتراضي"
 msgstr ""
 
-#: src/media_player/media_gui.py:1099
+#: src/media_player/media_gui.py:1224
 msgid "وضع ملء الشاشة مفعل"
 msgstr ""
 
-#: src/media_player/media_gui.py:1101
+#: src/media_player/media_gui.py:1226
 msgid "وضع ملء الشاشة متوقف"
 msgstr ""
 
-#: src/media_player/media_gui.py:1117
+#: src/media_player/media_gui.py:1242
 #, python-brace-format
 msgid "جاري تشغيل {}"
 msgstr ""
 
-#: src/media_player/media_gui.py:1139
+#: src/media_player/media_gui.py:1264
 msgid "تعذر جلب رابط التشغيل لهذا المقطع"
 msgstr ""
 
-#: src/media_player/media_gui.py:1150
+#: src/media_player/media_gui.py:1275
 msgid "حدث خطأ أثناء محاولة جلب رابط التشغيل"
 msgstr ""
 
-#: src/media_player/media_gui.py:1215
+#: src/media_player/media_gui.py:1340
 msgid "نهاية القائمة"
 msgstr ""
 
-#: src/media_player/media_gui.py:1263
+#: src/media_player/media_gui.py:1388
 msgid "بداية القائمة"
 msgstr ""
 
-#: src/media_player/media_gui.py:1275
+#: src/media_player/media_gui.py:1400
 msgid "جاري الفتح"
 msgstr ""
 
-#: src/media_player/media_gui.py:1281
+#: src/media_player/media_gui.py:1406
 msgid "رابط القناة غير متوفر"
 msgstr ""
 
-#: src/media_player/media_gui.py:1327
+#: src/media_player/media_gui.py:1452
 msgid "يتم الآن جلب وصف الفيديو"
 msgstr ""
 
-#: src/media_player/media_gui.py:1333
+#: src/media_player/media_gui.py:1458
 msgid "تعذر جلب وصف الفيديو"
 msgstr ""
 
-#: src/media_player/media_gui.py:1340
+#: src/media_player/media_gui.py:1465
 msgid "هناك خطأ ما أدى إلى منع جلب وصف الفيديو"
 msgstr ""
 

@@ -2,9 +2,7 @@ import configparser
 import os
 import threading
 from language_handler import get_default_language
-from paths import settings_path
-
-# settings_path = os.path.join(os.getenv("appdata"), "accessible youtube downloader pro")
+from paths import legacy_settings_paths, settings_path
 
 defaults = {
     "path": f"{os.getenv('USERPROFILE')}\\downloads\\HexPlayer",
@@ -24,6 +22,7 @@ defaults = {
     "defaultvideoquality": 4,
     "defaultaudioquality": 2,
     "audiooutputdevice": "",
+    "player_fullscreen_default": False,
     "debug": False,
     "background_monitoring": False,
     "browser_integration": False,
@@ -36,9 +35,61 @@ defaults = {
 }
 
 _cache = {}
-_config = configparser.ConfigParser()
+_default_key_map = {key.casefold(): key for key in defaults}
 _save_timer = None
 _lock = threading.Lock()
+
+
+def _new_config():
+    config = configparser.ConfigParser()
+    config.optionxform = str
+    return config
+
+
+_config = _new_config()
+
+
+def _canonical_key(key):
+    return _default_key_map.get(str(key).casefold(), str(key))
+
+
+def _settings_file(path):
+    return os.path.join(path, "settings.ini")
+
+
+def _candidate_settings_files():
+    paths = [settings_path]
+    for path in legacy_settings_paths:
+        if path not in paths:
+            paths.append(path)
+    files = []
+    for path in paths:
+        settings_file = _settings_file(path)
+        if os.path.exists(settings_file):
+            files.append(settings_file)
+    files.sort(key=lambda path: os.path.getmtime(path), reverse=True)
+    return files
+
+
+def _sync_config_from_cache():
+    global _config
+    _config = _new_config()
+    _config.add_section("settings")
+    written = set()
+    for key in defaults:
+        if key in _cache:
+            _config["settings"][key] = str(_cache[key])
+            written.add(key)
+    for key, value in _cache.items():
+        if key not in written:
+            _config["settings"][key] = str(value)
+
+
+def _write_settings_now():
+    os.makedirs(settings_path, exist_ok=True)
+    settings_file = _settings_file(settings_path)
+    with open(settings_file, "w", encoding="utf-8") as file:
+        _config.write(file)
 
 
 def config_initialization():
@@ -46,47 +97,42 @@ def config_initialization():
         os.makedirs(settings_path, exist_ok=True)
     except Exception:
         pass
-    settings_file = os.path.join(settings_path, "settings.ini")
-    if not os.path.exists(settings_file):
-        config = configparser.ConfigParser()
-        config.add_section("settings")
-        for key, value in defaults.items():
-            config["settings"][key] = str(value)
-        try:
-            with open(settings_file, "w", encoding="utf-8") as file:
-                config.write(file)
-        except Exception:
-            pass
     _load_cache()
+    try:
+        _write_settings_now()
+    except Exception:
+        pass
 
 
 def _load_cache():
     global _cache, _config
-    settings_file = os.path.join(settings_path, "settings.ini")
-    if not os.path.exists(settings_file):
-        _cache = defaults.copy()
-        return
-    _config.read(settings_file, encoding="utf-8")
-    if "settings" not in _config:
-        _cache = defaults.copy()
-        return
-    for key in _config["settings"]:
-        _cache[key] = string_to_bool(_config["settings"][key])
-    # Ensure all defaults are present
+    _cache = {}
+    for settings_file in _candidate_settings_files():
+        config = _new_config()
+        config.read(settings_file, encoding="utf-8")
+        if "settings" not in config:
+            continue
+        for key in config["settings"]:
+            canonical_key = _canonical_key(key)
+            if canonical_key not in _cache:
+                _cache[canonical_key] = string_to_bool(config["settings"][key])
+
     for key, value in defaults.items():
         if key not in _cache:
             _cache[key] = value
+    _sync_config_from_cache()
 
 
 def string_to_bool(string):
-    if string == "True":
+    text = str(string).strip()
+    if text.casefold() == "true":
         return True
-    elif string == "False":
+    elif text.casefold() == "false":
         return False
     try:
-        if string.isdigit():
-            return int(string)
-        return float(string)
+        if text.isdigit():
+            return int(text)
+        return float(text)
     except ValueError:
         return string
 
@@ -94,6 +140,7 @@ def string_to_bool(string):
 def config_get(key):
     if not _cache:
         _load_cache()
+    key = _canonical_key(key)
     if key in _cache:
         return _cache[key]
     # Fallback to defaults if key not found
@@ -109,16 +156,15 @@ def save_settings():
         if _save_timer:
             _save_timer.cancel()
             _save_timer = None
-        settings_file = os.path.join(settings_path, "settings.ini")
         try:
-            with open(settings_file, "w", encoding="utf-8") as file:
-                _config.write(file)
+            _write_settings_now()
         except Exception:
             pass
 
 
 def config_set(key, value):
     global _save_timer
+    key = _canonical_key(key)
     _cache[key] = value
     with _lock:
         if "settings" not in _config:

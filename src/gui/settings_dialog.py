@@ -62,6 +62,62 @@ def _set_accessible_name(control, label):
         control.SetName(name)
 
 
+_WX_ACCESSIBLE_BASE = getattr(wx, "Accessible", None)
+if not isinstance(_WX_ACCESSIBLE_BASE, type):
+    _WX_ACCESSIBLE_BASE = object
+
+
+def _wx_constant(name, fallback):
+    value = getattr(wx, name, fallback)
+    return value if isinstance(value, int) else fallback
+
+
+class CheckBoxAccessible(_WX_ACCESSIBLE_BASE):
+    def __init__(self, control):
+        if _WX_ACCESSIBLE_BASE is object:
+            super().__init__()
+        else:
+            super().__init__(control)
+        self.control = control
+
+    def GetName(self, child_id):
+        label = getattr(self.control, "_accessible_label", "")
+        get_label = getattr(self.control, "GetLabel", None)
+        if not label and callable(get_label):
+            label = get_label()
+        return _wx_constant("ACC_OK", 0), _accessible_name(label)
+
+    def GetRole(self, child_id):
+        return _wx_constant("ACC_OK", 0), _wx_constant("ROLE_SYSTEM_CHECKBUTTON", 0x2C)
+
+    def GetState(self, child_id):
+        state = _wx_constant("ACC_STATE_SYSTEM_FOCUSABLE", 0x100000)
+        get_value = getattr(self.control, "GetValue", None)
+        if callable(get_value) and get_value():
+            state |= _wx_constant("ACC_STATE_SYSTEM_CHECKED", 0x10)
+        is_enabled = getattr(self.control, "IsEnabled", None)
+        if callable(is_enabled) and not is_enabled():
+            state |= _wx_constant("ACC_STATE_SYSTEM_UNAVAILABLE", 0x1)
+        has_focus = getattr(self.control, "HasFocus", None)
+        if callable(has_focus) and has_focus():
+            state |= _wx_constant("ACC_STATE_SYSTEM_FOCUSED", 0x4)
+        return _wx_constant("ACC_OK", 0), state
+
+
+class SettingsCheckBox(wx.CheckBox):
+    def __init__(self, parent, id, label, **kwargs):
+        super().__init__(parent, id, label, **kwargs)
+        self._accessible_label = _accessible_name(label)
+        self._accessible = None
+        set_accessible = getattr(self, "SetAccessible", None)
+        if callable(set_accessible) and _WX_ACCESSIBLE_BASE is not object:
+            try:
+                self._accessible = CheckBoxAccessible(self)
+                set_accessible(self._accessible)
+            except Exception:
+                self._accessible = None
+
+
 class SettingsDialog(wx.Dialog):
     def __init__(self, parent):
         wx.Dialog.__init__(self, parent, title=_("الإعدادات"))
@@ -101,19 +157,19 @@ class SettingsDialog(wx.Dialog):
         changeCookiesButton = wx.Button(panel, -1, _("تغيير"), name="cookies")
         clearCookiesButton = wx.Button(panel, -1, _("حذف"), name="cookies")
         preferencesBox = wx.StaticBox(panel, -1, _("التفضيلات العامة"))
-        self.autoDetectItem = wx.CheckBox(
+        self.autoDetectItem = SettingsCheckBox(
             panel,
             -1,
             _("اكتشاف الروابط تلقائيًا عند فتح البرنامج"),
             name="autodetect",
         )
-        self.autoCheckForUpdates = wx.CheckBox(
+        self.autoCheckForUpdates = SettingsCheckBox(
             panel,
             -1,
             _("الكشف عن التحديثات الجديدة تلقائيًا عند فتح البرنامج"),
             name="checkupdates",
         )
-        self.autoLoadItem = wx.CheckBox(
+        self.autoLoadItem = SettingsCheckBox(
             panel,
             -1,
             _(
@@ -121,19 +177,19 @@ class SettingsDialog(wx.Dialog):
             ),
             name="autoload",
         )
-        self.debugMode = wx.CheckBox(
+        self.debugMode = SettingsCheckBox(
             panel,
             -1,
             _("تفعيل رسائل تصحيح الأخطاء للمطورين فقط"),
             name="debug",
         )
-        self.backgroundMonitoring = wx.CheckBox(
+        self.backgroundMonitoring = SettingsCheckBox(
             panel,
             -1,
             _("التشغيل في الخلفية ومراقبة الحافظة عند بدء تشغيل النظام"),
             name="background_monitoring",
         )
-        self.browserIntegration = wx.CheckBox(
+        self.browserIntegration = SettingsCheckBox(
             panel,
             -1,
             _("تفعيل التكامل الآمن مع إضافة المتصفح"),
@@ -221,27 +277,34 @@ class SettingsDialog(wx.Dialog):
         self.audioOutputDevice.Selection = self.getAudioOutputDeviceSelection(
             config_get("audiooutputdevice")
         )
-        self.continueWatching = wx.CheckBox(
+        self.continueWatching = SettingsCheckBox(
             panel,
             -1,
             _("متابعة المشاهدة بعد إغلاق الفيديو وتشغيله من جديد"),
             name="continue",
         )
-        self.continueWatching.Value = config_get("continue")
-        self.repeateTracks = wx.CheckBox(
+        self.continueWatching.SetValue(config_get("continue"))
+        self.openPlayerFullscreen = SettingsCheckBox(
+            panel,
+            -1,
+            _("فتح مشغل الوسائط في وضع ملء الشاشة افتراضيًا"),
+            name="player_fullscreen_default",
+        )
+        self.openPlayerFullscreen.SetValue(config_get("player_fullscreen_default"))
+        self.repeateTracks = SettingsCheckBox(
             panel,
             -1,
             _("إعادة تشغيل المقطع تلقائيًا عند انتهائه"),
             name="repeatTracks",
         )
-        self.autoPlayNext = wx.CheckBox(
+        self.autoPlayNext = SettingsCheckBox(
             panel,
             -1,
             _("الانتقال إلى المقطع التالي تلقائيًا عند انتهاء المقطع الحالي"),
             name="autonext",
         )
-        self.autoPlayNext.Value = config_get("autonext")
-        self.repeateTracks.Value = config_get("repeatTracks")
+        self.autoPlayNext.SetValue(config_get("autonext"))
+        self.repeateTracks.SetValue(config_get("repeatTracks"))
         self.eqButton = wx.Button(panel, -1, _("إعدادات المعادل..."))
         playback_speed_label_text = _("مقدار تغيير سرعة التشغيل: ")
         self.playbackSpeedStepLabel = wx.StaticText(
@@ -325,6 +388,7 @@ class SettingsDialog(wx.Dialog):
         add_row(player_grid, self.playbackSpeedStepLabel, self.playbackSpeedStep)
         playerOptionsSizer.Add(player_grid, 0, wx.EXPAND | wx.ALL, 5)
         playerOptionsSizer.Add(self.continueWatching, 0, wx.EXPAND | wx.ALL, 5)
+        playerOptionsSizer.Add(self.openPlayerFullscreen, 0, wx.EXPAND | wx.ALL, 5)
         playerOptionsSizer.Add(self.repeateTracks, 0, wx.EXPAND | wx.ALL, 5)
         playerOptionsSizer.Add(self.autoPlayNext, 0, wx.EXPAND | wx.ALL, 5)
         playerOptionsSizer.Add(self.eqButton, 0, wx.EXPAND | wx.ALL, 5)
@@ -354,6 +418,7 @@ class SettingsDialog(wx.Dialog):
         self.repeateTracks.Bind(wx.EVT_CHECKBOX, self.onCheck)
         self.autoPlayNext.Bind(wx.EVT_CHECKBOX, self.onCheck)
         self.continueWatching.Bind(wx.EVT_CHECKBOX, self.onCheck)
+        self.openPlayerFullscreen.Bind(wx.EVT_CHECKBOX, self.onCheck)
         self.eqButton.Bind(wx.EVT_BUTTON, self.onEqualizer)
         self.themeBox.Bind(wx.EVT_CHOICE, self.onThemeChange)
         okButton.Bind(wx.EVT_BUTTON, self.onOk)
@@ -381,15 +446,25 @@ class SettingsDialog(wx.Dialog):
 
     def onCheck(self, event):
         obj = event.EventObject
-        if all((self.repeateTracks.Value, self.autoPlayNext.Value)) and obj in (
-            self.repeateTracks,
-            self.autoPlayNext,
-        ):
-            self.repeateTracks.Value = self.autoPlayNext.Value = False
-        if obj.Name in self.preferences and config_get(obj.Name) == obj.Value:
-            del self.preferences[obj.Name]
-        elif not obj.Value == config_get(obj.Name):
-            self.preferences[obj.Name] = obj.Value
+        if obj is self.repeateTracks and self._checkbox_value(self.repeateTracks):
+            self.autoPlayNext.SetValue(False)
+            self._queue_checkbox_preference(self.autoPlayNext)
+        elif obj is self.autoPlayNext and self._checkbox_value(self.autoPlayNext):
+            self.repeateTracks.SetValue(False)
+            self._queue_checkbox_preference(self.repeateTracks)
+        self._queue_checkbox_preference(obj)
+
+    def _checkbox_value(self, control):
+        if hasattr(control, "GetValue"):
+            return control.GetValue()
+        return control.Value
+
+    def _queue_checkbox_preference(self, control):
+        value = self._checkbox_value(control)
+        if control.Name in self.preferences and config_get(control.Name) == value:
+            del self.preferences[control.Name]
+        elif value != config_get(control.Name):
+            self.preferences[control.Name] = value
 
     def onChange(self, event):
         new = wx.DirSelector(

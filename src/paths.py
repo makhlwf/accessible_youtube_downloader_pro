@@ -17,9 +17,16 @@ def get_bundled_data_path():
     return main_path
 
 
-settings_path = os.path.join(
-    os.getenv("appdata") or os.path.expanduser("~/.HexPlayer"), "HexPlayer"
-)
+settings_root = os.getenv("APPDATA") or os.getenv("appdata")
+if not settings_root:
+    settings_root = os.path.expanduser("~/.HexPlayer")
+
+settings_path = os.path.join(settings_root, "HexPlayer")
+legacy_settings_paths = [
+    os.path.join(settings_root, "accessible youtube downloader pro"),
+    os.path.join(settings_root, "Accessible YouTube Downloader Pro"),
+    os.path.join(settings_root, "accessible_youtube_downloader_pro"),
+]
 update_path = os.path.join(settings_path, "updates")
 db_path = os.path.join(settings_path, "aHexPlayer.db")
 js_runtime_path = os.path.join(settings_path, "js_runtime")
