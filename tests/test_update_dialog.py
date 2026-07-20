@@ -47,7 +47,10 @@ def test_check_for_updates_uses_update_dialog_title_keyword(monkeypatch):
 
     utils.check_for_updates()
 
-    assert captured["args"] == (top_window, "https://example.com/download/HexPlayer.exe")
+    assert captured["args"] == (
+        top_window,
+        "https://example.com/download/HexPlayer.exe",
+    )
     assert captured["kwargs"] == {"title": "جاري تنزيل التحديث"}
 
 
