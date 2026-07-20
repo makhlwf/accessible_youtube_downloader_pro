@@ -1,8 +1,11 @@
 import sqlite3 as sql
 import logging
+import threading
+import time
 from paths import db_path
 
 logger = logging.getLogger(__name__)
+_db_lock = threading.RLock()
 
 
 def db_init():
@@ -18,10 +21,11 @@ def db_init():
 def is_valid(function):
     def wrapper(*args, **kwargs):
         if con is not None:
-            try:
-                return function(*args, **kwargs)
-            except sql.Error as e:
-                logger.error(f"Database error in {function.__name__}: {e}")
+            with _db_lock:
+                try:
+                    return function(*args, **kwargs)
+                except sql.Error as e:
+                    logger.error(f"Database error in {function.__name__}: {e}")
         return None
 
     return wrapper
@@ -47,6 +51,25 @@ def prepare_tables():
         position REAL NOT NULL
     )"""
     con.execute(continue_query)
+    history_query = """
+    CREATE TABLE IF NOT EXISTS watch_history (
+        id INTEGER PRIMARY KEY,
+        title TEXT NOT NULL,
+        display_title TEXT NOT NULL,
+        url TEXT NOT NULL UNIQUE,
+        is_live INTEGER NOT NULL,
+        channel_name TEXT NOT NULL,
+        channel_url TEXT NOT NULL,
+        watched_seconds REAL NOT NULL DEFAULT 0,
+        last_played REAL NOT NULL
+    )"""
+    con.execute(history_query)
+    con.execute(
+        """
+        CREATE INDEX IF NOT EXISTS idx_watch_history_last_played
+        ON watch_history (last_played DESC)
+        """
+    )
     con.commit()
 
 
@@ -130,6 +153,113 @@ class Continue:
     @is_valid
     def remove_continue(cls, url):
         con.execute("DELETE FROM continue WHERE url = ?", (url,))
+        con.commit()
+
+
+class WatchHistory:
+    @classmethod
+    @is_valid
+    def add_or_update(cls, data):
+        url = data.get("url", "")
+        if not url:
+            return
+
+        title = data.get("title") or data.get("display_title") or url
+        channel_name = data.get("channel_name") or data.get("author") or ""
+        channel_url = data.get("channel_url") or ""
+        display_title = data.get("display_title") or (
+            f"{title}. {channel_name}" if channel_name else title
+        )
+        watched_seconds = data.get("watched_seconds") or 0
+        try:
+            watched_seconds = max(0, float(watched_seconds))
+        except (TypeError, ValueError):
+            watched_seconds = 0
+
+        query = """
+        INSERT INTO watch_history (
+            title, display_title, url, is_live, channel_name, channel_url,
+            watched_seconds, last_played
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(url) DO UPDATE SET
+            title = CASE
+                WHEN excluded.title != '' THEN excluded.title
+                ELSE watch_history.title
+            END,
+            display_title = CASE
+                WHEN excluded.display_title != '' THEN excluded.display_title
+                ELSE watch_history.display_title
+            END,
+            is_live = excluded.is_live,
+            channel_name = CASE
+                WHEN excluded.channel_name != '' THEN excluded.channel_name
+                ELSE watch_history.channel_name
+            END,
+            channel_url = CASE
+                WHEN excluded.channel_url != '' THEN excluded.channel_url
+                ELSE watch_history.channel_url
+            END,
+            watched_seconds = CASE
+                WHEN excluded.watched_seconds > 0 THEN excluded.watched_seconds
+                ELSE watch_history.watched_seconds
+            END,
+            last_played = excluded.last_played
+        """
+        con.execute(
+            query,
+            (
+                title,
+                display_title,
+                url,
+                1 if data.get("is_live") or data.get("live") else 0,
+                channel_name,
+                channel_url,
+                watched_seconds,
+                time.time(),
+            ),
+        )
+        con.commit()
+
+    @classmethod
+    @is_valid
+    def get_page(cls, limit=50, offset=0):
+        cursor = con.execute(
+            """
+            SELECT
+                title, display_title, url, is_live, channel_name, channel_url,
+                watched_seconds, last_played
+            FROM watch_history
+            ORDER BY last_played DESC
+            LIMIT ? OFFSET ?
+            """,
+            (limit, offset),
+        )
+        rows = cursor.fetchall()
+        data = []
+        for row in rows:
+            channel_name = row["channel_name"]
+            data.append(
+                {
+                    "title": row["title"],
+                    "display_title": row["display_title"],
+                    "url": row["url"],
+                    "is_live": row["is_live"],
+                    "live": row["is_live"],
+                    "channel_name": channel_name,
+                    "channel_url": row["channel_url"],
+                    "author": channel_name,
+                    "watched_seconds": row["watched_seconds"],
+                    "last_played": row["last_played"],
+                    "type": "video",
+                }
+            )
+        return data
+
+    @classmethod
+    @is_valid
+    def clear(cls):
+        con.execute("DELETE FROM watch_history")
         con.commit()
 
 

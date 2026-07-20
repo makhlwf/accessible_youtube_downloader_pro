@@ -268,19 +268,12 @@ class MediaGui(wx.Frame):
         self.history_timer.Start(10000)  # 10 seconds
         self.subtitle_timer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.on_subtitle_timer, self.subtitle_timer)
-        try:
-            Thread(
-                target=utils.update_watch_history,
-                args=(
-                    self.url,
-                    self.player.media.get_time() / 1000
-                    if self.player.media.get_time() != -1
-                    else 0,
-                ),
-                daemon=True,
-            ).start()
-        except Exception:
-            pass
+        watched_seconds = (
+            self.player.media.get_time() / 1000
+            if self.player.media.get_time() != -1
+            else 0
+        )
+        self._report_watch_history(watched_seconds)
 
     def _resolve_channel(self, stream=None, url=None, index=None):
         channel_name = getattr(stream, "channel_name", "") if stream else ""
@@ -325,6 +318,26 @@ class MediaGui(wx.Frame):
         except Exception:
             logger.debug("Could not find result index for %s", url, exc_info=True)
         return None
+
+    def _history_metadata(self):
+        channel = self.current_channel or {}
+        return {
+            "title": self.title,
+            "channel_name": channel.get("name", ""),
+            "channel_url": channel.get("url", ""),
+            "is_live": self.is_live,
+        }
+
+    def _report_watch_history(self, watched_seconds=0):
+        try:
+            Thread(
+                target=utils.update_watch_history,
+                args=(self.url, watched_seconds),
+                kwargs=self._history_metadata(),
+                daemon=True,
+            ).start()
+        except Exception:
+            pass
 
     def fetch_chapters(self):
         import logging
@@ -610,11 +623,7 @@ class MediaGui(wx.Frame):
             if self.player and self.player.media.get_state() == State.Playing:
                 watched_seconds = self.player.media.get_time() / 1000
                 if watched_seconds > 0:
-                    Thread(
-                        target=utils.update_watch_history,
-                        args=(self.url, watched_seconds),
-                        daemon=True,
-                    ).start()
+                    self._report_watch_history(watched_seconds)
         except Exception:
             pass
 
@@ -805,11 +814,7 @@ class MediaGui(wx.Frame):
             try:
                 watched_seconds = player.media.get_time() / 1000
                 if watched_seconds > 0:
-                    Thread(
-                        target=utils.update_watch_history,
-                        args=(self.url, watched_seconds),
-                        daemon=True,
-                    ).start()
+                    self._report_watch_history(watched_seconds)
             except Exception:
                 pass
 
@@ -1176,12 +1181,7 @@ class MediaGui(wx.Frame):
         Thread(target=self.fetch_chapters, daemon=True).start()
         Thread(target=self.fetch_subtitles, daemon=True).start()
         # Report new track to history
-        try:
-            Thread(
-                target=utils.update_watch_history, args=(self.url, 0), daemon=True
-            ).start()
-        except Exception:
-            pass
+        self._report_watch_history(0)
 
     def next(self):
         if self.results is None:

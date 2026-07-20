@@ -450,6 +450,76 @@ async function handleGetHomeFeed(params) {
     };
 }
 
+function historyContinuationToken(feed) {
+    const types = [YTNodes.ContinuationItem];
+    if (YTNodes.ContinuationItemView) {
+        types.push(YTNodes.ContinuationItemView);
+    }
+    const continuations = feed.memo.getType(...types) || [];
+    const continuation = continuations.find(item =>
+        item?.endpoint?.payload?.token || item?.endpoint?.payload?.continuation
+    );
+    return continuation?.endpoint?.payload?.token ||
+        continuation?.endpoint?.payload?.continuation ||
+        null;
+}
+
+function historyMetadataText(video, rowIndex = 0, partIndex = 0) {
+    return textValue(
+        video?.metadata?.metadata?.metadata_rows?.[rowIndex]
+            ?.metadata_parts?.[partIndex]?.text
+    );
+}
+
+function historyVideoId(video) {
+    return video.video_id ||
+        video.id ||
+        video.content_id ||
+        video.endpoint?.payload?.videoId ||
+        video.renderer_context?.command_context?.on_tap?.payload?.videoId ||
+        '';
+}
+
+function historyVideoTitle(video) {
+    return textValue(video.title) ||
+        textValue(video.metadata?.title) ||
+        textValue(video.accessibility_label) ||
+        '';
+}
+
+function historyVideoAuthor(video) {
+    return video.author?.name ||
+        textValue(video.author) ||
+        textValue(video.short_byline_text) ||
+        textValue(video.long_byline_text) ||
+        historyMetadataText(video, 0, 0) ||
+        'Unknown';
+}
+
+function isHistoryShort(video) {
+    const contentType = String(video.content_type || '').toUpperCase();
+    const style = String(video.style || '').toUpperCase();
+    const overlay = textValue(video.overlay_metadata).toUpperCase();
+    const shortTypes = [YTNodes.ReelItem];
+    if (YTNodes.ShortsLockupView) {
+        shortTypes.push(YTNodes.ShortsLockupView);
+    }
+    return contentType === 'SHORT' ||
+        style.includes('SHORT') ||
+        overlay.includes('SHORTS') ||
+        (typeof video.is === 'function' && video.is(...shortTypes));
+}
+
+function isHistoryLive(video) {
+    if (video.is_live !== undefined) {
+        return !!video.is_live;
+    }
+    const timeStatus = video.thumbnail_overlays?.firstOfType?.(
+        YTNodes.ThumbnailOverlayTimeStatus
+    );
+    return timeStatus?.style === 'LIVE';
+}
+
 async function handleGetWatchHistory(params) {
     if (!params.cookiesPath) {
         throw new Error("Cookies path is required");
@@ -471,30 +541,18 @@ async function handleGetWatchHistory(params) {
     if (feed.videos && feed.videos.length > 0) {
         feed.videos.forEach(v => {
             try {
-                if (v.is(YTNodes.ReelItem, YTNodes.ShortsLockupView)) return;
-                const isShort = v.style === 'SHORTS' || v.overlay_metadata?.includes?.('Shorts');
-                if (isShort) return;
+                if (isHistoryShort(v)) return;
 
-                const id = v.video_id || v.id;
-                const title = v.title?.toString();
-                const author = v.author?.name || v.author?.toString() || 'Unknown';
+                const id = historyVideoId(v);
+                const title = historyVideoTitle(v);
+                const author = historyVideoAuthor(v);
                 
                 if (id && title) {
-                    let is_live = false;
-                    if (v.is(YTNodes.Video, YTNodes.CompactVideo)) {
-                        is_live = v.is_live;
-                    } else if (v.is(YTNodes.GridVideo)) {
-                        const time_status = v.thumbnail_overlays?.firstOfType?.(YTNodes.ThumbnailOverlayTimeStatus);
-                        is_live = time_status?.style === 'LIVE';
-                    } else {
-                        is_live = !!v.is_live;
-                    }
-
                     processedVideos.push({
                         title: title,
                         url: `https://www.youtube.com/watch?v=${id}`,
                         author: author,
-                        is_live: is_live,
+                        is_live: isHistoryLive(v),
                         id: id
                     });
                 }
@@ -504,8 +562,7 @@ async function handleGetWatchHistory(params) {
         });
     }
 
-    const continuation = feed.memo.getType(YTNodes.ContinuationItem)?.[0];
-    const nextToken = continuation?.endpoint.payload.token || null;
+    const nextToken = historyContinuationToken(feed);
 
     return {
         videos: processedVideos,

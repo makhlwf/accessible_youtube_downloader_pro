@@ -207,7 +207,6 @@ class HomeScreen(wx.Frame):
             panel, -1, _("الفيديوهات المفضلة	ctrl+shift+f"), name="tab"
         )
         self.historyBtn = wx.Button(panel, -1, _("سجل المشاهدة\tctrl+h"), name="tab")
-        self.historyBtn.Hide()
 
         # Home feed
         self.home_feed_list = wx.ListBox(panel, -1, name="home_feed")
@@ -245,7 +244,6 @@ class HomeScreen(wx.Frame):
         )
         self.favItem = mainMenu.Append(-1, _("الفيديوهات المفضلة	ctrl+shift+f"))
         self.historyItem = mainMenu.Append(-1, _("سجل المشاهدة\tctrl+h"))
-        self.historyItem.Enable(False)
         self.openPathItem = mainMenu.Append(-1, _("فتح مجلد التنزيل\tctrl+p"))
         self.settingsItem = mainMenu.Append(-1, _("الإعدادات...\talt+s"))
         self.exitItem = mainMenu.Append(-1, _("خروج\tctrl+w"))
@@ -390,8 +388,6 @@ class HomeScreen(wx.Frame):
 
         cookies_path = settings_handler.config_get("cookiespath")
         if cookies_path and os.path.exists(cookies_path):
-            self.historyBtn.Show()
-            self.historyItem.Enable(True)
             self.load_home_feed()
 
         if settings_handler.config_get("background_monitoring"):

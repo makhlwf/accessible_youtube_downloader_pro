@@ -44,7 +44,7 @@ Main buttons:
 - Download from Link, Ctrl + D.
 - Play YouTube Link, Ctrl + Y.
 - Favorites, Ctrl + Shift + F.
-- Watch History, Ctrl + H. This is enabled only when a valid cookies file is configured.
+- Watch History, Ctrl + H.
 
 If a valid cookies file is configured, the main window may also show home recommendations from YouTube. Use Enter to play a recommendation as audio, Ctrl + Enter to play it as video, and the Load More button to fetch more recommendations.
 
@@ -56,7 +56,7 @@ The Main menu contains:
 - Download from Link, Ctrl + D.
 - Play YouTube Link, Ctrl + Y.
 - Favorites, Ctrl + Shift + F.
-- Watch History, Ctrl + H. This is disabled until cookies are configured.
+- Watch History, Ctrl + H.
 - Open Download Folder, Ctrl + P.
 - Settings, Alt + S.
 - Exit, Ctrl + W.
@@ -128,7 +128,7 @@ Cookies are optional. Without cookies, normal search, playback, and many downloa
 With a valid cookies file, HexPlayer can:
 
 - Show home recommendations in the main window.
-- Enable Watch History.
+- Show YouTube account Watch History.
 - Update YouTube watch history while you play videos.
 - Fetch YouTube like counts when available.
 - Like or dislike videos from the player.
@@ -354,11 +354,11 @@ When playing from Favorites, next and previous move through the favorites list.
 
 Watch history
 
-Watch History is available when a valid cookies file is configured. Open it with Ctrl + H or from the Main menu.
+Watch History is available from Ctrl + H or from the Main menu. With a valid signed-in cookies file, it lists your YouTube account watch history. Without cookies, or if the account history request fails, it lists videos played locally in HexPlayer.
 
 The history window lists recently watched videos from YouTube. You can play, download, favorite, copy links, open in the browser, and load more history. Enter plays audio, and Ctrl + Enter plays video.
 
-HexPlayer also saves local resume positions when Continue Watching is enabled. YouTube watch history updates require cookies and Deno.
+HexPlayer saves local watch history and local resume positions on this computer. Updating your YouTube account watch history requires cookies and Deno.
 
 Troubleshooting
 

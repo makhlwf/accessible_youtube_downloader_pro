@@ -1,6 +1,6 @@
 # Privacy Policy for HexPlayer
 
-**Last Updated: July 17, 2026**
+**Last Updated: July 20, 2026**
 
 HexPlayer is an open-source, accessible YouTube downloader and player for Windows. This Privacy Policy explains what information the app uses, where it is stored, and when it is sent to third-party services.
 
@@ -12,7 +12,7 @@ HexPlayer may use the following information while you use the app:
 
 - **YouTube links, searches, channels, playlists, and video metadata:** Used to search, browse, play, and download YouTube content.
 - **Download settings:** Such as output folder, selected format, quality, and conversion preferences.
-- **Playback settings:** Such as volume, speed, equalizer settings, audio output device, and resume positions.
+- **Playback settings and history:** Such as volume, speed, equalizer settings, audio output device, resume positions, and locally played video history.
 - **Favorites:** Videos you manually save to favorites.
 - **Clipboard content:** If clipboard link detection is enabled or used, HexPlayer may read the clipboard locally to detect YouTube links. It does not upload your clipboard contents to the project maintainer.
 - **Cookies file path:** If you configure a YouTube cookies file, HexPlayer stores the local path to that file in settings.
@@ -35,6 +35,7 @@ HexPlayer stores app data locally on your device. This may include:
 
 - **Settings:** Stored in a local configuration file, including language, download path, theme, playback options, cookies file path, and tool paths.
 - **Favorites:** Stored in a local SQLite database.
+- **Local watch history:** Stored in a local SQLite database when videos are played in HexPlayer.
 - **Resume positions:** Stored locally so playback can continue from the previous position.
 - **Downloaded files:** Stored in the folder you choose.
 - **External tool files:** `yt-dlp`, Deno, cache files, or related support files may be stored locally so the app can play, browse, and download media.
@@ -43,7 +44,7 @@ HexPlayer does not sell, rent, or share this local data with the project maintai
 
 ## 4. YouTube Watch History and Account Features
 
-If you use cookies and account-based features, HexPlayer may request or update data associated with your YouTube account, including:
+HexPlayer stores local watch history on your computer when videos are played. If you use cookies and account-based features, HexPlayer may also request or update data associated with your YouTube account, including:
 
 - YouTube home feed and recommendations.
 - YouTube watch history.
@@ -76,8 +77,8 @@ You can control or remove locally stored data by:
 
 - Clearing the cookies file path in settings.
 - Deleting favorites from the Favorites window.
+- Removing HexPlayer settings and databases from the local app data folder to clear local watch history.
 - Changing or deleting the download folder contents yourself.
-- Removing HexPlayer settings and databases from the local app data folder.
 - Uninstalling HexPlayer.
 
 If you want to revoke YouTube account access represented by a cookies file, delete or replace that cookies file and sign out or manage sessions from your Google account settings.

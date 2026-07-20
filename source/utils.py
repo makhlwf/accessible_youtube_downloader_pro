@@ -19,6 +19,7 @@ from concurrent.futures import ThreadPoolExecutor
 from settings_handler import config_get
 from language_handler import _
 from deno_service import deno_service
+from database import WatchHistory
 from youtube_url_utils import (
     extract_launch_youtube_url as extract_launch_youtube_url,
     extract_supported_youtube_url as extract_supported_youtube_url,
@@ -1530,7 +1531,7 @@ def get_home_feed(continuation=None):
 def get_watch_history(continuation=None):
     cookies_path = config_get("cookiespath")
     if not cookies_path or not os.path.exists(cookies_path):
-        return {"videos": [], "continuation": None}
+        return _local_watch_history_response(continuation)
 
     result = deno_service.send_command(
         "get_watch_history",
@@ -1539,23 +1540,58 @@ def get_watch_history(continuation=None):
 
     if isinstance(result, dict) and "error" in result:
         logger.error(f"Deno service error: {result['error']}")
-        return {"videos": [], "continuation": None}
+        return _local_watch_history_response(continuation)
 
     if result is None:
-        return {"videos": [], "continuation": None}
+        return _local_watch_history_response(continuation)
 
     return result
 
 
-def update_watch_history(url, watched_seconds=0):
-    cookies_path = config_get("cookiespath")
-    if not cookies_path or not os.path.exists(cookies_path):
-        return
+def _local_watch_history_response(continuation=None, page_size=50):
+    try:
+        offset = int(continuation or 0)
+    except (TypeError, ValueError):
+        offset = 0
+    offset = max(0, offset)
 
+    rows = WatchHistory.get_page(page_size + 1, offset) or []
+    videos = rows[:page_size]
+    next_offset = offset + page_size if len(rows) > page_size else None
+    return {
+        "videos": videos,
+        "continuation": str(next_offset) if next_offset is not None else None,
+        "source": "local",
+    }
+
+
+def update_watch_history(
+    url,
+    watched_seconds=0,
+    title="",
+    channel_name="",
+    channel_url="",
+    is_live=False,
+):
     match = youtube_regexp(url)
     if not match:
         return
     video_id = match.group(5)
+
+    WatchHistory.add_or_update(
+        {
+            "title": title or video_id,
+            "url": url,
+            "channel_name": channel_name,
+            "channel_url": channel_url,
+            "is_live": is_live,
+            "watched_seconds": watched_seconds,
+        }
+    )
+
+    cookies_path = config_get("cookiespath")
+    if not cookies_path or not os.path.exists(cookies_path):
+        return
 
     try:
         env = os.environ.copy()

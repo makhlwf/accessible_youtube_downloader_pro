@@ -49,7 +49,7 @@ The current application version is **3.0.0**. The app is intended for modern 64-
 - **Downloads:** Download videos, playlists, channels, and supported YouTube links as MP4, M4A, or MP3 using `yt-dlp`.
 - **Quality selection:** Choose available video quality before video downloads, and configure default playback quality.
 - **Favorites:** Save local favorite videos and quickly play or download them later.
-- **Account features:** Use a YouTube cookies file for watch history, home recommendations, likes, chapters, comment posting, and signed-in content.
+- **Account features:** Use a YouTube cookies file for YouTube account watch history, home recommendations, likes, chapters, comment posting, and signed-in content.
 - **Resume playback:** Continue videos from the last saved local position.
 - **Clipboard detection:** Detect supported YouTube links at startup or continuously when background monitoring is enabled.
 - **Browser integration:** Use the included Chromium-compatible extension to send supported YouTube links to HexPlayer through Native Messaging or the `hexplayer://` fallback protocol.
@@ -60,7 +60,7 @@ The current application version is **3.0.0**. The app is intended for modern 64-
 
 ## Privacy
 
-HexPlayer does not collect or transmit personal information to the developer. A cookies file is optional and is used locally by the app and its tools for YouTube features that require your signed-in session, such as watch history, recommendations, likes, comments, chapters, and restricted content.
+HexPlayer does not collect or transmit personal information to the developer. A cookies file is optional and is used locally by the app and its tools for YouTube features that require your signed-in session, such as YouTube account watch history, recommendations, likes, comments, chapters, and restricted content. Without cookies, HexPlayer keeps played videos in local watch history on your computer.
 
 Read the full [Privacy Policy](PRIVACY_POLICY.md) for details.
 
@@ -76,7 +76,7 @@ HexPlayer is designed to be fully navigable from the keyboard.
 | `Ctrl + D` | Download from link or direct download |
 | `Ctrl + Y` | Play YouTube link |
 | `Ctrl + Shift + F` | Open Favorites |
-| `Ctrl + H` | Open Watch History, when cookies are configured |
+| `Ctrl + H` | Open Watch History |
 | `Ctrl + P` | Open download folder |
 | `Alt + S` | Open settings |
 | `F1` | Open user guide |

@@ -57,3 +57,34 @@ def test_continue_operations(test_db):
         cont.remove_continue(url)
         all_continues = cont.get_all()
         assert url not in all_continues
+
+
+def test_watch_history_add_update_and_page(test_db):
+    history = database.WatchHistory()
+    url = "https://youtube.com/watch?v=789"
+
+    with patch("database.con", test_db):
+        history.add_or_update(
+            {
+                "title": "First Title",
+                "url": url,
+                "channel_name": "First Channel",
+                "channel_url": "https://youtube.com/channel/789",
+                "watched_seconds": 10,
+            }
+        )
+        history.add_or_update(
+            {
+                "title": "Updated Title",
+                "url": url,
+                "channel_name": "",
+                "watched_seconds": 0,
+            }
+        )
+
+        page = history.get_page(limit=10, offset=0)
+        assert len(page) == 1
+        assert page[0]["title"] == "Updated Title"
+        assert page[0]["author"] == "First Channel"
+        assert page[0]["watched_seconds"] == 10
+        assert page[0]["url"] == url
