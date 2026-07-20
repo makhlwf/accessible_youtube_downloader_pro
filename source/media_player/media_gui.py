@@ -113,6 +113,16 @@ class MediaGui(wx.Frame):
         self.rating = None
         self.rating_request_pending = False
         self.like_count = None
+        self.available_subtitles = []
+        self.current_subtitle_language = None
+        self.current_subtitle_label = ""
+        self.subtitle_cues = []
+        self.subtitle_cues_language = None
+        self.subtitles_enabled = False
+        self.subtitle_loading = False
+        self.subtitle_loading_key = None
+        self.last_spoken_subtitle_index = -1
+        self.subtitle_language_items = {}
         previousButton = CustomButton(self, -1, _("المقطع السابق"), name="controls")
         previousButton.Show() if self.results is not None else previousButton.Hide()
         beginingButton = CustomButton(self, -1, _("بداية المقطع"), name="controls")
@@ -151,6 +161,14 @@ class MediaGui(wx.Frame):
         self.chaptersSubMenu = trackOptions.AppendSubMenu(
             self.chaptersMenu, _("الفصول")
         )
+        self.subtitlesMenu = wx.Menu()
+        self.subtitlesEnableItem = self.subtitlesMenu.AppendCheckItem(
+            -1, _("تشغيل الترجمة")
+        )
+        self.subtitlesLanguageMenu = wx.Menu()
+        self.subtitlesLanguageMenu.Append(-1, _("جاري التحميل...")).Enable(False)
+        self.subtitlesMenu.AppendSubMenu(self.subtitlesLanguageMenu, _("لغة الترجمة"))
+        trackOptions.AppendSubMenu(self.subtitlesMenu, _("الترجمة"))
 
         descriptionItem = trackOptions.Append(-1, _("وصف الفيديو\tctrl+shift+d"))
         commentsItem = trackOptions.Append(-1, _("تعليقات الفيديو\tctrl+shift+m"))
@@ -182,6 +200,7 @@ class MediaGui(wx.Frame):
         self.Bind(wx.EVT_MENU, self.onM4aDownload, m4aItem)
         self.Bind(wx.EVT_MENU, self.onMp3Download, mp3Item)
         self.Bind(wx.EVT_MENU, self.onDirect, directDownloadItem)
+        self.Bind(wx.EVT_MENU, self.onToggleSubtitles, self.subtitlesEnableItem)
         self.Bind(wx.EVT_MENU, self.onDescription, descriptionItem)
         self.Bind(wx.EVT_MENU, self.onComments, commentsItem)
         self.Bind(wx.EVT_MENU, self.onEqualizer, equalizerItem)
@@ -239,6 +258,7 @@ class MediaGui(wx.Frame):
             return
         Thread(target=self.fetch_qualities, daemon=True).start()
         Thread(target=self.fetch_chapters, daemon=True).start()
+        Thread(target=self.fetch_subtitles, daemon=True).start()
         self.fetch_like_count()
         if self.url in Continue.get_all() and config_get("continue"):
             self.player.media.set_position(Continue.get_all()[url])
@@ -246,6 +266,8 @@ class MediaGui(wx.Frame):
         self.history_timer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.on_history_timer, self.history_timer)
         self.history_timer.Start(10000)  # 10 seconds
+        self.subtitle_timer = wx.Timer(self)
+        self.Bind(wx.EVT_TIMER, self.on_subtitle_timer, self.subtitle_timer)
         try:
             Thread(
                 target=utils.update_watch_history,
@@ -314,6 +336,12 @@ class MediaGui(wx.Frame):
             return
         wx.CallAfter(self.populate_chapters_menu, chapters)
 
+    def fetch_subtitles(self):
+        subtitles = utils.get_available_subtitles(self.url)
+        if self._closing:
+            return
+        wx.CallAfter(self.populate_subtitles_menu, subtitles)
+
     def can_update_player_ui(self):
         try:
             return not self._closing and not self.IsBeingDeleted()
@@ -353,6 +381,229 @@ class MediaGui(wx.Frame):
             self.player.media.set_time(time_ms)
             time_str = utils.time_formatting(time_ms // 1000)
             speak(_("الانتقال إلى {} في {}").format(title, time_str))
+
+    def populate_subtitles_menu(self, subtitles):
+        if not self.can_update_player_ui():
+            return
+        try:
+            for item in self.subtitlesLanguageMenu.GetMenuItems():
+                self.subtitlesLanguageMenu.DestroyItem(item)
+
+            self.available_subtitles = list(subtitles or [])
+            self.subtitle_language_items = {}
+
+            if not self.available_subtitles:
+                self.subtitlesLanguageMenu.Append(-1, _("لا توجد ترجمات متاحة")).Enable(
+                    False
+                )
+                self.current_subtitle_language = None
+                self.current_subtitle_label = ""
+                self._set_subtitles_enabled(False, announce=False)
+                return
+
+            for subtitle in self.available_subtitles:
+                label = subtitle.get("label") or subtitle.get("code") or ""
+                item = self.subtitlesLanguageMenu.AppendCheckItem(-1, label)
+                code = subtitle.get("code")
+                self.subtitle_language_items[code] = item
+                if code == self.current_subtitle_language:
+                    item.Check(True)
+                self.Bind(
+                    wx.EVT_MENU,
+                    lambda event, lang=code: self.onSelectSubtitleLanguage(lang),
+                    item,
+                )
+
+            selected_available = (
+                self.current_subtitle_language in self.subtitle_language_items
+            )
+            if self.current_subtitle_language and not selected_available:
+                self.current_subtitle_language = None
+                self.current_subtitle_label = ""
+                self._set_subtitles_enabled(False, announce=False)
+                return
+
+            if self.subtitles_enabled and self.current_subtitle_language:
+                self._load_selected_subtitle_cues()
+        except RuntimeError:
+            logger.debug(
+                "Skipping subtitle menu update after player close", exc_info=True
+            )
+
+    def onToggleSubtitles(self, event=None):
+        enabled = (
+            self.subtitlesEnableItem.IsChecked()
+            if hasattr(self.subtitlesEnableItem, "IsChecked")
+            else not self.subtitles_enabled
+        )
+        if not enabled:
+            self._set_subtitles_enabled(False)
+            return
+
+        if not self.available_subtitles:
+            self._check_subtitles_enable_item(False)
+            speak(_("لا توجد ترجمات متاحة"))
+            return
+
+        if not self.current_subtitle_language:
+            if len(self.available_subtitles) == 1:
+                self.onSelectSubtitleLanguage(self.available_subtitles[0]["code"])
+            else:
+                self._check_subtitles_enable_item(False)
+                speak(_("اختر لغة الترجمة من القائمة"))
+            return
+
+        has_loaded_cues = (
+            self.subtitle_cues
+            and self.subtitle_cues_language == self.current_subtitle_language
+        )
+        self._set_subtitles_enabled(True, announce=has_loaded_cues)
+        if not has_loaded_cues:
+            speak(_("جاري تحميل الترجمة: {}").format(self.current_subtitle_label))
+        self._load_selected_subtitle_cues()
+
+    def onSelectSubtitleLanguage(self, language_code):
+        subtitle = next(
+            (
+                subtitle
+                for subtitle in self.available_subtitles
+                if subtitle.get("code") == language_code
+            ),
+            None,
+        )
+        if subtitle is None:
+            speak(_("لغة الترجمة غير متاحة"))
+            return
+
+        self.current_subtitle_language = language_code
+        self.current_subtitle_label = subtitle.get("label") or language_code
+        for code, item in self.subtitle_language_items.items():
+            item.Check(code == language_code)
+        self.subtitle_cues = []
+        self.subtitle_cues_language = None
+        self.subtitle_loading = False
+        self.subtitle_loading_key = None
+        self.last_spoken_subtitle_index = -1
+        self._set_subtitles_enabled(True, announce=False)
+        speak(_("جاري تحميل الترجمة: {}").format(self.current_subtitle_label))
+        self._load_selected_subtitle_cues()
+
+    def _set_subtitles_enabled(self, enabled, announce=True):
+        self.subtitles_enabled = enabled
+        self._check_subtitles_enable_item(enabled)
+        if hasattr(self, "subtitle_timer"):
+            if enabled and self.subtitle_cues:
+                self.subtitle_timer.Start(250)
+            else:
+                self.subtitle_timer.Stop()
+        if announce:
+            if enabled:
+                label = self.current_subtitle_label or _("الترجمة")
+                speak(_("الترجمة مفعلة: {}").format(label))
+            else:
+                speak(_("الترجمة متوقفة"))
+
+    def _check_subtitles_enable_item(self, checked):
+        try:
+            self.subtitlesEnableItem.Check(checked)
+        except AttributeError:
+            pass
+
+    def _load_selected_subtitle_cues(self):
+        if (
+            not self.subtitles_enabled
+            or not self.current_subtitle_language
+            or self.subtitle_loading
+        ):
+            return
+        if (
+            self.subtitle_cues
+            and self.subtitle_cues_language == self.current_subtitle_language
+        ):
+            self._set_subtitles_enabled(True, announce=False)
+            return
+
+        language_code = self.current_subtitle_language
+        media_url = self.url
+        self.subtitle_loading = True
+        self.subtitle_loading_key = (media_url, language_code)
+
+        def _task():
+            cues = utils.get_subtitle_cues(media_url, language_code)
+            if self._closing:
+                return
+            wx.CallAfter(self._on_subtitle_cues_loaded, media_url, language_code, cues)
+
+        Thread(target=_task, daemon=True).start()
+
+    def _on_subtitle_cues_loaded(self, media_url, language_code, cues):
+        load_key = (media_url, language_code)
+        if self.subtitle_loading_key == load_key:
+            self.subtitle_loading = False
+            self.subtitle_loading_key = None
+        if (
+            self._closing
+            or media_url != self.url
+            or language_code != self.current_subtitle_language
+            or not self.subtitles_enabled
+        ):
+            return
+        self.subtitle_cues = list(cues or [])
+        self.subtitle_cues_language = language_code if self.subtitle_cues else None
+        self.last_spoken_subtitle_index = -1
+        if not self.subtitle_cues:
+            self._set_subtitles_enabled(False, announce=False)
+            speak(_("تعذر تحميل نص الترجمة"))
+            return
+        self._set_subtitles_enabled(True, announce=False)
+        speak(_("تم تفعيل الترجمة: {}").format(self.current_subtitle_label))
+
+    def on_subtitle_timer(self, event):
+        if not self.subtitles_enabled or not self.subtitle_cues or self.player is None:
+            return
+        try:
+            if self.player.media.get_state() != State.Playing:
+                return
+            current_ms = self.player.media.get_time()
+        except Exception:
+            return
+        self._speak_due_subtitle(current_ms)
+
+    def _speak_due_subtitle(self, current_ms):
+        if current_ms is None or current_ms < 0:
+            return
+        if self.last_spoken_subtitle_index >= 0:
+            last_cue = self.subtitle_cues[self.last_spoken_subtitle_index]
+            if current_ms < last_cue["start_ms"]:
+                self.last_spoken_subtitle_index = -1
+
+        for index, cue in enumerate(self.subtitle_cues):
+            if current_ms < cue["start_ms"]:
+                break
+            if cue["start_ms"] <= current_ms <= cue["end_ms"]:
+                if index != self.last_spoken_subtitle_index:
+                    self.last_spoken_subtitle_index = index
+                    speak(cue["text"])
+                break
+
+    def reset_subtitles_for_media(self):
+        self.available_subtitles = []
+        self.subtitle_cues = []
+        self.subtitle_cues_language = None
+        self.subtitle_loading = False
+        self.subtitle_loading_key = None
+        self.last_spoken_subtitle_index = -1
+        self.subtitle_language_items = {}
+        if hasattr(self, "subtitle_timer"):
+            self.subtitle_timer.Stop()
+        try:
+            for item in self.subtitlesLanguageMenu.GetMenuItems():
+                self.subtitlesLanguageMenu.DestroyItem(item)
+            self.subtitlesLanguageMenu.Append(-1, _("جاري التحميل...")).Enable(False)
+        except RuntimeError:
+            logger.debug(
+                "Skipping subtitle menu reset after player close", exc_info=True
+            )
 
     def on_history_timer(self, event):
         try:
@@ -527,6 +778,13 @@ class MediaGui(wx.Frame):
                 self.history_timer.Stop()
             except Exception:
                 logger.debug("Could not stop history timer during close", exc_info=True)
+        if hasattr(self, "subtitle_timer"):
+            try:
+                self.subtitle_timer.Stop()
+            except Exception:
+                logger.debug(
+                    "Could not stop subtitle timer during close", exc_info=True
+                )
         player = self.player
         self.player = None
         if player is not None:
@@ -898,6 +1156,7 @@ class MediaGui(wx.Frame):
         self.player.set_media(stream.url, options=options)
         self.url = url
         self.title = title
+        self.reset_subtitles_for_media()
         self.current_channel = self._resolve_channel(stream, url, index)
         self.SetTitle(f"{title} - {application.name}")
         self.like_count = None
@@ -915,6 +1174,7 @@ class MediaGui(wx.Frame):
             self.chaptersMenu.DestroyItem(item)
         self.chaptersMenu.Append(-1, _("جاري التحميل...")).Enable(False)
         Thread(target=self.fetch_chapters, daemon=True).start()
+        Thread(target=self.fetch_subtitles, daemon=True).start()
         # Report new track to history
         try:
             Thread(
