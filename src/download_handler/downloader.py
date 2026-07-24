@@ -1,14 +1,16 @@
+import logging
 import os
 import re
-import wx
-import logging
 import time
-from settings_handler import config_get
+from threading import Thread
+
+import wx
+from wx.lib.newevent import NewEvent
+
 import paths
 import utils
-from wx.lib.newevent import NewEvent
-from threading import Thread
 from language_handler import _
+from settings_handler import config_get
 
 logger = logging.getLogger(__name__)
 
@@ -28,10 +30,43 @@ def clean_progress_text(value):
     return ANSI_RE.sub("", str(value)).replace("\r", "").strip()
 
 
-def get_audio_download_format(convert=False):
+AUDIO_KBPS_FORMAT_MAP = {
+    96: (
+        "bestaudio[abr=96][ext=m4a]/bestaudio[abr=96]/bestaudio[ext=m4a]/bestaudio/best"
+    ),
+    128: (
+        "bestaudio[abr=128][ext=m4a]/bestaudio[abr=128]/"
+        "bestaudio[ext=m4a]/bestaudio/best"
+    ),
+    192: (
+        "bestaudio[abr=192][ext=m4a]/bestaudio[abr=192]/"
+        "bestaudio[ext=m4a]/bestaudio/best"
+    ),
+    320: (
+        "bestaudio[abr=320][ext=m4a]/bestaudio[abr=320]/"
+        "bestaudio[ext=m4a]/bestaudio/best"
+    ),
+}
+
+AUDIO_KBPS_SORTED = sorted(AUDIO_KBPS_FORMAT_MAP.keys())
+
+
+def _fallback_format_for_kbps(kbps):
+    for candidate in reversed(AUDIO_KBPS_SORTED):
+        if candidate <= kbps:
+            return AUDIO_KBPS_FORMAT_MAP[candidate]
+    return AUDIO_KBPS_FORMAT_MAP[AUDIO_KBPS_SORTED[0]]
+
+
+def get_audio_download_format(convert=False, kbps=None):
     if convert:
         return "bestaudio/best"
-    return "bestaudio[ext=m4a]/bestaudio/best"
+    if kbps is None:
+        kbps = int(config_get("conversion"))
+    kbps = int(kbps)
+    if kbps in AUDIO_KBPS_FORMAT_MAP:
+        return AUDIO_KBPS_FORMAT_MAP[kbps]
+    return _fallback_format_for_kbps(kbps)
 
 
 def get_video_download_format(quality=None):
@@ -57,6 +92,7 @@ class Downloader:
         convert=False,
         folder=False,
         cancel_checker=None,
+        kbps=None,
     ):
         # initializing class properties
         self.url = url
@@ -70,9 +106,10 @@ class Downloader:
         self.cancel_checker = cancel_checker
         self.last_file = None
         self.started_at = None
+        self.kbps = kbps
 
     def get_quality(self):
-        qualities = {0: "96", 1: "128", 2: "192"}
+        qualities = {0: "96", 1: "128", 2: "192", 3: "320"}
         return qualities[int(config_get("conversion"))]
 
     def cancel(self):
@@ -213,7 +250,7 @@ class Downloader:
         if self.convert:
             return get_audio_download_format(convert=True)
         if self.downloading_format == "bestaudio[ext=m4a]":
-            return get_audio_download_format()
+            return get_audio_download_format(kbps=self.kbps)
         if self.downloading_format == "bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4":
             return get_video_download_format()
         return self.downloading_format
@@ -275,6 +312,7 @@ def downloadAction(
     status_label,
     convert=False,
     folder=False,
+    kbps=None,
 ):
     if not utils.check_yt_dlp(wx.GetApp().GetTopWindow()):
         dlg.Destroy()
@@ -289,6 +327,7 @@ def downloadAction(
         convert=convert,
         folder=folder,
         cancel_checker=dlg.is_cancelled if hasattr(dlg, "is_cancelled") else None,
+        kbps=kbps,
     )
     if hasattr(dlg, "set_cancel_callback"):
         dlg.set_cancel_callback(downloader.cancel)

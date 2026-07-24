@@ -6,8 +6,10 @@ import download_handler.downloader as downloader_module
 import paths
 import utils
 from download_handler.downloader import (
+    AUDIO_KBPS_FORMAT_MAP,
     DownloadCancelled,
     Downloader,
+    _fallback_format_for_kbps,
     clean_progress_text,
     get_audio_download_format,
     get_video_download_format,
@@ -45,11 +47,8 @@ def test_audio_download_format_falls_back_when_converting_to_mp3():
     assert downloader._effective_format() == "bestaudio/best"
 
 
-def test_audio_download_format_falls_back_for_m4a_downloads():
-    downloader = Downloader("url", ".", "bestaudio[ext=m4a]", None, None)
-
-    assert get_audio_download_format() == "bestaudio[ext=m4a]/bestaudio/best"
-    assert downloader._effective_format() == "bestaudio[ext=m4a]/bestaudio/best"
+def test_audio_download_format_explicit_kbps_128():
+    assert get_audio_download_format(kbps=128) == AUDIO_KBPS_FORMAT_MAP[128]
 
 
 def test_video_download_format_falls_back_for_selected_quality():
@@ -177,3 +176,57 @@ def test_cookie_fallback_retries_without_cookiefile(monkeypatch):
     assert len(option_sets) == 2
     assert option_sets[0]["cookiefile"] == "cookies.txt"
     assert "cookiefile" not in option_sets[1]
+
+
+def test_audio_download_format_returns_exact_match_for_known_kbps():
+    for kbps, expected in AUDIO_KBPS_FORMAT_MAP.items():
+        result = get_audio_download_format(kbps=kbps)
+        assert result == expected, f"kbps={kbps}"
+
+
+def test_audio_download_format_falls_back_for_unknown_kbps():
+    result = get_audio_download_format(kbps=80)
+    assert result == AUDIO_KBPS_FORMAT_MAP[96]
+
+
+def test_audio_download_format_falls_back_below_for_unknown_kbps():
+    result = get_audio_download_format(kbps=100)
+    assert result == AUDIO_KBPS_FORMAT_MAP[96]
+
+
+def test_audio_download_format_falls_back_to_nearest_lower():
+    result = get_audio_download_format(kbps=160)
+    assert result == AUDIO_KBPS_FORMAT_MAP[128]
+
+
+def test_audio_download_format_falls_back_to_lowest_for_very_small_kbps():
+    result = get_audio_download_format(kbps=1)
+    assert result == AUDIO_KBPS_FORMAT_MAP[96]
+
+
+def test_audio_download_format_ignores_kbps_when_convert_true():
+    result = get_audio_download_format(convert=True, kbps=128)
+    assert result == "bestaudio/best"
+
+
+def test_audio_download_format_defaults_to_96_when_no_config():
+    result = get_audio_download_format()
+    assert result == AUDIO_KBPS_FORMAT_MAP[96]
+
+
+def test_fallback_format_for_kbps_returns_nearest_lower():
+    assert _fallback_format_for_kbps(128) == AUDIO_KBPS_FORMAT_MAP[128]
+    assert _fallback_format_for_kbps(200) == AUDIO_KBPS_FORMAT_MAP[192]
+    assert _fallback_format_for_kbps(400) == AUDIO_KBPS_FORMAT_MAP[320]
+
+
+def test_effective_format_passes_kbps_to_audio():
+    downloader = Downloader("url", ".", "bestaudio[ext=m4a]", None, None, kbps=320)
+    assert downloader._effective_format() == AUDIO_KBPS_FORMAT_MAP[320]
+
+
+def test_effective_format_ignores_kbps_for_mp3_convert():
+    downloader = Downloader(
+        "url", ".", "bestaudio[ext=m4a]", None, None, convert=True, kbps=128
+    )
+    assert downloader._effective_format() == "bestaudio/best"

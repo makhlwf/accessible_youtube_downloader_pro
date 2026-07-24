@@ -2,11 +2,11 @@ import os
 import sys
 
 import wx
+
+import windows_url_association
 from language_handler import _, supported_languages
 from settings_handler import config_get, config_set
 from theme_handler import THEMES, apply_theme, apply_theme_to_all_windows
-import windows_url_association
-
 
 languages = {
     index: language for language, index in enumerate(supported_languages.values())
@@ -227,16 +227,16 @@ class SettingsDialog(wx.Dialog):
         )
         _set_accessible_name(self.formats, format_label_text)
         self.formats.Selection = int(config_get("defaultformat"))
-        mp3_quality_label_text = _("جودة تحويل ملفات mp3: ")
-        lbl3 = wx.StaticText(panel, -1, mp3_quality_label_text)
-        self.mp3Quality = wx.Choice(
+        audio_quality_label_text = _("جودة الصوت: ")
+        lbl3 = wx.StaticText(panel, -1, audio_quality_label_text)
+        self.audioQuality2 = wx.Choice(
             panel,
             -1,
-            choices=[_("96 ك.ب/ث"), _("128 ك.ب/ث"), _("192 ك.ب/ث")],
+            choices=[_("96 ك.ب/ث"), _("128 ك.ب/ث"), _("192 ك.ب/ث"), _("320 ك.ب/ث")],
             name="conversion",
         )
-        _set_accessible_name(self.mp3Quality, mp3_quality_label_text)
-        self.mp3Quality.Selection = int(config_get("conversion"))
+        _set_accessible_name(self.audioQuality2, audio_quality_label_text)
+        self.audioQuality2.Selection = int(config_get("conversion"))
         playerOptions = wx.StaticBox(panel, -1, _("إعدادات المشغل"))
         video_quality_label_text = _("جودة الفيديو الافتراضية: ")
         self.videoQualityLabel = wx.StaticText(panel, -1, video_quality_label_text)
@@ -372,7 +372,7 @@ class SettingsDialog(wx.Dialog):
         download_grid = wx.FlexGridSizer(0, 2, 6, 8)
         download_grid.AddGrowableCol(1, 1)
         add_row(download_grid, lbl2, self.formats)
-        add_row(download_grid, lbl3, self.mp3Quality)
+        add_row(download_grid, lbl3, self.audioQuality2)
         downloadPreferencesSizer = wx.StaticBoxSizer(
             downloadPreferencesBox, wx.VERTICAL
         )
@@ -516,8 +516,8 @@ class SettingsDialog(wx.Dialog):
                     style=wx.ICON_ERROR,
                     parent=self,
                 )
-        if not self.mp3Quality.Selection == int(config_get("conversion")):
-            config_set("conversion", self.mp3Quality.Selection)
+        if self.audioQuality2.Selection != int(config_get("conversion")):
+            config_set("conversion", self.audioQuality2.Selection)
         config_set(
             "defaultformat", self.formats.Selection
         ) if not self.formats.Selection == int(config_get("defaultformat")) else None

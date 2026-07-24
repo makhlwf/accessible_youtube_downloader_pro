@@ -1269,6 +1269,14 @@ msgstr "128 ك.ب/ث"
 msgid "192 ك.ب/ث"
 msgstr "192 ك.ب/ث"
 
+#: src/gui/settings_dialog.py:235
+msgid "320 ك.ب/ث"
+msgstr "320 ك.ب/ث"
+
+#: src/gui/settings_dialog.py:230
+msgid "جودة الصوت: "
+msgstr "جودة الصوت: "
+
 #: src/gui/settings_dialog.py:240
 msgid "إعدادات المشغل"
 msgstr "إعدادات المشغل"

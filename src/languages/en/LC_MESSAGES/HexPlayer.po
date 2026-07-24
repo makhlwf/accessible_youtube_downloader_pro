@@ -1271,6 +1271,14 @@ msgstr "128 kbps"
 msgid "192 ك.ب/ث"
 msgstr "192 kbps"
 
+#: src/gui/settings_dialog.py:235
+msgid "320 ك.ب/ث"
+msgstr "320 kbps"
+
+#: src/gui/settings_dialog.py:230
+msgid "جودة الصوت: "
+msgstr "Audio Quality: "
+
 #: src/gui/settings_dialog.py:240
 msgid "إعدادات المشغل"
 msgstr "Player Settings"
