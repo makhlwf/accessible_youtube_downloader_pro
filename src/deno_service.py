@@ -1,8 +1,9 @@
-import subprocess
 import json
-import threading
-import os
 import logging
+import os
+import subprocess
+import threading
+
 import paths
 
 logger = logging.getLogger(__name__)

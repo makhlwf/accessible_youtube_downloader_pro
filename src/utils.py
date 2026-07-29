@@ -1,29 +1,37 @@
-import sys
-import re
-import json
-import requests
-import wx
 import html as html_parser
-import application
-import paths
-import subprocess
-import os
+import json
 import logging
-import time
-import threading
+import os
+import re
 import socket
+import subprocess
+import sys
+import threading
+import time
+import xml.etree.ElementTree as ET
 import zipfile
 import zipimport
-import xml.etree.ElementTree as ET
 from concurrent.futures import ThreadPoolExecutor
-from settings_handler import config_get
-from language_handler import _
-from deno_service import deno_service
+
+import requests
+import wx
+
+import application
+import paths
 from database import WatchHistory
+from deno_service import deno_service
+from language_handler import _
+from settings_handler import config_get
 from youtube_url_utils import (
     extract_launch_youtube_url as extract_launch_youtube_url,
+)
+from youtube_url_utils import (
     extract_supported_youtube_url as extract_supported_youtube_url,
+)
+from youtube_url_utils import (
     is_supported_youtube_url as is_supported_youtube_url,
+)
+from youtube_url_utils import (
     youtube_regexp,
 )
 
@@ -2101,7 +2109,7 @@ def show_error(message, exception=None, parent=None):
         wx.CallAfter(show_error, message, exception, parent)
         return
     if config_get("debug") and exception:
-        message = f"{message}\n\nDebug Info:\n{str(exception)}"
+        message = f"{message}\n\nDebug Info:\n{exception!s}"
     wx.MessageBox(
         message,
         _("خطأ"),

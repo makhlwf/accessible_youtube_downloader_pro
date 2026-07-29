@@ -1,8 +1,9 @@
-import wx
 import pyperclip
-from utils import youtube_regexp
+import wx
+
 from language_handler import _
 from theme_handler import apply_theme
+from utils import youtube_regexp
 
 
 class LinkDlg(wx.Dialog):

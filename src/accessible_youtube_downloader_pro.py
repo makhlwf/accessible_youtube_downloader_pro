@@ -1,4 +1,3 @@
-# ruff: noqa: E402
 import json
 import os
 import socket
@@ -10,33 +9,35 @@ from runtime_dlls import configure_dll_search_path
 
 configure_dll_search_path()
 
+import logging
+import subprocess
 import threading
 import webbrowser
-import subprocess
-import logging
-import wx
+
 import pyperclip
-import settings_handler
-import windows_url_association
-import browser_extension_manager
-from theme_handler import apply_theme
-from language_handler import init_translation, codes, _
+import wx
+
 import application
+import browser_extension_manager
 import database
+import settings_handler
 import utils
+import windows_url_association
 from async_utils import start_async_loop, stop_async_loop
+from doc_handler import documentation_get
 from gui.activity_dialog import LoadingDialog
 from gui.auto_detect_dialog import AutoDetectDialog
+from gui.custom_controls import CustomLabel
 from gui.download_dialog import DownloadDialog
+from gui.favorites import Favorites
+from gui.history import HistoryDialog
 from gui.link_dlg import LinkDlg
 from gui.settings_dialog import SettingsDialog
 from gui.text_viewer import Viewer
-from gui.custom_controls import CustomLabel
-from gui.favorites import Favorites
-from gui.history import HistoryDialog
-from doc_handler import documentation_get
-from media_player.media_gui import MediaGui
 from gui.tray_icon import TaskBarIcon
+from language_handler import _, codes, init_translation
+from media_player.media_gui import MediaGui
+from theme_handler import apply_theme
 from youtube_browser.browser import YoutubeBrowser
 from youtube_browser.scraper import Scraper
 from youtube_browser.search_handler import SimpleResult

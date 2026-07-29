@@ -1,7 +1,8 @@
-import sqlite3 as sql
 import logging
+import sqlite3 as sql
 import threading
 import time
+
 from paths import db_path
 
 logger = logging.getLogger(__name__)

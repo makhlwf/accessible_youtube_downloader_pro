@@ -2,6 +2,7 @@ import os
 import subprocess
 
 import wx
+
 from language_handler import _
 from theme_handler import apply_theme
 

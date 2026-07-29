@@ -1,31 +1,33 @@
 import logging
-import webbrowser
-import pyperclip
 import time
+import webbrowser
+from threading import Thread
+
+import pyperclip
 import wx
-from language_handler import _
-from gui.download_progress import DownloadProgress
-from gui.activity_dialog import LoadingDialog
-from nvda_client.client import speak
-from settings_handler import config_get, config_set
-from theme_handler import apply_theme
+
 import application
 import utils
-from utils import get_playable_stream
+from database import Continue
 from download_handler.downloader import (
     downloadAction,
     get_audio_download_format,
     get_video_download_format,
 )
-from gui.settings_dialog import SettingsDialog
-from gui.description import DescriptionDialog
+from gui.activity_dialog import LoadingDialog
 from gui.comments_dialog import CommentsDialog
 from gui.custom_controls import CustomButton
+from gui.description import DescriptionDialog
+from gui.download_progress import DownloadProgress
 from gui.quality_selection import QualitySelectionDialog
-from threading import Thread
-from database import Continue
+from gui.settings_dialog import SettingsDialog
+from language_handler import _
 from media_player.player import Player, State
 from media_player.timecodes import format_timecode, parse_timecode
+from nvda_client.client import speak
+from settings_handler import config_get, config_set
+from theme_handler import apply_theme
+from utils import get_playable_stream
 
 logger = logging.getLogger(__name__)
 
@@ -131,7 +133,7 @@ class MediaGui(wx.Frame):
         previousButton.Show() if self.results is not None else previousButton.Hide()
         beginingButton = CustomButton(self, -1, _("بداية المقطع"), name="controls")
         rewindButton = CustomButton(self, -1, _("إرجاع المقطع <"), name="controls")
-        playButton = CustomButton(self, -1, _("تشغيل\إيقاف"), name="controls")
+        playButton = CustomButton(self, -1, _(r"تشغيل\إيقاف"), name="controls")
         forwardButton = CustomButton(self, -1, _("تقديم المقطع >"), name="controls")
         nextButton = CustomButton(self, -1, _("المقطع التالي"), name="controls")
         nextButton.Show() if self.results is not None else nextButton.Hide()
@@ -1052,8 +1054,7 @@ class MediaGui(wx.Frame):
                 rate = round(
                     self.player.media.get_rate() - config_get("playback_speed_step"), 2
                 )
-                if rate < 0.1:
-                    rate = 0.1
+                rate = max(rate, 0.1)
                 self.player.media.set_rate(rate)
                 speak(f"{rate}x")
         elif event.GetKeyCode() == wx.WXK_HOME:
@@ -1081,8 +1082,7 @@ class MediaGui(wx.Frame):
         elif event.GetKeyCode() in (ord("-"), wx.WXK_NUMPAD_SUBTRACT):
             self.seek -= 1
 
-            if self.seek < 1:
-                self.seek = 1
+            self.seek = max(self.seek, 1)
 
             speak("{} {} {}".format(_("تحريك المقطع"), self.seek, _("ثانية/ثواني")))
 
@@ -1091,8 +1091,7 @@ class MediaGui(wx.Frame):
         elif event.GetKeyCode() in (ord("="), wx.WXK_NUMPAD_ADD):
             self.seek += 1
 
-            if self.seek > 10:
-                self.seek = 10
+            self.seek = min(self.seek, 10)
 
             speak("{} {} {}".format(_("تحريك المقطع"), self.seek, _("ثانية/ثواني")))
 

@@ -1,14 +1,14 @@
+import utils
 from utils import (
+    extract_launch_youtube_url,
+    extract_supported_youtube_url,
+    format_duration,
+    is_supported_youtube_url,
+    sanitize_filename,
     time_formatting,
     time_to_seconds,
-    sanitize_filename,
     youtube_regexp,
-    is_supported_youtube_url,
-    extract_supported_youtube_url,
-    extract_launch_youtube_url,
-    format_duration,
 )
-import utils
 
 
 def test_time_formatting():

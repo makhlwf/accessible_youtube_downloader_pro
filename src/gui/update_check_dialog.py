@@ -1,6 +1,7 @@
 import wx
-from language_handler import _
+
 import application
+from language_handler import _
 from theme_handler import apply_theme
 
 

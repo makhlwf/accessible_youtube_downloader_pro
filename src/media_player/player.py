@@ -1,7 +1,7 @@
 import logging
+from threading import Thread
 
 import wx
-from threading import Thread
 
 from media_player.equalizer import EqualizerService
 from media_player.mpv_backend import MpvMedia, MpvMediaPlayer, State

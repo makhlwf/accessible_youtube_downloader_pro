@@ -1,9 +1,10 @@
-import gettext
+import builtins
 import ctypes
+import gettext
 import locale
 from collections import OrderedDict
+
 import wx
-import builtins
 
 
 def _(text):
@@ -39,9 +40,10 @@ def get_default_language():
 
 
 def init_translation(domain):
-    from settings_handler import config_get
-    from paths import get_bundled_data_path
     import os
+
+    from paths import get_bundled_data_path
+    from settings_handler import config_get
 
     localedir = os.path.join(get_bundled_data_path(), "languages")
     try:

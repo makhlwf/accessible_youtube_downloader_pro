@@ -1,17 +1,18 @@
-import requests
-import wx
-import utils
-from language_handler import _
-from wx.lib.newevent import NewEvent
 import os
-from paths import update_path
-from threading import Thread
 import shutil
 import subprocess
 import sys
+from threading import Thread
 from urllib.parse import unquote, urlparse
-from theme_handler import apply_theme
 
+import requests
+import wx
+from wx.lib.newevent import NewEvent
+
+import utils
+from language_handler import _
+from paths import update_path
+from theme_handler import apply_theme
 
 ProgressChangedEvent, EVT_PROGRESS_CHANGED = NewEvent()
 DownloadFinishedEvent, EVT_DOWNLOAD_FINISHED = NewEvent()

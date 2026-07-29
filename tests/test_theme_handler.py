@@ -1,6 +1,6 @@
-from unittest.mock import patch
 import os
 import sys
+from unittest.mock import patch
 
 # Add application source directory to path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src")))
@@ -16,7 +16,7 @@ def test_theme_handler_import():
 
 
 def test_apply_theme_dark():
-    from theme_handler import apply_theme, THEMES
+    from theme_handler import THEMES, apply_theme
 
     frame = wx.Frame()
     panel = wx.Panel()
@@ -55,7 +55,7 @@ def test_apply_theme_system_default():
 
 
 def test_apply_theme_config_get():
-    from theme_handler import apply_theme, THEMES
+    from theme_handler import THEMES, apply_theme
 
     frame = wx.Frame()
 

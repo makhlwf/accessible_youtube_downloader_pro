@@ -1,5 +1,7 @@
 import unittest
+
 import wx
+
 from gui.equalizer_dialog import EqualizerDialog
 
 

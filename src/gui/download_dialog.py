@@ -1,16 +1,19 @@
-import wx
-import pyperclip
 import os
+
+import pyperclip
+import wx
+
+import utils
 from download_handler.downloader import (
     downloadAction,
     get_audio_download_format,
     get_video_download_format,
 )
-from settings_handler import config_get, config_set
-from .download_progress import DownloadProgress
-import utils
 from language_handler import _
+from settings_handler import config_get, config_set
 from theme_handler import apply_theme
+
+from .download_progress import DownloadProgress
 
 
 class DownloadDialog(wx.Frame):

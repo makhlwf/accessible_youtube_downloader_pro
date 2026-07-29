@@ -1,25 +1,27 @@
+import os
+import webbrowser
+
+import pyperclip
 import wx
+
+import application
 import utils
-from language_handler import _
-from youtube_browser.search_handler import PlaylistResult
-from youtube_browser.scraper import Scraper
-from utils import get_audio_stream, get_video_stream
 from download_handler.downloader import (
     downloadAction,
     get_audio_download_format,
     get_video_download_format,
 )
+from gui.activity_dialog import LoadingDialog
 from gui.channel_dialog import ChannelDialog
-from media_player.media_gui import MediaGui
-import pyperclip
 from gui.download_progress import DownloadProgress
 from gui.quality_selection import QualitySelectionDialog
+from language_handler import _
+from media_player.media_gui import MediaGui
 from settings_handler import config_get
 from theme_handler import apply_theme
-import webbrowser
-import os
-from gui.activity_dialog import LoadingDialog
-import application
+from utils import get_audio_stream, get_video_stream
+from youtube_browser.scraper import Scraper
+from youtube_browser.search_handler import PlaylistResult
 
 
 class PlaylistDialog(wx.Dialog):

@@ -3,24 +3,24 @@ from threading import Thread
 
 import pyperclip
 import wx
-from language_handler import _
-from gui.download_progress import DownloadProgress
-from gui.activity_dialog import LoadingDialog
-from gui.quality_selection import QualitySelectionDialog
 
-from media_player.media_gui import MediaGui
-from nvda_client.client import speak
-from settings_handler import config_get
-from theme_handler import apply_theme
 import utils
-from youtube_browser.scraper import Scraper
-from youtube_browser.search_handler import SimpleResult
+from database import Favorite
 from download_handler.downloader import (
     downloadAction,
     get_audio_download_format,
     get_video_download_format,
 )
-from database import Favorite
+from gui.activity_dialog import LoadingDialog
+from gui.download_progress import DownloadProgress
+from gui.quality_selection import QualitySelectionDialog
+from language_handler import _
+from media_player.media_gui import MediaGui
+from nvda_client.client import speak
+from settings_handler import config_get
+from theme_handler import apply_theme
+from youtube_browser.scraper import Scraper
+from youtube_browser.search_handler import SimpleResult
 
 
 class HistoryDialog(wx.Frame):

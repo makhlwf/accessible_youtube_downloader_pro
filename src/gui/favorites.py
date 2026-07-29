@@ -1,31 +1,32 @@
 import os
+import webbrowser
 
+import pyperclip
 import wx
-from language_handler import _
+
 import application
 from database import Favorite
-from utils import (
-    check_yt_dlp,
-    get_audio_stream,
-    get_video_stream,
-    get_available_qualities,
-    sanitize_filename,
-)
 from download_handler.downloader import (
     downloadAction,
     get_audio_download_format,
     get_video_download_format,
 )
+from gui.activity_dialog import LoadingDialog
 from gui.channel_dialog import ChannelDialog
-from media_player.media_gui import MediaGui
-from nvda_client.client import speak
-import pyperclip
 from gui.download_progress import DownloadProgress
 from gui.quality_selection import QualitySelectionDialog
-from gui.activity_dialog import LoadingDialog
+from language_handler import _
+from media_player.media_gui import MediaGui
+from nvda_client.client import speak
 from settings_handler import config_get
 from theme_handler import apply_theme
-import webbrowser
+from utils import (
+    check_yt_dlp,
+    get_audio_stream,
+    get_available_qualities,
+    get_video_stream,
+    sanitize_filename,
+)
 
 
 class Favorites(wx.Frame):

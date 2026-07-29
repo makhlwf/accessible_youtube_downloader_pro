@@ -1,6 +1,7 @@
 import os
-from settings_handler import config_get, config_set, defaults, config_initialization
+
 from paths import settings_path
+from settings_handler import config_get, config_initialization, config_set, defaults
 
 
 def _reset_settings_module(settings_handler):

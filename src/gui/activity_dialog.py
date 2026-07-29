@@ -1,7 +1,9 @@
-import wx
-from threading import Thread
 import inspect
 import logging
+from threading import Thread
+
+import wx
+
 from async_utils import run_in_async_loop
 from theme_handler import apply_theme
 

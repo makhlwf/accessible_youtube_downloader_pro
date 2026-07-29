@@ -1,10 +1,11 @@
-import wx
 import re
 import webbrowser
+
 import pyperclip
+import wx
+
 from language_handler import _
 from theme_handler import apply_theme
-
 
 url = re.compile(
     r"(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))"
@@ -91,7 +92,7 @@ class DescriptionDialog(wx.Dialog):
             match = url.search(description[line])
             if match is not None:
                 description[line] = f'<a href="{match.group()}">{match.group()}</a>'
-        description = "<br \>\n".join(description)
+        description = "<br \\>\n".join(description)
         content += f"""<h1>{self.Parent.title}</h1>
 <p>{description}</p>
 </body>

@@ -1,6 +1,7 @@
 import configparser
 import os
 import threading
+
 from language_handler import get_default_language
 from paths import legacy_settings_paths, settings_path
 

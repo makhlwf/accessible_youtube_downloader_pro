@@ -1,7 +1,8 @@
-from settings_handler import config_get
 import os
+
 import application
 import paths
+from settings_handler import config_get
 
 
 def documentation_get():

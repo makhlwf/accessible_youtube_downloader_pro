@@ -1,4 +1,5 @@
 import wx
+
 from settings_handler import config_get
 
 THEMES = {

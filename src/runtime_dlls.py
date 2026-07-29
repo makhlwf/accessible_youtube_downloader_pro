@@ -1,8 +1,7 @@
 import os
 import sys
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable
-
 
 _dll_directory_handles = []
 _registered_dll_directories: set[str] = set()

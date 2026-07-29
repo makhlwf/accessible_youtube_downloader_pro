@@ -1,6 +1,5 @@
 import re
 
-
 TIMECODE_PATTERN = re.compile(r"(?<![\d:])(?:\d+:)?\d{1,2}:\d{2}(?![\d:])")
 
 

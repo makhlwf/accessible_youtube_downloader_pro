@@ -1,18 +1,19 @@
-from py_yt import (
-    ChannelsSearch,
-    Playlist,
-    VideosSearch,
-    PlaylistsSearch,
-)
 import asyncio
 import logging
 import os
 from urllib.parse import urlsplit, urlunsplit
 
+from py_yt import (
+    ChannelsSearch,
+    Playlist,
+    PlaylistsSearch,
+    VideosSearch,
+)
+
 import utils
-from settings_handler import config_get
-from utils import time_to_seconds, format_duration
 from language_handler import _
+from settings_handler import config_get
+from utils import format_duration, time_to_seconds
 
 logger = logging.getLogger(__name__)
 

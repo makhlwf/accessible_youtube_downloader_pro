@@ -1,6 +1,6 @@
 import ctypes
-import platform
 import os
+import platform
 
 arch = platform.architecture()[0]
 dll_name = f"nvdaControllerClient{'32' if arch == '32bit' else '64'}.dll"

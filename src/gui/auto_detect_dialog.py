@@ -1,10 +1,10 @@
 import wx
-from language_handler import _
-from theme_handler import apply_theme
 
+from language_handler import _
 from media_player.media_gui import MediaGui
-from utils import check_yt_dlp, get_audio_stream
 from nvda_client.client import speak
+from theme_handler import apply_theme
+from utils import check_yt_dlp, get_audio_stream
 
 
 def link_type(url):

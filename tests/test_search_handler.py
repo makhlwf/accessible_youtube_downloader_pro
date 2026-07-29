@@ -1,10 +1,12 @@
-import pytest
 from unittest.mock import AsyncMock, patch
+
+import pytest
+
 from youtube_browser.search_handler import (
     ChannelTabResult,
     PlaylistResult,
-    SimpleResult,
     Search,
+    SimpleResult,
 )
 
 

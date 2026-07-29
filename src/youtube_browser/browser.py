@@ -1,35 +1,34 @@
-import utils
+import logging
+import os
 import webbrowser
 from threading import Thread
-import os
 
 import pyperclip
 import wx
-from language_handler import _
-from gui.download_progress import DownloadProgress
-from gui.search_dialog import SearchDialog
-from gui.settings_dialog import SettingsDialog
-from gui.playlist_dialog import PlaylistDialog
-from gui.channel_dialog import ChannelDialog
-from gui.activity_dialog import LoadingDialog
-from gui.quality_selection import QualitySelectionDialog
 
-from media_player.media_gui import MediaGui
-from nvda_client.client import speak
-from settings_handler import config_get
-from youtube_browser.search_handler import Search
-from youtube_browser.scraper import Scraper
-from utils import get_playable_stream
+import utils
 from async_utils import run_in_async_loop
-from theme_handler import apply_theme
-
+from database import Favorite
 from download_handler.downloader import (
     downloadAction,
     get_audio_download_format,
     get_video_download_format,
 )
-from database import Favorite
-import logging
+from gui.activity_dialog import LoadingDialog
+from gui.channel_dialog import ChannelDialog
+from gui.download_progress import DownloadProgress
+from gui.playlist_dialog import PlaylistDialog
+from gui.quality_selection import QualitySelectionDialog
+from gui.search_dialog import SearchDialog
+from gui.settings_dialog import SettingsDialog
+from language_handler import _
+from media_player.media_gui import MediaGui
+from nvda_client.client import speak
+from settings_handler import config_get
+from theme_handler import apply_theme
+from utils import get_playable_stream
+from youtube_browser.scraper import Scraper
+from youtube_browser.search_handler import Search
 
 logger = logging.getLogger(__name__)
 

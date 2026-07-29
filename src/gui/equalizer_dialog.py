@@ -1,8 +1,9 @@
 import wx
+
 from language_handler import _
-from settings_handler import config_get, config_set
 from media_player.equalizer import EqualizerService
 from media_player.media_gui import MediaGui
+from settings_handler import config_get, config_set
 from theme_handler import apply_theme
 
 

@@ -10,7 +10,6 @@ from typing import Any
 
 from runtime_dlls import configure_dll_search_path, runtime_roots
 
-
 MPV_FORMAT_STRING = 1
 MPV_FORMAT_FLAG = 3
 MPV_FORMAT_INT64 = 4
@@ -677,7 +676,7 @@ class MpvMediaPlayer:
     def set_rate(self, rate: float) -> None:
         self._set_property_double("speed", max(0.1, float(rate)))
 
-    def audio_set_volume(self, volume: int | float) -> None:
+    def audio_set_volume(self, volume: float) -> None:
         self._set_property_double("volume", max(0.0, min(350.0, float(volume))))
 
     def get_audio_output_devices(self) -> list[dict[str, str]]:

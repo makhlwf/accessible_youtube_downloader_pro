@@ -15,7 +15,9 @@ def _normalise_url_candidate(value):
     value = value.strip().strip("\"'")
     if value.startswith("//"):
         return f"https:{value}"
-    if re.match(r"^(?:[\w-]+\.)?(?:youtube\.com|youtu\.be)(?:[/:?#]|$)", value, re.I):
+    if re.match(
+        r"^(?:[\w-]+\.)?(?:youtube\.com|youtu\.be)(?:[/:?#]|$)", value, re.IGNORECASE
+    ):
         return f"https://{value}"
     return value
 

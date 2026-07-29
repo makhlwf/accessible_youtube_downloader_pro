@@ -1,7 +1,7 @@
-import sys
-import os
-import ctypes
 import builtins
+import ctypes
+import os
+import sys
 from unittest.mock import MagicMock
 
 # Add application source to sys.path
