@@ -34,7 +34,7 @@ requires-dist = [
     { name = "py-yt-search", specifier = "==0.7.2" },
     { name = "pyperclip", specifier = "==1.11.0" },
     { name = "requests", specifier = "==2.34.2" },
-    { name = "wxpython", specifier = "==4.3.0" },
+    { name = "wxpython", specifier = "==4.3.1" },
 ]
 
 [package.metadata.requires-dev]
@@ -763,15 +763,15 @@ wheels = [
 
 [[package]]
 name = "wxpython"
-version = "4.3.0"
+version = "4.3.1"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/5f/59/8da2f898b3e1772ba501e5108d7d7824175485731c9b5f79381cb1e682d0/wxpython-4.3.0.tar.gz", hash = "sha256:33d17964ba7392a7d08d4cdfe6573ab331fe61b3ba2e281f202fd8b4e0ef7810", size = 64071549, upload-time = "2026-07-28T13:05:46.102Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/3d/dd/026f6286f8beefcdd9551ad2e05b4e3edb45e638cdc067db211c53c950ce/wxpython-4.3.1.tar.gz", hash = "sha256:4e3a95b63175be8e10f0662de506a36d8cc6cb86ecc5b30ae880c8dafb34a0cd", size = 64071924, upload-time = "2026-07-30T01:11:13.852Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ac/48/32dcbbac583dbfe55e49a6c5ddde76e6000da5c52fdc0b21cc51a0e24324/wxpython-4.3.0-cp314-cp314-macosx_10_15_x86_64.whl", hash = "sha256:964d13481681f79008f1ec70d9455513f36adefbd1a2833a9db1c07dd5024c7a", size = 20027413, upload-time = "2026-07-28T13:05:27.018Z" },
-    { url = "https://files.pythonhosted.org/packages/66/4f/69cfd22261c8cad412b0a0e604b9bbe1059f828c0c1def2f9caa718feac9/wxpython-4.3.0-cp314-cp314-macosx_11_0_arm64.whl", hash = "sha256:0b5b9a2bb96103a940c785a2a94918dfe698c3858ee834a52407bff9533cfdbb", size = 18826655, upload-time = "2026-07-28T13:05:30.18Z" },
-    { url = "https://files.pythonhosted.org/packages/e0/56/7f6058c4e0d4eed38e42338dd3f60325c006efc01b3b9b9c8616feeafd9a/wxpython-4.3.0-cp314-cp314-win32.whl", hash = "sha256:d420242e02031e45217a38ce9b4a037aac43ada03daef012b1c95dec49736ccb", size = 16662576, upload-time = "2026-07-28T13:05:33.289Z" },
-    { url = "https://files.pythonhosted.org/packages/70/c9/b11f58fae8e82a11769e193ce18be4b37e5ba161944074d4a2e858e45dd6/wxpython-4.3.0-cp314-cp314-win_amd64.whl", hash = "sha256:c19d2efc215704dfae87137670e17e8b421157fcb33535074ddd5dda7a12bf7d", size = 18967164, upload-time = "2026-07-28T13:05:36.839Z" },
-    { url = "https://files.pythonhosted.org/packages/8a/a4/1454dbb1a75a55f23f120fd885e31113e988f2a216de3d963ff92ff9d7ec/wxpython-4.3.0-cp314-cp314-win_arm64.whl", hash = "sha256:5df2224f5c26cee8627a3fd9bebc24d767e62555ca146d7d86309d6f7c392851", size = 16622300, upload-time = "2026-07-28T13:05:40.191Z" },
+    { url = "https://files.pythonhosted.org/packages/d2/6b/b526cadb25bcf95f29e899198b8fb5d443bdf7f34122298a0cdb2783ba5b/wxpython-4.3.1-cp314-cp314-macosx_10_15_x86_64.whl", hash = "sha256:a5e771bb8a6115ca3f52facb66e661c341591def4ae5bcc1616ce824323697cc", size = 20027593, upload-time = "2026-07-30T01:10:54.332Z" },
+    { url = "https://files.pythonhosted.org/packages/f1/cd/93e944a4c072325787cc226c8987c339db3e313fe684314305bfaff15070/wxpython-4.3.1-cp314-cp314-macosx_11_0_arm64.whl", hash = "sha256:6e4ad9bae9758bde843d9d4d713421451b2d90858805611c8a5ad3844b8ca66f", size = 18827057, upload-time = "2026-07-30T01:10:57.836Z" },
+    { url = "https://files.pythonhosted.org/packages/d0/bc/76f8ed6d9b8484a32d60cfac804056f7b28c66d1c8c461e283d1d967d4de/wxpython-4.3.1-cp314-cp314-win32.whl", hash = "sha256:f2a0721f56ad45bfea1edae8cf9de662c4048647bbd25e55f8d73644d26aba72", size = 16662676, upload-time = "2026-07-30T01:11:01.344Z" },
+    { url = "https://files.pythonhosted.org/packages/16/73/ff21c019e8aaad5eb563859559ba2a4f6efd0581834703db993d64abea97/wxpython-4.3.1-cp314-cp314-win_amd64.whl", hash = "sha256:bbb4cefea441cba77f81b0ac2f7445f0ad01f18fee3b72a78ed48298b3f8f0ab", size = 18967348, upload-time = "2026-07-30T01:11:04.774Z" },
+    { url = "https://files.pythonhosted.org/packages/0a/10/97d4671cd565cf156dcb3223a45cad34236ed1825a2abf0c5c815ad2daec/wxpython-4.3.1-cp314-cp314-win_arm64.whl", hash = "sha256:d69d21344d92488465e32118363d2ef307aee54f9d33a0826180e6bee8fbfd91", size = 16622520, upload-time = "2026-07-30T01:11:08.148Z" },
 ]
 
 [[package]]
