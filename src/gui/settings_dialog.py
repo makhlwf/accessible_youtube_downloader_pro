@@ -472,7 +472,7 @@ class SettingsDialog(wx.Dialog):
             os.path.join(os.getenv("userprofile"), "downloads"),
             parent=self,
         )
-        if not new == "":
+        if new != "":
             self.preferences["path"] = new
             self.pathField.Value = new
             self.pathField.SetFocus()
@@ -520,7 +520,7 @@ class SettingsDialog(wx.Dialog):
             config_set("conversion", self.audioQuality2.Selection)
         config_set(
             "defaultformat", self.formats.Selection
-        ) if not self.formats.Selection == int(config_get("defaultformat")) else None
+        ) if self.formats.Selection != int(config_get("defaultformat")) else None
         config_set("defaultvideoquality", self.videoQuality.Selection)
         config_set("defaultaudioquality", self.audioQuality.Selection)
         config_set(
@@ -532,7 +532,7 @@ class SettingsDialog(wx.Dialog):
         config_set("theme", selected_theme)
         apply_theme_to_all_windows(selected_theme)
         lang = {value: key for key, value in languages.items()}
-        if not lang[self.languageBox.Selection] == config_get("lang"):
+        if lang[self.languageBox.Selection] != config_get("lang"):
             config_set("lang", lang[self.languageBox.Selection])
             msg = wx.MessageBox(
                 _(

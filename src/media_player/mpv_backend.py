@@ -6,7 +6,7 @@ import threading
 import zipfile
 from enum import IntEnum
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 from runtime_dlls import configure_dll_search_path, runtime_roots
 
@@ -61,7 +61,7 @@ class MpvNodeList(ctypes.Structure):
 
 
 class MpvNodeUnion(ctypes.Union):
-    _fields_ = [
+    _fields_: ClassVar[list] = [
         ("string", ctypes.c_char_p),
         ("flag", ctypes.c_int),
         ("int64", ctypes.c_int64),
@@ -300,7 +300,7 @@ def _parse_node(node: MpvNode) -> Any:
 
 def _clean_option(option: str) -> tuple[str, str]:
     option = option.strip()
-    while option.startswith(":") or option.startswith("-"):
+    while option.startswith((":", "-")):
         option = option[1:]
     if "=" in option:
         key, value = option.split("=", 1)

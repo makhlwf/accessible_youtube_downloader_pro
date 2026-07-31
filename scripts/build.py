@@ -11,7 +11,7 @@ BUILD_DIR = os.path.join(ROOT, "build")
 
 if not os.path.isdir(SRC_DIR):
     print("Error: This script should be run from the root of the repository.")
-    exit(1)
+    sys.exit(1)
 
 mpv_dll = os.path.join(SRC_DIR, "libmpv-2.dll")
 mpv_archive = os.path.join(SRC_DIR, "libmpv-2.dll.zip")
@@ -385,11 +385,11 @@ try:
     print(f"The package directory is: {package_dir}")
 except subprocess.CalledProcessError as e:
     print(f"Build failed with error: {e}")
-    exit(1)
+    sys.exit(1)
 except RuntimeError as e:
     print(f"Build failed: {e}")
-    exit(1)
+    sys.exit(1)
 except FileNotFoundError:
     print("Error: pyinstaller is not installed or not in the system's PATH.")
     print("Please install it using: uv sync --no-dev --group build")
-    exit(1)
+    sys.exit(1)

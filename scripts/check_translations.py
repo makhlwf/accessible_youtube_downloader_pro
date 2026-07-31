@@ -17,6 +17,8 @@ def comparable_lines(path):
 
 
 def main():
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
     with tempfile.TemporaryDirectory() as temp_dir:
         generated = Path(temp_dir) / "messages.pot.tmp"
         command = [

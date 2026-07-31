@@ -258,7 +258,7 @@ class HistoryDialog(wx.Frame):
             format = get_video_download_format(quality)
         else:
             format = get_audio_download_format(convert=option == 2)
-        convert = True if option == 2 else False
+        convert = option == 2
         downloadAction(
             url,
             config_get("path"),

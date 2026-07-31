@@ -752,7 +752,7 @@ class MediaGui(wx.Frame):
             format = get_video_download_format(quality)
         else:
             format = get_audio_download_format(convert=option == 2)
-        convert = True if option == 2 else False
+        convert = option == 2
         folder = False  # Not relevant for single video downloads in MediaGui
         downloadAction(
             url,
@@ -1356,11 +1356,10 @@ class MediaGui(wx.Frame):
                             self.Parent.searchResults.Append,
                             self.results.get_last_titles(),
                         )
-                elif hasattr(self.Parent, "videosBox"):
-                    if self.results.next():
-                        wx.CallAfter(
-                            self.Parent.videosBox.Append, self.results.get_new_titles()
-                        )
+                elif hasattr(self.Parent, "videosBox") and self.results.next():
+                    wx.CallAfter(
+                        self.Parent.videosBox.Append, self.results.get_new_titles()
+                    )
 
             Thread(target=load_more, daemon=True).start()
 

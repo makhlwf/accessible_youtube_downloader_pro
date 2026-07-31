@@ -205,16 +205,18 @@ class YoutubeBrowser(wx.Frame):
         url,
         dlg,
         download_type="video",
-        path=config_get("path"),
+        path=None,
         title=None,
         quality=None,
     ):
+        if path is None:
+            path = config_get("path")
         if option == 0:
             fmt = get_video_download_format(quality)
         else:
             fmt = get_audio_download_format(convert=option == 2)
-        convert = True if option == 2 else False
-        folder = False if download_type == "video" else True
+        convert = option == 2
+        folder = download_type != "video"
         if folder and title:
             path = os.path.join(path, utils.sanitize_filename(title))
         downloadAction(
@@ -245,7 +247,7 @@ class YoutubeBrowser(wx.Frame):
             try:
                 self.search = run_in_async_loop(search_obj.init_async())
                 if self.search is None:
-                    raise Exception("Search returned no results")
+                    raise RuntimeError("Search returned no results")
                 wx.CallAfter(self.on_search_complete)
             except Exception as e:
                 logger.error(f"Search failed: {e}")

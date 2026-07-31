@@ -24,9 +24,9 @@ def _download_name_from_url(url):
 
 
 class UpdateDialog(wx.Dialog):
-    def __init__(
-        self, parent, url, dest=None, title=_("تنزيل التحديثات"), is_zip=False
-    ):
+    def __init__(self, parent, url, dest=None, title=None, is_zip=False):
+        if title is None:
+            title = _("تنزيل التحديثات")
         super().__init__(parent, title=title)
         self.dest = dest
         self.is_zip = is_zip

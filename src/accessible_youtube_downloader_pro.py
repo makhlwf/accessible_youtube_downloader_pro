@@ -381,9 +381,8 @@ class HomeScreen(wx.Frame):
         if (
             legacy_url_association
             or windows_url_association.is_legacy_http_url_handler_registered()
-        ):
-            if windows_url_association.cleanup_legacy_http_url_handler():
-                settings_handler.config_set("url_association", False)
+        ) and windows_url_association.cleanup_legacy_http_url_handler():
+            settings_handler.config_set("url_association", False)
         if settings_handler.config_get("browser_integration"):
             windows_url_association.register_browser_integration()
 
@@ -736,7 +735,7 @@ class HomeScreen(wx.Frame):
                 s.bind((IPC_HOST, IPC_PORT))
                 s.listen(1)
                 while True:
-                    conn, addr = s.accept()
+                    conn, _addr = s.accept()
                     with conn:
                         chunks = []
                         while True:

@@ -62,12 +62,10 @@ class DownloadDialog(wx.Frame):
     # a method to show/hide the audio formats box depending on the downloading type
     def toggleChoices(self):
         for control in self.panel.GetChildren():
-            if self.downloadingFormat.Selection == 0:
-                if control.Name == "convert":
-                    control.Show()
-            elif self.downloadingFormat.Selection == 1:
-                if control.Name == "convert":
-                    control.Hide()
+            if self.downloadingFormat.Selection == 0 and control.Name == "convert":
+                control.Show()
+            elif self.downloadingFormat.Selection == 1 and control.Name == "convert":
+                control.Hide()
 
     # an event method which is called when the radio box selection is changed
     def onRadioBox(self, event):

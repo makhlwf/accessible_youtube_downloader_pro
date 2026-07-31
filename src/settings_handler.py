@@ -106,7 +106,7 @@ def config_initialization():
 
 
 def _load_cache():
-    global _cache, _config
+    global _cache
     _cache = {}
     for settings_file in _candidate_settings_files():
         config = _new_config()

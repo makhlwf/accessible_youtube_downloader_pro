@@ -88,9 +88,8 @@ class Player:
             self.apply_saved_audio_output_device()
         if config_get("repeatTracks") and not config_get("autonext"):
             self.media.play()
-        elif config_get("autonext") and not config_get("repeatTracks"):
-            if self.window:
-                wx.CallAfter(self.window.next)
+        elif config_get("autonext") and not config_get("repeatTracks") and self.window:
+            wx.CallAfter(self.window.next)
 
     def set_media(self, m, options=None):
         media = MpvMedia(m, options)

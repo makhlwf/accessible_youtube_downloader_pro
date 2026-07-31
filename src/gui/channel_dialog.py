@@ -191,10 +191,12 @@ class ChannelDialog(wx.Dialog):
         url,
         dlg,
         download_type="video",
-        path=config_get("path"),
+        path=None,
         title=None,
         quality=None,
     ):
+        if path is None:
+            path = config_get("path")
         if option == 0:
             fmt = get_video_download_format(quality)
         else:

@@ -1,6 +1,7 @@
 import html as html_parser
 import json
 import logging
+import math
 import os
 import re
 import socket
@@ -22,16 +23,10 @@ from database import WatchHistory
 from deno_service import deno_service
 from language_handler import _
 from settings_handler import config_get
-from youtube_url_utils import (
-    extract_launch_youtube_url as extract_launch_youtube_url,
-)
-from youtube_url_utils import (
-    extract_supported_youtube_url as extract_supported_youtube_url,
-)
-from youtube_url_utils import (
-    is_supported_youtube_url as is_supported_youtube_url,
-)
-from youtube_url_utils import (
+from youtube_url_utils import (  # noqa: F401
+    extract_launch_youtube_url,
+    extract_supported_youtube_url,
+    is_supported_youtube_url,
     youtube_regexp,
 )
 
@@ -55,7 +50,7 @@ def _coerce_count(value):
     if isinstance(value, int):
         return value
     if isinstance(value, float):
-        return int(value) if value == value else None
+        return int(value) if not math.isnan(value) else None
 
     text = str(value).strip()
     if not text:
@@ -72,7 +67,7 @@ def _coerce_count(value):
 
     suffix = (match.group(2) or "").lower()
     multiplier = {"k": 1000, "m": 1000000, "b": 1000000000}.get(suffix, 1)
-    return int(round(number * multiplier))
+    return round(number * multiplier)
 
 
 def _normalize_like_info(result):
@@ -237,7 +232,7 @@ def _normalize_subtitle_tracks(info):
             if not entries:
                 continue
 
-            selected = sorted(entries, key=_subtitle_track_priority)[0]
+            selected = min(entries, key=_subtitle_track_priority)
             tracks.append(
                 {
                     "code": code,
@@ -796,6 +791,7 @@ def _run_deno_cache(config_path, lock_path, reload_package=False):
         text=True,
         encoding="utf-8",
         timeout=180,
+        check=False,
     )
 
 
@@ -947,6 +943,7 @@ def get_deno_version():
             text=True,
             encoding="utf-8",
             creationflags=subprocess.CREATE_NO_WINDOW,
+            check=False,
         )
         if result.returncode == 0:
             line = result.stdout.splitlines()[0]
@@ -1049,6 +1046,7 @@ def ensure_js_dependencies():
                     creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
                     env=env,
                     cwd=paths.main_path,
+                    check=False,
                 )
         except Exception:
             pass
@@ -1352,7 +1350,7 @@ def get_playable_stream(url, audio_mode=False):
                         ) as ydl_retry:
                             entry = ydl_retry.extract_info(url, download=False)
                     else:
-                        raise e
+                        raise
 
             _info_cache.set(url, entry)
             return _stream_from_info(entry, audio_mode=audio_mode)
@@ -1449,7 +1447,7 @@ def get_available_qualities(url, audio_mode=False):
             and f.get("vcodec") == "none"
             and f.get("abr") is not None
         ]
-    return sorted(list(set(available)))
+    return sorted(set(available))
 
 
 def get_available_subtitles(url):
@@ -1494,21 +1492,20 @@ def get_specific_quality_stream(url, height, audio_mode=False):
         is_video=not audio_mode,
         target_height=height if not audio_mode else None,
     )
-    if audio_mode:
+    if audio_mode and isinstance(height, int):
         # For audio, target_height is not really height but we might want to handle it
         # Actually pick_best_format for audio doesn't support target_height yet
         # But we can pass preferred_index
         # Let's just find the closest abr if audio_mode
-        if isinstance(height, int):
-            for f in formats:
-                if (
-                    f.get("acodec") != "none"
-                    and f.get("vcodec") == "none"
-                    and f.get("abr") == height
-                ):
-                    stream = f
-                    quality = f.get("abr")
-                    break
+        for f in formats:
+            if (
+                f.get("acodec") != "none"
+                and f.get("vcodec") == "none"
+                and f.get("abr") == height
+            ):
+                stream = f
+                quality = f.get("abr")
+                break
 
     if stream:
         audio_url = audio_stream.get("url") if audio_stream else None
@@ -1629,6 +1626,7 @@ def update_watch_history(
             cwd=paths.main_path,
             env=env,
             capture_output=True,
+            check=False,
         )
     except Exception as e:
         logger.error(f"Error updating watch history: {e}")

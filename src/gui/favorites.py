@@ -84,16 +84,18 @@ class Favorites(wx.Frame):
         url,
         dlg,
         download_type="video",
-        path=config_get("path"),
+        path=None,
         title=None,
         quality=None,
     ):
+        if path is None:
+            path = config_get("path")
         if option == 0:
             format = get_video_download_format(quality)
         else:
             format = get_audio_download_format(convert=option == 2)
-        convert = True if option == 2 else False
-        folder = False if download_type == "video" else True
+        convert = option == 2
+        folder = download_type != "video"
         if folder and title:
             path = os.path.join(path, sanitize_filename(title))
         downloadAction(
@@ -135,7 +137,7 @@ class Favorites(wx.Frame):
             title,
             stream,
             url,
-            True if not self.rows[n]["live"] else False,
+            bool(not self.rows[n]["live"]),
             results=self.rows,
         )
         self.Hide()

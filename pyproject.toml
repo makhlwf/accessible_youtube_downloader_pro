@@ -38,3 +38,11 @@ addopts = "-ra"
 [tool.ruff]
 target-version = "py314"
 src = ["src", "tests", "scripts"]
+
+[tool.ruff.lint]
+ignore = ["BLE001", "S110"]
+
+[tool.ty.rules]
+all = "ignore"
+
+

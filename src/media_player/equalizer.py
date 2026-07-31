@@ -1,10 +1,10 @@
-from typing import Any
+from typing import Any, ClassVar
 
 
 class EqualizerService:
     """Service to manage MPV audio equalizer settings."""
 
-    PRESETS = {
+    PRESETS: ClassVar[dict[str, dict[str, Any]]] = {
         "Flat": {"preamp": 0.0, "bands": [0.0] * 10},
         "Rock": {
             "preamp": 5.0,

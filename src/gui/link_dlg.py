@@ -44,7 +44,7 @@ class LinkDlg(wx.Dialog):
 
     def onOk(self, event):
         link = self.link.Value
-        audio = True if self.mode.Selection == 1 else False
+        audio = self.mode.Selection == 1
         self.data = {"link": link, "audio": audio}
         self.Destroy()
 

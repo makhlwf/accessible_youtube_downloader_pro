@@ -126,7 +126,7 @@ class DenoService:
 
                 return response.get("result")
             except Exception as e:
-                logger.exception(f"Error in Deno service send_command: {e}")
+                logger.exception("Error in Deno service send_command")
                 if self.process:
                     try:
                         self.process.kill()

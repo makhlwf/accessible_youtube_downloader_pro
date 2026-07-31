@@ -16,7 +16,6 @@ def start_async_loop():
 
 
 def stop_async_loop():
-    global _async_loop
     if _async_loop and _async_loop.is_running():
         future = asyncio.run_coroutine_threadsafe(_cancel_pending_tasks(), _async_loop)
         try:
@@ -28,7 +27,6 @@ def stop_async_loop():
 
 
 def get_async_loop(timeout=5):
-    global _async_loop
     if _async_loop_ready.wait(timeout) and _async_loop and _async_loop.is_running():
         return _async_loop
     raise RuntimeError("Async loop not running or not initialized.")

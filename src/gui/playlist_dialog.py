@@ -79,7 +79,7 @@ class PlaylistDialog(wx.Dialog):
             if (
                 self.result is None
             ):  # Handle case where init_async returns None due to error
-                raise Exception("Failed to initialize playlist")
+                raise RuntimeError("Failed to initialize playlist")
 
             self.title = self.result.title
             self.SetTitle(f"{application.name} - {self.title}")
@@ -110,16 +110,18 @@ class PlaylistDialog(wx.Dialog):
         url,
         dlg,
         download_type="video",
-        path=config_get("path"),
+        path=None,
         title=None,
         quality=None,
     ):
+        if path is None:
+            path = config_get("path")
         if option == 0:
             format = get_video_download_format(quality)
         else:
             format = get_audio_download_format(convert=option == 2)
-        convert = True if option == 2 else False
-        folder = False if download_type == "video" else True
+        convert = option == 2
+        folder = download_type != "video"
         if folder and title:
             path = os.path.join(path, utils.sanitize_filename(title))
         downloadAction(
