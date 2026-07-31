@@ -221,8 +221,8 @@ def test_copy_comment_copies_selected_content(monkeypatch):
     spoken = []
     dialog.commentsList = FakeList()
     monkeypatch.setattr(
-        comments_dialog.pyperclip,
-        "copy",
+        comments_dialog.utils,
+        "copy_to_clipboard",
         lambda content: copied.setdefault("content", content),
     )
     monkeypatch.setattr(
