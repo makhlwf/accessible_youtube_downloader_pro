@@ -2158,3 +2158,17 @@ def ensure_focus(window):
             ctypes.windll.user32.SetForegroundWindow(window.GetHandle())
         except Exception as e:
             logger.error(f"Failed to SetForegroundWindow: {e}")
+
+
+def copy_to_clipboard(text):
+    import pyperclip
+
+    pyperclip.copy(text)
+    try:
+        app = wx.GetApp()
+        if app:
+            top_win = app.GetTopWindow()
+            if top_win and hasattr(top_win, "last_clip_content"):
+                top_win.last_clip_content = text
+    except Exception:
+        pass

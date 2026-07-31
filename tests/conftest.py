@@ -176,9 +176,12 @@ mock_wx.SL_VERTICAL = 4
 mock_wx.NOT_FOUND = -1
 mock_wx.Locale = MagicMock()
 mock_wx.GetApp = MagicMock()
+mock_wx.GetActiveWindow = MagicMock(return_value=None)
+mock_wx.GetTopLevelWindows = MagicMock(return_value=[])
 mock_wx.Timer = MagicMock()
 
 sys.modules["wx"] = mock_wx
+sys.modules["wx.adv"] = MagicMock()
 sys.modules["wx.lib"] = MagicMock()
 mock_newevent = MagicMock()
 mock_newevent.NewEvent.return_value = (MagicMock(), MagicMock())

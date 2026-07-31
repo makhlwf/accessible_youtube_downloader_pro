@@ -1,6 +1,5 @@
 from threading import Thread
 
-import pyperclip
 import wx
 
 import utils
@@ -351,7 +350,7 @@ class CommentsDialog(wx.Dialog):
         if selection == wx.NOT_FOUND or selection >= len(self.comments):
             return
 
-        pyperclip.copy(self.comments[selection].get("content") or "")
+        utils.copy_to_clipboard(self.comments[selection].get("content") or "")
         speak(_("تم نسخ نص التعليق"))
 
     def onCharHook(self, event):

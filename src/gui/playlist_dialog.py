@@ -1,7 +1,6 @@
 import os
 import webbrowser
 
-import pyperclip
 import wx
 
 import application
@@ -202,7 +201,7 @@ class PlaylistDialog(wx.Dialog):
         n = self.videosBox.Selection
         video_id = self.result.get_id(n)
         url = f"https://www.youtube.com/watch?v={video_id}"
-        pyperclip.copy(url)
+        utils.copy_to_clipboard(url)
         wx.MessageBox(_("تم نسخ رابط المقطع بنجاح"), _("اكتمال"), parent=self)
 
     def onOpenChannel(self, event):

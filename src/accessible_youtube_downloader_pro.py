@@ -390,12 +390,22 @@ class HomeScreen(wx.Frame):
         if cookies_path and os.path.exists(cookies_path):
             self.load_home_feed()
 
-        if settings_handler.config_get("background_monitoring"):
+        autodetect = settings_handler.config_get("autodetect")
+        bg_monitoring = settings_handler.config_get("background_monitoring")
+
+        if bg_monitoring:
             utils.set_startup(True)
+            if autodetect:
+                self.detectFromClipboard(True)
+            else:
+                try:
+                    self.last_clip_content = pyperclip.paste()
+                except Exception:
+                    pass
             self.clip_timer.Start(1500)
         else:
             utils.set_startup(False)
-            self.detectFromClipboard(settings_handler.config_get("autodetect"))
+            self.detectFromClipboard(autodetect)
 
         if settings_handler.config_get("checkupdates"):
             threading.Thread(
@@ -404,6 +414,14 @@ class HomeScreen(wx.Frame):
                 daemon=True,
             ).start()
 
+    def is_app_active(self):
+        if wx.GetActiveWindow() is not None:
+            return True
+        for win in wx.GetTopLevelWindows():
+            if win.IsShown() and win.IsActive():
+                return True
+        return False
+
     def on_clip_timer(self, event):
         try:
             clip_content = pyperclip.paste()
@@ -411,6 +429,8 @@ class HomeScreen(wx.Frame):
             return
         if clip_content != self.last_clip_content:
             self.last_clip_content = clip_content
+            if self.is_app_active():
+                return
             detected_url = utils.extract_supported_youtube_url(clip_content)
             if detected_url:
                 dlg = AutoDetectDialog(self, detected_url)
@@ -599,7 +619,11 @@ class HomeScreen(wx.Frame):
     def detectFromClipboard(self, config):
         if not config:
             return
-        clip_content = pyperclip.paste()
+        try:
+            clip_content = pyperclip.paste()
+        except Exception:
+            return
+        self.last_clip_content = clip_content
         detected_url = utils.extract_supported_youtube_url(clip_content)
         if detected_url:
             AutoDetectDialog(self, detected_url).ShowModal()
@@ -620,6 +644,10 @@ class HomeScreen(wx.Frame):
         if settings_handler.config_get("background_monitoring"):
             utils.set_startup(True)
             if not self.clip_timer.IsRunning():
+                try:
+                    self.last_clip_content = pyperclip.paste()
+                except Exception:
+                    pass
                 self.clip_timer.Start(1500)
         else:
             utils.set_startup(False)

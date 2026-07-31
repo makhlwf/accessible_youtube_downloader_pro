@@ -3,7 +3,6 @@ import os
 import webbrowser
 from threading import Thread
 
-import pyperclip
 import wx
 
 import utils
@@ -460,7 +459,7 @@ class YoutubeBrowser(wx.Frame):
     def onCopy(self, event):
         n = self.searchResults.Selection
         if n != wx.NOT_FOUND:
-            pyperclip.copy(self.search.get_url(n))
+            utils.copy_to_clipboard(self.search.get_url(n))
             wx.MessageBox(_("تم نسخ رابط المقطع بنجاح"), _("اكتمال"), parent=self)
 
     def loadMore(self):

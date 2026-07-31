@@ -1,9 +1,9 @@
 import re
 import webbrowser
 
-import pyperclip
 import wx
 
+import utils
 from language_handler import _
 from theme_handler import apply_theme
 
@@ -104,5 +104,5 @@ class DescriptionDialog(wx.Dialog):
         self.contentBox.SetFocus()
 
     def onCopy(self, event):
-        pyperclip.copy(self.content)
+        utils.copy_to_clipboard(self.content)
         self.contentBox.SetFocus()

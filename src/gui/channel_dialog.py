@@ -2,7 +2,6 @@ import os
 import webbrowser
 from threading import Thread
 
-import pyperclip
 import wx
 
 import application
@@ -505,7 +504,7 @@ class ChannelDialog(wx.Dialog):
     def onCopy(self, event):
         selection = self.current_selection()
         if selection != wx.NOT_FOUND:
-            pyperclip.copy(self.current_result.get_url(selection))
+            utils.copy_to_clipboard(self.current_result.get_url(selection))
             wx.MessageBox(_("تم نسخ رابط المقطع بنجاح"), _("اكتمال"), parent=self)
 
     def toggleActions(self):

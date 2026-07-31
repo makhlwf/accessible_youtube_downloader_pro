@@ -1,7 +1,6 @@
 import os
 import webbrowser
 
-import pyperclip
 import wx
 
 import application
@@ -22,6 +21,7 @@ from settings_handler import config_get
 from theme_handler import apply_theme
 from utils import (
     check_yt_dlp,
+    copy_to_clipboard,
     get_audio_stream,
     get_available_qualities,
     get_video_stream,
@@ -244,7 +244,7 @@ class Favorites(wx.Frame):
         )
 
     def onCopy(self, event):
-        pyperclip.copy(self.rows[self.favList.Selection]["url"])
+        copy_to_clipboard(self.rows[self.favList.Selection]["url"])
         wx.MessageBox(_("تم نسخ رابط المقطع بنجاح"), _("اكتمال"), parent=self)
 
     def directDownload(self):

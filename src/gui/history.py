@@ -1,7 +1,6 @@
 import webbrowser
 from threading import Thread
 
-import pyperclip
 import wx
 
 import utils
@@ -316,7 +315,7 @@ class HistoryDialog(wx.Frame):
     def onCopy(self, event):
         selection = self.historyList.GetSelection()
         if selection != wx.NOT_FOUND and self.history_data:
-            pyperclip.copy(self.history_data[selection]["url"])
+            utils.copy_to_clipboard(self.history_data[selection]["url"])
             wx.MessageBox(_("تم نسخ رابط المقطع بنجاح"), _("اكتمال"), parent=self)
 
     def onFavorite(self, event):

@@ -3,7 +3,6 @@ import time
 import webbrowser
 from threading import Thread
 
-import pyperclip
 import wx
 
 import application
@@ -1391,7 +1390,7 @@ class MediaGui(wx.Frame):
         self.changeTrack(index)
 
     def onCopy(self, event):
-        pyperclip.copy(self.url)
+        utils.copy_to_clipboard(self.url)
         wx.MessageBox(_("تم نسخ رابط المقطع بنجاح"), _("اكتمال"), parent=self)
 
     def onBrowser(self, event):
