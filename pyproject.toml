@@ -1,6 +1,6 @@
 [project]
 name = "accessible-youtube-downloader-pro"
-version = "3.5.0"
+version = "3.6.0"
 description = "Accessible Windows YouTube browser, player, and downloader."
 readme = "readme.md"
 requires-python = ">=3.14"
