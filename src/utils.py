@@ -2070,7 +2070,7 @@ def check_for_updates(quiet=False):
                 whats_new = info.get("whats_new", _("لا توجد معلومات حول هذا التحديث"))
                 url = info["url"]
                 dlg = UpdateCheckDialog(
-                    wx.GetApp().GetTopWindow(), new_version, whats_new
+                    wx.GetApp().GetTopWindow(), new_version, whats_new, url=url
                 )
                 if dlg.ShowModal() == wx.ID_OK:
                     from gui.update_dialog import UpdateDialog

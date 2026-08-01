@@ -18,10 +18,11 @@ def test_check_for_updates_uses_update_dialog_title_keyword(monkeypatch):
             }
 
     class FakeUpdateCheckDialog:
-        def __init__(self, parent, new_version, whats_new):
+        def __init__(self, parent, new_version, whats_new, **kwargs):
             self.parent = parent
             self.new_version = new_version
             self.whats_new = whats_new
+            self.url = kwargs.get("url", "")
 
         def ShowModal(self):
             return update_dialog.wx.ID_OK
@@ -91,3 +92,33 @@ def test_on_finished_launches_downloaded_update_path(monkeypatch, tmp_path):
     dialog.status.SetValue.assert_called_once_with("جاري تثبيت التحديث")
     launch.assert_called_once_with(str(installer))
     assert dialog.download is False
+
+
+def test_update_check_dialog_on_open_browser(monkeypatch):
+    dialog = object.__new__(update_check_dialog.UpdateCheckDialog)
+    dialog.url = "https://example.com/update.exe"
+    dialog.EndModal = Mock()
+    opened = []
+    monkeypatch.setattr("webbrowser.open", lambda url: opened.append(url))
+
+    dialog.onOpenBrowser(None)
+
+    assert opened == ["https://example.com/update.exe"]
+    dialog.EndModal.assert_called_once_with(update_check_dialog.wx.ID_CANCEL)
+
+
+def test_update_dialog_on_open_browser(monkeypatch):
+    dialog = object.__new__(update_dialog.UpdateDialog)
+    dialog.url = "https://example.com/update.exe"
+    dialog.download = True
+    dialog.cleanupDownload = Mock()
+    dialog.EndModal = Mock()
+    opened = []
+    monkeypatch.setattr("webbrowser.open", lambda url: opened.append(url))
+
+    dialog.onOpenBrowser(None)
+
+    assert opened == ["https://example.com/update.exe"]
+    assert dialog.download is False
+    dialog.cleanupDownload.assert_called_once()
+    dialog.EndModal.assert_called_once_with(update_dialog.wx.ID_CANCEL)

@@ -6,10 +6,11 @@ from theme_handler import apply_theme
 
 
 class UpdateCheckDialog(wx.Dialog):
-    def __init__(self, parent, new_version, whats_new):
+    def __init__(self, parent, new_version, whats_new, url=""):
         super().__init__(parent, title=_("تحديث جديد متوفر"))
         self.new_version = new_version
         self.whats_new = whats_new
+        self.url = url
         self.InitUI()
         self.Center()
         apply_theme(self)
@@ -43,10 +44,23 @@ class UpdateCheckDialog(wx.Dialog):
         hbox = wx.BoxSizer(wx.HORIZONTAL)
         self.download_btn = wx.Button(panel, label=_("تنزيل"), id=wx.ID_OK)
         self.download_btn.SetDefault()
+        self.open_browser_btn = wx.Button(
+            panel, label=_("فتح المتصفح لتنزيل التحديث الجديد")
+        )
         self.cancel_btn = wx.Button(panel, label=_("إلغاء"), id=wx.ID_CANCEL)
         hbox.Add(self.download_btn)
+        hbox.Add(self.open_browser_btn, flag=wx.LEFT, border=5)
         hbox.Add(self.cancel_btn, flag=wx.LEFT, border=5)
         vbox.Add(hbox, 0, wx.ALIGN_CENTER | wx.TOP | wx.BOTTOM, 10)
 
+        self.open_browser_btn.Bind(wx.EVT_BUTTON, self.onOpenBrowser)
+
         panel.SetSizer(vbox)
         vbox.Fit(self)
+
+    def onOpenBrowser(self, event):
+        if self.url:
+            import webbrowser
+
+            webbrowser.open(self.url)
+        self.EndModal(wx.ID_CANCEL)

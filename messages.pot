@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-07-31 20:26+0200\n"
+"POT-Creation-Date: 2026-08-01 17:29+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -221,7 +221,7 @@ msgstr ""
 msgid "البرنامج قيد التشغيل بالفعل."
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:804 src/gui/settings_dialog.py:541
+#: src/accessible_youtube_downloader_pro.py:804 src/gui/settings_dialog.py:573
 #: src/utils.py:991 src/utils.py:1008
 msgid "تنبيه"
 msgstr ""
@@ -497,7 +497,7 @@ msgstr ""
 msgid "أنت تعمل الآن على آخر تحديث متوفر من التطبيق"
 msgstr ""
 
-#: src/gui/settings_dialog.py:515 src/utils.py:2113
+#: src/gui/settings_dialog.py:547 src/utils.py:2113
 msgid "خطأ"
 msgstr ""
 
@@ -547,7 +547,7 @@ msgid "تم إلغاء التنزيل"
 msgstr ""
 
 #: src/download_handler/downloader.py:384 src/gui/auto_detect_dialog.py:52
-#: src/gui/update_check_dialog.py:46
+#: src/gui/update_check_dialog.py:50
 msgid "إلغاء"
 msgstr ""
 
@@ -601,7 +601,7 @@ msgstr ""
 #: src/gui/download_dialog.py:39 src/gui/favorites.py:42
 #: src/gui/favorites.py:173 src/gui/history.py:39 src/gui/history.py:213
 #: src/gui/playlist_dialog.py:37 src/gui/playlist_dialog.py:150
-#: src/gui/update_check_dialog.py:44 src/media_player/media_gui.py:168
+#: src/gui/update_check_dialog.py:45 src/media_player/media_gui.py:168
 #: src/youtube_browser/browser.py:69 src/youtube_browser/browser.py:135
 msgid "تنزيل"
 msgstr ""
@@ -913,11 +913,11 @@ msgid "صيغة المقطع"
 msgstr ""
 
 #: src/gui/download_dialog.py:42 src/gui/download_dialog.py:92
-#: src/gui/settings_dialog.py:340
+#: src/gui/settings_dialog.py:179 src/gui/settings_dialog.py:372
 msgid "مسار مجلد التنزيل: "
 msgstr ""
 
-#: src/gui/download_dialog.py:85 src/gui/settings_dialog.py:471
+#: src/gui/download_dialog.py:85 src/gui/settings_dialog.py:503
 msgid "اختر مجلد التنزيل"
 msgstr ""
 
@@ -1166,207 +1166,207 @@ msgstr ""
 msgid "جهاز إخراج الصوت الافتراضي"
 msgstr ""
 
-#: src/gui/settings_dialog.py:123
+#: src/gui/settings_dialog.py:153
 msgid "الإعدادات"
 msgstr ""
 
-#: src/gui/settings_dialog.py:133
+#: src/gui/settings_dialog.py:163
 msgid "لغة البرنامج: "
 msgstr ""
 
-#: src/gui/settings_dialog.py:149
+#: src/gui/settings_dialog.py:180
 msgid "&تغيير المسار"
 msgstr ""
 
-#: src/gui/settings_dialog.py:157
-msgid "تغيير"
-msgstr ""
-
-#: src/gui/settings_dialog.py:158
-msgid "حذف"
-msgstr ""
-
-#: src/gui/settings_dialog.py:159
-msgid "التفضيلات العامة"
-msgstr ""
-
-#: src/gui/settings_dialog.py:163
-msgid "اكتشاف الروابط تلقائيًا عند فتح البرنامج"
-msgstr ""
-
-#: src/gui/settings_dialog.py:169
-msgid "الكشف عن التحديثات الجديدة تلقائيًا عند فتح البرنامج"
-msgstr ""
-
-#: src/gui/settings_dialog.py:176
-msgid "تحميل المزيد من نتائج البحث عند الوصول إلى نهاية قائمة الفيديوهات المعروضة"
-msgstr ""
-
-#: src/gui/settings_dialog.py:183
-msgid "تفعيل رسائل تصحيح الأخطاء للمطورين فقط"
-msgstr ""
-
-#: src/gui/settings_dialog.py:189
-msgid "التشغيل في الخلفية ومراقبة الحافظة عند بدء تشغيل النظام"
-msgstr ""
-
-#: src/gui/settings_dialog.py:195
-msgid "تفعيل التكامل الآمن مع إضافة المتصفح"
-msgstr ""
-
-#: src/gui/settings_dialog.py:206
-msgid "مظهر البرنامج: "
-msgstr ""
-
-#: src/gui/settings_dialog.py:220
-msgid "إعدادات التنزيل"
-msgstr ""
-
-#: src/gui/settings_dialog.py:221
-msgid "صيغة التحميل المباشر: "
-msgstr ""
-
-#: src/gui/settings_dialog.py:226
-msgid "فيديو (mp4)"
-msgstr ""
-
-#: src/gui/settings_dialog.py:226
-msgid "صوت (m4a)"
-msgstr ""
-
-#: src/gui/settings_dialog.py:226
-msgid "صوت (mp3)"
-msgstr ""
-
-#: src/gui/settings_dialog.py:230
-msgid "جودة الصوت: "
-msgstr ""
-
-#: src/gui/settings_dialog.py:235
-msgid "96 ك.ب/ث"
-msgstr ""
-
-#: src/gui/settings_dialog.py:235
-msgid "128 ك.ب/ث"
-msgstr ""
-
-#: src/gui/settings_dialog.py:235
-msgid "192 ك.ب/ث"
-msgstr ""
-
-#: src/gui/settings_dialog.py:235
-msgid "320 ك.ب/ث"
-msgstr ""
-
-#: src/gui/settings_dialog.py:240
-msgid "إعدادات المشغل"
-msgstr ""
-
-#: src/gui/settings_dialog.py:241
-msgid "جودة الفيديو الافتراضية: "
-msgstr ""
-
-#: src/gui/settings_dialog.py:247
-msgid "144ب"
-msgstr ""
-
-#: src/gui/settings_dialog.py:248
-msgid "240ب"
-msgstr ""
-
-#: src/gui/settings_dialog.py:249
-msgid "360ب"
-msgstr ""
-
-#: src/gui/settings_dialog.py:250
-msgid "480ب"
-msgstr ""
-
-#: src/gui/settings_dialog.py:251
-msgid "720ب"
-msgstr ""
-
-#: src/gui/settings_dialog.py:252
-msgid "1080ب"
-msgstr ""
-
-#: src/gui/settings_dialog.py:253
-msgid "1440ب"
-msgstr ""
-
-#: src/gui/settings_dialog.py:254
-msgid "2160ب"
-msgstr ""
-
-#: src/gui/settings_dialog.py:259
-msgid "جودة الصوت الافتراضية: "
-msgstr ""
-
-#: src/gui/settings_dialog.py:264
-msgid "منخفضة"
-msgstr ""
-
-#: src/gui/settings_dialog.py:264
-msgid "متوسطة"
-msgstr ""
-
-#: src/gui/settings_dialog.py:264
-msgid "عالية"
-msgstr ""
-
-#: src/gui/settings_dialog.py:269 src/media_player/media_gui.py:43
-msgid "جهاز إخراج الصوت: "
-msgstr ""
-
-#: src/gui/settings_dialog.py:283
-msgid "متابعة المشاهدة بعد إغلاق الفيديو وتشغيله من جديد"
-msgstr ""
-
-#: src/gui/settings_dialog.py:290
-msgid "فتح مشغل الوسائط في وضع ملء الشاشة افتراضيًا"
-msgstr ""
-
-#: src/gui/settings_dialog.py:297
-msgid "إعادة تشغيل المقطع تلقائيًا عند انتهائه"
-msgstr ""
-
-#: src/gui/settings_dialog.py:303
-msgid "الانتقال إلى المقطع التالي تلقائيًا عند انتهاء المقطع الحالي"
-msgstr ""
-
-#: src/gui/settings_dialog.py:308
-msgid "إعدادات المعادل..."
-msgstr ""
-
-#: src/gui/settings_dialog.py:309
-msgid "مقدار تغيير سرعة التشغيل: "
-msgstr ""
-
-#: src/gui/settings_dialog.py:322 src/media_player/media_gui.py:50
-msgid "مواف&ق"
-msgstr ""
-
-#: src/gui/settings_dialog.py:324 src/media_player/media_gui.py:52
-msgid "إل&غاء"
-msgstr ""
-
-#: src/gui/settings_dialog.py:350
+#: src/gui/settings_dialog.py:188 src/gui/settings_dialog.py:382
 msgid "مسار ملف الكوكيز: "
 msgstr ""
 
-#: src/gui/settings_dialog.py:481
+#: src/gui/settings_dialog.py:189
+msgid "تغيير"
+msgstr ""
+
+#: src/gui/settings_dialog.py:190
+msgid "حذف"
+msgstr ""
+
+#: src/gui/settings_dialog.py:191
+msgid "التفضيلات العامة"
+msgstr ""
+
+#: src/gui/settings_dialog.py:195
+msgid "اكتشاف الروابط تلقائيًا عند فتح البرنامج"
+msgstr ""
+
+#: src/gui/settings_dialog.py:201
+msgid "الكشف عن التحديثات الجديدة تلقائيًا عند فتح البرنامج"
+msgstr ""
+
+#: src/gui/settings_dialog.py:208
+msgid "تحميل المزيد من نتائج البحث عند الوصول إلى نهاية قائمة الفيديوهات المعروضة"
+msgstr ""
+
+#: src/gui/settings_dialog.py:215
+msgid "تفعيل رسائل تصحيح الأخطاء للمطورين فقط"
+msgstr ""
+
+#: src/gui/settings_dialog.py:221
+msgid "التشغيل في الخلفية ومراقبة الحافظة عند بدء تشغيل النظام"
+msgstr ""
+
+#: src/gui/settings_dialog.py:227
+msgid "تفعيل التكامل الآمن مع إضافة المتصفح"
+msgstr ""
+
+#: src/gui/settings_dialog.py:238
+msgid "مظهر البرنامج: "
+msgstr ""
+
+#: src/gui/settings_dialog.py:252
+msgid "إعدادات التنزيل"
+msgstr ""
+
+#: src/gui/settings_dialog.py:253
+msgid "صيغة التحميل المباشر: "
+msgstr ""
+
+#: src/gui/settings_dialog.py:258
+msgid "فيديو (mp4)"
+msgstr ""
+
+#: src/gui/settings_dialog.py:258
+msgid "صوت (m4a)"
+msgstr ""
+
+#: src/gui/settings_dialog.py:258
+msgid "صوت (mp3)"
+msgstr ""
+
+#: src/gui/settings_dialog.py:262
+msgid "جودة الصوت: "
+msgstr ""
+
+#: src/gui/settings_dialog.py:267
+msgid "96 ك.ب/ث"
+msgstr ""
+
+#: src/gui/settings_dialog.py:267
+msgid "128 ك.ب/ث"
+msgstr ""
+
+#: src/gui/settings_dialog.py:267
+msgid "192 ك.ب/ث"
+msgstr ""
+
+#: src/gui/settings_dialog.py:267
+msgid "320 ك.ب/ث"
+msgstr ""
+
+#: src/gui/settings_dialog.py:272
+msgid "إعدادات المشغل"
+msgstr ""
+
+#: src/gui/settings_dialog.py:273
+msgid "جودة الفيديو الافتراضية: "
+msgstr ""
+
+#: src/gui/settings_dialog.py:279
+msgid "144ب"
+msgstr ""
+
+#: src/gui/settings_dialog.py:280
+msgid "240ب"
+msgstr ""
+
+#: src/gui/settings_dialog.py:281
+msgid "360ب"
+msgstr ""
+
+#: src/gui/settings_dialog.py:282
+msgid "480ب"
+msgstr ""
+
+#: src/gui/settings_dialog.py:283
+msgid "720ب"
+msgstr ""
+
+#: src/gui/settings_dialog.py:284
+msgid "1080ب"
+msgstr ""
+
+#: src/gui/settings_dialog.py:285
+msgid "1440ب"
+msgstr ""
+
+#: src/gui/settings_dialog.py:286
+msgid "2160ب"
+msgstr ""
+
+#: src/gui/settings_dialog.py:291
+msgid "جودة الصوت الافتراضية: "
+msgstr ""
+
+#: src/gui/settings_dialog.py:296
+msgid "منخفضة"
+msgstr ""
+
+#: src/gui/settings_dialog.py:296
+msgid "متوسطة"
+msgstr ""
+
+#: src/gui/settings_dialog.py:296
+msgid "عالية"
+msgstr ""
+
+#: src/gui/settings_dialog.py:301 src/media_player/media_gui.py:43
+msgid "جهاز إخراج الصوت: "
+msgstr ""
+
+#: src/gui/settings_dialog.py:315
+msgid "متابعة المشاهدة بعد إغلاق الفيديو وتشغيله من جديد"
+msgstr ""
+
+#: src/gui/settings_dialog.py:322
+msgid "فتح مشغل الوسائط في وضع ملء الشاشة افتراضيًا"
+msgstr ""
+
+#: src/gui/settings_dialog.py:329
+msgid "إعادة تشغيل المقطع تلقائيًا عند انتهائه"
+msgstr ""
+
+#: src/gui/settings_dialog.py:335
+msgid "الانتقال إلى المقطع التالي تلقائيًا عند انتهاء المقطع الحالي"
+msgstr ""
+
+#: src/gui/settings_dialog.py:340
+msgid "إعدادات المعادل..."
+msgstr ""
+
+#: src/gui/settings_dialog.py:341
+msgid "مقدار تغيير سرعة التشغيل: "
+msgstr ""
+
+#: src/gui/settings_dialog.py:354 src/media_player/media_gui.py:50
+msgid "مواف&ق"
+msgstr ""
+
+#: src/gui/settings_dialog.py:356 src/media_player/media_gui.py:52
+msgid "إل&غاء"
+msgstr ""
+
+#: src/gui/settings_dialog.py:513
 msgid "ملفات نصية (*.txt)|*.txt"
 msgstr ""
 
-#: src/gui/settings_dialog.py:484
+#: src/gui/settings_dialog.py:516
 msgid "اختر ملف الكوكيز"
 msgstr ""
 
-#: src/gui/settings_dialog.py:514
+#: src/gui/settings_dialog.py:546
 msgid "تعذر تحديث تكامل المتصفح في Windows."
 msgstr ""
 
-#: src/gui/settings_dialog.py:539
+#: src/gui/settings_dialog.py:571
 #, python-brace-format
 msgid ""
 "لقد قمت بتغيير لغة البرنامج إلى {}, مما يعني أنه ينبغي عليك إعادة تشغيل "
@@ -1389,71 +1389,75 @@ msgstr ""
 msgid "تحديث جديد متوفر"
 msgstr ""
 
-#: src/gui/update_check_dialog.py:21
+#: src/gui/update_check_dialog.py:22
 msgid "هناك تحديث جديد متوفر للتطبيق."
 msgstr ""
 
-#: src/gui/update_check_dialog.py:25
+#: src/gui/update_check_dialog.py:26
 #, python-brace-format
 msgid ""
 "الإصدار الحالي: {current}\n"
 "الإصدار الجديد: {new}"
 msgstr ""
 
-#: src/gui/update_check_dialog.py:31
+#: src/gui/update_check_dialog.py:32
 msgid "ما الجديد:"
 msgstr ""
 
-#: src/gui/update_check_dialog.py:40
+#: src/gui/update_check_dialog.py:41
 msgid "ما الجديد"
+msgstr ""
+
+#: src/gui/update_check_dialog.py:48 src/gui/update_dialog.py:46
+msgid "فتح المتصفح لتنزيل التحديث الجديد"
 msgstr ""
 
 #: src/gui/update_dialog.py:29
 msgid "تنزيل التحديثات"
 msgstr ""
 
-#: src/gui/update_dialog.py:40
+#: src/gui/update_dialog.py:41
 msgid "في انتظار بدء التحميل..."
 msgstr ""
 
-#: src/gui/update_dialog.py:43
+#: src/gui/update_dialog.py:44
 msgid "حالة تنزيل التحديث"
 msgstr ""
 
-#: src/gui/update_dialog.py:44
+#: src/gui/update_dialog.py:48
 msgid "إيقاف التحميل"
 msgstr ""
 
-#: src/gui/update_dialog.py:117
+#: src/gui/update_dialog.py:134
 msgid "لا يمكن اكمال التنزيل في الوقت الحالي"
 msgstr ""
 
-#: src/gui/update_dialog.py:126
+#: src/gui/update_dialog.py:143
 #, python-brace-format
 msgid "يتم الآن تنزيل الملف {}"
 msgstr ""
 
-#: src/gui/update_dialog.py:139
+#: src/gui/update_dialog.py:156
 msgid "حدث خطأ أثناء استخراج الملف"
 msgstr ""
 
-#: src/gui/update_dialog.py:146
+#: src/gui/update_dialog.py:163
 msgid "اكتمل تنزيل الملف بنجاح"
 msgstr ""
 
-#: src/gui/update_dialog.py:146 src/gui/update_dialog.py:154
+#: src/gui/update_dialog.py:163 src/gui/update_dialog.py:171
 msgid "نجاح"
 msgstr ""
 
-#: src/gui/update_dialog.py:152
+#: src/gui/update_dialog.py:169
 msgid "اكتمل تنزيل التحديث بنجاح. يرجى الضغط على موافق للشروع في عملية التثبيت"
 msgstr ""
 
-#: src/gui/update_dialog.py:158
+#: src/gui/update_dialog.py:175
 msgid "جاري تثبيت التحديث"
 msgstr ""
 
-#: src/gui/update_dialog.py:164
+#: src/gui/update_dialog.py:181
 msgid ""
 "حدث خطأ ما عند محاولة فتح ملف التثبيت. فضلًا أعد محاولة التحديث مجددًا, "
 "أو تواصل مع المطور للإبلاغ بالمشكلة"

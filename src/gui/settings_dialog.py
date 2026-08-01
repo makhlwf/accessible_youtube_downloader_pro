@@ -56,12 +56,6 @@ def _accessible_name(label):
     return str(label).replace("&", "").strip().rstrip(":：").strip()
 
 
-def _set_accessible_name(control, label):
-    name = _accessible_name(label)
-    if name:
-        control.SetName(name)
-
-
 _WX_ACCESSIBLE_BASE = getattr(wx, "Accessible", None)
 if not isinstance(_WX_ACCESSIBLE_BASE, type):
     _WX_ACCESSIBLE_BASE = object
@@ -70,6 +64,42 @@ if not isinstance(_WX_ACCESSIBLE_BASE, type):
 def _wx_constant(name, fallback):
     value = getattr(wx, name, fallback)
     return value if isinstance(value, int) else fallback
+
+
+class ControlAccessible(_WX_ACCESSIBLE_BASE):
+    def __init__(self, control):
+        if _WX_ACCESSIBLE_BASE is object:
+            super().__init__()
+        else:
+            super().__init__(control)
+        self.control = control
+
+    def GetName(self, child_id):
+        label = getattr(self.control, "_accessible_label", "")
+        if not label:
+            get_name = getattr(self.control, "GetName", None)
+            if callable(get_name):
+                label = get_name()
+            elif hasattr(self.control, "Name"):
+                label = getattr(self.control, "Name", "")
+        return _wx_constant("ACC_OK", 0), _accessible_name(label or "")
+
+
+def _set_accessible_name(control, label):
+    name = _accessible_name(label)
+    if name:
+        set_name = getattr(control, "SetName", None)
+        if callable(set_name):
+            set_name(name)
+        control._accessible_label = name
+        set_accessible = getattr(control, "SetAccessible", None)
+        if callable(set_accessible) and _WX_ACCESSIBLE_BASE is not object:
+            try:
+                if not getattr(control, "_accessible", None):
+                    control._accessible = ControlAccessible(control)
+                    set_accessible(control._accessible)
+            except Exception:
+                control._accessible = None
 
 
 class CheckBoxAccessible(_WX_ACCESSIBLE_BASE):
@@ -146,6 +176,7 @@ class SettingsDialog(wx.Dialog):
             name="path",
             style=wx.TE_READONLY | wx.TE_MULTILINE | wx.HSCROLL,
         )
+        _set_accessible_name(self.pathField, _("مسار مجلد التنزيل: "))
         changeButton = wx.Button(panel, -1, _("&تغيير المسار"), name="path")
         self.cookiesPathField = wx.TextCtrl(
             panel,
@@ -154,6 +185,7 @@ class SettingsDialog(wx.Dialog):
             name="cookies",
             style=wx.TE_READONLY | wx.TE_MULTILINE | wx.HSCROLL,
         )
+        _set_accessible_name(self.cookiesPathField, _("مسار ملف الكوكيز: "))
         changeCookiesButton = wx.Button(panel, -1, _("تغيير"), name="cookies")
         clearCookiesButton = wx.Button(panel, -1, _("حذف"), name="cookies")
         preferencesBox = wx.StaticBox(panel, -1, _("التفضيلات العامة"))

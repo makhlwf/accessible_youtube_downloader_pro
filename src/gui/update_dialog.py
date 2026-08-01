@@ -28,6 +28,7 @@ class UpdateDialog(wx.Dialog):
         if title is None:
             title = _("تنزيل التحديثات")
         super().__init__(parent, title=title)
+        self.url = url
         self.dest = dest
         self.is_zip = is_zip
         self.download = True
@@ -41,22 +42,38 @@ class UpdateDialog(wx.Dialog):
             style=wx.TE_READONLY | wx.TE_MULTILINE | wx.HSCROLL,
         )
         self.status.SetName(_("حالة تنزيل التحديث"))
+        self.open_browser_btn = wx.Button(
+            panel, -1, _("فتح المتصفح لتنزيل التحديث الجديد")
+        )
         cancelButton = wx.Button(panel, wx.ID_CANCEL, _("إيقاف التحميل"))
         self.progress = wx.Gauge(panel, -1, range=100)
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(self.status, 1, wx.EXPAND | wx.ALL, 8)
         sizer.Add(self.progress, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 8)
+        sizer.Add(
+            self.open_browser_btn, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 8
+        )
         sizer.Add(cancelButton, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 8)
         panel.SetSizer(sizer)
         self.Fit()
         self.progress.Bind(EVT_PROGRESS_CHANGED, self.onChanged)
         self.Bind(EVT_DOWNLOAD_FINISHED, self.onFinished)
+        self.open_browser_btn.Bind(wx.EVT_BUTTON, self.onOpenBrowser)
         cancelButton.Bind(wx.EVT_BUTTON, self.onCancel)
         self.Bind(wx.EVT_CLOSE, self.onClose)
         apply_theme(self)
         Thread(target=self.updateDownload, args=[url], daemon=True).start()
         self.ShowModal()
         self.Destroy()
+
+    def onOpenBrowser(self, event):
+        if self.url:
+            import webbrowser
+
+            webbrowser.open(self.url)
+        self.download = False
+        self.cleanupDownload()
+        self.EndModal(wx.ID_CANCEL)
 
     def updateDownload(self, url):
         if self.dest is None:

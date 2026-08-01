@@ -1,5 +1,9 @@
 import os
 
+import wx
+
+_app = wx.App.GetInstance() or wx.App()
+
 from paths import settings_path
 from settings_handler import config_get, config_initialization, config_set, defaults
 
@@ -72,6 +76,36 @@ def test_settings_checkbox_accessible_role_uses_checkbutton():
     assert accessible.GetName(0) == (0, "Open fullscreen")
     assert accessible.GetRole(0) == (0, 0x2C)
     assert accessible.GetState(0)[1] & 0x10
+
+
+def test_control_accessible_name():
+    from gui import settings_dialog
+
+    class FakeControl:
+        _accessible_label = "مسار مجلد التنزيل"
+        Name = "path"
+
+    accessible = settings_dialog.ControlAccessible(FakeControl())
+    assert accessible.GetName(0) == (0, "مسار مجلد التنزيل")
+
+
+def test_set_accessible_name_attaches_accessible():
+    from gui import settings_dialog
+
+    class FakeControl:
+        def SetName(self, name):
+            self.Name = name
+
+        def SetAccessible(self, accessible):
+            self._accessible = accessible
+
+    ctrl = FakeControl()
+    settings_dialog._set_accessible_name(ctrl, "مسار ملف الكوكيز: ")
+
+    assert ctrl._accessible_label == "مسار ملف الكوكيز"
+    if settings_dialog._WX_ACCESSIBLE_BASE is not object:
+        assert isinstance(ctrl._accessible, settings_dialog.ControlAccessible)
+        assert ctrl._accessible.GetName(0) == (0, "مسار ملف الكوكيز")
 
 
 def test_settings_repeat_checkbox_disables_autoplay(monkeypatch):
