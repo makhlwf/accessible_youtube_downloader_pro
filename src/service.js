@@ -579,21 +579,31 @@ async function handleLikeInteraction(params) {
         throw new Error("Not logged in");
     }
     const { videoId, action } = params;
+    let endpoint;
+    if (action === 'like') {
+        endpoint = 'like/like';
+    } else if (action === 'dislike') {
+        endpoint = 'like/dislike';
+    } else if (action === 'remove_like') {
+        endpoint = 'like/removelike';
+    } else {
+        throw new Error(`Unknown interaction action: ${action}`);
+    }
+
     try {
-        if (action === 'like') {
-            await yt.interact.like(videoId);
-        } else if (action === 'dislike') {
-            await yt.interact.dislike(videoId);
-        } else if (action === 'remove_like') {
-            await yt.interact.removeRating(videoId);
-        } else {
-            throw new Error(`Unknown interaction action: ${action}`);
+        const response = await yt.actions.execute(endpoint, {
+            target: { videoId }
+        });
+        if (response && response.success === false) {
+            const errorMsg = response.data?.error?.message || response.data?.message || `HTTP ${response.status_code || 'error'}`;
+            throw new Error(errorMsg);
         }
         return { success: true };
     } catch (error) {
         throw new Error(`Interaction failed: ${error.message}`);
     }
 }
+
 async function handleGetVideoLikes(params) {
     const yt = await getYT(params.cookiesPath);
     const { videoId } = params;
@@ -775,6 +785,7 @@ export {
     commentsPageResponse,
     extractChapters,
     extractLikeInfo,
+    handleLikeInteraction,
     normalizeChapter,
     normalizeComment,
     normalizeCommentThreads,
