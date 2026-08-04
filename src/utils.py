@@ -70,6 +70,66 @@ def _coerce_count(value):
     return round(number * multiplier)
 
 
+def get_windows_region(default="US"):
+    """
+    Returns the 2-letter ISO country code for the current Windows region setting.
+    Falls back to system locale or default ('US') if unavailable.
+    """
+    if os.name == "nt":
+        try:
+            import ctypes
+
+            buf = ctypes.create_unicode_buffer(10)
+            res = ctypes.windll.kernel32.GetUserDefaultGeoName(buf, 10)
+            if res > 0 and buf.value:
+                code = buf.value.strip().upper()
+                if len(code) == 2 and code.isalpha():
+                    return code
+        except Exception:
+            pass
+
+        try:
+            import winreg
+
+            key = winreg.OpenKey(
+                winreg.HKEY_CURRENT_USER, r"Control Panel\International\Geo"
+            )
+            name, _ = winreg.QueryValueEx(key, "Name")
+            winreg.CloseKey(key)
+            if name and isinstance(name, str):
+                code = name.strip().upper()
+                if len(code) == 2 and code.isalpha():
+                    return code
+        except Exception:
+            pass
+
+        try:
+            import ctypes
+            import locale
+
+            lcid = ctypes.windll.kernel32.GetUserDefaultLCID()
+            win_loc = locale.windows_locale.get(lcid)
+            if win_loc and "_" in win_loc:
+                code = win_loc.split("_")[-1].strip().upper()
+                if len(code) == 2 and code.isalpha():
+                    return code
+        except Exception:
+            pass
+
+    try:
+        import locale
+
+        loc = locale.getlocale()[0] or os.environ.get("LANG") or ""
+        if "_" in loc:
+            code = loc.split("_")[-1].split(".")[0].strip().upper()
+            if len(code) == 2 and code.isalpha():
+                return code
+    except Exception:
+        pass
+
+    return default
+
+
 def _normalize_like_info(result):
     if not isinstance(result, dict) or "error" in result:
         return {
@@ -1291,7 +1351,11 @@ def get_playable_stream(url, audio_mode=False):
         cookies_path = config_get("cookiespath")
         result = deno_service.send_command(
             "get_playlist",
-            {"playlistId": playlist_id, "cookiesPath": cookies_path},
+            {
+                "playlistId": playlist_id,
+                "cookiesPath": cookies_path,
+                "location": get_windows_region(),
+            },
         )
         if isinstance(result, dict) and "videos" in result and result["videos"]:
             # Pick the first video to play
@@ -1520,7 +1584,11 @@ def get_home_feed(continuation=None):
 
     result = deno_service.send_command(
         "get_home_feed",
-        {"cookiesPath": cookies_path, "continuationToken": continuation},
+        {
+            "cookiesPath": cookies_path,
+            "continuationToken": continuation,
+            "location": get_windows_region(),
+        },
     )
 
     if isinstance(result, dict) and "error" in result:
@@ -1540,7 +1608,11 @@ def get_watch_history(continuation=None):
 
     result = deno_service.send_command(
         "get_watch_history",
-        {"cookiesPath": cookies_path, "continuationToken": continuation},
+        {
+            "cookiesPath": cookies_path,
+            "continuationToken": continuation,
+            "location": get_windows_region(),
+        },
     )
 
     if isinstance(result, dict) and "error" in result:

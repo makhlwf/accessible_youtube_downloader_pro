@@ -1,6 +1,6 @@
 # Privacy Policy for HexPlayer
 
-**Last Updated: July 20, 2026**
+**Last Updated: August 5, 2026**
 
 HexPlayer is an open-source, accessible YouTube downloader and player for Windows. This Privacy Policy explains what information the app uses, where it is stored, and when it is sent to third-party services.
 
@@ -11,6 +11,7 @@ HexPlayer is designed as a local-first application. The project maintainer does 
 HexPlayer may use the following information while you use the app:
 
 - **YouTube links, searches, channels, playlists, and video metadata:** Used to search, browse, play, and download YouTube content.
+- **Windows User Region / Geolocation:** HexPlayer detects your Windows user region setting (2-letter ISO country code, e.g., `US`, `SA`, `EG`, `GB`, `FR`, `DE`) locally on your device to send YouTube's standard geolocation parameter (`gl`) with search and feed queries. This ensures search results, trending content, and recommendations match your region. HexPlayer does not track physical GPS/IP location, nor does it share location data with the developer.
 - **Download settings:** Such as output folder, selected format, quality, and conversion preferences.
 - **Playback settings and history:** Such as volume, speed, equalizer settings, audio output device, resume positions, and locally played video history.
 - **Favorites:** Videos you manually save to favorites.
@@ -59,7 +60,7 @@ These requests are sent to Google/YouTube and are subject to Google's privacy po
 
 HexPlayer may connect to the following third-party services:
 
-- **Google/YouTube:** For search, browsing, playback metadata, streams, channels, playlists, recommendations, watch history, video comments, likes, dislikes, and downloads.
+- **Google/YouTube:** For search, browsing, playback metadata, streams, channels, playlists, recommendations, watch history, video comments, likes, dislikes, and downloads. Search and feed requests include your Windows user region code (`gl`) and selected UI language (`hl`) to return relevant regional results.
 - **GitHub:** For checking app updates and downloading or updating external components such as `yt-dlp`.
 - **Deno release sources:** For downloading or updating Deno when needed.
 - **Deno module and package hosts:** Deno or YouTube-related helper code may download modules from sources such as `deno.land`, `jsr.io`, or the npm registry.

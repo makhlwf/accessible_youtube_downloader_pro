@@ -187,3 +187,23 @@ def test_update_watch_history_stores_local_history_without_cookies(monkeypatch):
             "watched_seconds": 12.5,
         }
     ]
+
+
+def test_get_windows_region():
+    region = utils.get_windows_region()
+    assert isinstance(region, str)
+    assert len(region) == 2
+    assert region.isupper()
+    assert region.isalpha()
+
+
+def test_get_windows_region_mocked(monkeypatch):
+    class FakeBuf:
+        value = "de"
+
+    monkeypatch.setattr(utils.os, "name", "nt")
+    monkeypatch.setattr(
+        "ctypes.windll.kernel32.GetUserDefaultGeoName",
+        lambda buf, size: setattr(buf, "value", "DE") or 2,
+    )
+    assert utils.get_windows_region() == "DE"

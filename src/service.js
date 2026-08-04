@@ -33,6 +33,7 @@ function parseCookies(filePath) {
 
 let yt = null;
 let currentCookiesPath = null;
+let currentClientLocation = null;
 let tokenCounter = 0;
 const commentsPages = new Map();
 const replyThreads = new Map();
@@ -250,8 +251,9 @@ function repliesResponse(thread) {
     };
 }
 
-async function getYT(cookiesPath) {
-    if (yt && currentCookiesPath === cookiesPath) {
+async function getYT(cookiesPath, location) {
+    const targetLocation = location || null;
+    if (yt && currentCookiesPath === cookiesPath && currentClientLocation === targetLocation) {
         return yt;
     }
     
@@ -260,16 +262,22 @@ async function getYT(cookiesPath) {
         cookieString = parseCookies(cookiesPath);
     }
     
-    yt = await Innertube.create({
+    const options = {
         cookie: cookieString || '',
         cache: new UniversalCache(false)
-    });
+    };
+    if (location) {
+        options.location = location;
+    }
+    
+    yt = await Innertube.create(options);
     currentCookiesPath = cookiesPath;
+    currentClientLocation = targetLocation;
     return yt;
 }
 
 async function handleGetHomeFeed(params) {
-    const yt = await getYT(params.cookiesPath);
+    const yt = await getYT(params.cookiesPath, params.location);
     const results = [];
     let nextToken = null;
 
@@ -524,7 +532,7 @@ async function handleGetWatchHistory(params) {
     if (!params.cookiesPath) {
         throw new Error("Cookies path is required");
     }
-    const yt = await getYT(params.cookiesPath);
+    const yt = await getYT(params.cookiesPath, params.location);
     if (!yt.session.logged_in) {
         throw new Error("Not logged in with provided cookies");
     }
@@ -574,7 +582,7 @@ async function handleLikeInteraction(params) {
     if (!params.cookiesPath) {
         throw new Error("Cookies path is required");
     }
-    const yt = await getYT(params.cookiesPath);
+    const yt = await getYT(params.cookiesPath, params.location);
     if (!yt.session.logged_in) {
         throw new Error("Not logged in");
     }
@@ -605,7 +613,7 @@ async function handleLikeInteraction(params) {
 }
 
 async function handleGetVideoLikes(params) {
-    const yt = await getYT(params.cookiesPath);
+    const yt = await getYT(params.cookiesPath, params.location);
     const { videoId } = params;
     try {
         const info = await yt.getInfo(videoId);
@@ -623,7 +631,7 @@ async function handleGetVideoLikes(params) {
 }
 
 async function handleGetVideoChapters(params) {
-    const yt = await getYT(params.cookiesPath);
+    const yt = await getYT(params.cookiesPath, params.location);
     const { videoId } = params;
     try {
         const info = await yt.getInfo(videoId);
@@ -635,7 +643,7 @@ async function handleGetVideoChapters(params) {
 }
 
 async function handleGetVideoComments(params) {
-    const yt = await getYT(params.cookiesPath);
+    const yt = await getYT(params.cookiesPath, params.location);
     const { videoId, sortBy = 'TOP_COMMENTS', continuationToken } = params;
     try {
         if (continuationToken) {
@@ -689,7 +697,7 @@ async function handlePostVideoComment(params) {
     if (!params.cookiesPath) {
         throw new Error("Cookies path is required");
     }
-    const yt = await getYT(params.cookiesPath);
+    const yt = await getYT(params.cookiesPath, params.location);
     if (!yt.session.logged_in) {
         throw new Error("Not logged in");
     }
@@ -719,7 +727,7 @@ async function handlePostVideoComment(params) {
 }
 
 async function handleGetPlaylist(params) {
-    const yt = await getYT(params.cookiesPath);
+    const yt = await getYT(params.cookiesPath, params.location);
     const { playlistId } = params;
     try {
         const playlist = await yt.getPlaylist(playlistId);

@@ -170,6 +170,31 @@ async def test_channel_search_init_async():
         assert "1.2K subscribers" in search.get_titles()[0]
 
 
+def test_search_uses_windows_region(monkeypatch):
+    captured_kwargs = {}
+
+    def fake_videos_search(query, limit=20, language="ar", region="US"):
+        captured_kwargs["query"] = query
+        captured_kwargs["language"] = language
+        captured_kwargs["region"] = region
+        mock_inst = AsyncMock()
+        mock_inst.next = AsyncMock(return_value={"result": []})
+        return mock_inst
+
+    monkeypatch.setattr(
+        "youtube_browser.search_handler.VideosSearch", fake_videos_search
+    )
+    monkeypatch.setattr(
+        "youtube_browser.search_handler.utils.get_windows_region", lambda: "EG"
+    )
+    monkeypatch.setattr("youtube_browser.search_handler.config_get", lambda key: "ar")
+
+    _ = Search("test query")
+    assert captured_kwargs["query"] == "test query"
+    assert captured_kwargs["language"] == "ar"
+    assert captured_kwargs["region"] == "EG"
+
+
 def test_channel_tab_result_normalizes_video_entries(monkeypatch):
     class FakeYDL:
         def __init__(self, options):

@@ -558,18 +558,25 @@ class Search:
         self.count = 0
         self.new_videos = 0
 
+        lang = config_get("lang") or "ar"
+        region = utils.get_windows_region()
+
         if self.filter == 0:  # Videos
-            self.search = VideosSearch(self.query, limit=20, language="ar", region="SA")
+            self.search = VideosSearch(
+                self.query, limit=20, language=lang, region=region
+            )
         elif self.filter == 4:  # Playlists
             self.search = PlaylistsSearch(
-                self.query, limit=20, language="ar", region="SA"
+                self.query, limit=20, language=lang, region=region
             )
         elif self.filter == 5:  # Channels
             self.search = ChannelsSearch(
-                self.query, limit=20, language="ar", region="SA"
+                self.query, limit=20, language=lang, region=region
             )
         else:
-            self.search = VideosSearch(self.query, limit=20, language="ar", region="SA")
+            self.search = VideosSearch(
+                self.query, limit=20, language=lang, region=region
+            )
 
     async def init_async(self):
         try:

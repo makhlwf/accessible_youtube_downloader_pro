@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-08-01 17:29+0200\n"
+"POT-Creation-Date: 2026-08-05 00:48+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -222,97 +222,97 @@ msgid "البرنامج قيد التشغيل بالفعل."
 msgstr ""
 
 #: src/accessible_youtube_downloader_pro.py:804 src/gui/settings_dialog.py:573
-#: src/utils.py:991 src/utils.py:1008
+#: src/utils.py:1051 src/utils.py:1068
 msgid "تنبيه"
 msgstr ""
 
-#: src/media_player/media_gui.py:410 src/utils.py:144
+#: src/media_player/media_gui.py:410 src/utils.py:204
 msgid "فصل بدون عنوان"
 msgstr ""
 
-#: src/utils.py:201
+#: src/utils.py:261
 #, python-brace-format
 msgid "{} - تلقائي"
 msgstr ""
 
-#: src/utils.py:601
+#: src/utils.py:661
 msgid "144ب (جودة منخفضة جدًا)"
 msgstr ""
 
-#: src/utils.py:602
+#: src/utils.py:662
 msgid "240ب (جودة منخفضة)"
 msgstr ""
 
-#: src/utils.py:603
+#: src/utils.py:663
 msgid "360ب (جودة متوسطة)"
 msgstr ""
 
-#: src/utils.py:604
+#: src/utils.py:664
 msgid "480ب (جودة متوسطة)"
 msgstr ""
 
-#: src/utils.py:605
+#: src/utils.py:665
 msgid "720ب (جودة عالية عالية الدقة)"
 msgstr ""
 
-#: src/utils.py:606
+#: src/utils.py:666
 msgid "1080ب (جودة عالية جدًا عالية الدقة الكاملة)"
 msgstr ""
 
-#: src/utils.py:607
+#: src/utils.py:667
 msgid "1440ب (جودة فائقة 2 كي)"
 msgstr ""
 
-#: src/utils.py:608
+#: src/utils.py:668
 msgid "2160ب (جودة فائقة 4 كي)"
 msgstr ""
 
-#: src/utils.py:614
+#: src/utils.py:674
 #, python-brace-format
 msgid "{}ب (جودة غير معروفة)"
 msgstr ""
 
-#: src/utils.py:635
+#: src/utils.py:695
 msgid "جاري تنزيل واي تي دي إل بي"
 msgstr ""
 
-#: src/utils.py:646
+#: src/utils.py:706
 msgid "ملف واي تي دي إل بي الذي تم تنزيله غير صالح"
 msgstr ""
 
-#: src/utils.py:802
+#: src/utils.py:862
 msgid ""
 "لم يتم العثور على أداة deno.exe, وهي مطلوبة لتحديث مكتبة YouTube.js "
 "(Innertube)."
 msgstr ""
 
-#: src/utils.py:815 src/utils.py:832
+#: src/utils.py:875 src/utils.py:892
 msgid "تعذر تحديث مكتبة YouTube.js (Innertube)"
 msgstr ""
 
-#: src/utils.py:824
+#: src/utils.py:884
 #, python-brace-format
 msgid "تم تحديث مكتبة YouTube.js (Innertube) إلى الإصدار {}"
 msgstr ""
 
-#: src/utils.py:827
+#: src/utils.py:887
 msgid "اكتمل التحديث"
 msgstr ""
 
-#: src/utils.py:841
+#: src/utils.py:901
 msgid "تعذر الحصول على معلومات تحديث مكتبة YouTube.js (Innertube) من npm"
 msgstr ""
 
-#: src/utils.py:849
+#: src/utils.py:909
 #, python-brace-format
 msgid "أنت تستخدم بالفعل أحدث إصدار من مكتبة YouTube.js (Innertube) ({})"
 msgstr ""
 
-#: src/utils.py:851 src/utils.py:907 src/utils.py:971 src/utils.py:2091
+#: src/utils.py:911 src/utils.py:967 src/utils.py:1031 src/utils.py:2163
 msgid "لا يوجد تحديث"
 msgstr ""
 
-#: src/utils.py:858
+#: src/utils.py:918
 #, python-brace-format
 msgid ""
 "هناك إصدار جديد متوفر من مكتبة YouTube.js (Innertube)\n"
@@ -321,37 +321,37 @@ msgid ""
 "هل تريد التحديث الآن؟"
 msgstr ""
 
-#: src/gui/comments_dialog.py:13 src/utils.py:859 src/utils.py:914
-#: src/utils.py:978 src/utils.py:1773 src/utils.py:2016
+#: src/gui/comments_dialog.py:13 src/utils.py:919 src/utils.py:974
+#: src/utils.py:1038 src/utils.py:1845 src/utils.py:2088
 #: src/youtube_browser/search_handler.py:111
 #: src/youtube_browser/search_handler.py:209
 #: src/youtube_browser/search_handler.py:444
-#: src/youtube_browser/search_handler.py:610
+#: src/youtube_browser/search_handler.py:617
 msgid "غير معروف"
 msgstr ""
 
-#: src/utils.py:860 src/utils.py:915 src/utils.py:979
+#: src/utils.py:920 src/utils.py:975 src/utils.py:1039
 msgid "تحديث متوفر"
 msgstr ""
 
-#: src/utils.py:873
+#: src/utils.py:933
 msgid "تعذر تحديد إصدار مكتبة YouTube.js (Innertube) الحالي"
 msgstr ""
 
-#: src/utils.py:880
+#: src/utils.py:940
 msgid "تم تحديث ذاكرة مكتبة YouTube.js (Innertube) المؤقتة"
 msgstr ""
 
-#: src/utils.py:900 src/utils.py:964
+#: src/utils.py:960 src/utils.py:1024
 msgid "تعذر الحصول على معلومات التحديث من غيت هاب"
 msgstr ""
 
-#: src/utils.py:906
+#: src/utils.py:966
 #, python-brace-format
 msgid "أنت تستخدم بالفعل أحدث إصدار من واي تي دي إل بي ({})"
 msgstr ""
 
-#: src/utils.py:913
+#: src/utils.py:973
 #, python-brace-format
 msgid ""
 "هناك إصدار جديد متوفر من واي تي دي إل بي\n"
@@ -360,16 +360,16 @@ msgid ""
 "هل تريد التحديث الآن؟"
 msgstr ""
 
-#: src/utils.py:931
+#: src/utils.py:991
 msgid "جاري تنزيل دينو"
 msgstr ""
 
-#: src/utils.py:970
+#: src/utils.py:1030
 #, python-brace-format
 msgid "أنت تستخدم بالفعل أحدث إصدار من دينو ({})"
 msgstr ""
 
-#: src/utils.py:977
+#: src/utils.py:1037
 #, python-brace-format
 msgid ""
 "هناك إصدار جديد متوفر من دينو\n"
@@ -378,126 +378,126 @@ msgid ""
 "هل تريد التحديث الآن؟"
 msgstr ""
 
-#: src/utils.py:990
+#: src/utils.py:1050
 msgid "لم يتم العثور على مكتبة واي تي دي إل بي, هل تريد تنزيلها الآن؟"
 msgstr ""
 
-#: src/utils.py:1006
+#: src/utils.py:1066
 msgid ""
 "لم يتم العثور على أداة deno.exe, وهي مطلوبة لبعض وظائف اليوتيوب. هل تريد "
 "تنزيلها الآن؟"
 msgstr ""
 
-#: src/gui/comments_dialog.py:186 src/utils.py:1913
+#: src/gui/comments_dialog.py:186 src/utils.py:1985
 msgid "يرجى كتابة تعليق قبل النشر"
 msgstr ""
 
-#: src/utils.py:1915
+#: src/utils.py:1987
 msgid "تحتاج إلى ضبط ملف كوكيز صالح قبل نشر التعليقات"
 msgstr ""
 
-#: src/utils.py:1917
+#: src/utils.py:1989
 msgid "ملف الكوكيز لا يحتوي على جلسة يوتيوب مسجلة الدخول"
 msgstr ""
 
-#: src/gui/comments_dialog.py:215 src/utils.py:1918
+#: src/gui/comments_dialog.py:215 src/utils.py:1990
 msgid "تعذر نشر التعليق"
 msgstr ""
 
-#: src/utils.py:1936
+#: src/utils.py:2008
 msgid "رابط الفيديو غير صالح"
 msgstr ""
 
-#: src/utils.py:1974
+#: src/utils.py:2046
 msgid "ساعة واحدة"
 msgstr ""
 
-#: src/utils.py:1976
+#: src/utils.py:2048
 msgid "ساعتان"
 msgstr ""
 
-#: src/utils.py:1978
+#: src/utils.py:2050
 #, python-brace-format
 msgid "{} ساعات"
 msgstr ""
 
-#: src/utils.py:1980
+#: src/utils.py:2052
 #, python-brace-format
 msgid "{} ساعة"
 msgstr ""
 
-#: src/utils.py:1984
+#: src/utils.py:2056
 msgid "دقيقة واحدة"
 msgstr ""
 
-#: src/utils.py:1986
+#: src/utils.py:2058
 msgid "دقيقتان"
 msgstr ""
 
-#: src/utils.py:1988
+#: src/utils.py:2060
 #, python-brace-format
 msgid "{} دقائق"
 msgstr ""
 
-#: src/utils.py:1990
+#: src/utils.py:2062
 #, python-brace-format
 msgid "{} دقيقة"
 msgstr ""
 
-#: src/utils.py:1994
+#: src/utils.py:2066
 msgid "ثانية واحدة"
 msgstr ""
 
-#: src/utils.py:1996
+#: src/utils.py:2068
 msgid "ثانيتين"
 msgstr ""
 
-#: src/utils.py:1998
+#: src/utils.py:2070
 #, python-brace-format
 msgid "{} ثواني"
 msgstr ""
 
-#: src/utils.py:2000
+#: src/utils.py:2072
 #, python-brace-format
 msgid "{} ثانية"
 msgstr ""
 
-#: src/utils.py:2003
+#: src/utils.py:2075
 msgid "0 ثانية"
 msgstr ""
 
-#: src/utils.py:2005
+#: src/utils.py:2077
 msgid " و"
 msgstr ""
 
-#: src/utils.py:2010
+#: src/utils.py:2082
 msgid "مباشر"
 msgstr ""
 
-#: src/media_player/media_gui.py:1153 src/utils.py:2017
+#: src/media_player/media_gui.py:1153 src/utils.py:2089
 #, python-brace-format
 msgid "المدة: {}"
 msgstr ""
 
-#: src/utils.py:2060 src/utils.py:2099
+#: src/utils.py:2132 src/utils.py:2171
 msgid ""
 "حدث خطأ ما أثناء الاتصال بخدمة العثور على التحديثات. تأكد من وجود اتصال "
 "مستقر بالإنترنت ثم عاود المحاولة"
 msgstr ""
 
-#: src/utils.py:2070
+#: src/utils.py:2142
 msgid "لا توجد معلومات حول هذا التحديث"
 msgstr ""
 
-#: src/utils.py:2081
+#: src/utils.py:2153
 msgid "جاري تنزيل التحديث"
 msgstr ""
 
-#: src/utils.py:2090
+#: src/utils.py:2162
 msgid "أنت تعمل الآن على آخر تحديث متوفر من التطبيق"
 msgstr ""
 
-#: src/gui/settings_dialog.py:547 src/utils.py:2113
+#: src/gui/settings_dialog.py:547 src/utils.py:2185
 msgid "خطأ"
 msgstr ""
 
@@ -559,7 +559,7 @@ msgstr ""
 #: src/gui/auto_detect_dialog.py:87 src/gui/search_dialog.py:25
 #: src/youtube_browser/search_handler.py:184
 #: src/youtube_browser/search_handler.py:496
-#: src/youtube_browser/search_handler.py:670
+#: src/youtube_browser/search_handler.py:677
 msgid "قائمة تشغيل"
 msgstr ""
 
@@ -570,7 +570,7 @@ msgstr ""
 #: src/youtube_browser/search_handler.py:368
 #: src/youtube_browser/search_handler.py:402
 #: src/youtube_browser/search_handler.py:503
-#: src/youtube_browser/search_handler.py:676
+#: src/youtube_browser/search_handler.py:683
 msgid "قناة"
 msgstr ""
 
@@ -1122,7 +1122,7 @@ msgstr ""
 msgid "بلا فلتر"
 msgstr ""
 
-#: src/gui/search_dialog.py:22 src/youtube_browser/search_handler.py:728
+#: src/gui/search_dialog.py:22 src/youtube_browser/search_handler.py:735
 msgid "بث مباشر"
 msgstr ""
 
@@ -1851,8 +1851,8 @@ msgstr ""
 #: src/youtube_browser/search_handler.py:250
 #: src/youtube_browser/search_handler.py:489
 #: src/youtube_browser/search_handler.py:497
-#: src/youtube_browser/search_handler.py:664
 #: src/youtube_browser/search_handler.py:671
+#: src/youtube_browser/search_handler.py:678
 msgid "بواسطة"
 msgstr ""
 
@@ -1886,14 +1886,14 @@ msgid "الوصف: {}"
 msgstr ""
 
 #: src/youtube_browser/search_handler.py:498
-#: src/youtube_browser/search_handler.py:672
-#: src/youtube_browser/search_handler.py:678
+#: src/youtube_browser/search_handler.py:679
+#: src/youtube_browser/search_handler.py:685
 #, python-brace-format
 msgid "تحتوي على {} من الفيديوهات"
 msgstr ""
 
 #: src/youtube_browser/search_handler.py:549
-#: src/youtube_browser/search_handler.py:726
+#: src/youtube_browser/search_handler.py:733
 #, python-brace-format
 msgid "عدد المشاهدات {}"
 msgstr ""

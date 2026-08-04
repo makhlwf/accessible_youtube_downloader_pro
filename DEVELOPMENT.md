@@ -406,6 +406,12 @@ All translatable strings are managed via GNU gettext.
    uv run pybabel compile -d src/languages
    ```
 
+### Windows Region & Geolocation Detection:
+To provide relevant search results, trending feeds, and regional recommendations matching the user's system location without hardcoding countries or defaulting to `US`:
+1. `utils.get_windows_region()` queries the Windows API (`ctypes.windll.kernel32.GetUserDefaultGeoName`), registry (`HKCU\Control Panel\International\Geo\Name`), or system LCID locale to obtain the 2-letter ISO 3166-1 country code (e.g., `US`, `SA`, `EG`, `LY`, `GB`, `FR`, `DE`).
+2. `youtube_browser/search_handler.py` passes `region=utils.get_windows_region()` and `language=config_get("lang")` to `py_yt` (`VideosSearch`, `PlaylistsSearch`, `ChannelsSearch`). In `py_yt`, these map directly to YouTube's `gl` (geolocation) and `hl` (host language) InnerTube API parameters.
+3. `service.js` (Deno JS bridge) receives `location` in command parameters and initializes `Innertube` via `Innertube.create({ location: ... })`.
+
 ---
 
 ## 11. Development Environment & Quality Assurance
