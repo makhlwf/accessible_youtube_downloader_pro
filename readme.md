@@ -204,6 +204,8 @@ To create a standalone build:
 
 ## Project Structure
 
+- `DEVELOPMENT.md`: detailed technical architecture, database schema, and developer guide.
+- `CONTRIBUTING.md`: community guidelines, pull request instructions, and coding standards.
 - `src/accessible_youtube_downloader_pro.py`: main application entry point.
 - `src/media_player/`: MPV-backed media player and equalizer logic.
 - `src/youtube_browser/`: search, playlist, and channel browsing logic.
@@ -214,6 +216,14 @@ To create a standalone build:
 - `scripts/`: local maintenance and build utilities.
 - `packaging/windows/`: Windows installer definition.
 - `tests/`: unit tests for core helpers and dialogs.
+
+---
+
+## Contributing
+
+We welcome contributions to HexPlayer! Please see our [Contributing Guide](CONTRIBUTING.md) for guidelines on reporting issues, setting up your environment, adhering to accessibility standards, and submitting pull requests.
+
+For an in-depth technical overview of the application architecture, Deno RPC protocol, and media backends, refer to [DEVELOPMENT.md](DEVELOPMENT.md).
 
 ---
 
