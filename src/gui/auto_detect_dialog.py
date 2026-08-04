@@ -2,7 +2,7 @@ import wx
 
 from language_handler import _
 from media_player.media_gui import MediaGui
-from nvda_client.client import speak
+from speech_client import speak
 from theme_handler import apply_theme
 from utils import check_yt_dlp, get_audio_stream
 

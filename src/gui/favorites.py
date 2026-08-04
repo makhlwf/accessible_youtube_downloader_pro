@@ -16,8 +16,8 @@ from gui.download_progress import DownloadProgress
 from gui.quality_selection import QualitySelectionDialog
 from language_handler import _
 from media_player.media_gui import MediaGui
-from nvda_client.client import speak
 from settings_handler import config_get
+from speech_client import speak
 from theme_handler import apply_theme
 from utils import (
     check_yt_dlp,

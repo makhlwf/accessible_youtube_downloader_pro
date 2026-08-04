@@ -140,8 +140,7 @@ accessible_youtube_downloader_pro/
 │   │   ├── ar/LC_MESSAGES/messages.mo # Arabic compiled binary catalog
 │   │   └── en/LC_MESSAGES/messages.mo # English compiled binary catalog
 │   │
-│   ├── speech_client.py               # Prism Speech & Screen Reader Manager
-│   └── nvda_client/                   # Legacy compatibility wrapper for speech_client
+│   └── speech_client.py               # Prism Speech & Screen Reader Manager
 │
 └── tests/                             # Pytest Suite (137 Unit/Integration Tests)
     ├── conftest.py                    # Global fixtures (mocking Deno, MPV, wx, SQLite)

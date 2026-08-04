@@ -22,8 +22,8 @@ from gui.search_dialog import SearchDialog
 from gui.settings_dialog import SettingsDialog
 from language_handler import _
 from media_player.media_gui import MediaGui
-from nvda_client.client import speak
 from settings_handler import config_get
+from speech_client import speak
 from theme_handler import apply_theme
 from utils import get_playable_stream
 from youtube_browser.scraper import Scraper

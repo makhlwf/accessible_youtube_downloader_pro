@@ -23,8 +23,8 @@ from gui.settings_dialog import SettingsDialog
 from language_handler import _
 from media_player.player import Player, State
 from media_player.timecodes import format_timecode, parse_timecode
-from nvda_client.client import speak
 from settings_handler import config_get, config_set
+from speech_client import speak
 from theme_handler import apply_theme
 from utils import get_playable_stream
 

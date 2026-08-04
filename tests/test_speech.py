@@ -2,7 +2,6 @@
 
 from unittest.mock import MagicMock, patch
 
-import nvda_client.client as nvda_compat
 import speech_client
 
 
@@ -50,12 +49,6 @@ def test_is_speaking_returns_status():
         mock_get_backend.return_value = mock_backend
 
         assert speech_client.is_speaking() is True
-
-
-def test_legacy_nvda_compat_exports():
-    with patch.object(speech_client, "speak") as mock_speak:
-        nvda_compat.speak("Test text")
-        mock_speak.assert_called_once_with("Test text", interrupt=False)
 
 
 def test_speech_client_handles_prism_exceptions():

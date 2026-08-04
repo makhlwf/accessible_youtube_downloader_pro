@@ -5,7 +5,7 @@ import wx
 import utils
 from language_handler import _
 from media_player.timecodes import extract_timecodes
-from nvda_client.client import speak
+from speech_client import speak
 from theme_handler import apply_theme
 
 
