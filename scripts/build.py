@@ -69,7 +69,6 @@ binary_files = [
     "ffmpeg.exe",
     "ffprobe.exe",
     "libmpv-2.dll",
-    "nvdaControllerClient64.dll",
 ]
 
 system_binary_files = [
@@ -279,6 +278,7 @@ command.extend(["--collect-submodules", "ctypes"])
 command.extend(
     ["--collect-submodules", "curses"]
 )  # Windows sometimes needs this for progress bars
+command.extend(["--collect-all", "prism"])
 
 # Add binary files
 for item in binary_files:

@@ -35,7 +35,7 @@
 
 ## Overview
 
-HexPlayer is the current continuation of Accessible YouTube Downloader Pro. It is designed for blind and visually impaired Windows users who want a screen-reader friendly way to use YouTube without relying on the YouTube web interface.
+HexPlayer is the current continuation of Accessible YouTube Downloader Pro. It is designed for blind and visually impaired Windows users who want a screen-reader friendly way to use YouTube without relying on the YouTube web interface. HexPlayer works with all Windows screen readers (NVDA, JAWS, Narrator, System Access, etc.) and Windows speech engines via [Prism](https://github.com/ethindp/prism).
 
 The current application version is **3.6.0**. The app is intended for modern 64-bit Windows systems, especially Windows 10 and Windows 11.
 
@@ -54,6 +54,7 @@ The current application version is **3.6.0**. The app is intended for modern 64-
 - **Clipboard detection:** Detect supported YouTube links at startup or continuously when background monitoring is enabled.
 - **Browser integration:** Use the included Chromium-compatible extension to send supported YouTube links to HexPlayer through Native Messaging or the `hexplayer://` fallback protocol.
 - **External tools management:** Check and update `yt-dlp`, Deno, and the YouTube.js/Innertube library from the app.
+- **Universal Screen Reader Support:** Powered by [Prism](https://github.com/ethindp/prism), speech announcements automatically work with all active Windows screen readers (NVDA, JAWS, Narrator, System Access, etc.) and TTS engines.
 - **Localization and themes:** Arabic and English interfaces, automatic language detection, and system, light, dark, and high contrast dark themes.
 
 ---

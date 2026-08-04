@@ -20,7 +20,7 @@ First off, thank you for considering contributing to **HexPlayer**! Community co
 
 HexPlayer is engineered specifically around **accessibility**, **reliability**, and **screen-reader performance**. When contributing, please keep the following core values in mind:
 
-1. **Accessibility First:** Every feature, dialog, control, and shortcut must be 100% accessible via keyboard navigation and screen readers (NVDA, JAWS, Narrator, Windows SAPI).
+1. **Accessibility First:** Every feature, dialog, control, and shortcut must be 100% accessible via keyboard navigation and all Windows screen readers (NVDA, JAWS, Narrator, System Access, etc. via Prism).
 2. **Respect & Inclusion:** We foster an open, welcoming, and inclusive community for all contributors and users regardless of experience level.
 3. **No Breaking Accessibility Regressions:** Custom, mouse-only, or owner-drawn controls that break screen reader focus or keyboard control are strictly disallowed.
 
@@ -33,7 +33,7 @@ Before creating a bug report, please search existing [GitHub Issues](https://git
 
 When filing a bug report, please include:
 - **Application version:** (e.g. `3.6.0` or git commit hash)
-- **Environment details:** Windows version and screen reader (e.g. Windows 11 64-bit, NVDA 2024.1 / JAWS / SAPI)
+- **Environment details:** Windows version and active screen reader or speech engine (e.g. Windows 11 64-bit, NVDA / JAWS / Narrator / System Access / OneCore / SAPI)
 - **Steps to reproduce:** Clear, step-by-step instructions to reproduce the issue
 - **Expected vs. Actual behavior:** Clear description of what should happen vs. what actually occurred
 - **Error output or traceback:** Any relevant log output or stack traces
@@ -124,7 +124,7 @@ Before submitting a Pull Request, verify that your changes pass all automated ch
 
 4. **Manual Accessibility Verification:**
    - Verify full keyboard navigation using `Tab`, `Shift+Tab`, and `Alt` mnemonics.
-   - Confirm screen reader announcements function properly with NVDA or SAPI.
+   - Confirm screen reader announcements function properly with any active Windows screen reader (NVDA, JAWS, Narrator, etc.) or TTS engine via Prism.
 
 ---
 

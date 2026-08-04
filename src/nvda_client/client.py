@@ -1,21 +1,22 @@
-import ctypes
-import os
-import platform
+"""Legacy compatibility module forwarding speech calls to speech_client (Prism)."""
 
-arch = platform.architecture()[0]
-dll_name = f"nvdaControllerClient{'32' if arch == '32bit' else '64'}.dll"
-# Construct absolute path to the DLL in the parent directory
-dll = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), dll_name
-)
-nvda = ctypes.windll.LoadLibrary(dll)
+import speech_client
 
 
-def speak(msg):
-    # Test if nvda is running
-    try:
-        running = nvda.nvdaController_testIfRunning()
-        if running == 0:  # 0 usually means NVDA is running
-            nvda.nvdaController_speakText(msg)
-    except Exception:
-        pass
+def speak(msg, interrupt=False):
+    return speech_client.speak(msg, interrupt=interrupt)
+
+
+def stop():
+    return speech_client.stop()
+
+
+def is_speaking():
+    return speech_client.is_speaking()
+
+
+def get_backend():
+    return speech_client.get_backend()
+
+
+__all__ = ["get_backend", "is_speaking", "speak", "stop"]

@@ -39,7 +39,7 @@ HexPlayer is a full-featured, screen-reader friendly Windows desktop application
 | **Database** | SQLite 3 | Thread-safe connection pool with RLock |
 | **Settings Engine** | INI / ConfigParser | Windows `%APPDATA%\HexPlayer\settings.ini` |
 | **Browser Integration**| Chromium Manifest V3 | Native Messaging Host + `hexplayer://` protocol |
-| **Screen Reader Speech**| NVDA Controller Client & SAPI | `nvdaControllerClient64.dll` & Windows SAPI |
+| **Screen Reader Speech**| Prism (ethindp/prism) | `prismatoid` abstraction library (NVDA, JAWS, OneCore, SAPI) |
 | **Internationalization**| GNU gettext / Babel | `2.18.0` (Arabic `ar`, English `en`) |
 | **Linter & Formatter** | Ruff | `0.16.0` |
 | **Testing** | Pytest + pytest-asyncio | `9.0.2` |
@@ -140,8 +140,8 @@ accessible_youtube_downloader_pro/
 │   │   ├── ar/LC_MESSAGES/messages.mo # Arabic compiled binary catalog
 │   │   └── en/LC_MESSAGES/messages.mo # English compiled binary catalog
 │   │
-│   └── nvda_client/                   # NVDA Screen Reader Controller Client
-│       └── nvdaControllerClient64.dll # 64-bit C-types DLL wrapper
+│   ├── speech_client.py               # Prism Speech & Screen Reader Manager
+│   └── nvda_client/                   # Legacy compatibility wrapper for speech_client
 │
 └── tests/                             # Pytest Suite (137 Unit/Integration Tests)
     ├── conftest.py                    # Global fixtures (mocking Deno, MPV, wx, SQLite)
@@ -195,8 +195,7 @@ graph TD
     end
 
     subgraph Screen Reader Speech Output
-        MainApp -->|speak| NVDA[NVDA Controller Client DLL]
-        MainApp -->|speak| SAPI[Windows SAPI Speech Engine]
+        MainApp -->|speak| Prism[Prism Speech Client - NVDA / JAWS / OneCore / SAPI]
     end
 ```
 
@@ -371,8 +370,8 @@ Accessibility is the foundational requirement of HexPlayer. Code that breaks key
    - Provide keyboard mnemonics (e.g. `&Search`, `&Download`) so `Alt + Key` navigates directly to controls.
 3. **Tab Navigation Order:** Explicitly specify tab traversal order for modal dialogs.
 4. **Speech Output (`speak()`):**
-   - Call `speak(message)` from `src/utils.py` whenever asynchronous actions take place.
-   - `speak()` uses `nvdaControllerClient64.dll` if NVDA is running, falling back to Windows SAPI.
+   - Call `speak(message)` from `speech_client` whenever asynchronous actions take place.
+   - `speak()` uses Prism (`prismatoid`) to route announcements to active screen readers (NVDA, JAWS, etc.) or TTS engines (OneCore, SAPI).
 5. **Keyboard Shortcuts:**
    - `Ctrl + F`: Focus Search
    - `Ctrl + D`: Download dialog
@@ -442,7 +441,7 @@ uv run ruff check .
 Standalone executable packaging is managed by `scripts/build.py`.
 
 ### Key Build Operations:
-1. **DLL Verification:** Ensures `libmpv-2.dll` (extracted from `libmpv-2.dll.zip`), `ffmpeg.exe`, `ffprobe.exe`, and `nvdaControllerClient64.dll` are present in `src/`.
+1. **DLL Verification:** Ensures `libmpv-2.dll` (extracted from `libmpv-2.dll.zip`), `ffmpeg.exe`, and `ffprobe.exe` are present in `src/`.
 2. **System DLL Inclusion:** Resolves system binary dependencies such as `vulkan-1.dll` from `System32` or system `PATH`.
 3. **PyInstaller Execution:** Compiles main app (`HexPlayer.exe`) and native messaging host (`HexPlayerNativeHost.exe`).
 4. **Installer Compilation:** Executes Inno Setup (`iscc packaging\windows\inno.iss`) via `./BuildNPackage.bat`.
