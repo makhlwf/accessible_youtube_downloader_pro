@@ -31,9 +31,51 @@ THEMES = {
 }
 
 
+def update_msw_dark_mode(theme_name=None):
+    """Enable OS-level dark mode on Windows (MSWEnableDarkMode) for title bars, menus, and scrollbars (wxPython 4.3.0+)."""
+    if theme_name is None:
+        theme_name = config_get("theme")
+
+    get_app = getattr(wx, "GetApp", None)
+    if not callable(get_app):
+        get_app = getattr(getattr(wx, "App", None), "Get", None)
+
+    if not callable(get_app):
+        return
+
+    try:
+        app = get_app()
+    except Exception:
+        app = None
+
+    if not app:
+        return
+
+    msw_enable_dark_mode = getattr(app, "MSWEnableDarkMode", None)
+    if not callable(msw_enable_dark_mode):
+        return
+
+    wx_app_class = getattr(wx, "App", None)
+
+    try:
+        if theme_name == "System Default":
+            auto_flag = getattr(wx_app_class, "DarkMode_Auto", 0)
+            msw_enable_dark_mode(auto_flag)
+        elif theme_name in ("Dark", "High Contrast Dark"):
+            always_flag = getattr(wx_app_class, "DarkMode_Always", 1)
+            msw_enable_dark_mode(always_flag)
+        elif theme_name == "Light":
+            msw_enable_dark_mode(0)
+    except Exception:
+        pass
+
+
 def apply_theme(window, theme_name=None):
     if theme_name is None:
         theme_name = config_get("theme")
+
+    update_msw_dark_mode(theme_name)
+
     palette = THEMES.get(theme_name)
     if palette is None and theme_name != "System Default":
         return

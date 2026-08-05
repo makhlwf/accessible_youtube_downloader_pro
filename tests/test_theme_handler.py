@@ -64,3 +64,28 @@ def test_apply_theme_config_get():
 
     light_palette = THEMES["Light"]
     frame.SetBackgroundColour.assert_called_with(light_palette["background"])
+
+
+def test_update_msw_dark_mode():
+    from unittest.mock import MagicMock
+
+    from theme_handler import update_msw_dark_mode
+
+    mock_app = MagicMock()
+    mock_app.MSWEnableDarkMode = MagicMock()
+
+    with (
+        patch.object(wx, "GetApp", return_value=mock_app),
+        patch.object(wx, "App", getattr(wx, "App", MagicMock())),
+    ):
+        wx.App.DarkMode_Auto = 0
+        wx.App.DarkMode_Always = 1
+
+        update_msw_dark_mode("Dark")
+        mock_app.MSWEnableDarkMode.assert_called_with(1)
+
+        update_msw_dark_mode("System Default")
+        mock_app.MSWEnableDarkMode.assert_called_with(0)
+
+        update_msw_dark_mode("Light")
+        mock_app.MSWEnableDarkMode.assert_called_with(0)

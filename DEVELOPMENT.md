@@ -85,7 +85,7 @@ accessible_youtube_downloader_pro/
 │   ├── service_test.js                # Integration tests for Deno service.js script
 │   ├── update_history.js              # JS utility for YouTube account watch history updates
 │   ├── language_handler.py            # Translation catalog loader & gettext wrapper
-│   ├── theme_handler.py               # Theme provider (System, Light, Dark, High Contrast)
+│   ├── theme_handler.py               # Theme provider (System, Light, Dark, High Contrast with wxPython 4.3.0+ MSWEnableDarkMode native title bar/menu support)
 │   ├── doc_handler.py                 # Local guide document loader
 │   ├── runtime_dlls.py                # Verification for required binary DLL dependencies
 │   ├── native_messaging_host.py       # Stdio Native Messaging host for Chrome extension
