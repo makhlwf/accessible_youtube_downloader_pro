@@ -85,7 +85,7 @@ HexPlayer is designed to be fully navigable from the keyboard.
 | `Ctrl + Enter` | Play selected list item as video |
 | `Space` | Play or pause in the player |
 | Arrow keys | Volume and seeking in the player |
-| `Shift + Up / Down` | Change playback speed |
+| `Shift + , / .` | Change playback speed |
 | `Ctrl + E` | Open equalizer in the player |
 | `F12` | Choose audio output device in the player |
 

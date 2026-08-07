@@ -117,7 +117,7 @@ Player settings:
 - Repeat track: restarts the current track when it ends.
 - Auto-next: plays the next item in the current list when the current item ends.
 - Equalizer settings: presets and manual band controls.
-- Playback speed step: how much Shift + Up or Shift + Down changes speed each time.
+- Playback speed step: how much Shift + , or Shift + . changes speed each time.
 
 Repeat and auto-next cannot both stay enabled. Turning one on turns the other off.
 
@@ -302,8 +302,8 @@ Player keyboard shortcuts
 - Numbers 1 through 9: jump to 10 percent through 90 percent of the video.
 - Ctrl + Right Arrow: next item.
 - Ctrl + Left Arrow: previous item.
-- Shift + Up Arrow: increase playback speed.
-- Shift + Down Arrow: decrease playback speed.
+- Shift + .: increase playback speed.
+- Shift + ,: decrease playback speed.
 - R: announce remaining time.
 - E: announce elapsed time.
 - T: announce total duration.

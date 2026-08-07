@@ -2,6 +2,8 @@ import {
     commentsPageResponse,
     extractChapters,
     extractLikeInfo,
+    handleLikeComment,
+    handleReplyComment,
     normalizeComment,
     normalizeReplyComments,
     parseCount
@@ -83,7 +85,7 @@ Deno.test('extractChapters normalizes marker chapters', () => {
     ]);
 });
 
-Deno.test('normalizeComment includes author, metadata, and reply token', () => {
+Deno.test('normalizeComment includes author, metadata, is_liked, is_disliked, and reply token', () => {
     const comment = normalizeComment(
         {
             comment_id: 'comment-1',
@@ -91,7 +93,8 @@ Deno.test('normalizeComment includes author, metadata, and reply token', () => {
             content: { toString: () => 'Nice video' },
             published_time: '2 days ago',
             like_count: '7',
-            reply_count: '3'
+            reply_count: '3',
+            is_liked: true
         },
         { has_replies: true }
     );
@@ -109,13 +112,23 @@ Deno.test('normalizeComment includes author, metadata, and reply token', () => {
         published_time: '2 days ago',
         likes: 7,
         replies: 3,
-        has_replies: true
+        has_replies: true,
+        is_liked: true,
+        is_disliked: false
     });
+
+    const dislikedComment = normalizeComment({
+        comment_id: 'comment-disliked',
+        vote: 'DISLIKE'
+    });
+    assertEquals(dislikedComment.is_liked, false);
+    assertEquals(dislikedComment.is_disliked, true);
 });
 
-Deno.test('commentsPageResponse normalizes comment threads', () => {
+Deno.test('commentsPageResponse normalizes comment threads and includes is_disabled', () => {
     const page = {
         has_continuation: false,
+        is_disabled: false,
         contents: [
             {
                 has_replies: false,
@@ -142,11 +155,20 @@ Deno.test('commentsPageResponse normalizes comment threads', () => {
                 likes: 0,
                 replies: 0,
                 has_replies: false,
-                reply_token: null
+                reply_token: null,
+                is_liked: false,
+                is_disliked: false
             }
         ],
-        continuation: null
+        continuation: null,
+        is_disabled: false
     });
+
+    const disabledPage = {
+        header: { comments_disabled: true },
+        contents: []
+    };
+    assertEquals(commentsPageResponse(disabledPage).is_disabled, true);
 });
 
 Deno.test('normalizeReplyComments normalizes reply comments without reply tokens', () => {
@@ -158,7 +180,8 @@ Deno.test('normalizeReplyComments normalizes reply comments without reply tokens
                 content: { toString: () => 'A reply' },
                 published_time: 'now',
                 like_count: '2',
-                reply_count: '0'
+                reply_count: '0',
+                vote: 'LIKE'
             }
         ]),
         [
@@ -171,7 +194,9 @@ Deno.test('normalizeReplyComments normalizes reply comments without reply tokens
                 likes: 2,
                 replies: 0,
                 has_replies: false,
-                reply_token: null
+                reply_token: null,
+                is_liked: true,
+                is_disliked: false
             }
         ]
     );
@@ -189,8 +214,6 @@ Deno.test('handleLikeInteraction routes actions to correct Innertube endpoints',
         }
     };
 
-    // Replace getYT dynamically or test directly by mocking
-    // Test endpoints logic directly
     const actionsMap = {
         like: 'like/like',
         dislike: 'like/dislike',
@@ -209,3 +232,62 @@ Deno.test('handleLikeInteraction routes actions to correct Innertube endpoints',
         { endpoint: 'like/removelike', payload: { target: { videoId: 'VIDEO_123' } } }
     ]);
 });
+
+Deno.test('handleLikeComment calls perform_comment_action with correct endpoint action', async () => {
+    const executed = [];
+    const fakeYt = {
+        session: { logged_in: true },
+        actions: {
+            execute: async (endpoint, payload) => {
+                executed.push({ endpoint, payload });
+                return { success: true, status_code: 200, data: {} };
+            }
+        }
+    };
+
+    const actionsMap = {
+        like: 'LIKE',
+        dislike: 'DISLIKE',
+        remove_like: 'INDIFFERENT'
+    };
+
+    for (const [action] of Object.entries(actionsMap)) {
+        const res = await handleLikeComment({
+            ytClient: fakeYt,
+            commentId: 'COMMENT_456',
+            action: action
+        });
+        assertEquals(res.success, true);
+    }
+
+    assertEquals(executed, [
+        { endpoint: 'comment/perform_comment_action', payload: { action: 'LIKE', commentId: 'COMMENT_456' } },
+        { endpoint: 'comment/perform_comment_action', payload: { action: 'DISLIKE', commentId: 'COMMENT_456' } },
+        { endpoint: 'comment/perform_comment_action', payload: { action: 'INDIFFERENT', commentId: 'COMMENT_456' } }
+    ]);
+});
+
+Deno.test('handleReplyComment calls create_comment_reply with commentId and trimmed commentText', async () => {
+    const executed = [];
+    const fakeYt = {
+        session: { logged_in: true },
+        actions: {
+            execute: async (endpoint, payload) => {
+                executed.push({ endpoint, payload });
+                return { success: true, status_code: 200, data: {} };
+            }
+        }
+    };
+
+    const res = await handleReplyComment({
+        ytClient: fakeYt,
+        commentId: 'COMMENT_789',
+        text: 'Nice reply!'
+    });
+    assertEquals(res.success, true);
+
+    assertEquals(executed, [
+        { endpoint: 'comment/create_comment_reply', payload: { commentId: 'COMMENT_789', commentText: 'Nice reply!' } }
+    ]);
+});
+

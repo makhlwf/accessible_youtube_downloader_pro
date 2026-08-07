@@ -39,9 +39,12 @@ def test_get_video_comments_normalizes_response():
                 "replies": 3,
                 "has_replies": True,
                 "reply_token": "token-1",
+                "is_liked": False,
+                "is_disliked": False,
             }
         ],
         "continuation": "next-1",
+        "is_disabled": False,
     }
     mock_deno_service.send_command.assert_called_once_with(
         "get_video_comments",
@@ -180,6 +183,8 @@ def test_get_comment_replies_falls_back_to_yt_dlp_parent_filter(monkeypatch):
                 "replies": 0,
                 "has_replies": False,
                 "reply_token": None,
+                "is_liked": False,
+                "is_disliked": False,
             }
         ],
         "continuation": None,
@@ -284,3 +289,141 @@ def test_activate_comment_with_timestamp_calls_seek_callback():
     dialog.onActivateComment()
 
     assert calls == [(167, "2:47")]
+
+
+def test_normalize_comment_item_includes_liked_and_disliked_flags():
+    from utils import _normalize_comment_item
+
+    item = {
+        "id": "c123",
+        "parent_id": "",
+        "author": "Tester",
+        "content": "Nice!",
+        "published_time": "1 hour ago",
+        "likes": 10,
+        "replies": 0,
+        "has_replies": False,
+        "reply_token": None,
+        "is_liked": True,
+        "is_disliked": False,
+    }
+    normalized = _normalize_comment_item(item)
+    assert normalized["is_liked"] is True
+    assert normalized["is_disliked"] is False
+
+    item_defaults = {"id": "c456"}
+    normalized_defaults = _normalize_comment_item(item_defaults)
+    assert normalized_defaults["is_liked"] is False
+    assert normalized_defaults["is_disliked"] is False
+
+
+def test_normalize_comments_response_includes_is_disabled_flag():
+    from utils import _normalize_comments_response
+
+    resp = {
+        "comments": [{"id": "c1", "content": "Hi"}],
+        "continuation": None,
+        "is_disabled": True,
+    }
+    normalized = _normalize_comments_response(resp)
+    assert normalized["is_disabled"] is True
+    assert len(normalized["comments"]) == 1
+
+    resp_enabled = {"comments": [], "continuation": None}
+    normalized_enabled = _normalize_comments_response(resp_enabled)
+    assert normalized_enabled["is_disabled"] is False
+
+
+def test_like_comment_sends_command_and_validates():
+    from utils import like_comment
+
+    # Validation: missing comment_id
+    res_no_id = like_comment(
+        "https://www.youtube.com/watch?v=dQw4w9WgXcQ", "", action="like"
+    )
+    assert res_no_id["success"] is False
+    assert "معرف التعليق" in res_no_id["error"]
+
+    # Validation: missing cookies
+    with (
+        patch("utils.config_get", return_value="cookies.txt"),
+        patch("utils.os.path.exists", return_value=False),
+    ):
+        res_no_cookie = like_comment(
+            "https://www.youtube.com/watch?v=dQw4w9WgXcQ", "c123", action="like"
+        )
+        assert res_no_cookie["success"] is False
+        assert "كوكيز" in res_no_cookie["error"]
+
+    # Success call
+    with (
+        patch("utils.config_get", return_value="cookies.txt"),
+        patch("utils.os.path.exists", return_value=True),
+        patch("utils.deno_service") as mock_deno_service,
+    ):
+        mock_deno_service.send_command.return_value = {"success": True}
+        res = like_comment(
+            "https://www.youtube.com/watch?v=dQw4w9WgXcQ", "c123", action="like"
+        )
+
+    assert res == {"success": True}
+    mock_deno_service.send_command.assert_called_once_with(
+        "like_comment",
+        {
+            "cookiesPath": "cookies.txt",
+            "videoId": "dQw4w9WgXcQ",
+            "commentId": "c123",
+            "action": "like",
+        },
+    )
+
+
+def test_reply_to_comment_sends_command_and_validates():
+    from utils import reply_to_comment
+
+    # Validation: missing comment_id
+    res_no_id = reply_to_comment(
+        "https://www.youtube.com/watch?v=dQw4w9WgXcQ", "", "My reply"
+    )
+    assert res_no_id["success"] is False
+    assert "معرف التعليق" in res_no_id["error"]
+
+    # Validation: empty text
+    res_no_text = reply_to_comment(
+        "https://www.youtube.com/watch?v=dQw4w9WgXcQ", "c123", "   "
+    )
+    assert res_no_text["success"] is False
+    assert "رد" in res_no_text["error"]
+
+    # Validation: missing cookies
+    with (
+        patch("utils.config_get", return_value="cookies.txt"),
+        patch("utils.os.path.exists", return_value=False),
+    ):
+        res_no_cookie = reply_to_comment(
+            "https://www.youtube.com/watch?v=dQw4w9WgXcQ", "c123", "My reply"
+        )
+        assert res_no_cookie["success"] is False
+        assert "كوكيز" in res_no_cookie["error"]
+
+    # Success call
+    with (
+        patch("utils.config_get", return_value="cookies.txt"),
+        patch("utils.os.path.exists", return_value=True),
+        patch("utils.deno_service") as mock_deno_service,
+    ):
+        mock_deno_service.send_command.return_value = {"success": True}
+        res = reply_to_comment(
+            "https://www.youtube.com/watch?v=dQw4w9WgXcQ", "c123", "My reply"
+        )
+
+    assert res == {"success": True}
+    mock_deno_service.send_command.assert_called_once_with(
+        "reply_to_comment",
+        {
+            "cookiesPath": "cookies.txt",
+            "videoId": "dQw4w9WgXcQ",
+            "commentId": "c123",
+            "text": "My reply",
+        },
+    )

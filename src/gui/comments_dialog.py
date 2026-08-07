@@ -18,7 +18,7 @@ def format_comment_item(comment):
     if not content:
         content = _("تعليق فارغ")
 
-    return _(
+    formatted = _(
         "التعليق: {content}، المستخدم: {author}، التاريخ: {published_time}، "
         "الإعجابات: {likes}، الردود: {replies}"
     ).format(
@@ -28,6 +28,116 @@ def format_comment_item(comment):
         likes=likes,
         replies=replies,
     )
+    if comment.get("is_liked"):
+        formatted += _("، (أعجبك)")
+    elif comment.get("is_disliked"):
+        formatted += _("، (لم يعجبك)")
+    return formatted
+
+
+class CommentReplyDialog(wx.Dialog):
+    def __init__(self, parent, video_url, target_comment):
+        wx.Dialog.__init__(self, parent, title=_("رد على التعليق"), size=(600, 400))
+        self.Centre()
+        self.video_url = video_url
+        self.target_comment = target_comment or {}
+        self.posting = False
+
+        panel = wx.Panel(self)
+        author = self.target_comment.get("author") or _("غير معروف")
+        snippet = " ".join(str(self.target_comment.get("content") or "").split())
+        if len(snippet) > 100:
+            snippet = snippet[:100] + "..."
+        if not snippet:
+            snippet = _("تعليق فارغ")
+
+        target_label = wx.StaticText(
+            panel,
+            -1,
+            _("الرد على {author}: {content}").format(author=author, content=snippet),
+        )
+        self.replyTextCtrl = wx.TextCtrl(
+            panel,
+            -1,
+            style=wx.TE_MULTILINE | wx.TE_PROCESS_ENTER,
+            name="reply",
+        )
+        self.replyTextCtrl.SetMinSize((-1, 100))
+        self.postButton = wx.Button(panel, -1, _("نشر الرد"))
+        self.cancelButton = wx.Button(panel, wx.ID_CANCEL, _("إلغاء"))
+
+        buttonsSizer = wx.BoxSizer(wx.HORIZONTAL)
+        buttonsSizer.Add(self.postButton, 1)
+        buttonsSizer.Add(self.cancelButton, 1)
+
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(target_label, 0, wx.ALL, 5)
+        sizer.Add(self.replyTextCtrl, 1, wx.EXPAND | wx.ALL, 5)
+        sizer.Add(buttonsSizer, 0, wx.EXPAND | wx.ALL, 5)
+        panel.SetSizer(sizer)
+
+        self.postButton.Bind(wx.EVT_BUTTON, self.onPostReply)
+        self.cancelButton.Bind(wx.EVT_BUTTON, lambda event: self.Destroy())
+        self.Bind(wx.EVT_CHAR_HOOK, self.onCharHook)
+        self.Bind(wx.EVT_CLOSE, lambda event: self.Destroy())
+
+        apply_theme(self)
+
+    def onPostReply(self, event=None):
+        if self.posting:
+            return
+
+        text = self.replyTextCtrl.Value.strip()
+        if not text:
+            speak(_("يرجى كتابة رد قبل النشر"))
+            self.replyTextCtrl.SetFocus()
+            return
+
+        self.posting = True
+        self.postButton.Disable()
+        speak(_("جاري نشر الرد..."))
+
+        def _post():
+            result = utils.reply_to_comment(
+                self.video_url,
+                self.target_comment.get("id"),
+                text,
+            )
+            wx.CallAfter(self.update_reply_result, result)
+
+        Thread(target=_post, daemon=True).start()
+
+    def update_reply_result(self, result):
+        self.posting = False
+        self.postButton.Enable()
+
+        if isinstance(result, dict) and result.get("success"):
+            speak(_("تم نشر الرد بنجاح"))
+            self.Destroy()
+            return
+
+        message = (
+            result.get("error")
+            if isinstance(result, dict) and result.get("error")
+            else _("تعذر نشر الرد")
+        )
+        utils.show_error(message, parent=self)
+        if self.replyTextCtrl:
+            self.replyTextCtrl.SetFocus()
+        speak(message)
+
+    def onCharHook(self, event):
+        key = event.GetKeyCode()
+        if key == wx.WXK_ESCAPE:
+            self.Destroy()
+            return
+        if self.replyTextCtrl and wx.Window.FindFocus() == self.replyTextCtrl:
+            if key == wx.WXK_RETURN and event.ControlDown():
+                self.onPostReply()
+                return
+            event.Skip()
+            return
+        event.Skip()
 
 
 class CommentsDialog(wx.Dialog):
@@ -142,6 +252,20 @@ class CommentsDialog(wx.Dialog):
 
     def update_comments(self, data, load_more=False):
         self.loading = False
+        if isinstance(data, dict) and data.get("is_disabled"):
+            if self.commentLabel:
+                self.commentLabel.Hide()
+            if self.commentTextCtrl:
+                self.commentTextCtrl.Hide()
+            if self.postCommentButton:
+                self.postCommentButton.Hide()
+            self.comments = []
+            self.commentsList.Set([_("التعليقات معطلة لهذا الفيديو")])
+            self.loadMoreButton.Hide()
+            self.Layout()
+            speak(_("التعليقات معطلة لهذا الفيديو"))
+            return
+
         new_comments = data.get("comments", []) if isinstance(data, dict) else []
         self.continuation = data.get("continuation") if isinstance(data, dict) else None
 
@@ -328,6 +452,7 @@ class CommentsDialog(wx.Dialog):
 
         comment = self.comments[selection]
         menu = wx.Menu()
+
         for timestamp in self._comment_timestamps(comment):
             item = menu.Append(-1, _("الانتقال إلى {}").format(timestamp["label"]))
             self.Bind(
@@ -337,13 +462,93 @@ class CommentsDialog(wx.Dialog):
                 ),
                 item,
             )
+
+        like_item = menu.Append(-1, _("إعجاب بالتعليق"))
+        self.Bind(
+            wx.EVT_MENU,
+            lambda event, c=comment: self.onCommentVote(c, "like"),
+            like_item,
+        )
+
+        dislike_item = menu.Append(-1, _("عدم إعجاب بالتعليق"))
+        self.Bind(
+            wx.EVT_MENU,
+            lambda event, c=comment: self.onCommentVote(c, "dislike"),
+            dislike_item,
+        )
+
+        remove_like_item = menu.Append(-1, _("إلغاء التفاعل مع التعليق"))
+        self.Bind(
+            wx.EVT_MENU,
+            lambda event, c=comment: self.onCommentVote(c, "remove_like"),
+            remove_like_item,
+        )
+
+        reply_item = menu.Append(-1, _("رد على التعليق"))
+        self.Bind(
+            wx.EVT_MENU,
+            lambda event, c=comment: self.onReplyToComment(c),
+            reply_item,
+        )
+
         if comment.get("has_replies") and comment.get("reply_token"):
-            replies_item = menu.Append(-1, _("فتح الردود"))
+            replies_item = menu.Append(-1, _("عرض الردود"))
             self.Bind(wx.EVT_MENU, self.onOpenReplies, replies_item)
+
         copy_item = menu.Append(-1, _("نسخ نص التعليق"))
         self.Bind(wx.EVT_MENU, self.onCopyComment, copy_item)
+
         self.commentsList.PopupMenu(menu)
         menu.Destroy()
+
+    def onReplyToComment(self, comment=None):
+        if comment is None:
+            comment = self._selected_comment()
+        if not comment:
+            return
+        dlg = CommentReplyDialog(self, self.video_url, comment)
+        dlg.ShowModal()
+
+    def onCommentVote(self, comment, action):
+        if not comment or not comment.get("id"):
+            return
+
+        speak(_("جاري تحديث التفاعل..."))
+
+        def _vote():
+            result = utils.like_comment(self.video_url, comment["id"], action)
+            wx.CallAfter(self.update_vote_result, comment, action, result)
+
+        Thread(target=_vote, daemon=True).start()
+
+    def update_vote_result(self, comment, action, result):
+        if isinstance(result, dict) and result.get("success"):
+            if action == "like":
+                comment["is_liked"] = True
+                comment["is_disliked"] = False
+                speak(_("تم الإعجاب بالتعليق"))
+            elif action == "dislike":
+                comment["is_liked"] = False
+                comment["is_disliked"] = True
+                speak(_("تم عدم الإعجاب بالتعليق"))
+            elif action == "remove_like":
+                comment["is_liked"] = False
+                comment["is_disliked"] = False
+                speak(_("تم إلغاء التفاعل مع التعليق"))
+
+            try:
+                idx = self.comments.index(comment)
+                self.commentsList.SetString(idx, format_comment_item(comment))
+            except ValueError:
+                pass
+        else:
+            message = (
+                result.get("error")
+                if isinstance(result, dict) and result.get("error")
+                else _("تعذر تنفيذ الإجراء")
+            )
+            utils.show_error(message, parent=self)
+            speak(message)
 
     def onCopyComment(self, event=None):
         selection = self.commentsList.GetSelection()

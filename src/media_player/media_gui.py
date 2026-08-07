@@ -1041,14 +1041,20 @@ class MediaGui(wx.Frame):
             self.onLike()
         elif event.GetKeyCode() == ord("D") and not event.HasAnyModifiers():
             self.onDislike()
-        elif event.GetKeyCode() == wx.WXK_UP and event.ShiftDown():
+        elif event.ShiftDown() and (
+            event.GetKeyCode() in (ord("."), ord(">"))
+            or event.GetUnicodeKey() in (ord("."), ord(">"))
+        ):
             if self.player is not None:
                 rate = round(
                     self.player.media.get_rate() + config_get("playback_speed_step"), 2
                 )
                 self.player.media.set_rate(rate)
                 speak(f"{rate}x")
-        elif event.GetKeyCode() == wx.WXK_DOWN and event.ShiftDown():
+        elif event.ShiftDown() and (
+            event.GetKeyCode() in (ord(","), ord("<"))
+            or event.GetUnicodeKey() in (ord(","), ord("<"))
+        ):
             if self.player is not None:
                 rate = round(
                     self.player.media.get_rate() - config_get("playback_speed_step"), 2

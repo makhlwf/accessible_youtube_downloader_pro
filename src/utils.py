@@ -1849,12 +1849,20 @@ def _normalize_comment_item(comment):
         "replies": _coerce_count(comment.get("replies")) or 0,
         "has_replies": bool(comment.get("has_replies") or comment.get("reply_token")),
         "reply_token": comment.get("reply_token"),
+        "is_liked": bool(comment.get("is_liked")),
+        "is_disliked": bool(comment.get("is_disliked")),
     }
 
 
 def _normalize_comments_response(result):
     if not isinstance(result, dict) or "error" in result:
-        return {"comments": [], "continuation": None}
+        return {
+            "comments": [],
+            "continuation": None,
+            "is_disabled": bool(result.get("is_disabled"))
+            if isinstance(result, dict)
+            else False,
+        }
 
     comments = []
     for comment in result.get("comments", []):
@@ -1862,7 +1870,11 @@ def _normalize_comments_response(result):
         if normalized is not None:
             comments.append(normalized)
 
-    return {"comments": comments, "continuation": result.get("continuation")}
+    return {
+        "comments": comments,
+        "continuation": result.get("continuation"),
+        "is_disabled": bool(result.get("is_disabled")),
+    }
 
 
 def _normalize_yt_dlp_comment(comment):
@@ -2027,6 +2039,77 @@ def post_video_comment(url, text):
     except Exception as e:
         logger.error(f"Failed to post video comment: {e}")
         return {"success": False, "error": _post_comment_error_message(e)}
+
+
+def like_comment(url, comment_id, action="like"):
+    """
+    Likes, dislikes, or removes vote on a comment.
+    action can be 'like', 'dislike', or 'remove_like'.
+    """
+    if not comment_id:
+        return {"success": False, "error": _("معرف التعليق غير موجود")}
+
+    cookies_path = config_get("cookiespath")
+    if not cookies_path or not os.path.exists(cookies_path):
+        return {
+            "success": False,
+            "error": _("تحتاج إلى ضبط ملف كوكيز صالح لاستخدام هذه الميزة"),
+        }
+
+    match = youtube_regexp(url) if url else None
+    video_id = match.group(5) if match else None
+
+    try:
+        result = deno_service.send_command(
+            "like_comment",
+            {
+                "cookiesPath": cookies_path,
+                "videoId": video_id,
+                "commentId": comment_id,
+                "action": action,
+            },
+        )
+        return result
+    except Exception as e:
+        logger.error(f"Failed to perform comment action: {e}")
+        return {"success": False, "error": str(e)}
+
+
+def reply_to_comment(url, comment_id, text):
+    """
+    Posts a reply to a specific comment.
+    """
+    if not comment_id:
+        return {"success": False, "error": _("معرف التعليق غير موجود")}
+
+    reply_text = str(text or "").strip()
+    if not reply_text:
+        return {"success": False, "error": _("يرجى كتابة رد قبل النشر")}
+
+    cookies_path = config_get("cookiespath")
+    if not cookies_path or not os.path.exists(cookies_path):
+        return {
+            "success": False,
+            "error": _("تحتاج إلى ضبط ملف كوكيز صالح لاستخدام هذه الميزة"),
+        }
+
+    match = youtube_regexp(url) if url else None
+    video_id = match.group(5) if match else None
+
+    try:
+        result = deno_service.send_command(
+            "reply_to_comment",
+            {
+                "cookiesPath": cookies_path,
+                "videoId": video_id,
+                "commentId": comment_id,
+                "text": reply_text,
+            },
+        )
+        return result
+    except Exception as e:
+        logger.error(f"Failed to reply to comment: {e}")
+        return {"success": False, "error": str(e)}
 
 
 def time_formatting(total_seconds):

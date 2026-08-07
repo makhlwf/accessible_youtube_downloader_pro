@@ -209,7 +209,9 @@ function normalizeComment(comment, thread = null) {
         likes: parseCount(comment?.like_count) || 0,
         replies: replyCount,
         has_replies: hasReplies,
-        reply_token: replyToken
+        reply_token: replyToken,
+        is_liked: !!comment?.is_liked || comment?.vote === 'LIKE',
+        is_disliked: !!comment?.is_disliked || comment?.vote === 'DISLIKE'
     };
 }
 
@@ -234,7 +236,8 @@ function commentsPageResponse(page) {
 
     return {
         comments: normalizeCommentThreads(page?.contents || []),
-        continuation
+        continuation,
+        is_disabled: !!page?.is_disabled || !!page?.header?.comments_disabled
     };
 }
 
@@ -726,6 +729,87 @@ async function handlePostVideoComment(params) {
     }
 }
 
+async function handleLikeComment(params) {
+    if (!params.ytClient && !params.cookiesPath) {
+        throw new Error("Cookies path is required");
+    }
+    const yt = params.ytClient || await getYT(params.cookiesPath, params.location);
+    if (!yt.session.logged_in) {
+        throw new Error("Not logged in");
+    }
+    const { commentId, action } = params;
+    if (!commentId) {
+        throw new Error("Comment ID is required");
+    }
+    let endpointAction;
+    if (action === 'like') {
+        endpointAction = 'LIKE';
+    } else if (action === 'dislike') {
+        endpointAction = 'DISLIKE';
+    } else if (action === 'remove_like') {
+        endpointAction = 'INDIFFERENT';
+    } else {
+        throw new Error(`Unknown interaction action: ${action}`);
+    }
+
+    try {
+        const response = await yt.actions.execute('comment/perform_comment_action', {
+            action: endpointAction,
+            commentId: commentId
+        });
+        if (response && response.success === false) {
+            const errorMsg = response.data?.error?.message || response.data?.message || `HTTP ${response.status_code || 'error'}`;
+            throw new Error(errorMsg);
+        }
+        return { success: true };
+    } catch (error) {
+        console.error(JSON.stringify({
+            debug: "handleLikeComment error",
+            error: error.message
+        }));
+        throw new Error(`Comment interaction failed: ${error.message}`);
+    }
+}
+
+async function handleReplyComment(params) {
+    if (!params.ytClient && !params.cookiesPath) {
+        throw new Error("Cookies path is required");
+    }
+    const yt = params.ytClient || await getYT(params.cookiesPath, params.location);
+    if (!yt.session.logged_in) {
+        throw new Error("Not logged in");
+    }
+    const { commentId } = params;
+    const text = textValue(params.text).trim();
+    if (!commentId) {
+        throw new Error("Comment ID is required");
+    }
+    if (!text) {
+        throw new Error("Comment text is required");
+    }
+
+    try {
+        const response = await yt.actions.execute('comment/create_comment_reply', {
+            commentId: commentId,
+            commentText: text
+        });
+        if (response && response.success === false) {
+            const errorMsg = response.data?.error?.message || response.data?.message || `HTTP ${response.status_code || 'error'}`;
+            throw new Error(errorMsg);
+        }
+        return {
+            success: response?.success !== false,
+            status_code: response?.status_code || null
+        };
+    } catch (error) {
+        console.error(JSON.stringify({
+            debug: "handleReplyComment error",
+            error: error.message
+        }));
+        throw new Error(`Failed to reply to comment: ${error.message}`);
+    }
+}
+
 async function handleGetPlaylist(params) {
     const yt = await getYT(params.cookiesPath, params.location);
     const { playlistId } = params;
@@ -777,6 +861,10 @@ async function main() {
                 result = await handleGetCommentReplies(params);
             } else if (command === 'post_video_comment') {
                 result = await handlePostVideoComment(params);
+            } else if (command === 'like_comment') {
+                result = await handleLikeComment(params);
+            } else if (command === 'reply_to_comment') {
+                result = await handleReplyComment(params);
             } else if (command === 'get_playlist') {
                 result = await handleGetPlaylist(params);
             } else {
@@ -793,7 +881,9 @@ export {
     commentsPageResponse,
     extractChapters,
     extractLikeInfo,
+    handleLikeComment,
     handleLikeInteraction,
+    handleReplyComment,
     normalizeChapter,
     normalizeComment,
     normalizeCommentThreads,
