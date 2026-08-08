@@ -12,6 +12,14 @@ def test_speech_client_get_backend():
     assert hasattr(backend, "speak")
 
 
+def test_prism_import_and_native_components():
+    from prism import _native, _prism_cffi
+
+    assert hasattr(_prism_cffi, "lib")
+    assert hasattr(_prism_cffi, "ffi")
+    assert _native._find_native_dir() is not None
+
+
 def test_speak_handles_empty_or_whitespace():
     with patch.object(speech_client, "get_backend") as mock_get_backend:
         mock_backend = MagicMock()

@@ -280,6 +280,20 @@ command.extend(
 )  # Windows sometimes needs this for progress bars
 command.extend(["--collect-all", "prism"])
 
+# Dynamically discover and bundle prism C extension and DLL files from site-packages
+try:
+    import prism
+
+    prism_dir = os.path.dirname(prism.__file__)
+    for root_path, _, filenames in os.walk(prism_dir):
+        for filename in filenames:
+            if filename.endswith((".pyd", ".dll")):
+                full_src = os.path.join(root_path, filename)
+                rel_dst = os.path.relpath(root_path, os.path.dirname(prism_dir))
+                command.extend(["--add-binary", f"{full_src}{os.pathsep}{rel_dst}"])
+except ImportError:
+    pass
+
 # Add binary files
 for item in binary_files:
     source_path = src_item_path(item)
@@ -365,6 +379,8 @@ def validate_package_layout():
         os.path.join(package_dir, f"{native_host_name}.exe"),
         os.path.join(package_dir, "_internal"),
         os.path.join(package_dir, "_internal", "browser_extension", "manifest.json"),
+        os.path.join(package_dir, "_internal", "prism", "_native", "_prism_cffi.pyd"),
+        os.path.join(package_dir, "_internal", "prism", "_native", "prism.dll"),
     ]
     missing_paths = [path for path in required_paths if not os.path.exists(path)]
     if missing_paths:
