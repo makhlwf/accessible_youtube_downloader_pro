@@ -279,6 +279,8 @@ command.extend(
     ["--collect-submodules", "curses"]
 )  # Windows sometimes needs this for progress bars
 command.extend(["--collect-all", "prism"])
+command.extend(["--collect-all", "cffi"])
+command.extend(["--hidden-import", "_cffi_backend"])
 
 # Dynamically discover and bundle prism C extension and DLL files from site-packages
 try:
@@ -383,6 +385,20 @@ def validate_package_layout():
         os.path.join(package_dir, "_internal", "prism", "_native", "prism.dll"),
     ]
     missing_paths = [path for path in required_paths if not os.path.exists(path)]
+    internal_dir = os.path.join(package_dir, "_internal")
+    has_cffi_backend = (
+        any(
+            f.startswith("_cffi_backend") and f.endswith(".pyd")
+            for f in os.listdir(internal_dir)
+        )
+        if os.path.isdir(internal_dir)
+        else False
+    )
+    if not has_cffi_backend:
+        missing_paths.append(
+            os.path.join(package_dir, "_internal", "_cffi_backend*.pyd")
+        )
+
     if missing_paths:
         missing_list = "\n".join(f"- {path}" for path in missing_paths)
         raise RuntimeError(
