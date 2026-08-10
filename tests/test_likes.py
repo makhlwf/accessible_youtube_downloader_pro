@@ -85,10 +85,9 @@ def test_like_video_sends_remove_like_action():
     ):
         mock_deno_service.send_command.return_value = {"success": True}
 
-        assert (
-            like_video("https://www.youtube.com/watch?v=dQw4w9WgXcQ", "remove_like")
-            is True
-        )
+        res = like_video("https://www.youtube.com/watch?v=dQw4w9WgXcQ", "remove_like")
+        assert res["success"] is True
+        assert res["error"] is None
 
     mock_deno_service.send_command.assert_called_once_with(
         "like_video",

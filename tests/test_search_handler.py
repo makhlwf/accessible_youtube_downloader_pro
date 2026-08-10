@@ -257,3 +257,124 @@ def test_channel_tab_result_handles_missing_tab(monkeypatch):
     assert result.count == 0
     assert result.has_more is False
     assert result.get_display_titles() == []
+
+
+def test_get_home_feed_validation_missing_deno(monkeypatch):
+    import utils
+
+    monkeypatch.setattr(utils, "ensure_deno_installed", lambda **kw: False)
+
+    res = utils.get_home_feed()
+    assert res["videos"] == []
+    assert "لم يتم تثبيت Deno.\nDeno is not installed." in res["error"]
+
+
+def test_get_home_feed_validation_missing_cookies(monkeypatch):
+    import utils
+
+    monkeypatch.setattr(utils, "ensure_deno_installed", lambda **kw: True)
+    monkeypatch.setattr(utils, "ensure_cookies_configured", lambda **kw: False)
+
+    res = utils.get_home_feed()
+    assert res["videos"] == []
+    assert "لم يتم ضبط ملف الكوكيز.\nCookies file is not set." in res["error"]
+
+
+def test_get_home_feed_success(monkeypatch):
+    import utils
+
+    monkeypatch.setattr(utils, "ensure_deno_installed", lambda **kw: True)
+    monkeypatch.setattr(utils, "ensure_cookies_configured", lambda **kw: True)
+    monkeypatch.setattr(utils, "config_get", lambda k: "cookies.txt")
+    monkeypatch.setattr(utils, "get_windows_region", lambda: "US")
+    monkeypatch.setattr(
+        utils.deno_service,
+        "send_command",
+        lambda cmd, params: {"videos": [{"id": "v1"}], "continuation": "cont1"},
+    )
+
+    res = utils.get_home_feed()
+    assert len(res["videos"]) == 1
+    assert res["videos"][0]["id"] == "v1"
+    assert res["continuation"] == "cont1"
+
+
+def test_get_watch_history_falls_back_without_deno(monkeypatch):
+    import utils
+
+    class FakeWatchHistory:
+        @classmethod
+        def get_page(cls, limit, offset):
+            return [{"title": "Local Fallback"}]
+
+    deno_calls = []
+    cookie_calls = []
+
+    monkeypatch.setattr(
+        utils, "ensure_deno_installed", lambda **kw: deno_calls.append(kw) or False
+    )
+    monkeypatch.setattr(
+        utils, "ensure_cookies_configured", lambda **kw: cookie_calls.append(kw) or True
+    )
+    monkeypatch.setattr(utils, "WatchHistory", FakeWatchHistory)
+
+    res = utils.get_watch_history()
+    assert res["videos"][0]["title"] == "Local Fallback"
+    assert res["source"] == "local"
+    assert len(deno_calls) == 1
+    assert deno_calls[0]["feature_name_ar"] == "سجل المشاهدة أونلاين"
+    assert deno_calls[0]["feature_name_en"] == "online watch history"
+    assert len(cookie_calls) == 0
+    assert (
+        "Notice: Viewing YouTube online history requires Deno and Cookies."
+        in res["error"]
+    )
+
+
+def test_get_watch_history_falls_back_without_cookies(monkeypatch):
+    import utils
+
+    class FakeWatchHistory:
+        @classmethod
+        def get_page(cls, limit, offset):
+            return [{"title": "Local Fallback"}]
+
+    deno_calls = []
+    cookie_calls = []
+
+    monkeypatch.setattr(
+        utils, "ensure_deno_installed", lambda **kw: deno_calls.append(kw) or True
+    )
+    monkeypatch.setattr(
+        utils,
+        "ensure_cookies_configured",
+        lambda **kw: cookie_calls.append(kw) or False,
+    )
+    monkeypatch.setattr(utils, "WatchHistory", FakeWatchHistory)
+
+    res = utils.get_watch_history()
+    assert res["videos"][0]["title"] == "Local Fallback"
+    assert res["source"] == "local"
+    assert len(deno_calls) == 1
+    assert len(cookie_calls) == 1
+    assert cookie_calls[0]["feature_name_ar"] == "سجل المشاهدة أونلاين"
+    assert cookie_calls[0]["feature_name_en"] == "online watch history"
+    assert (
+        "Notice: Viewing YouTube online history requires Deno and Cookies."
+        in res["error"]
+    )
+
+
+def test_local_watch_history_response_handles_invalid_continuation(monkeypatch):
+    import utils
+
+    class FakeWatchHistory:
+        @classmethod
+        def get_page(cls, limit, offset):
+            assert offset == 0
+            return []
+
+    monkeypatch.setattr(utils, "WatchHistory", FakeWatchHistory)
+    res = utils._local_watch_history_response(continuation="not_an_int")
+    assert res["source"] == "local"
+    assert res["videos"] == []

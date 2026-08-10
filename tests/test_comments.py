@@ -110,8 +110,8 @@ def test_post_video_comment_requires_valid_cookies():
     from utils import post_video_comment
 
     with (
-        patch("utils.config_get", return_value="cookies.txt"),
-        patch("utils.os.path.exists", return_value=False),
+        patch("utils.ensure_deno_installed", return_value=True),
+        patch("utils.ensure_cookies_configured", return_value=False),
         patch("utils.deno_service") as mock_deno_service,
     ):
         result = post_video_comment(
@@ -121,6 +121,24 @@ def test_post_video_comment_requires_valid_cookies():
 
     assert result["success"] is False
     assert "كوكيز" in result["error"]
+    assert "cookies" in result["error"].lower()
+    mock_deno_service.send_command.assert_not_called()
+
+
+def test_post_video_comment_requires_deno():
+    from utils import post_video_comment
+
+    with (
+        patch("utils.ensure_deno_installed", return_value=False),
+        patch("utils.deno_service") as mock_deno_service,
+    ):
+        result = post_video_comment(
+            "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+            "Great video",
+        )
+
+    assert result["success"] is False
+    assert "Deno" in result["error"]
     mock_deno_service.send_command.assert_not_called()
 
 
@@ -337,17 +355,18 @@ def test_normalize_comments_response_includes_is_disabled_flag():
 def test_like_comment_sends_command_and_validates():
     from utils import like_comment
 
-    # Validation: missing comment_id
-    res_no_id = like_comment(
-        "https://www.youtube.com/watch?v=dQw4w9WgXcQ", "", action="like"
-    )
-    assert res_no_id["success"] is False
-    assert "معرف التعليق" in res_no_id["error"]
+    # Validation: missing Deno
+    with patch("utils.ensure_deno_installed", return_value=False):
+        res_no_deno = like_comment(
+            "https://www.youtube.com/watch?v=dQw4w9WgXcQ", "c123", action="like"
+        )
+        assert res_no_deno["success"] is False
+        assert "Deno" in res_no_deno["error"]
 
     # Validation: missing cookies
     with (
-        patch("utils.config_get", return_value="cookies.txt"),
-        patch("utils.os.path.exists", return_value=False),
+        patch("utils.ensure_deno_installed", return_value=True),
+        patch("utils.ensure_cookies_configured", return_value=False),
     ):
         res_no_cookie = like_comment(
             "https://www.youtube.com/watch?v=dQw4w9WgXcQ", "c123", action="like"
@@ -355,10 +374,22 @@ def test_like_comment_sends_command_and_validates():
         assert res_no_cookie["success"] is False
         assert "كوكيز" in res_no_cookie["error"]
 
+    # Validation: missing comment_id
+    with (
+        patch("utils.ensure_deno_installed", return_value=True),
+        patch("utils.ensure_cookies_configured", return_value=True),
+    ):
+        res_no_id = like_comment(
+            "https://www.youtube.com/watch?v=dQw4w9WgXcQ", "", action="like"
+        )
+        assert res_no_id["success"] is False
+        assert "معرف التعليق" in res_no_id["error"]
+
     # Success call
     with (
+        patch("utils.ensure_deno_installed", return_value=True),
+        patch("utils.ensure_cookies_configured", return_value=True),
         patch("utils.config_get", return_value="cookies.txt"),
-        patch("utils.os.path.exists", return_value=True),
         patch("utils.deno_service") as mock_deno_service,
     ):
         mock_deno_service.send_command.return_value = {"success": True}
@@ -381,24 +412,18 @@ def test_like_comment_sends_command_and_validates():
 def test_reply_to_comment_sends_command_and_validates():
     from utils import reply_to_comment
 
-    # Validation: missing comment_id
-    res_no_id = reply_to_comment(
-        "https://www.youtube.com/watch?v=dQw4w9WgXcQ", "", "My reply"
-    )
-    assert res_no_id["success"] is False
-    assert "معرف التعليق" in res_no_id["error"]
-
-    # Validation: empty text
-    res_no_text = reply_to_comment(
-        "https://www.youtube.com/watch?v=dQw4w9WgXcQ", "c123", "   "
-    )
-    assert res_no_text["success"] is False
-    assert "رد" in res_no_text["error"]
+    # Validation: missing Deno
+    with patch("utils.ensure_deno_installed", return_value=False):
+        res_no_deno = reply_to_comment(
+            "https://www.youtube.com/watch?v=dQw4w9WgXcQ", "c123", "My reply"
+        )
+        assert res_no_deno["success"] is False
+        assert "Deno" in res_no_deno["error"]
 
     # Validation: missing cookies
     with (
-        patch("utils.config_get", return_value="cookies.txt"),
-        patch("utils.os.path.exists", return_value=False),
+        patch("utils.ensure_deno_installed", return_value=True),
+        patch("utils.ensure_cookies_configured", return_value=False),
     ):
         res_no_cookie = reply_to_comment(
             "https://www.youtube.com/watch?v=dQw4w9WgXcQ", "c123", "My reply"
@@ -406,10 +431,33 @@ def test_reply_to_comment_sends_command_and_validates():
         assert res_no_cookie["success"] is False
         assert "كوكيز" in res_no_cookie["error"]
 
+    # Validation: missing comment_id
+    with (
+        patch("utils.ensure_deno_installed", return_value=True),
+        patch("utils.ensure_cookies_configured", return_value=True),
+    ):
+        res_no_id = reply_to_comment(
+            "https://www.youtube.com/watch?v=dQw4w9WgXcQ", "", "My reply"
+        )
+        assert res_no_id["success"] is False
+        assert "معرف التعليق" in res_no_id["error"]
+
+    # Validation: empty text
+    with (
+        patch("utils.ensure_deno_installed", return_value=True),
+        patch("utils.ensure_cookies_configured", return_value=True),
+    ):
+        res_no_text = reply_to_comment(
+            "https://www.youtube.com/watch?v=dQw4w9WgXcQ", "c123", "   "
+        )
+        assert res_no_text["success"] is False
+        assert "رد" in res_no_text["error"]
+
     # Success call
     with (
+        patch("utils.ensure_deno_installed", return_value=True),
+        patch("utils.ensure_cookies_configured", return_value=True),
         patch("utils.config_get", return_value="cookies.txt"),
-        patch("utils.os.path.exists", return_value=True),
         patch("utils.deno_service") as mock_deno_service,
     ):
         mock_deno_service.send_command.return_value = {"success": True}

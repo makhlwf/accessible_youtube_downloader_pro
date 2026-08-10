@@ -84,6 +84,24 @@ def has_player(method):
     return wrapper
 
 
+def diagnose_extraction_error(error_str: str) -> str:
+    err_lower = str(error_str).lower()
+    if "sign in" in err_lower or "confirm your age" in err_lower:
+        return utils.format_bilingual_message(
+            "هذا الفيديو يتطلب تسجيل الدخول أو إثبات العمر. يرجى ضبط ملف الكوكيز من الإعدادات.",
+            "This video requires sign-in or age verification. Please configure YouTube cookies in Settings.",
+        )
+    if "private video" in err_lower or "video unavailable" in err_lower:
+        return utils.format_bilingual_message(
+            "الفيديو غير متاح أو خاص.",
+            "Video is unavailable or private.",
+        )
+    return utils.format_bilingual_message(
+        f"تعذر تشغيل المقطع: {error_str}",
+        f"Could not play video: {error_str}",
+    )
+
+
 class MediaGui(wx.Frame):
     def __init__(
         self,
@@ -257,7 +275,9 @@ class MediaGui(wx.Frame):
         self.Bind(wx.EVT_CLOSE, self.onClose)
         self.Show()
         if stream is None:
-            utils.show_error(_("لا يمكن تشغيل الرابط"), parent=self)
+            utils.show_error(
+                diagnose_extraction_error("No playable stream"), parent=self
+            )
             self.closeAction()
             return
         options = []
@@ -280,7 +300,7 @@ class MediaGui(wx.Frame):
             )
         except Exception as e:
             logger.exception("Failed to initialize media player")
-            utils.show_error(_("لا يمكن تشغيل الرابط"), e, parent=self)
+            utils.show_error(diagnose_extraction_error(str(e)), parent=self)
             self.closeAction()
             return
         if config_get("player_fullscreen_default"):
@@ -990,18 +1010,21 @@ class MediaGui(wx.Frame):
 
         previous_rating = self.rating
         self.rating_request_pending = True
-        self.rating = new_rating
-        speak(success_message)
 
         def _task():
-            success = utils.like_video(self.url, action)
+            res = utils.like_video(self.url, action, parent=self)
             self.rating_request_pending = False
-            if success:
+            if res.get("success"):
+                self.rating = new_rating
+                speak(success_message)
                 self.fetch_like_count()
                 return
+
             if self.rating == new_rating:
                 self.rating = previous_rating
-            wx.CallAfter(speak, _("تعذر تحديث التقييم"))
+
+            err = res.get("error") or _("تعذر تحديث التقييم")
+            wx.CallAfter(speak, err)
 
         Thread(target=_task, daemon=True).start()
 
@@ -1265,7 +1288,7 @@ class MediaGui(wx.Frame):
                 else:
                     wx.CallAfter(
                         utils.show_error,
-                        _("تعذر جلب رابط التشغيل لهذا المقطع"),
+                        diagnose_extraction_error("No playable stream URL returned"),
                         parent=self,
                     )
             except Exception as e:
@@ -1276,9 +1299,8 @@ class MediaGui(wx.Frame):
                 )
                 wx.CallAfter(
                     utils.show_error,
-                    _("حدث خطأ أثناء محاولة جلب رابط التشغيل"),
-                    e,
-                    self,
+                    diagnose_extraction_error(str(e)),
+                    parent=self,
                 )
 
         Thread(target=_task, daemon=True).start()

@@ -37,6 +37,7 @@ from gui.text_viewer import Viewer
 from gui.tray_icon import TaskBarIcon
 from language_handler import _, codes, init_translation
 from media_player.media_gui import MediaGui
+from speech_client import speak
 from theme_handler import apply_theme
 from youtube_browser.browser import YoutubeBrowser
 from youtube_browser.scraper import Scraper
@@ -479,7 +480,7 @@ class HomeScreen(wx.Frame):
 
         def _load():
             try:
-                data = utils.get_home_feed(continuation)
+                data = utils.get_home_feed(continuation, parent=self)
                 wx.CallAfter(self._update_home_feed, data, load_more)
             except Exception as e:
                 logger.error(f"Failed to load home feed: {e}")
@@ -488,8 +489,20 @@ class HomeScreen(wx.Frame):
         threading.Thread(target=_load, daemon=True).start()
 
     def _update_home_feed(self, data, load_more=False):
-        new_videos = data.get("videos", [])
-        self.home_feed_continuation = data.get("continuation")
+        if isinstance(data, dict) and data.get("error"):
+            err_msg = data["error"]
+            wx.MessageBox(
+                err_msg,
+                utils.format_bilingual_message("تنبيه", "Notice"),
+                style=wx.OK | wx.ICON_WARNING,
+                parent=self,
+            )
+            speak(err_msg)
+
+        new_videos = data.get("videos", []) if isinstance(data, dict) else []
+        self.home_feed_continuation = (
+            data.get("continuation") if isinstance(data, dict) else None
+        )
 
         old_count = len(self.home_feed_data)
         if load_more:

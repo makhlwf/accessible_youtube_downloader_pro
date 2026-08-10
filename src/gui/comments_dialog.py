@@ -102,6 +102,7 @@ class CommentReplyDialog(wx.Dialog):
                 self.video_url,
                 self.target_comment.get("id"),
                 text,
+                parent=self,
             )
             wx.CallAfter(self.update_reply_result, result)
 
@@ -116,15 +117,20 @@ class CommentReplyDialog(wx.Dialog):
             self.Destroy()
             return
 
-        message = (
+        error_msg = (
             result.get("error")
             if isinstance(result, dict) and result.get("error")
-            else _("تعذر نشر الرد")
+            else utils.format_bilingual_message("تعذر نشر الرد", "Failed to post reply")
         )
-        utils.show_error(message, parent=self)
+        wx.MessageBox(
+            error_msg,
+            utils.format_bilingual_message("خطأ", "Error"),
+            style=wx.OK | wx.ICON_ERROR,
+            parent=self,
+        )
         if self.replyTextCtrl:
             self.replyTextCtrl.SetFocus()
-        speak(message)
+        speak(error_msg)
 
     def onCharHook(self, event):
         key = event.GetKeyCode()
@@ -317,7 +323,7 @@ class CommentsDialog(wx.Dialog):
         speak(_("جاري نشر التعليق"))
 
         def _post():
-            result = utils.post_video_comment(self.video_url, text)
+            result = utils.post_video_comment(self.video_url, text, parent=self)
             wx.CallAfter(self.update_post_result, result, text)
 
         Thread(target=_post, daemon=True).start()
@@ -333,15 +339,22 @@ class CommentsDialog(wx.Dialog):
             speak(_("تم نشر التعليق"))
             return
 
-        message = (
+        error_msg = (
             result.get("error")
             if isinstance(result, dict) and result.get("error")
-            else _("تعذر نشر التعليق")
+            else utils.format_bilingual_message(
+                "تعذر نشر التعليق", "Failed to post comment"
+            )
         )
-        utils.show_error(message, parent=self)
+        wx.MessageBox(
+            error_msg,
+            utils.format_bilingual_message("خطأ", "Error"),
+            style=wx.OK | wx.ICON_ERROR,
+            parent=self,
+        )
         if self.commentTextCtrl:
             self.commentTextCtrl.SetFocus()
-        speak(message)
+        speak(error_msg)
 
     def _prepend_posted_comment(self, text):
         comment = {
@@ -516,7 +529,9 @@ class CommentsDialog(wx.Dialog):
         speak(_("جاري تحديث التفاعل..."))
 
         def _vote():
-            result = utils.like_comment(self.video_url, comment["id"], action)
+            result = utils.like_comment(
+                self.video_url, comment["id"], action, parent=self
+            )
             wx.CallAfter(self.update_vote_result, comment, action, result)
 
         Thread(target=_vote, daemon=True).start()
@@ -542,13 +557,21 @@ class CommentsDialog(wx.Dialog):
             except ValueError:
                 pass
         else:
-            message = (
+            error_msg = (
                 result.get("error")
                 if isinstance(result, dict) and result.get("error")
-                else _("تعذر تنفيذ الإجراء")
+                else utils.format_bilingual_message(
+                    "حدث خطأ أثناء تنفيذ الإجراء على التعليق.",
+                    "An error occurred while executing comment action.",
+                )
             )
-            utils.show_error(message, parent=self)
-            speak(message)
+            wx.MessageBox(
+                error_msg,
+                utils.format_bilingual_message("خطأ", "Error"),
+                style=wx.OK | wx.ICON_ERROR,
+                parent=self,
+            )
+            speak(error_msg)
 
     def onCopyComment(self, event=None):
         selection = self.commentsList.GetSelection()

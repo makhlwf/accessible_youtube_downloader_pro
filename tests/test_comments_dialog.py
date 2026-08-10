@@ -108,8 +108,8 @@ def test_update_vote_result_failure_shows_error(monkeypatch):
     errors = []
     spoken = []
     monkeypatch.setattr(
-        "gui.comments_dialog.utils.show_error",
-        lambda msg, parent=None: errors.append(msg),
+        "gui.comments_dialog.wx.MessageBox",
+        lambda msg, title, style, parent: errors.append(msg),
     )
     monkeypatch.setattr("gui.comments_dialog.speak", lambda msg: spoken.append(msg))
 
@@ -139,7 +139,7 @@ def test_on_comment_vote_spawns_thread(monkeypatch):
     monkeypatch.setattr("gui.comments_dialog.Thread", ImmediateThread)
     monkeypatch.setattr(
         "gui.comments_dialog.utils.like_comment",
-        lambda url, cid, act: ("like_comment", cid, act),
+        lambda url, cid, act, parent=None: ("like_comment", cid, act),
     )
     monkeypatch.setattr(
         "gui.comments_dialog.wx.CallAfter", lambda fn, *args: called.append(args)

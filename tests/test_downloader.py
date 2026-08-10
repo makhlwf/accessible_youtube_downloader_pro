@@ -230,3 +230,67 @@ def test_effective_format_ignores_kbps_for_mp3_convert():
         "url", ".", "bestaudio[ext=m4a]", None, None, convert=True, kbps=128
     )
     assert downloader._effective_format() == "bestaudio/best"
+
+
+def test_diagnose_extraction_error_age_verification():
+    from media_player.media_gui import diagnose_extraction_error
+
+    msg = diagnose_extraction_error("Sign in to confirm your age")
+    assert "تسجيل الدخول" in msg
+    assert "sign-in or age verification" in msg
+    assert "\n" in msg
+
+
+def test_diagnose_extraction_error_unavailable_private():
+    from media_player.media_gui import diagnose_extraction_error
+
+    msg = diagnose_extraction_error("This is a private video")
+    assert "غير متاح أو خاص" in msg
+    assert "unavailable or private" in msg
+    assert "\n" in msg
+
+
+def test_diagnose_extraction_error_generic():
+    from media_player.media_gui import diagnose_extraction_error
+
+    msg = diagnose_extraction_error("Unknown player error")
+    assert "تعذر تشغيل المقطع: Unknown player error" in msg
+    assert "Could not play video: Unknown player error" in msg
+    assert "\n" in msg
+
+
+def test_diagnose_download_error_missing_ytdlp(monkeypatch):
+    from download_handler.downloader import diagnose_download_error
+
+    monkeypatch.setattr(utils, "YoutubeDL", None)
+    msg = diagnose_download_error("missing yt-dlp binary")
+    assert "لم يتم العثور على مكتبة yt-dlp" in msg
+    assert "yt-dlp library was not found" in msg
+    assert "\n" in msg
+
+
+def test_diagnose_download_error_network_timeout():
+    from download_handler.downloader import diagnose_download_error
+
+    msg = diagnose_download_error("HTTP Error 504: Gateway Timeout")
+    assert "انتهت مهلة الإرسال" in msg
+    assert "Network timeout" in msg
+    assert "\n" in msg
+
+
+def test_diagnose_download_error_permission_or_disk_full():
+    from download_handler.downloader import diagnose_download_error
+
+    msg = diagnose_download_error("Permission denied: 'C:\\downloads\\video.mp4'")
+    assert "تم رفض الوصول أو القرص ممتلئ" in msg
+    assert "Permission denied or disk full" in msg
+    assert "\n" in msg
+
+
+def test_diagnose_download_error_generic():
+    from download_handler.downloader import diagnose_download_error
+
+    msg = diagnose_download_error("Some unexpected error")
+    assert "حدث خطأ أثناء التنزيل: Some unexpected error" in msg
+    assert "Download error occurred: Some unexpected error" in msg
+    assert "\n" in msg

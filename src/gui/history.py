@@ -96,14 +96,26 @@ class HistoryDialog(wx.Frame):
             speak(_("جاري تحميل المزيد من السجل"))
 
         def _load():
-            data = utils.get_watch_history(self.continuation if load_more else None)
+            data = utils.get_watch_history(
+                self.continuation if load_more else None, parent=self
+            )
             wx.CallAfter(self._update_history, data, load_more)
 
         Thread(target=_load, daemon=True).start()
 
     def _update_history(self, data, load_more=False):
-        new_videos = data.get("videos", [])
-        self.continuation = data.get("continuation")
+        if isinstance(data, dict) and data.get("error"):
+            err_msg = data["error"]
+            wx.MessageBox(
+                err_msg,
+                utils.format_bilingual_message("تنبيه", "Notice"),
+                style=wx.OK | wx.ICON_WARNING,
+                parent=self,
+            )
+            speak(err_msg)
+
+        new_videos = data.get("videos", []) if isinstance(data, dict) else []
+        self.continuation = data.get("continuation") if isinstance(data, dict) else None
 
         old_count = len(self.history_data)
         if load_more:

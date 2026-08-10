@@ -103,7 +103,13 @@ class DownloadDialog(wx.Frame):
     def onDownload(self, event):
         url = self.videoLink.GetValue()
         if url == "" or not utils.is_supported_youtube_url(url):
-            utils.show_error(_("يرجى إدخال رابطًا صحيحًا."), parent=self)
+            utils.show_error(
+                utils.format_bilingual_message(
+                    "يرجى إدخال رابط صحيح.",
+                    "Please enter a valid link.",
+                ),
+                parent=self,
+            )
             wx.CallAfter(self.videoLink.SetFocus)
             return
         cases = ("list", "channel", "playlist", "/user/", "/c/", "/@", "RD", "mix")

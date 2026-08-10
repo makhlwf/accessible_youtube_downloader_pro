@@ -3,6 +3,7 @@ import sys
 
 import wx
 
+import utils
 import windows_url_association
 from language_handler import _, supported_languages
 from settings_handler import config_get, config_set
@@ -509,6 +510,22 @@ class SettingsDialog(wx.Dialog):
             self.pathField.Value = new
             self.pathField.SetFocus()
 
+    def validate_cookies_path(self, path):
+        if not path:
+            return True
+        if not os.path.exists(path):
+            wx.MessageBox(
+                utils.format_bilingual_message(
+                    "ملف الكوكيز المختار غير موجود.",
+                    "Selected cookies file does not exist.",
+                ),
+                utils.format_bilingual_message("تنبيه", "Notice"),
+                style=wx.OK | wx.ICON_WARNING,
+                parent=self,
+            )
+            return False
+        return True
+
     def onChangeCookies(self, event):
         wildcard = _("ملفات نصية (*.txt)|*.txt")
         dlg = wx.FileDialog(
@@ -521,6 +538,9 @@ class SettingsDialog(wx.Dialog):
         )
         if dlg.ShowModal() == wx.ID_OK:
             path = dlg.GetPath()
+            if not self.validate_cookies_path(path):
+                dlg.Destroy()
+                return
             self.preferences["cookiespath"] = path
             self.cookiesPathField.Value = path
             self.cookiesPathField.SetFocus()
@@ -531,6 +551,13 @@ class SettingsDialog(wx.Dialog):
         self.cookiesPathField.Value = ""
 
     def onOk(self, event):
+        cookies_path = (
+            self.cookiesPathField.Value
+            if hasattr(self, "cookiesPathField")
+            else self.preferences.get("cookiespath", "")
+        )
+        if not self.validate_cookies_path(cookies_path):
+            return
         old_browser_integration = config_get("browser_integration")
         for key, item in self.preferences.items():
             config_set(key, item)

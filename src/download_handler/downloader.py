@@ -273,7 +273,7 @@ class Downloader:
     def download(self, use_cookies=True):
         if not utils.YoutubeDL:
             logger.error("YoutubeDL library not loaded")
-            return 1
+            return RuntimeError("missing yt-dlp binary")
 
         if self._is_cancelled():
             return DownloadCancelled()
@@ -301,6 +301,71 @@ class Downloader:
             logger.warning("Cookie-based download failed; retrying without cookies")
             return self.download(use_cookies=False)
         return result
+
+
+def diagnose_download_error(error) -> str:
+    err_str = str(error) if error is not None else ""
+    err_lower = err_str.lower()
+
+    if (
+        (not utils.YoutubeDL and not err_str)
+        or "missing yt-dlp" in err_lower
+        or "ytdl_missing" in err_lower
+    ):
+        return utils.format_bilingual_message(
+            _("لم يتم العثور على مكتبة yt-dlp."),
+            _("yt-dlp library was not found."),
+        )
+    if any(
+        k in err_lower
+        for k in (
+            "permission denied",
+            "access is denied",
+            "access denied",
+            "no space left",
+            "disk full",
+            "errno 28",
+            "permissionerror",
+            "winerror 5",
+            "winerror 32",
+        )
+    ):
+        return utils.format_bilingual_message(
+            _("تعذر الكتابة على القرص (تم رفض الوصول أو القرص ممتلئ)."),
+            _("Permission denied or disk full. Could not write to disk."),
+        )
+    if any(
+        k in err_lower
+        for k in (
+            "timeout",
+            "timed out",
+            "connection",
+            "network",
+            "socket",
+            "http error",
+            "urlerror",
+            "dropped",
+            "read timed out",
+            "connect timeout",
+        )
+    ):
+        return utils.format_bilingual_message(
+            _(
+                "تعذر الاتصال بالشبكة أو انتهت مهلة الإرسال. يرجى التحقق من اتصال الإنترنت."
+            ),
+            _(
+                "Network timeout or connection dropped. Please check your internet connection."
+            ),
+        )
+    if err_str:
+        return utils.format_bilingual_message(
+            _("حدث خطأ أثناء التنزيل: {}").format(err_str),
+            _("Download error occurred: {}").format(err_str),
+        )
+    return utils.format_bilingual_message(
+        _("حدث خطأ أثناء التنزيل. يرجى التحقق من الرابط أو اتصالك بالإنترنت."),
+        _("Download error occurred. Please check the link or internet connection."),
+    )
 
 
 def downloadAction(
@@ -384,10 +449,9 @@ def downloadAction(
                 wx.MessageBox(_("تم إلغاء التنزيل"), _("إلغاء"), parent=dlg)
                 dlg.Destroy()
             else:
+                err_msg = diagnose_download_error(result)
                 utils.show_error(
-                    _(
-                        "حدث خطأ أثناء التنزيل. يرجى التحقق من الرابط أو اتصالك بالإنترنت."
-                    ),
+                    err_msg,
                     result if isinstance(result, Exception) else None,
                     parent=dlg,
                 )

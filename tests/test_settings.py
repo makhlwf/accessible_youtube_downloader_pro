@@ -188,3 +188,58 @@ def test_settings_merge_newest_file_with_missing_keys(monkeypatch, tmp_path):
 
     assert settings_handler.config_get("path") == "C:\\legacy"
     assert settings_handler.config_get("player_fullscreen_default") is True
+
+
+def test_validate_cookies_path_empty_returns_true():
+    from gui import settings_dialog
+
+    dialog = settings_dialog.SettingsDialog.__new__(settings_dialog.SettingsDialog)
+    assert dialog.validate_cookies_path("") is True
+    assert dialog.validate_cookies_path(None) is True
+
+
+def test_validate_cookies_path_existing_file_returns_true(tmp_path):
+    from gui import settings_dialog
+
+    cookies_file = tmp_path / "cookies.txt"
+    cookies_file.write_text("test", encoding="utf-8")
+    dialog = settings_dialog.SettingsDialog.__new__(settings_dialog.SettingsDialog)
+    assert dialog.validate_cookies_path(str(cookies_file)) is True
+
+
+def test_validate_cookies_path_nonexistent_returns_false_and_shows_messagebox(
+    monkeypatch, tmp_path
+):
+    import utils
+    from gui import settings_dialog
+
+    dialog = settings_dialog.SettingsDialog.__new__(settings_dialog.SettingsDialog)
+    non_existent = tmp_path / "does_not_exist.txt"
+
+    box_calls = []
+
+    def fake_messagebox(message, caption, style, parent):
+        box_calls.append(
+            {
+                "message": message,
+                "caption": caption,
+                "style": style,
+                "parent": parent,
+            }
+        )
+
+    monkeypatch.setattr(wx, "MessageBox", fake_messagebox)
+
+    result = dialog.validate_cookies_path(str(non_existent))
+
+    assert result is False
+    assert len(box_calls) == 1
+    expected_message = utils.format_bilingual_message(
+        "ملف الكوكيز المختار غير موجود.",
+        "Selected cookies file does not exist.",
+    )
+    expected_caption = utils.format_bilingual_message("تنبيه", "Notice")
+    assert box_calls[0]["message"] == expected_message
+    assert box_calls[0]["caption"] == expected_caption
+    assert box_calls[0]["style"] == (wx.OK | wx.ICON_WARNING)
+    assert box_calls[0]["parent"] == dialog

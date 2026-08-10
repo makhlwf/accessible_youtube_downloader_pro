@@ -111,24 +111,50 @@ def test_format_duration():
 
 
 def test_get_watch_history_returns_local_history_without_cookies(monkeypatch):
-    monkeypatch.setattr(utils, "config_get", lambda key: "")
+    deno_calls = []
+    cookie_calls = []
+    monkeypatch.setattr(
+        utils, "ensure_deno_installed", lambda **kw: deno_calls.append(kw) or True
+    )
+    monkeypatch.setattr(
+        utils,
+        "ensure_cookies_configured",
+        lambda **kw: cookie_calls.append(kw) or False,
+    )
     monkeypatch.setattr(
         utils,
         "_local_watch_history_response",
-        lambda continuation=None: {
+        lambda continuation=None, error=None: {
             "videos": [{"title": "Local Video"}],
             "continuation": None,
             "source": "local",
+            "error": error,
         },
     )
 
     result = utils.get_watch_history()
 
+    assert len(deno_calls) == 1
+    assert len(cookie_calls) == 1
     assert result["videos"][0]["title"] == "Local Video"
     assert result["source"] == "local"
+    assert "error" in result
+    assert "عذراً، يتطلب عرض سجل يوتيوب أونلاين" in result["error"]
+    assert (
+        "Notice: Viewing YouTube online history requires Deno and Cookies"
+        in result["error"]
+    )
 
 
 def test_get_watch_history_falls_back_to_local_on_cookie_error(monkeypatch):
+    deno_calls = []
+    cookie_calls = []
+    monkeypatch.setattr(
+        utils, "ensure_deno_installed", lambda **kw: deno_calls.append(kw) or True
+    )
+    monkeypatch.setattr(
+        utils, "ensure_cookies_configured", lambda **kw: cookie_calls.append(kw) or True
+    )
     monkeypatch.setattr(utils, "config_get", lambda key: "cookies.txt")
     monkeypatch.setattr(utils.os.path, "exists", lambda path: True)
     monkeypatch.setattr(
@@ -139,7 +165,7 @@ def test_get_watch_history_falls_back_to_local_on_cookie_error(monkeypatch):
     monkeypatch.setattr(
         utils,
         "_local_watch_history_response",
-        lambda continuation=None: {
+        lambda continuation=None, error=None: {
             "videos": [{"title": "Fallback Video"}],
             "continuation": None,
             "source": "local",
@@ -148,6 +174,8 @@ def test_get_watch_history_falls_back_to_local_on_cookie_error(monkeypatch):
 
     result = utils.get_watch_history()
 
+    assert len(deno_calls) == 1
+    assert len(cookie_calls) == 1
     assert result["videos"][0]["title"] == "Fallback Video"
     assert result["source"] == "local"
 
