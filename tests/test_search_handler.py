@@ -266,7 +266,7 @@ def test_get_home_feed_validation_missing_deno(monkeypatch):
 
     res = utils.get_home_feed()
     assert res["videos"] == []
-    assert "لم يتم تثبيت Deno.\nDeno is not installed." in res["error"]
+    assert res["error"] == "لم يتم تثبيت Deno."
 
 
 def test_get_home_feed_validation_missing_cookies(monkeypatch):
@@ -277,7 +277,7 @@ def test_get_home_feed_validation_missing_cookies(monkeypatch):
 
     res = utils.get_home_feed()
     assert res["videos"] == []
-    assert "لم يتم ضبط ملف الكوكيز.\nCookies file is not set." in res["error"]
+    assert res["error"] == "لم يتم ضبط ملف الكوكيز."
 
 
 def test_get_home_feed_success(monkeypatch):
@@ -322,13 +322,9 @@ def test_get_watch_history_falls_back_without_deno(monkeypatch):
     assert res["videos"][0]["title"] == "Local Fallback"
     assert res["source"] == "local"
     assert len(deno_calls) == 1
-    assert deno_calls[0]["feature_name_ar"] == "سجل المشاهدة أونلاين"
-    assert deno_calls[0]["feature_name_en"] == "online watch history"
+    assert deno_calls[0]["feature_name"] == "سجل المشاهدة أونلاين"
     assert len(cookie_calls) == 0
-    assert (
-        "Notice: Viewing YouTube online history requires Deno and Cookies."
-        in res["error"]
-    )
+    assert "عذراً، يتطلب عرض سجل يوتيوب أونلاين" in res["error"]
 
 
 def test_get_watch_history_falls_back_without_cookies(monkeypatch):
@@ -357,12 +353,8 @@ def test_get_watch_history_falls_back_without_cookies(monkeypatch):
     assert res["source"] == "local"
     assert len(deno_calls) == 1
     assert len(cookie_calls) == 1
-    assert cookie_calls[0]["feature_name_ar"] == "سجل المشاهدة أونلاين"
-    assert cookie_calls[0]["feature_name_en"] == "online watch history"
-    assert (
-        "Notice: Viewing YouTube online history requires Deno and Cookies."
-        in res["error"]
-    )
+    assert cookie_calls[0]["feature_name"] == "سجل المشاهدة أونلاين"
+    assert "عذراً، يتطلب عرض سجل يوتيوب أونلاين" in res["error"]
 
 
 def test_local_watch_history_response_handles_invalid_continuation(monkeypatch):

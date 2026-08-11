@@ -210,7 +210,6 @@ def test_validate_cookies_path_existing_file_returns_true(tmp_path):
 def test_validate_cookies_path_nonexistent_returns_false_and_shows_messagebox(
     monkeypatch, tmp_path
 ):
-    import utils
     from gui import settings_dialog
 
     dialog = settings_dialog.SettingsDialog.__new__(settings_dialog.SettingsDialog)
@@ -234,11 +233,8 @@ def test_validate_cookies_path_nonexistent_returns_false_and_shows_messagebox(
 
     assert result is False
     assert len(box_calls) == 1
-    expected_message = utils.format_bilingual_message(
-        "ملف الكوكيز المختار غير موجود.",
-        "Selected cookies file does not exist.",
-    )
-    expected_caption = utils.format_bilingual_message("تنبيه", "Notice")
+    expected_message = "ملف الكوكيز المختار غير موجود."
+    expected_caption = "تنبيه"
     assert box_calls[0]["message"] == expected_message
     assert box_calls[0]["caption"] == expected_caption
     assert box_calls[0]["style"] == (wx.OK | wx.ICON_WARNING)

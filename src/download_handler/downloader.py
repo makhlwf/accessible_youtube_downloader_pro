@@ -312,10 +312,7 @@ def diagnose_download_error(error) -> str:
         or "missing yt-dlp" in err_lower
         or "ytdl_missing" in err_lower
     ):
-        return utils.format_bilingual_message(
-            _("لم يتم العثور على مكتبة yt-dlp."),
-            _("yt-dlp library was not found."),
-        )
+        return _("لم يتم العثور على مكتبة yt-dlp.")
     if any(
         k in err_lower
         for k in (
@@ -330,10 +327,7 @@ def diagnose_download_error(error) -> str:
             "winerror 32",
         )
     ):
-        return utils.format_bilingual_message(
-            _("تعذر الكتابة على القرص (تم رفض الوصول أو القرص ممتلئ)."),
-            _("Permission denied or disk full. Could not write to disk."),
-        )
+        return _("تعذر الكتابة على القرص (تم رفض الوصول أو القرص ممتلئ).")
     if any(
         k in err_lower
         for k in (
@@ -349,23 +343,12 @@ def diagnose_download_error(error) -> str:
             "connect timeout",
         )
     ):
-        return utils.format_bilingual_message(
-            _(
-                "تعذر الاتصال بالشبكة أو انتهت مهلة الإرسال. يرجى التحقق من اتصال الإنترنت."
-            ),
-            _(
-                "Network timeout or connection dropped. Please check your internet connection."
-            ),
+        return _(
+            "تعذر الاتصال بالشبكة أو انتهت مهلة الإرسال. يرجى التحقق من اتصال الإنترنت."
         )
     if err_str:
-        return utils.format_bilingual_message(
-            _("حدث خطأ أثناء التنزيل: {}").format(err_str),
-            _("Download error occurred: {}").format(err_str),
-        )
-    return utils.format_bilingual_message(
-        _("حدث خطأ أثناء التنزيل. يرجى التحقق من الرابط أو اتصالك بالإنترنت."),
-        _("Download error occurred. Please check the link or internet connection."),
-    )
+        return _("حدث خطأ أثناء التنزيل: {}").format(err_str)
+    return _("حدث خطأ أثناء التنزيل. يرجى التحقق من الرابط أو اتصالك بالإنترنت.")
 
 
 def downloadAction(

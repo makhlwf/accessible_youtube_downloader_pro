@@ -87,19 +87,12 @@ def has_player(method):
 def diagnose_extraction_error(error_str: str) -> str:
     err_lower = str(error_str).lower()
     if "sign in" in err_lower or "confirm your age" in err_lower:
-        return utils.format_bilingual_message(
-            "هذا الفيديو يتطلب تسجيل الدخول أو إثبات العمر. يرجى ضبط ملف الكوكيز من الإعدادات.",
-            "This video requires sign-in or age verification. Please configure YouTube cookies in Settings.",
+        return _(
+            "هذا الفيديو يتطلب تسجيل الدخول أو إثبات العمر. يرجى ضبط ملف الكوكيز من الإعدادات."
         )
     if "private video" in err_lower or "video unavailable" in err_lower:
-        return utils.format_bilingual_message(
-            "الفيديو غير متاح أو خاص.",
-            "Video is unavailable or private.",
-        )
-    return utils.format_bilingual_message(
-        f"تعذر تشغيل المقطع: {error_str}",
-        f"Could not play video: {error_str}",
-    )
+        return _("الفيديو غير متاح أو خاص.")
+    return _("تعذر تشغيل المقطع: {}").format(error_str)
 
 
 class MediaGui(wx.Frame):

@@ -120,11 +120,11 @@ class CommentReplyDialog(wx.Dialog):
         error_msg = (
             result.get("error")
             if isinstance(result, dict) and result.get("error")
-            else utils.format_bilingual_message("تعذر نشر الرد", "Failed to post reply")
+            else _("تعذر نشر الرد")
         )
         wx.MessageBox(
             error_msg,
-            utils.format_bilingual_message("خطأ", "Error"),
+            _("خطأ"),
             style=wx.OK | wx.ICON_ERROR,
             parent=self,
         )
@@ -342,13 +342,11 @@ class CommentsDialog(wx.Dialog):
         error_msg = (
             result.get("error")
             if isinstance(result, dict) and result.get("error")
-            else utils.format_bilingual_message(
-                "تعذر نشر التعليق", "Failed to post comment"
-            )
+            else _("تعذر نشر التعليق")
         )
         wx.MessageBox(
             error_msg,
-            utils.format_bilingual_message("خطأ", "Error"),
+            _("خطأ"),
             style=wx.OK | wx.ICON_ERROR,
             parent=self,
         )
@@ -560,14 +558,11 @@ class CommentsDialog(wx.Dialog):
             error_msg = (
                 result.get("error")
                 if isinstance(result, dict) and result.get("error")
-                else utils.format_bilingual_message(
-                    "حدث خطأ أثناء تنفيذ الإجراء على التعليق.",
-                    "An error occurred while executing comment action.",
-                )
+                else _("حدث خطأ أثناء تنفيذ الإجراء على التعليق.")
             )
             wx.MessageBox(
                 error_msg,
-                utils.format_bilingual_message("خطأ", "Error"),
+                _("خطأ"),
                 style=wx.OK | wx.ICON_ERROR,
                 parent=self,
             )

@@ -108,7 +108,7 @@ class HistoryDialog(wx.Frame):
             err_msg = data["error"]
             wx.MessageBox(
                 err_msg,
-                utils.format_bilingual_message("تنبيه", "Notice"),
+                _("تنبيه"),
                 style=wx.OK | wx.ICON_WARNING,
                 parent=self,
             )

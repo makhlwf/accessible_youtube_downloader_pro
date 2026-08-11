@@ -121,7 +121,6 @@ def test_post_video_comment_requires_valid_cookies():
 
     assert result["success"] is False
     assert "كوكيز" in result["error"]
-    assert "cookies" in result["error"].lower()
     mock_deno_service.send_command.assert_not_called()
 
 

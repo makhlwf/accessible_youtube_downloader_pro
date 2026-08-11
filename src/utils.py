@@ -1076,32 +1076,17 @@ def check_deno(parent=None):
     return True
 
 
-def format_bilingual_message(ar_msg: str, en_msg: str | None = None) -> str:
-    """Formats a message with Arabic on line 1 and English on line 2 (translated via gettext)."""
-    if en_msg:
-        return f"{_(ar_msg)}\n{_(en_msg)}"
-    return _(ar_msg)
-
-
-def ensure_deno_installed(
-    parent=None, feature_name_ar="هذه الميزة", feature_name_en="this feature"
-):
+def ensure_deno_installed(parent=None, feature_name=None, **kwargs):
     """
     Checks if deno.exe is installed. If missing, prompts the user to download Deno.
     Returns True if Deno is available or installed, False otherwise.
     """
     if not os.path.exists(paths.deno_path):
-        feat_ar = _(feature_name_ar)
-        feat_en = _(feature_name_en)
-        msg_text = format_bilingual_message(
-            _(
-                "تنبيه: لم يتم تثبيت أداة Deno وهي مطلوبة لـ {}. هل تريد تنزيل وتثبيت Deno الآن؟"
-            ).format(feat_ar),
-            _(
-                "Notice: Deno tool is not installed and is required for {}. Would you like to download and install Deno now?"
-            ).format(feat_en),
-        )
-        title = format_bilingual_message(_("تنبيه"), _("Notice"))
+        feature = feature_name or kwargs.get("feature_name_ar") or _("هذه الميزة")
+        msg_text = _(
+            "تنبيه: لم يتم تثبيت أداة Deno وهي مطلوبة لـ {}. هل تريد تنزيل وتثبيت Deno الآن؟"
+        ).format(feature)
+        title = _("تنبيه")
         dialog_parent = parent or (wx.GetApp().GetTopWindow() if wx.GetApp() else None)
         res = wx.MessageBox(
             msg_text,
@@ -1116,9 +1101,7 @@ def ensure_deno_installed(
     return True
 
 
-def ensure_cookies_configured(
-    parent=None, feature_name_ar="هذه الميزة", feature_name_en="this feature"
-):
+def ensure_cookies_configured(parent=None, feature_name=None, **kwargs):
     """
     Checks if YouTube cookies file path is configured and exists.
     If missing, alerts user that cookies file is required in Settings.
@@ -1126,17 +1109,11 @@ def ensure_cookies_configured(
     """
     cookies_path = config_get("cookiespath")
     if not cookies_path or not os.path.exists(cookies_path):
-        feat_ar = _(feature_name_ar)
-        feat_en = _(feature_name_en)
-        msg_text = format_bilingual_message(
-            _(
-                "تنبيه: لم يتم تحديد ملف الكوكيز الخاص بيوتيوب أو أن الملف غير موجود. تتطلب هذه الميزة ({}) ملف كوكيز صالح. يرجى إضافة ملف كوكيز من إعدادات البرنامج."
-            ).format(feat_ar),
-            _(
-                "Notice: YouTube cookies file is missing or not configured. This feature ({}) requires YouTube cookies. Please set a valid cookies file in Application Settings."
-            ).format(feat_en),
-        )
-        title = format_bilingual_message(_("تنبيه"), _("Notice"))
+        feature = feature_name or kwargs.get("feature_name_ar") or _("هذه الميزة")
+        msg_text = _(
+            "تنبيه: لم يتم تحديد ملف الكوكيز الخاص بيوتيوب أو أن الملف غير موجود. تتطلب هذه الميزة ({}) ملف كوكيز صالح. يرجى إضافة ملف كوكيز من إعدادات البرنامج."
+        ).format(feature)
+        title = _("تنبيه")
         dialog_parent = parent or (wx.GetApp().GetTopWindow() if wx.GetApp() else None)
         wx.MessageBox(
             msg_text,
@@ -1650,28 +1627,19 @@ def get_specific_quality_stream(url, height, audio_mode=False):
 
 
 def get_home_feed(continuation=None, parent=None):
-    feature_ar = "عرض الخلاصة الرئيسية"
-    feature_en = "viewing home feed"
-    if not ensure_deno_installed(
-        parent=parent, feature_name_ar=feature_ar, feature_name_en=feature_en
-    ):
+    feature_name = _("عرض الخلاصة الرئيسية")
+    if not ensure_deno_installed(parent=parent, feature_name=feature_name):
         return {
             "videos": [],
             "continuation": None,
-            "error": format_bilingual_message(
-                "لم يتم تثبيت Deno.", "Deno is not installed."
-            ),
+            "error": _("لم يتم تثبيت Deno."),
         }
 
-    if not ensure_cookies_configured(
-        parent=parent, feature_name_ar=feature_ar, feature_name_en=feature_en
-    ):
+    if not ensure_cookies_configured(parent=parent, feature_name=feature_name):
         return {
             "videos": [],
             "continuation": None,
-            "error": format_bilingual_message(
-                "لم يتم ضبط ملف الكوكيز.", "Cookies file is not set."
-            ),
+            "error": _("لم يتم ضبط ملف الكوكيز."),
         }
 
     cookies_path = config_get("cookiespath")
@@ -1695,16 +1663,12 @@ def get_home_feed(continuation=None, parent=None):
 
 
 def get_watch_history(continuation=None, parent=None):
-    feature_ar = "سجل المشاهدة أونلاين"
-    feature_en = "online watch history"
+    feature_name = _("سجل المشاهدة أونلاين")
     if not ensure_deno_installed(
-        parent=parent, feature_name_ar=feature_ar, feature_name_en=feature_en
-    ) or not ensure_cookies_configured(
-        parent=parent, feature_name_ar=feature_ar, feature_name_en=feature_en
-    ):
-        err_msg = format_bilingual_message(
-            "عذراً، يتطلب عرض سجل يوتيوب أونلاين وجود Deno وملف كوكيز. يتم عرض السجل المحلي حالياً.",
-            "Notice: Viewing YouTube online history requires Deno and Cookies. Showing local history instead.",
+        parent=parent, feature_name=feature_name
+    ) or not ensure_cookies_configured(parent=parent, feature_name=feature_name):
+        err_msg = _(
+            "عذراً، يتطلب عرض سجل يوتيوب أونلاين وجود Deno وملف كوكيز. يتم عرض السجل المحلي حالياً."
         )
         return _local_watch_history_response(continuation, error=err_msg)
 
@@ -1816,38 +1780,25 @@ def like_video(url, action="like", parent=None):
     Actions: 'like', 'dislike', 'remove_like'
     Returns dict: {"success": bool, "error": str or None}
     """
-    feature_ar = "إبداء الإعجاب بالمرئيات"
-    feature_en = "liking videos"
+    feature_name = _("إبداء الإعجاب بالمرئيات")
 
-    if not ensure_deno_installed(
-        parent=parent, feature_name_ar=feature_ar, feature_name_en=feature_en
-    ):
+    if not ensure_deno_installed(parent=parent, feature_name=feature_name):
         return {
             "success": False,
-            "error": format_bilingual_message(
-                "لم يتم تثبيت أداة Deno المطلوبة للإعجاب بالمرئيات.",
-                "Deno tool required to like videos is not installed.",
-            ),
+            "error": _("لم يتم تثبيت أداة Deno المطلوبة للإعجاب بالمرئيات."),
         }
 
-    if not ensure_cookies_configured(
-        parent=parent, feature_name_ar=feature_ar, feature_name_en=feature_en
-    ):
+    if not ensure_cookies_configured(parent=parent, feature_name=feature_name):
         return {
             "success": False,
-            "error": format_bilingual_message(
-                "لم يتم ضبط ملف الكوكيز الخاص بيوتيوب.",
-                "YouTube cookies file is not configured.",
-            ),
+            "error": _("لم يتم ضبط ملف الكوكيز الخاص بيوتيوب."),
         }
 
     match = youtube_regexp(url)
     if not match:
         return {
             "success": False,
-            "error": format_bilingual_message(
-                "رابط الفيديو غير صالح.", "Invalid video URL."
-            ),
+            "error": _("رابط الفيديو غير صالح."),
         }
     video_id = match.group(5)
 
@@ -1866,19 +1817,15 @@ def like_video(url, action="like", parent=None):
         err_msg = result.get("error") if isinstance(result, dict) else None
         return {
             "success": False,
-            "error": format_bilingual_message(
-                f"تعذر تحديث تقييم المرئي: {err_msg or 'خطأ غير معروف'}",
-                f"Failed to update video rating: {err_msg or 'Unknown error'}",
+            "error": _("تعذر تحديث تقييم المرئي: {}").format(
+                err_msg or _("خطأ غير معروف")
             ),
         }
     except Exception as e:
         logger.error(f"Failed to perform like interaction: {e}")
         return {
             "success": False,
-            "error": format_bilingual_message(
-                f"فشل الاتصال أثناء تحديث التقييم: {e}",
-                f"Connection failed while updating rating: {e}",
-            ),
+            "error": _("فشل الاتصال أثناء تحديث التقييم: {}").format(e),
         }
 
 
@@ -2148,47 +2095,28 @@ def get_comment_replies(reply_token, continuation=None, video_url=None, parent_i
 def _post_comment_error_message(error=None):
     text = str(error or "").lower()
     if "comment text" in text:
-        return format_bilingual_message(
-            "يرجى كتابة تعليق قبل النشر", "Please write a comment before posting"
-        )
+        return _("يرجى كتابة تعليق قبل النشر")
     if "cookies path" in text or "cookie" in text:
-        return format_bilingual_message(
-            "تحتاج إلى ضبط ملف كوكيز صالح قبل نشر التعليقات",
-            "You need to configure a valid cookies file before posting comments",
-        )
+        return _("تحتاج إلى ضبط ملف كوكيز صالح قبل نشر التعليقات")
     if "not logged" in text or "signed in" in text:
-        return format_bilingual_message(
-            "ملف الكوكيز لا يحتوي على جلسة يوتيوب مسجلة الدخول",
-            "The cookies file does not contain a logged-in YouTube session",
-        )
-    return format_bilingual_message("تعذر نشر التعليق", "Failed to post comment")
+        return _("ملف الكوكيز لا يحتوي على جلسة يوتيوب مسجلة الدخول")
+    return _("تعذر نشر التعليق")
 
 
 def post_video_comment(url, text, parent=None):
     """
     Posts a top-level comment on a YouTube video using configured cookies.
     """
-    feature_ar = "نشر التعليقات"
-    feature_en = "posting comments"
-    if not ensure_deno_installed(
-        parent=parent, feature_name_ar=feature_ar, feature_name_en=feature_en
-    ):
+    feature_name = _("نشر التعليقات")
+    if not ensure_deno_installed(parent=parent, feature_name=feature_name):
         return {
             "success": False,
-            "error": format_bilingual_message(
-                "لم يتم تثبيت أداة Deno المطلوبة لنشر التعليقات.",
-                "Deno tool required for posting comments is not installed.",
-            ),
+            "error": _("لم يتم تثبيت أداة Deno المطلوبة لنشر التعليقات."),
         }
-    if not ensure_cookies_configured(
-        parent=parent, feature_name_ar=feature_ar, feature_name_en=feature_en
-    ):
+    if not ensure_cookies_configured(parent=parent, feature_name=feature_name):
         return {
             "success": False,
-            "error": format_bilingual_message(
-                "تحتاج إلى ضبط ملف كوكيز صالح لنشر التعليقات.",
-                "You need to configure a valid cookies file to post comments.",
-            ),
+            "error": _("تحتاج إلى ضبط ملف كوكيز صالح لنشر التعليقات."),
         }
 
     comment_text = str(text or "").strip()
@@ -2202,9 +2130,7 @@ def post_video_comment(url, text, parent=None):
         logger.error(f"Failed to match URL for comment posting: {url}")
         return {
             "success": False,
-            "error": format_bilingual_message(
-                "رابط الفيديو غير صالح", "Invalid video URL"
-            ),
+            "error": _("رابط الفيديو غير صالح"),
         }
     video_id = match.group(5)
 
@@ -2234,35 +2160,22 @@ def like_comment(url, comment_id, action="like", parent=None):
     Likes, dislikes, or removes vote on a comment.
     action can be 'like', 'dislike', or 'remove_like'.
     """
-    feature_ar = "التفاعل مع التعليقات"
-    feature_en = "comment interactions"
-    if not ensure_deno_installed(
-        parent=parent, feature_name_ar=feature_ar, feature_name_en=feature_en
-    ):
+    feature_name = _("التفاعل مع التعليقات")
+    if not ensure_deno_installed(parent=parent, feature_name=feature_name):
         return {
             "success": False,
-            "error": format_bilingual_message(
-                "لم يتم تثبيت أداة Deno المطلوبة للتفاعل مع التعليقات.",
-                "Deno tool required for comment interactions is not installed.",
-            ),
+            "error": _("لم يتم تثبيت أداة Deno المطلوبة للتفاعل مع التعليقات."),
         }
-    if not ensure_cookies_configured(
-        parent=parent, feature_name_ar=feature_ar, feature_name_en=feature_en
-    ):
+    if not ensure_cookies_configured(parent=parent, feature_name=feature_name):
         return {
             "success": False,
-            "error": format_bilingual_message(
-                "تحتاج إلى ضبط ملف كوكيز صالح لاستخدام هذه الميزة.",
-                "You need to configure a valid cookies file to use this feature.",
-            ),
+            "error": _("تحتاج إلى ضبط ملف كوكيز صالح لاستخدام هذه الميزة"),
         }
 
     if not comment_id:
         return {
             "success": False,
-            "error": format_bilingual_message(
-                "معرف التعليق غير موجود", "Comment ID is missing"
-            ),
+            "error": _("معرف التعليق غير موجود"),
         }
 
     cookies_path = config_get("cookiespath")
@@ -2290,44 +2203,29 @@ def reply_to_comment(url, comment_id, text, parent=None):
     """
     Posts a reply to a specific comment.
     """
-    feature_ar = "الرد على التعليقات"
-    feature_en = "replying to comments"
-    if not ensure_deno_installed(
-        parent=parent, feature_name_ar=feature_ar, feature_name_en=feature_en
-    ):
+    feature_name = _("الرد على التعليقات")
+    if not ensure_deno_installed(parent=parent, feature_name=feature_name):
         return {
             "success": False,
-            "error": format_bilingual_message(
-                "لم يتم تثبيت أداة Deno المطلوبة للرد على التعليقات.",
-                "Deno tool required for replying to comments is not installed.",
-            ),
+            "error": _("لم يتم تثبيت أداة Deno المطلوبة للرد على التعليقات."),
         }
-    if not ensure_cookies_configured(
-        parent=parent, feature_name_ar=feature_ar, feature_name_en=feature_en
-    ):
+    if not ensure_cookies_configured(parent=parent, feature_name=feature_name):
         return {
             "success": False,
-            "error": format_bilingual_message(
-                "تحتاج إلى ضبط ملف كوكيز صالح للرد على التعليقات.",
-                "You need to configure a valid cookies file to reply to comments.",
-            ),
+            "error": _("تحتاج إلى ضبط ملف كوكيز صالح للرد على التعليقات."),
         }
 
     if not comment_id:
         return {
             "success": False,
-            "error": format_bilingual_message(
-                "معرف التعليق غير موجود", "Comment ID is missing"
-            ),
+            "error": _("معرف التعليق غير موجود"),
         }
 
     reply_text = str(text or "").strip()
     if not reply_text:
         return {
             "success": False,
-            "error": format_bilingual_message(
-                "يرجى كتابة رد قبل النشر", "Please write a reply before posting"
-            ),
+            "error": _("يرجى كتابة رد قبل النشر"),
         }
 
     cookies_path = config_get("cookiespath")

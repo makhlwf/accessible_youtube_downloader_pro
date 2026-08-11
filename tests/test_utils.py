@@ -140,10 +140,6 @@ def test_get_watch_history_returns_local_history_without_cookies(monkeypatch):
     assert result["source"] == "local"
     assert "error" in result
     assert "عذراً، يتطلب عرض سجل يوتيوب أونلاين" in result["error"]
-    assert (
-        "Notice: Viewing YouTube online history requires Deno and Cookies"
-        in result["error"]
-    )
 
 
 def test_get_watch_history_falls_back_to_local_on_cookie_error(monkeypatch):

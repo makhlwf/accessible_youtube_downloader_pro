@@ -3,7 +3,6 @@ import sys
 
 import wx
 
-import utils
 import windows_url_association
 from language_handler import _, supported_languages
 from settings_handler import config_get, config_set
@@ -515,11 +514,8 @@ class SettingsDialog(wx.Dialog):
             return True
         if not os.path.exists(path):
             wx.MessageBox(
-                utils.format_bilingual_message(
-                    "ملف الكوكيز المختار غير موجود.",
-                    "Selected cookies file does not exist.",
-                ),
-                utils.format_bilingual_message("تنبيه", "Notice"),
+                _("ملف الكوكيز المختار غير موجود."),
+                _("تنبيه"),
                 style=wx.OK | wx.ICON_WARNING,
                 parent=self,
             )
