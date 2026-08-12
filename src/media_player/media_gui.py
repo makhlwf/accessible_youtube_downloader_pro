@@ -310,8 +310,9 @@ class MediaGui(wx.Frame):
         Thread(target=self.fetch_chapters, daemon=True).start()
         Thread(target=self.fetch_subtitles, daemon=True).start()
         self.fetch_like_count()
-        if self.url in Continue.get_all() and config_get("continue"):
-            self.player.media.set_position(Continue.get_all()[url])
+        all_continue = Continue.get_all() or {}
+        if self.url in all_continue and config_get("continue"):
+            self.player.media.set_position(all_continue[self.url])
         Thread(target=self.extract_description, daemon=True).start()
         self.history_timer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.on_history_timer, self.history_timer)
@@ -907,9 +908,10 @@ class MediaGui(wx.Frame):
         if player is not None:
             try:
                 position = player.media.get_position()
-                if position in (0.0, -1) and self.url in Continue.get_all():
+                all_continue = Continue.get_all() or {}
+                if position in (0.0, -1) and self.url in all_continue:
                     Continue.remove_continue(self.url)
-                elif self.url in Continue.get_all():
+                elif self.url in all_continue:
                     Continue.update(self.url, position)
                 else:
                     Continue.new_continue(self.url, position)
