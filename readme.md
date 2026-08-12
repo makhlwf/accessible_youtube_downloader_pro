@@ -44,12 +44,13 @@ The current application version is **4.1.0**. The app is intended for modern 64-
 ## Key Features
 
 - **YouTube search and browsing:** Search videos, playlists, channels, and live content directly inside the app.
+- **YouTube Shorts Experience:** Browse YouTube Shorts recommendations seamlessly with dedicated `Up`/`Down` navigation, background stream preloading for zero-buffering playback, continuous native looping, and context-aware actions like Liking, Disliking, and Commenting (requires cookies file).
 - **Playlist and channel views:** Open playlists and browse channel tabs such as videos, shorts, live streams, playlists, community, channels, and about.
 - **Accessible media player:** Play content as video or audio-only with keyboard shortcuts, volume boost, playback speed control, chapters, quality switching, equalizer, and audio output device selection.
-- **Downloads:** Download videos, playlists, channels, and supported YouTube links as MP4, M4A, or MP3 using `yt-dlp`.
+- **Downloads:** Download videos, playlists, channels, Shorts, and supported YouTube links as MP4, M4A, or MP3 using `yt-dlp`.
 - **Quality selection:** Choose available video quality before video downloads, and configure default playback quality.
 - **Favorites:** Save local favorite videos and quickly play or download them later.
-- **Account features:** Use a YouTube cookies file for YouTube account watch history, home recommendations, likes, chapters, comment posting, and signed-in content.
+- **Account features:** Use a YouTube cookies file for YouTube Shorts feed recommendations, account watch history, home recommendations, likes, chapters, comment posting, and signed-in content.
 - **Resume playback:** Continue videos from the last saved local position.
 - **Clipboard detection:** Detect supported YouTube links at startup or continuously when background monitoring is enabled.
 - **Browser integration:** Use the included Chromium-compatible extension to send supported YouTube links to HexPlayer through Native Messaging or the `hexplayer://` fallback protocol.
@@ -76,6 +77,7 @@ HexPlayer is designed to be fully navigable from the keyboard.
 | `Ctrl + F` | Search YouTube |
 | `Ctrl + D` | Download from link or direct download |
 | `Ctrl + Y` | Play YouTube link |
+| `Ctrl + Shift + S` | Watch Shorts (requires cookies file) |
 | `Ctrl + Shift + F` | Open Favorites |
 | `Ctrl + H` | Open Watch History |
 | `Ctrl + P` | Open download folder |
@@ -84,6 +86,8 @@ HexPlayer is designed to be fully navigable from the keyboard.
 | `Enter` | Play selected list item as audio |
 | `Ctrl + Enter` | Play selected list item as video |
 | `Space` | Play or pause in the player |
+| `Up / Down` (Shorts mode) | Cycle previous / next Short |
+| `Shift + Up / Down` (Shorts mode) | Increase / decrease volume in Shorts mode |
 | Arrow keys | Volume and seeking in the player |
 | `Shift + , / .` | Change playback speed |
 | `Ctrl + E` | Open equalizer in the player |

@@ -32,6 +32,7 @@ Main features
 - Optionally use a YouTube cookies file for authenticated features such as home recommendations, watch history, likes, chapters, and some restricted content.
 - Check for HexPlayer updates and update external tools such as yt-dlp and Deno.
 - Use Arabic or English, with automatic language selection on first run.
+- Dedicated YouTube Shorts watching experience with Up/Down arrow navigation, automatic preloading, and seamless continuous looping.
 - Use system, light, dark, or high contrast dark themes.
 
 Main window
@@ -43,6 +44,7 @@ Main buttons:
 - YouTube Search, Ctrl + F.
 - Download from Link, Ctrl + D.
 - Play YouTube Link, Ctrl + Y.
+- Watch Shorts, Ctrl + Shift + S (requires a configured cookies file).
 - Favorites, Ctrl + Shift + F.
 - Watch History, Ctrl + H.
 
@@ -225,6 +227,17 @@ For playlist and channel downloads, HexPlayer saves files into a dedicated folde
 Play YouTube Link
 
 Open this dialog with Ctrl + Y or from the Main menu. Paste a YouTube video link, or let HexPlayer fill it from the clipboard, then choose Audio or Video. The media player opens with the same controls and download options used for search results.
+
+YouTube Shorts Watching Experience
+
+This feature provides a dedicated, accessible feed for watching YouTube Shorts recommendations inside HexPlayer.
+
+- Opening Shorts: Launch Watch Shorts with Ctrl + Shift + S or from the "Watch Shorts" button on the main window.
+- Requirements: Requires a valid Netscape HTTP cookies file configured in Settings so the Deno service can fetch recommended Shorts using the Innertube JS API.
+- Video Navigation: Use Up Arrow and Down Arrow to cycle directly between previous and next Shorts.
+- Volume Control: Use Shift + Up Arrow and Shift + Down Arrow to increase or decrease playback volume in Shorts mode.
+- Preloading & Seamless Looping: HexPlayer preloads upcoming Shorts in the background so switching videos starts instantly without buffering, and automatically loops the current Short natively upon completion.
+- Interactive Actions: All player commands—such as Liking (L), Disliking (D), Commenting, and Direct Downloading (Ctrl + D)—operate directly on the currently playing Short.
 
 Automatic link detection
 
