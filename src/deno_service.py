@@ -75,7 +75,11 @@ class DenoService:
         try:
             for line in proc.stderr:
                 if line:
-                    logger.error(f"Deno service stderr: {line.strip()}")
+                    clean_line = line.strip()
+                    if clean_line.startswith("[YOUTUBEJS]"):
+                        logger.debug(f"Deno service stderr: {clean_line}")
+                    else:
+                        logger.error(f"Deno service stderr: {clean_line}")
         except Exception:
             pass
 

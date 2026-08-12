@@ -205,6 +205,9 @@ class HomeScreen(wx.Frame):
         self.playBtn = wx.Button(
             panel, -1, _("تشغيل فيديو يوتيوب من خلال الرابط\tctrl+y"), name="tab"
         )
+        self.shortsBtn = wx.Button(
+            panel, -1, _("مشاهدة Shorts\tctrl+shift+s"), name="tab"
+        )
         self.favBtn = wx.Button(
             panel, -1, _("الفيديوهات المفضلة	ctrl+shift+f"), name="tab"
         )
@@ -244,6 +247,7 @@ class HomeScreen(wx.Frame):
         self.playItem = mainMenu.Append(
             -1, _("تشغيل فيديو يوتيوب من خلال الرابط\tctrl+y")
         )
+        self.shortsItem = mainMenu.Append(-1, _("مشاهدة Shorts\tctrl+shift+s"))
         self.favItem = mainMenu.Append(-1, _("الفيديوهات المفضلة	ctrl+shift+f"))
         self.historyItem = mainMenu.Append(-1, _("سجل المشاهدة\tctrl+h"))
         self.openPathItem = mainMenu.Append(-1, _("فتح مجلد التنزيل\tctrl+p"))
@@ -295,6 +299,7 @@ class HomeScreen(wx.Frame):
                 (wx.ACCEL_CTRL, ord("F"), self.searchItem.GetId()),
                 (wx.ACCEL_CTRL, ord("D"), self.downloadItem.GetId()),
                 (wx.ACCEL_CTRL, ord("Y"), self.playItem.GetId()),
+                (wx.ACCEL_CTRL | wx.ACCEL_SHIFT, ord("S"), self.shortsItem.GetId()),
                 (wx.ACCEL_CTRL | wx.ACCEL_SHIFT, ord("F"), self.favItem.GetId()),
                 (wx.ACCEL_CTRL, ord("H"), self.historyItem.GetId()),
                 (wx.ACCEL_CTRL, ord("P"), self.openPathItem.GetId()),
@@ -311,6 +316,7 @@ class HomeScreen(wx.Frame):
         self.Bind(wx.EVT_MENU, self.onSearch, self.searchItem)
         self.Bind(wx.EVT_MENU, self.onDownload, self.downloadItem)
         self.Bind(wx.EVT_MENU, self.onPlay, self.playItem)
+        self.Bind(wx.EVT_MENU, self.on_open_shorts, self.shortsItem)
         self.Bind(wx.EVT_MENU, self.onFavorite, self.favItem)
         self.Bind(wx.EVT_MENU, self.onHistory, self.historyItem)
         self.Bind(wx.EVT_MENU, self.onOpenPath, self.openPathItem)
@@ -353,6 +359,7 @@ class HomeScreen(wx.Frame):
         self.searchBtn.Bind(wx.EVT_BUTTON, self.onSearch)
         self.downloadBtn.Bind(wx.EVT_BUTTON, self.onDownload)
         self.playBtn.Bind(wx.EVT_BUTTON, self.onPlay)
+        self.shortsBtn.Bind(wx.EVT_BUTTON, self.on_open_shorts)
         self.favBtn.Bind(wx.EVT_BUTTON, self.onFavorite)
         self.historyBtn.Bind(wx.EVT_BUTTON, self.onHistory)
         self.load_more_home_button.Bind(
@@ -390,6 +397,7 @@ class HomeScreen(wx.Frame):
         cookies_path = settings_handler.config_get("cookiespath")
         if cookies_path and os.path.exists(cookies_path):
             self.load_home_feed()
+        self.update_shorts_button_visibility()
 
         autodetect = settings_handler.config_get("autodetect")
         bg_monitoring = settings_handler.config_get("background_monitoring")
@@ -675,6 +683,67 @@ class HomeScreen(wx.Frame):
             self.home_feed_list.Hide()
             self.load_more_home_button.Hide()
             self.Layout()
+        self.update_shorts_button_visibility()
+
+    def update_shorts_button_visibility(self):
+        has_cookies = utils.has_cookies_file()
+        if hasattr(self, "shortsBtn"):
+            self.shortsBtn.Show(has_cookies)
+        if hasattr(self, "shortsItem"):
+            self.shortsItem.Enable(has_cookies)
+        if hasattr(self, "panel"):
+            self.panel.Layout()
+
+    def on_open_shorts(self, event=None):
+        if not utils.has_cookies_file():
+            utils.show_error(
+                _("يجب تحديد ملف الكوكيز من الإعدادات لاستخدام ميزة Shorts."),
+                parent=self,
+            )
+            return
+
+        loading = LoadingDialog(
+            self,
+            _("جاري تحميل فيديوهات Shorts المقترحة..."),
+            utils.get_shorts_feed,
+        )
+        shorts = loading.res
+        if not shorts:
+            utils.show_error(
+                _(
+                    "تعذر تحميل فيديوهات Shorts. يرجى التحقق من ملف الكوكيز والاتصال بالإنترنت."
+                ),
+                parent=self,
+            )
+            return
+
+        first_short = shorts[0]
+        first_url = first_short["url"]
+        first_title = first_short["title"]
+
+        stream = LoadingDialog(
+            self,
+            _("جاري جلب رابط التشغيل..."),
+            utils.get_playable_stream,
+            first_url,
+            audio_mode=False,
+        ).res
+
+        if not stream:
+            utils.show_error(_("تعذر استخراج رابط تشغيل الفيديو."), parent=self)
+            return
+
+        MediaGui(
+            self,
+            title=first_title,
+            stream=stream,
+            url=first_url,
+            can_download=True,
+            results=shorts,
+            audio_mode=False,
+            shorts_mode=True,
+        )
+        self.Hide()
 
     def onFavorite(self, event):
         Favorites(self)

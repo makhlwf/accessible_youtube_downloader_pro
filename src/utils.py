@@ -626,7 +626,6 @@ PLAYER_OPTS = {
         "youtube": {
             "player_client": ["android_vr"],
             "js_variant": "main",
-            "skip": ["dash", "hls"],
         }
     },
     "js_runtimes": {"deno": {}},
@@ -2464,3 +2463,40 @@ def copy_to_clipboard(text):
                 top_win.last_clip_content = text
     except Exception:
         pass
+
+
+def has_cookies_file():
+    cookies_path = config_get("cookiespath")
+    return bool(cookies_path and os.path.exists(cookies_path))
+
+
+def get_shorts_feed(seed_video_id=None, parent=None):
+    """
+    Fetches YouTube Shorts recommendations feed from Innertube via Deno service.
+    Requires a valid cookies file.
+    """
+    feature_name = _("مشاهدة Shorts")
+    if not ensure_deno_installed(parent=parent, feature_name=feature_name):
+        return []
+    if not ensure_cookies_configured(parent=parent, feature_name=feature_name):
+        return []
+
+    cookies_path = config_get("cookiespath")
+    try:
+        result = deno_service.send_command(
+            "get_shorts_feed",
+            {
+                "cookiesPath": cookies_path,
+                "location": get_windows_region(),
+                "seedVideoId": seed_video_id,
+            },
+        )
+        if isinstance(result, dict) and "shorts" in result:
+            return result["shorts"]
+        if isinstance(result, dict) and "error" in result:
+            logger.error(f"Failed to fetch Shorts feed: {result['error']}")
+            return []
+        return []
+    except Exception as e:
+        logger.error(f"Error fetching Shorts feed: {e}")
+        return []

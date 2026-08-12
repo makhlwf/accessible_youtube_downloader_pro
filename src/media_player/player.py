@@ -86,7 +86,9 @@ class Player:
         if current_media is not None:
             self.media.set_media(current_media)
             self.apply_saved_audio_output_device()
-        if config_get("repeatTracks") and not config_get("autonext"):
+        if getattr(self.window, "shorts_mode", False) or (
+            config_get("repeatTracks") and not config_get("autonext")
+        ):
             self.media.play()
         elif config_get("autonext") and not config_get("repeatTracks") and self.window:
             wx.CallAfter(self.window.next)

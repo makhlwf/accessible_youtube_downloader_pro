@@ -105,6 +105,7 @@ class MediaGui(wx.Frame):
         can_download=True,
         results=None,
         audio_mode=False,
+        shorts_mode=False,
     ):
         wx.Frame.__init__(self, parent, title=f"{title} - {application.name}")
         self.title = title
@@ -113,6 +114,13 @@ class MediaGui(wx.Frame):
         self.seek = int(config_get("seek"))
         self.results = results
         self.audio_mode = audio_mode
+        self.shorts_mode = shorts_mode
+        self.current_index = 0
+        if isinstance(self.results, list):
+            self.current_index = self._find_result_index(url) or 0
+        self.preloaded_streams = {}
+        self._preloading_in_progress = set()
+        self._fetching_more_shorts = False
         if hasattr(self.results, "scraper") and self.results.scraper:
             self.results.scraper.audio_mode = self.audio_mode
         self.current_quality = getattr(stream, "quality", None)
@@ -316,6 +324,8 @@ class MediaGui(wx.Frame):
             else 0
         )
         self._report_watch_history(watched_seconds)
+        if getattr(self, "shorts_mode", False):
+            self._preload_next_shorts()
 
     def on_theme_applied(self, theme_name=None):
         if not self.audio_mode:
@@ -781,6 +791,8 @@ class MediaGui(wx.Frame):
     def playAction(self):
         state = self.player.media.get_state()
         if state in (State.NothingSpecial, State.Stopped, State.Ended):
+            if state == State.Ended:
+                self.player.media.set_position(0.0)
             self.player.media.play()
         elif state in (State.Playing, State.Paused):
             if not self.is_live:
@@ -1036,6 +1048,30 @@ class MediaGui(wx.Frame):
             self.next()
         elif event.ControlDown() and event.GetKeyCode() == wx.WXK_LEFT:
             self.previous()
+        elif (
+            getattr(self, "shorts_mode", False)
+            and event.GetKeyCode() == wx.WXK_UP
+            and event.ShiftDown()
+        ):
+            self.increase_volume()
+        elif (
+            getattr(self, "shorts_mode", False)
+            and event.GetKeyCode() == wx.WXK_DOWN
+            and event.ShiftDown()
+        ):
+            self.decrease_volume()
+        elif (
+            getattr(self, "shorts_mode", False)
+            and event.GetKeyCode() == wx.WXK_UP
+            and not event.HasAnyModifiers()
+        ):
+            self.previous()
+        elif (
+            getattr(self, "shorts_mode", False)
+            and event.GetKeyCode() == wx.WXK_DOWN
+            and not event.HasAnyModifiers()
+        ):
+            self.next()
         elif event.GetKeyCode() == wx.WXK_UP and not event.HasAnyModifiers():
             self.increase_volume()
         elif event.GetKeyCode() == wx.WXK_DOWN and not event.HasAnyModifiers():
@@ -1218,6 +1254,102 @@ class MediaGui(wx.Frame):
             ),
         )
 
+    def _preload_next_shorts(self):
+        if (
+            not getattr(self, "shorts_mode", False)
+            or not isinstance(getattr(self, "results", None), list)
+            or getattr(self, "_closing", False)
+        ):
+            return
+
+        curr = self.current_index
+        targets = []
+        for offset in (-1, 1, 2):
+            idx = curr + offset
+            if 0 <= idx < len(self.results):
+                item_url = self.results[idx].get("url")
+                if (
+                    item_url
+                    and item_url not in self.preloaded_streams
+                    and item_url not in self._preloading_in_progress
+                ):
+                    targets.append((idx, item_url))
+
+        if curr >= len(self.results) - 3:
+            self._fetch_more_shorts()
+
+        for idx, item_url in targets:
+            self._preloading_in_progress.add(item_url)
+
+            def _preload_job(target_idx=idx, target_url=item_url):
+                try:
+                    s = get_playable_stream(target_url, audio_mode=self.audio_mode)
+                    if s and not getattr(self, "_closing", False):
+                        self.preloaded_streams[target_url] = s
+                        if (
+                            hasattr(s, "title")
+                            and s.title
+                            and s.title.strip()
+                            and isinstance(self.results, list)
+                            and 0 <= target_idx < len(self.results)
+                        ):
+                            self.results[target_idx]["title"] = s.title
+                except Exception as e:
+                    logger.debug(f"Preloading stream failed for {target_url}: {e}")
+                finally:
+                    self._preloading_in_progress.discard(target_url)
+
+            Thread(target=_preload_job, daemon=True).start()
+
+    def _fetch_more_shorts(self):
+        if (
+            getattr(self, "_fetching_more_shorts", False)
+            or not isinstance(self.results, list)
+            or not self.results
+        ):
+            return
+        self._fetching_more_shorts = True
+
+        def _task():
+            try:
+                last_id = self.results[-1].get("id")
+                more_shorts = utils.get_shorts_feed(seed_video_id=last_id)
+                if more_shorts and not self._closing:
+                    existing_ids = {
+                        item.get("id")
+                        for item in self.results
+                        if isinstance(item, dict)
+                    }
+                    new_items = [
+                        s
+                        for s in more_shorts
+                        if isinstance(s, dict) and s.get("id") not in existing_ids
+                    ]
+                    if new_items:
+                        self.results.extend(new_items)
+                        self._preload_next_shorts()
+            except Exception as e:
+                logger.debug(f"Failed to fetch more shorts: {e}")
+            finally:
+                self._fetching_more_shorts = False
+
+        Thread(target=_task, daemon=True).start()
+
+    def _resolve_channel(self, stream=None, url=None, index=None):
+        channel_name = getattr(stream, "channel_name", "") if stream else ""
+        channel_url = getattr(stream, "channel_url", "") if stream else ""
+        if channel_url or channel_name:
+            return {"name": channel_name or _("قناة"), "url": channel_url}
+        if (
+            index is not None
+            and isinstance(self.results, list)
+            and 0 <= index < len(self.results)
+        ):
+            author = self.results[index].get("author")
+            if author:
+                return {"name": author, "url": ""}
+        return {"name": _("قناةغيرمعروفة"), "url": ""}
+
     def _set_player_controls_visible(self, visible):
         for control in getattr(self, "_player_controls", []):
             show = bool(visible)
@@ -1245,9 +1377,25 @@ class MediaGui(wx.Frame):
         else:
             speak(_("وضع ملء الشاشة متوقف"))
 
+    def _has_parent_listbox(self):
+        if not self.Parent:
+            return False
+        return any(
+            hasattr(self.Parent, attr)
+            for attr in (
+                "searchResults",
+                "videosBox",
+                "itemsBox",
+                "home_feed_list",
+                "historyList",
+                "favList",
+            )
+        )
+
     def changeTrack(self, index):
         if self._closing or self.player is None:
             return
+        self.current_index = index
         if hasattr(self.results, "scraper"):
             self.results.scraper.add_item(index, priority=0)
         if not isinstance(self.results, list):
@@ -1256,21 +1404,42 @@ class MediaGui(wx.Frame):
         else:
             url = self.results[index]["url"]
             title = self.results[index]["title"]
+            if getattr(self, "shorts_mode", False) and url in self.preloaded_streams:
+                ps = self.preloaded_streams[url]
+                if hasattr(ps, "title") and ps.title and ps.title.strip():
+                    title = ps.title
+                    self.results[index]["title"] = title
         if hasattr(self, "description"):
             del self.description
 
         speak(_("جاري تشغيل {}").format(title))
+
+        if getattr(self, "shorts_mode", False):
+            self._preload_next_shorts()
+
+        if getattr(self, "shorts_mode", False) and url in getattr(
+            self, "preloaded_streams", {}
+        ):
+            stream = self.preloaded_streams.get(url)
+            if stream:
+                self.player.media.stop()
+                self._perform_track_change(stream, url, title, index)
+                return
 
         def _task():
             try:
                 if self._closing or self.player is None:
                     return
                 self.player.media.stop()
-                stream = (
-                    self.results.get_stream(index, audio_mode=self.audio_mode)
-                    if hasattr(self.results, "get_stream")
-                    else None
-                )
+                stream = None
+                if getattr(self, "shorts_mode", False) and url in getattr(
+                    self, "preloaded_streams", {}
+                ):
+                    stream = self.preloaded_streams.get(url)
+
+                if stream is None and hasattr(self.results, "get_stream"):
+                    stream = self.results.get_stream(index, audio_mode=self.audio_mode)
+
                 if stream is None:
                     stream = get_playable_stream(url, audio_mode=self.audio_mode)
 
@@ -1288,7 +1457,7 @@ class MediaGui(wx.Frame):
                 import logging
 
                 logging.getLogger(__name__).debug(
-                    f"Background description extraction failed: {e}"
+                    f"Background stream extraction failed: {e}"
                 )
                 wx.CallAfter(
                     utils.show_error,
@@ -1301,6 +1470,15 @@ class MediaGui(wx.Frame):
     def _perform_track_change(self, stream, url, title, index=None):
         if self._closing or self.player is None:
             return
+        if hasattr(stream, "title") and stream.title and stream.title.strip():
+            title = stream.title
+            if (
+                getattr(self, "shorts_mode", False)
+                and isinstance(self.results, list)
+                and index is not None
+                and 0 <= index < len(self.results)
+            ):
+                self.results[index]["title"] = title
         options = []
         if hasattr(stream, "headers") and stream.headers:
             ua = stream.headers.get("User-Agent")
@@ -1310,6 +1488,8 @@ class MediaGui(wx.Frame):
             options.append(f":input-slave={stream.audio_url}")
         if self.audio_mode:
             options.append(":no-video")
+        if getattr(self, "shorts_mode", False):
+            options.append("loop-file=inf")
 
         self.player.set_media(stream.url, options=options)
         self.url = url
@@ -1323,22 +1503,35 @@ class MediaGui(wx.Frame):
         self.fetch_like_count()
         self.player.media.play()
         self.player.media.audio_set_volume(self.player.volume)
-        Thread(target=self.extract_description, daemon=True).start()
-        for item in self.qualityMenu.GetMenuItems():
-            self.qualityMenu.DestroyItem(item)
-        self.qualityMenu.Append(-1, _("جاري التحميل...")).Enable(False)
-        Thread(target=self.fetch_qualities, daemon=True).start()
-        for item in self.chaptersMenu.GetMenuItems():
-            self.chaptersMenu.DestroyItem(item)
-        self.chaptersMenu.Append(-1, _("جاري التحميل...")).Enable(False)
-        Thread(target=self.fetch_chapters, daemon=True).start()
-        Thread(target=self.fetch_subtitles, daemon=True).start()
+        if not getattr(self, "shorts_mode", False):
+            Thread(target=self.extract_description, daemon=True).start()
+            for item in self.qualityMenu.GetMenuItems():
+                self.qualityMenu.DestroyItem(item)
+            self.qualityMenu.Append(-1, _("جاري التحميل...")).Enable(False)
+            Thread(target=self.fetch_qualities, daemon=True).start()
+            for item in self.chaptersMenu.GetMenuItems():
+                self.chaptersMenu.DestroyItem(item)
+            self.chaptersMenu.Append(-1, _("جاري التحميل...")).Enable(False)
+            Thread(target=self.fetch_chapters, daemon=True).start()
+            Thread(target=self.fetch_subtitles, daemon=True).start()
         # Report new track to history
         self._report_watch_history(0)
 
     def next(self):
         if self.results is None:
             return
+
+        if getattr(self, "shorts_mode", False) or (
+            isinstance(self.results, list) and not self._has_parent_listbox()
+        ):
+            count = len(self.results)
+            if self.current_index >= count - 1:
+                speak(_("نهاية القائمة"))
+                return
+            self.current_index += 1
+            self.changeTrack(self.current_index)
+            return
+
         if hasattr(self.Parent, "searchResults"):
             box = self.Parent.searchResults
         elif hasattr(self.Parent, "videosBox"):
@@ -1386,6 +1579,17 @@ class MediaGui(wx.Frame):
     def previous(self):
         if self.results is None:
             return
+
+        if getattr(self, "shorts_mode", False) or (
+            isinstance(self.results, list) and not self._has_parent_listbox()
+        ):
+            if self.current_index <= 0:
+                speak(_("بداية القائمة"))
+                return
+            self.current_index -= 1
+            self.changeTrack(self.current_index)
+            return
+
         if hasattr(self.Parent, "searchResults"):
             box = self.Parent.searchResults
         elif hasattr(self.Parent, "videosBox"):

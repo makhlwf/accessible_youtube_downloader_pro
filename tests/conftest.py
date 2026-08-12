@@ -27,6 +27,27 @@ class wxWindow:
         self.Refresh = MagicMock()
         self.Update = MagicMock()
         self.SetName = MagicMock()
+        self.Centre = MagicMock()
+        self.Center = MagicMock()
+        self.SetSize = MagicMock()
+        self.Maximize = MagicMock()
+        self._is_shown = True
+        self._is_enabled = True
+        self.Show = lambda show=True: setattr(self, "_is_shown", bool(show))
+        self.Hide = lambda: setattr(self, "_is_shown", False)
+        self.IsShown = lambda: self._is_shown
+        self.Enable = lambda enable=True: setattr(self, "_is_enabled", bool(enable))
+        self.IsEnabled = lambda: self._is_enabled
+        self.ShowModal = MagicMock()
+        self.ShowFullScreen = MagicMock()
+        self.IsFullScreen = MagicMock(return_value=False)
+        self.Destroy = MagicMock()
+        self.SetAcceleratorTable = MagicMock()
+        self.SetMenuBar = MagicMock()
+        self.RegisterHotKey = MagicMock()
+        self.GetHandle = MagicMock(return_value=12345)
+        self.GetParent = lambda: self.Parent
+        self.SetTitle = MagicMock()
 
 
 _next_control_id = 1000
@@ -63,7 +84,25 @@ class TextCtrl(wxWindow):
 
 
 class ListBox(wxWindow):
-    pass
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.Items = list(kwargs.get("choices", []))
+        self.Selection = mock_wx.NOT_FOUND
+
+    def Set(self, items):
+        self.Items = list(items)
+
+    def Clear(self):
+        self.Items = []
+
+    def Append(self, items):
+        if isinstance(items, list):
+            self.Items.extend(items)
+        else:
+            self.Items.append(items)
+
+    def GetCount(self):
+        return len(self.Items)
 
 
 class Choice(wxWindow):
@@ -223,5 +262,5 @@ mock_py_yt.ChannelsSearch = ChannelsSearch
 sys.modules["py_yt"] = mock_py_yt
 sys.modules["pyperclip"] = MagicMock()
 
-# Mock builtins._ for translation
-builtins._ = lambda x: x
+if not hasattr(builtins, "_"):
+    builtins._ = lambda x: x

@@ -2,6 +2,7 @@ import {
     commentsPageResponse,
     extractChapters,
     extractLikeInfo,
+    handleGetShortsFeed,
     handleLikeComment,
     handleReplyComment,
     normalizeComment,
@@ -290,4 +291,16 @@ Deno.test('handleReplyComment calls create_comment_reply with commentId and trim
         { endpoint: 'comment/create_comment_reply', payload: { commentId: 'COMMENT_789', commentText: 'Nice reply!' } }
     ]);
 });
+
+Deno.test('handleGetShortsFeed throws error if cookies path is missing', async () => {
+    let threw = false;
+    try {
+        await handleGetShortsFeed({});
+    } catch (e) {
+        threw = true;
+        assertEquals(e.message, 'Cookies path is required for Shorts');
+    }
+    assertEquals(threw, true);
+});
+
 

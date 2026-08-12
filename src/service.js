@@ -827,6 +827,92 @@ async function handleGetPlaylist(params) {
     }
 }
 
+async function handleGetShortsFeed(params) {
+    if (!params.cookiesPath) {
+        throw new Error("Cookies path is required for Shorts");
+    }
+    const yt = await getYT(params.cookiesPath, params.location);
+    if (!yt.session.logged_in) {
+        throw new Error("Not logged in with provided cookies");
+    }
+
+    let seedId = params.seedVideoId || null;
+    if (!seedId) {
+        try {
+            const home = await yt.getHomeFeed();
+            const items = home.contents?.contents || home.videos || [];
+            for (const item of items) {
+                const str = JSON.stringify(item);
+                if (str.includes('Shorts') || str.includes('reelWatchEndpoint') || str.includes('/shorts/')) {
+                    const match = str.match(/\/shorts\/([a-zA-Z0-9_-]{11})/) || str.match(/"videoId":"([a-zA-Z0-9_-]{11})"/);
+                    if (match) {
+                        seedId = match[1];
+                        break;
+                    }
+                }
+            }
+        } catch (e) {
+            // Ignore feed parsing errors
+        }
+    }
+
+    if (!seedId) {
+        try {
+            const searchRes = await yt.search('#shorts');
+            const firstVideo = searchRes.videos?.[0] || searchRes.results?.[0];
+            seedId = firstVideo?.video_id || firstVideo?.id || firstVideo?.videoId || null;
+        } catch (e) {
+            // Ignore search errors
+        }
+    }
+
+    if (!seedId) {
+        seedId = 'dQw4w9WgXcQ';
+    }
+
+    try {
+        const info = await yt.getShortsVideoInfo(seedId);
+        const shorts = [];
+        const seen = new Set();
+
+        const currentId = info.basic_info?.id || seedId;
+        const currentTitle = textValue(info.basic_info?.title) || 'Short Video';
+        const currentAuthor = textValue(info.basic_info?.author) || 'Unknown';
+
+        if (currentId) {
+            shorts.push({
+                id: currentId,
+                title: currentTitle,
+                author: currentAuthor,
+                url: `https://www.youtube.com/shorts/${currentId}`
+            });
+            seen.add(currentId);
+        }
+
+        if (info.watch_next_feed) {
+            for (const item of info.watch_next_feed) {
+                const vid = item.payload?.videoId || item.metadata?.url?.replace('/shorts/', '');
+                if (vid && !seen.has(vid)) {
+                    seen.add(vid);
+                    const title = textValue(item.payload?.title || item.title) || `Short (${vid})`;
+                    const author = textValue(item.payload?.author || item.author) || 'Unknown';
+                    shorts.push({
+                        id: vid,
+                        title: title,
+                        author: author,
+                        url: `https://www.youtube.com/shorts/${vid}`
+                    });
+                }
+            }
+        }
+
+        return { shorts };
+    } catch (error) {
+        console.error(JSON.stringify({ debug: "handleGetShortsFeed error", error: error.message }));
+        throw new Error(`Failed to fetch Shorts feed: ${error.message}`);
+    }
+}
+
 async function main() {
     const lines = Deno.stdin.readable
         .pipeThrough(new TextDecoderStream())
@@ -867,6 +953,8 @@ async function main() {
                 result = await handleReplyComment(params);
             } else if (command === 'get_playlist') {
                 result = await handleGetPlaylist(params);
+            } else if (command === 'get_shorts_feed') {
+                result = await handleGetShortsFeed(params);
             } else {
                 throw new Error(`Unknown command: ${command}`);
             }
@@ -881,6 +969,7 @@ export {
     commentsPageResponse,
     extractChapters,
     extractLikeInfo,
+    handleGetShortsFeed,
     handleLikeComment,
     handleLikeInteraction,
     handleReplyComment,
@@ -897,3 +986,4 @@ if (import.meta.main) {
         Deno.exit(1);
     });
 }
+
