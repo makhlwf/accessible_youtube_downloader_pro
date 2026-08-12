@@ -262,5 +262,15 @@ mock_py_yt.ChannelsSearch = ChannelsSearch
 sys.modules["py_yt"] = mock_py_yt
 sys.modules["pyperclip"] = MagicMock()
 
+import pytest
+
+
+@pytest.fixture(autouse=True)
+def reset_gettext():
+    builtins._ = lambda x: x
+    yield
+    builtins._ = lambda x: x
+
+
 if not hasattr(builtins, "_"):
     builtins._ = lambda x: x
