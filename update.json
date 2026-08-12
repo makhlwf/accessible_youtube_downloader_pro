@@ -1,5 +1,5 @@
 {
-    "version": "4.0.0",
-    "url": "https://github.com/makhlwf/accessible_youtube_downloader_pro/releases/download/v4.0.0/HexPlayer.exe",
-    "whats_new": "Native Windows dark mode integration, Prism screen reader engine support, automatic Windows region detection for YouTube search and feeds, fixed video like and dislike interactions, unified audio quality format mapping, settings accessibility improvements, and updated dependencies."
+    "version": "4.1.0",
+    "url": "https://github.com/makhlwf/accessible_youtube_downloader_pro/releases/download/v4.1.0/HexPlayer.exe",
+    "whats_new": "new shorts watching mode, and fixed screen reader output."
 }
