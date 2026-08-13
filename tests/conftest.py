@@ -14,6 +14,9 @@ sys.path.insert(
 class wxWindow:
     def __init__(self, *args, **kwargs):
         self.Parent = kwargs.get("parent", args[0] if args else None)
+        self._label = kwargs.get(
+            "label", args[2] if len(args) > 2 and isinstance(args[2], str) else ""
+        )
         self.Bind = MagicMock()
         self.Freeze = MagicMock()
         self.Thaw = MagicMock()
@@ -30,6 +33,7 @@ class wxWindow:
         self.Centre = MagicMock()
         self.Center = MagicMock()
         self.SetSize = MagicMock()
+        self.SetMinSize = MagicMock()
         self.Maximize = MagicMock()
         self._is_shown = True
         self._is_enabled = True
@@ -37,7 +41,10 @@ class wxWindow:
         self.Hide = lambda: setattr(self, "_is_shown", False)
         self.IsShown = lambda: self._is_shown
         self.Enable = lambda enable=True: setattr(self, "_is_enabled", bool(enable))
+        self.Disable = lambda: setattr(self, "_is_enabled", False)
         self.IsEnabled = lambda: self._is_enabled
+        self.HasFocus = lambda: getattr(self, "_has_focus", False)
+        self.SetFocus = MagicMock()
         self.ShowModal = MagicMock()
         self.ShowFullScreen = MagicMock()
         self.IsFullScreen = MagicMock(return_value=False)
@@ -48,6 +55,12 @@ class wxWindow:
         self.GetHandle = MagicMock(return_value=12345)
         self.GetParent = lambda: self.Parent
         self.SetTitle = MagicMock()
+
+    def GetLabel(self):
+        return self._label
+
+    def SetLabel(self, label):
+        self._label = str(label)
 
 
 _next_control_id = 1000
@@ -72,7 +85,9 @@ class Dialog(wxWindow):
 
 
 class Button(wxWindow):
-    pass
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.SetDefault = MagicMock()
 
 
 class StaticText(wxWindow):
@@ -80,7 +95,26 @@ class StaticText(wxWindow):
 
 
 class TextCtrl(wxWindow):
-    pass
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._value = kwargs.get("value", "")
+
+    def GetValue(self):
+        return self._value
+
+    def SetValue(self, val):
+        self._value = str(val)
+
+    def ChangeValue(self, val):
+        self._value = str(val)
+
+    @property
+    def Value(self):
+        return self._value
+
+    @Value.setter
+    def Value(self, val):
+        self._value = str(val)
 
 
 class ListBox(wxWindow):
@@ -110,6 +144,9 @@ class Choice(wxWindow):
         super().__init__(*args, **kwargs)
         self._choices = list(kwargs.get("choices", []))
         self._selection = self._choices[0] if self._choices else ""
+
+    def Set(self, items):
+        self._choices = list(items)
 
     def GetStrings(self):
         return self._choices
@@ -146,7 +183,15 @@ class SpinCtrlDouble(wxWindow):
 
 
 class CheckBox(wxWindow):
-    pass
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._value = False
+
+    def GetValue(self):
+        return self._value
+
+    def SetValue(self, val):
+        self._value = bool(val)
 
 
 class RadioButton(wxWindow):

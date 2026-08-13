@@ -4,6 +4,7 @@ import wx
 
 _app = wx.App.GetInstance() or wx.App()
 
+import settings_handler
 from paths import settings_path
 from settings_handler import config_get, config_initialization, config_set, defaults
 
@@ -239,3 +240,230 @@ def test_validate_cookies_path_nonexistent_returns_false_and_shows_messagebox(
     assert box_calls[0]["caption"] == expected_caption
     assert box_calls[0]["style"] == (wx.OK | wx.ICON_WARNING)
     assert box_calls[0]["parent"] == dialog
+
+
+def test_browser_cookies_source_setting():
+    # Should have a default value of empty string or allow get/set
+    source = settings_handler.config_get("browser_cookies_source")
+    assert isinstance(source, str)
+    settings_handler.config_set("browser_cookies_source", "firefox")
+    assert settings_handler.config_get("browser_cookies_source") == "firefox"
+
+
+def test_browser_cookies_controls_created_and_accessible(monkeypatch):
+    import cookies_manager
+    from gui import settings_dialog
+
+    dialog = settings_dialog.SettingsDialog.__new__(settings_dialog.SettingsDialog)
+    dialog.installed_browsers = cookies_manager.get_installed_browsers()
+    dialog.browserChoice = wx.Choice(
+        wx.Frame(None), -1, choices=[b["name"] for b in dialog.installed_browsers]
+    )
+    settings_dialog._set_accessible_name(
+        dialog.browserChoice, "المتصفح لاستيراد الكوكيز"
+    )
+    dialog.importBrowserCookiesButton = wx.Button(
+        wx.Frame(None), -1, "استيراد من المتصفح"
+    )
+
+    assert hasattr(dialog, "browserChoice")
+    assert hasattr(dialog, "importBrowserCookiesButton")
+    assert isinstance(dialog.browserChoice, wx.Choice)
+    assert isinstance(dialog.importBrowserCookiesButton, wx.Button)
+
+    browsers = cookies_manager.get_installed_browsers()
+    assert dialog.installed_browsers == browsers
+
+    assert dialog.importBrowserCookiesButton.GetLabel() == "استيراد من المتصفح"
+    assert dialog.browserChoice._accessible_label == "المتصفح لاستيراد الكوكيز"
+
+
+def test_browser_cookies_imported_success(monkeypatch):
+    from gui import settings_dialog
+
+    dialog = settings_dialog.SettingsDialog.__new__(settings_dialog.SettingsDialog)
+    dialog.preferences = {}
+    dialog.cookiesPathField = wx.TextCtrl(wx.Frame(None), -1)
+
+    box_calls = []
+
+    def fake_messagebox(message, caption, style, parent):
+        box_calls.append({"message": message, "caption": caption, "style": style})
+
+    monkeypatch.setattr(wx, "MessageBox", fake_messagebox)
+
+    result = {
+        "success": True,
+        "count": 12,
+        "path": "/mock/browser_cookies.txt",
+        "browser": "Mozilla Firefox",
+    }
+    dialog._on_browser_cookies_imported(result, "firefox")
+
+    assert dialog.cookiesPathField.GetValue() == "/mock/browser_cookies.txt"
+    assert dialog.preferences["cookiespath"] == "/mock/browser_cookies.txt"
+    assert dialog.preferences["browser_cookies_source"] == "firefox"
+    assert len(box_calls) == 1
+    assert "12" in box_calls[0]["message"]
+    assert "Mozilla Firefox" in box_calls[0]["message"]
+    assert box_calls[0]["style"] & wx.ICON_INFORMATION
+
+
+def test_browser_cookies_imported_locked_error(monkeypatch):
+    from gui import settings_dialog
+
+    dialog = settings_dialog.SettingsDialog.__new__(settings_dialog.SettingsDialog)
+    dialog.preferences = {}
+    dialog.cookiesPathField = wx.TextCtrl(wx.Frame(None), -1)
+
+    box_calls = []
+
+    def fake_messagebox(message, caption, style, parent):
+        box_calls.append({"message": message, "caption": caption, "style": style})
+
+    monkeypatch.setattr(wx, "MessageBox", fake_messagebox)
+
+    result = {
+        "success": False,
+        "count": 0,
+        "error_type": "locked",
+        "browser": "Google Chrome",
+        "error": "File locked",
+    }
+    dialog._on_browser_cookies_imported(result, "chrome")
+
+    assert len(box_calls) == 1
+    assert "Google Chrome" in box_calls[0]["message"]
+    assert box_calls[0]["style"] & wx.ICON_ERROR
+
+
+def test_browser_cookies_imported_decrypt_failed_error(monkeypatch):
+    from gui import settings_dialog
+
+    dialog = settings_dialog.SettingsDialog.__new__(settings_dialog.SettingsDialog)
+    dialog.preferences = {}
+    dialog.cookiesPathField = wx.TextCtrl(wx.Frame(None), -1)
+
+    box_calls = []
+
+    def fake_messagebox(message, caption, style, parent):
+        box_calls.append({"message": message, "caption": caption, "style": style})
+
+    monkeypatch.setattr(wx, "MessageBox", fake_messagebox)
+
+    result = {
+        "success": False,
+        "count": 0,
+        "error_type": "decrypt_failed",
+        "browser": "Google Chrome",
+        "error": "DPAPI error",
+    }
+    dialog._on_browser_cookies_imported(result, "chrome")
+
+    assert len(box_calls) == 1
+    assert "Google Chrome" in box_calls[0]["message"]
+    assert box_calls[0]["style"] & wx.ICON_ERROR
+
+
+def test_browser_cookies_imported_no_cookies_error(monkeypatch):
+    from gui import settings_dialog
+
+    dialog = settings_dialog.SettingsDialog.__new__(settings_dialog.SettingsDialog)
+    dialog.preferences = {}
+    dialog.cookiesPathField = wx.TextCtrl(wx.Frame(None), -1)
+
+    box_calls = []
+
+    def fake_messagebox(message, caption, style, parent):
+        box_calls.append({"message": message, "caption": caption, "style": style})
+
+    monkeypatch.setattr(wx, "MessageBox", fake_messagebox)
+
+    result = {
+        "success": False,
+        "count": 0,
+        "error_type": "no_cookies",
+        "browser": "Microsoft Edge",
+        "error": "No cookies found",
+    }
+    dialog._on_browser_cookies_imported(result, "edge")
+
+    assert len(box_calls) == 1
+    assert "Microsoft Edge" in box_calls[0]["message"]
+    assert box_calls[0]["style"] & wx.ICON_ERROR
+
+
+def test_on_import_browser_cookies_disables_button_and_shifts_focus(monkeypatch):
+    from gui import settings_dialog
+
+    dialog = settings_dialog.SettingsDialog.__new__(settings_dialog.SettingsDialog)
+    dialog.installed_browsers = [{"id": "firefox", "name": "Firefox"}]
+
+    frame = wx.Frame(None)
+    dialog.browserChoice = wx.Choice(frame, -1, choices=["Firefox"])
+    dialog.browserChoice.Selection = 0
+    dialog.importBrowserCookiesButton = wx.Button(frame, -1)
+
+    thread_started = []
+
+    class FakeThread:
+        def __init__(self, target, daemon=None):
+            self.target = target
+            thread_started.append(self)
+
+        def start(self):
+            pass
+
+    monkeypatch.setattr(settings_dialog.threading, "Thread", FakeThread)
+
+    monkeypatch.setattr(dialog.importBrowserCookiesButton, "HasFocus", lambda: True)
+    focused_control = []
+    monkeypatch.setattr(
+        dialog.browserChoice,
+        "SetFocus",
+        lambda: focused_control.append("browserChoice"),
+    )
+
+    dialog.onImportBrowserCookies()
+
+    assert dialog.importBrowserCookiesButton.IsEnabled() is False
+    assert focused_control == ["browserChoice"]
+    assert len(thread_started) == 1
+
+    dialog.onImportBrowserCookies()
+    assert len(thread_started) == 1
+
+
+def test_browser_cookies_imported_reenables_button_on_success_and_failure(
+    monkeypatch,
+):
+    from gui import settings_dialog
+
+    dialog = settings_dialog.SettingsDialog.__new__(settings_dialog.SettingsDialog)
+    dialog.preferences = {}
+    frame = wx.Frame(None)
+    dialog.cookiesPathField = wx.TextCtrl(frame, -1)
+    dialog.importBrowserCookiesButton = wx.Button(frame, -1)
+    dialog.importBrowserCookiesButton.Disable()
+    assert dialog.importBrowserCookiesButton.IsEnabled() is False
+
+    monkeypatch.setattr(wx, "MessageBox", lambda *args, **kwargs: None)
+
+    dialog._on_browser_cookies_imported(
+        {
+            "success": True,
+            "count": 5,
+            "path": "/path/to/cookies.txt",
+            "browser": "Firefox",
+        },
+        "firefox",
+    )
+    assert dialog.importBrowserCookiesButton.IsEnabled() is True
+
+    dialog.importBrowserCookiesButton.Disable()
+    assert dialog.importBrowserCookiesButton.IsEnabled() is False
+
+    dialog._on_browser_cookies_imported(
+        {"success": False, "error_type": "locked", "browser": "Chrome"}, "chrome"
+    )
+    assert dialog.importBrowserCookiesButton.IsEnabled() is True

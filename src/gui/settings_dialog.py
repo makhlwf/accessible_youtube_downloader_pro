@@ -1,8 +1,10 @@
 import os
 import sys
+import threading
 
 import wx
 
+import cookies_manager
 import windows_url_association
 from language_handler import _, supported_languages
 from settings_handler import config_get, config_set
@@ -178,6 +180,27 @@ class SettingsDialog(wx.Dialog):
         )
         _set_accessible_name(self.pathField, _("مسار مجلد التنزيل: "))
         changeButton = wx.Button(panel, -1, _("&تغيير المسار"), name="path")
+        browser_label_text = _("المتصفح لاستيراد الكوكيز: ")
+        browser_label = wx.StaticText(panel, -1, browser_label_text)
+        self.installed_browsers = cookies_manager.get_installed_browsers()
+        self.browserChoice = wx.Choice(
+            panel,
+            -1,
+            name="browser_cookies_source",
+            choices=[b["name"] for b in self.installed_browsers],
+        )
+        _set_accessible_name(self.browserChoice, browser_label_text)
+        saved_browser_source = config_get("browser_cookies_source")
+        selected_browser_idx = 0
+        for idx, b in enumerate(self.installed_browsers):
+            if b["id"] == saved_browser_source or b["name"] == saved_browser_source:
+                selected_browser_idx = idx
+                break
+        self.browserChoice.Selection = selected_browser_idx
+
+        self.importBrowserCookiesButton = wx.Button(
+            panel, -1, _("استيراد من المتصفح"), name="cookies"
+        )
         self.cookiesPathField = wx.TextCtrl(
             panel,
             -1,
@@ -380,6 +403,11 @@ class SettingsDialog(wx.Dialog):
         _set_accessible_name(self.pathField, path_label_text)
         add_row(general_grid, path_label, path_controls)
 
+        browser_controls = wx.BoxSizer(wx.HORIZONTAL)
+        browser_controls.Add(self.browserChoice, 1, wx.EXPAND | wx.RIGHT, 5)
+        browser_controls.Add(self.importBrowserCookiesButton, 0, wx.EXPAND)
+        add_row(general_grid, browser_label, browser_controls)
+
         cookies_controls = wx.BoxSizer(wx.HORIZONTAL)
         self.cookiesPathField.SetMinSize((-1, 56))
         cookies_controls.Add(self.cookiesPathField, 1, wx.EXPAND | wx.RIGHT, 5)
@@ -447,6 +475,7 @@ class SettingsDialog(wx.Dialog):
         changeButton.Bind(wx.EVT_BUTTON, self.onChange)
         changeCookiesButton.Bind(wx.EVT_BUTTON, self.onChangeCookies)
         clearCookiesButton.Bind(wx.EVT_BUTTON, self.onClearCookies)
+        self.importBrowserCookiesButton.Bind(wx.EVT_BUTTON, self.onImportBrowserCookies)
         self.autoDetectItem.Bind(wx.EVT_CHECKBOX, self.onCheck)
         self.autoLoadItem.Bind(wx.EVT_CHECKBOX, self.onCheck)
         self.autoCheckForUpdates.Bind(wx.EVT_CHECKBOX, self.onCheck)
@@ -552,7 +581,88 @@ class SettingsDialog(wx.Dialog):
         self.preferences["cookiespath"] = ""
         self.cookiesPathField.Value = ""
 
+    def onImportBrowserCookies(self, event=None):
+        if (
+            hasattr(self, "importBrowserCookiesButton")
+            and not self.importBrowserCookiesButton.IsEnabled()
+        ):
+            return
+        sel = self.browserChoice.Selection
+        if sel < 0 or sel >= len(self.installed_browsers):
+            return
+        browser_id = self.installed_browsers[sel]["id"]
+
+        if (
+            hasattr(self, "importBrowserCookiesButton")
+            and self.importBrowserCookiesButton.HasFocus()
+            and hasattr(self, "browserChoice")
+        ):
+            self.browserChoice.SetFocus()
+
+        if hasattr(self, "importBrowserCookiesButton"):
+            self.importBrowserCookiesButton.Disable()
+
+        def _worker():
+            result = cookies_manager.extract_and_save_browser_cookies(browser_id)
+            wx.CallAfter(self._on_browser_cookies_imported, result, browser_id)
+
+        threading.Thread(target=_worker, daemon=True).start()
+
+    def _on_browser_cookies_imported(self, result, browser_id):
+        if hasattr(self, "importBrowserCookiesButton"):
+            self.importBrowserCookiesButton.Enable()
+        browser_name = result.get("browser") or browser_id
+        if result.get("success"):
+            path = result.get("path", "")
+            self.cookiesPathField.Value = path
+            self.preferences["cookiespath"] = path
+            self.preferences["browser_cookies_source"] = browser_id
+            count = result.get("count", 0)
+            msg = _("تم استيراد {count} من الكوكيز بنجاح من متصفح {browser}.").format(
+                count=count, browser=browser_name
+            )
+            wx.MessageBox(
+                msg,
+                _("نجاح"),
+                style=wx.OK | wx.ICON_INFORMATION,
+                parent=self,
+            )
+        else:
+            error_type = result.get("error_type", "unknown")
+            if error_type == "locked":
+                msg = _(
+                    "متصفح {browser} مفتوح حاليًا. يرجى إغلاق المتصفح وإعادة المحاولة."
+                ).format(browser=browser_name)
+                caption = _("المتصفح مفتوح")
+            elif error_type == "decrypt_failed":
+                msg = _(
+                    "تعذر فك تشفير كوكيز متصفح {browser}. قد تكون المحفظة محمية بواسطة النظام."
+                ).format(browser=browser_name)
+                caption = _("خطأ في فك التشفير")
+            elif error_type == "no_cookies":
+                msg = _("لم يتم العثور على كوكيز في متصفح {browser}.").format(
+                    browser=browser_name
+                )
+                caption = _("لا توجد كوكيز")
+            else:
+                msg = _("فشل استيراد الكوكيز من متصفح {browser}: {error}").format(
+                    browser=browser_name, error=result.get("error", "")
+                )
+                caption = _("خطأ")
+            wx.MessageBox(
+                msg,
+                caption,
+                style=wx.OK | wx.ICON_ERROR,
+                parent=self,
+            )
+
     def onOk(self, event):
+        if hasattr(self, "browserChoice") and self.installed_browsers:
+            sel = self.browserChoice.Selection
+            if 0 <= sel < len(self.installed_browsers):
+                self.preferences["browser_cookies_source"] = self.installed_browsers[
+                    sel
+                ]["id"]
         cookies_path = (
             self.cookiesPathField.Value
             if hasattr(self, "cookiesPathField")
