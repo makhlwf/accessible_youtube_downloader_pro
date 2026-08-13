@@ -29,7 +29,7 @@ Main features
 - Open supported YouTube links from the browser extension or from external launch links.
 - Save local favorites.
 - Resume playback from the last saved position.
-- Optionally use a YouTube cookies file for authenticated features such as home recommendations, watch history, likes, chapters, and some restricted content.
+- Optionally import YouTube cookies automatically from an installed browser or use a cookies file for authenticated features such as home recommendations, watch history, likes, chapters, and some restricted content.
 - Check for HexPlayer updates and update external tools such as yt-dlp and Deno.
 - Use Arabic or English, with automatic language selection on first run.
 - Dedicated YouTube Shorts watching experience with Up/Down arrow navigation, automatic preloading, and seamless continuous looping.
@@ -96,7 +96,7 @@ General settings:
 
 - Program language: Arabic or English. Restart the app when asked after changing language.
 - Download folder: the default download location. The default is the HexPlayer folder inside your Windows Downloads folder.
-- Cookies file path: optional Netscape HTTP cookies file. Use Change to select it or Delete to clear it.
+- Cookies file path: optional Netscape HTTP cookies file. Choose an installed browser from the dropdown list and click "Import from browser" to automatically import YouTube cookies, or use Change to select a file manually, or Delete to clear it.
 - Auto-detect links at startup: checks the clipboard once when the program opens.
 - Auto-check for updates at startup.
 - Auto-load more results: automatically loads more search results and channel items when you reach the end of a supported list.
@@ -126,6 +126,8 @@ Repeat and auto-next cannot both stay enabled. Turning one on turns the other of
 Cookies file
 
 Cookies are optional. Without cookies, normal search, playback, and many downloads still work.
+
+You can import cookies automatically by choosing an installed browser (such as Google Chrome, Mozilla Firefox, Microsoft Edge, Brave, Vivaldi, Opera, Chromium, Safari, or LibreWolf) in Settings -> General and clicking "Import from browser". Alternatively, you can specify a Netscape HTTP cookies file manually using Change.
 
 With a valid cookies file, HexPlayer can:
 
@@ -381,7 +383,7 @@ If playback or downloads stop working:
 - Use External Tools, Check for Deno update if history, likes, chapters, or home feed features fail.
 - Use External Tools, Check for YouTube.js (Innertube) update if YouTube interaction features fail after YouTube changes.
 - Use External Tools, Refresh YouTube.js (Innertube) cache if Deno reports dependency or cache errors.
-- Check that your cookies file still exists and is current if authenticated features fail.
+- Check that your cookies file still exists and is current, or re-import from your browser in Settings -> General, if authenticated features fail.
 - Try the same link without cookies by clearing the cookies path if cookie errors continue.
 - Verify the download folder exists and that Windows allows HexPlayer to write to it.
 - Use Open Download Folder, Ctrl + P, to confirm where downloads are saved.
