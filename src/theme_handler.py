@@ -20,19 +20,11 @@ THEMES = {
         "text_bg": "#2D2D2D",
         "text_fg": "#FFFFFF",
     },
-    "High Contrast Dark": {
-        "background": "#000000",
-        "foreground": "#FFFFFF",
-        "button_bg": "#000000",
-        "button_fg": "#FFFFFF",
-        "text_bg": "#000000",
-        "text_fg": "#FFFFFF",
-    },
 }
 
 
 def update_msw_dark_mode(theme_name=None):
-    """Enable OS-level dark mode on Windows (MSWEnableDarkMode) for title bars, menus, and scrollbars (wxPython 4.3.0+)."""
+    """Enable or disable OS-level dark mode on Windows (MSWEnableDarkMode) for title bars, menus, dialogs, and controls (wxPython 4.3.0+)."""
     if theme_name is None:
         theme_name = config_get("theme")
 
@@ -58,14 +50,15 @@ def update_msw_dark_mode(theme_name=None):
     wx_app_class = getattr(wx, "App", None)
 
     try:
-        if theme_name == "System Default":
-            auto_flag = getattr(wx_app_class, "DarkMode_Auto", 0)
-            msw_enable_dark_mode(auto_flag)
-        elif theme_name in ("Dark", "High Contrast Dark"):
+        if theme_name == "Dark":
             always_flag = getattr(wx_app_class, "DarkMode_Always", 1)
             msw_enable_dark_mode(always_flag)
         elif theme_name == "Light":
             msw_enable_dark_mode(0)
+        else:
+            # System Default
+            auto_flag = getattr(wx_app_class, "DarkMode_Auto", 0)
+            msw_enable_dark_mode(auto_flag)
     except Exception:
         pass
 
@@ -77,20 +70,17 @@ def apply_theme(window, theme_name=None):
     update_msw_dark_mode(theme_name)
 
     palette = THEMES.get(theme_name)
-    if palette is None and theme_name != "System Default":
-        return
 
     _call_window_method(window, "Freeze")
     try:
-        if theme_name == "System Default":
+        if theme_name == "System Default" or palette is None:
             _apply_system_theme(window, is_root=True)
         else:
-            # Convert hex to wx.Colour here, after wx.App is initialized.
             prepared_palette = {
                 key: wx.Colour(value) if isinstance(value, str) else value
                 for key, value in palette.items()
             }
-            _apply_palette(window, prepared_palette)
+            _apply_palette(window, prepared_palette, theme_name=theme_name)
         _call_theme_hook(window, theme_name)
         _call_window_method(window, "Refresh")
         _call_window_method(window, "Update")
@@ -108,7 +98,64 @@ def apply_theme_to_all_windows(theme_name=None):
         apply_theme(window, theme_name)
 
 
-def _apply_palette(window, palette):
+def _on_dark_button_paint(event):
+    button = event.GetEventObject()
+    dc = wx.PaintDC(button)
+    rect = button.GetClientRect()
+
+    bg = button.GetBackgroundColour()
+    fg = button.GetForegroundColour()
+
+    if not bg.IsOk() or bg == wx.NullColour:
+        bg = wx.Colour("#333333")
+    if not fg.IsOk() or fg == wx.NullColour:
+        fg = wx.Colour("#FFFFFF")
+
+    # Fill background
+    dc.SetBackground(wx.Brush(bg))
+    dc.Clear()
+
+    # Draw rounded border (highlight when focused)
+    border_color = wx.Colour("#007ACC") if button.HasFocus() else wx.Colour("#555555")
+    dc.SetPen(wx.Pen(border_color, 1))
+    dc.SetBrush(wx.Brush(bg))
+    dc.DrawRoundedRectangle(rect, 4)
+
+    # Draw button text label centered
+    label = button.GetLabel()
+    if label:
+        dc.SetTextForeground(fg)
+        dc.SetFont(button.GetFont())
+        tw, th = dc.GetTextExtent(label)
+        dc.DrawText(
+            label, max(0, (rect.width - tw) // 2), max(0, (rect.height - th) // 2)
+        )
+
+
+def _apply_dark_button_style(window, bg, fg):
+    _set_colours(window, bg, fg)
+    if getattr(wx, "Platform", "") == "__WXMSW__":
+        if not getattr(window, "_dark_paint_bound", False):
+            window.Bind(wx.EVT_PAINT, _on_dark_button_paint)
+            window.Bind(wx.EVT_SET_FOCUS, lambda e: (window.Refresh(), e.Skip()))
+            window.Bind(wx.EVT_KILL_FOCUS, lambda e: (window.Refresh(), e.Skip()))
+            window._dark_paint_bound = True
+        _call_window_method(window, "Refresh")
+
+
+def _remove_dark_button_style(window):
+    if getattr(window, "_dark_paint_bound", False):
+        try:
+            window.Unbind(wx.EVT_PAINT)
+        except Exception:
+            pass
+        window._dark_paint_bound = False
+        _call_window_method(window, "Refresh")
+
+
+def _apply_palette(window, palette, theme_name=None):
+    is_dark_theme = theme_name == "Dark"
+
     bg = palette["background"]
     fg = palette["foreground"]
 
@@ -128,15 +175,22 @@ def _apply_palette(window, palette):
     ):
         _set_colours(window, palette["text_bg"], palette["text_fg"])
     elif _is_wx_instance(window, "Button", "ToggleButton", "BitmapButton"):
-        _set_colours(window, palette["button_bg"], palette["button_fg"])
+        if is_dark_theme:
+            _apply_dark_button_style(window, palette["button_bg"], palette["button_fg"])
+        else:
+            _remove_dark_button_style(window)
+            _set_colours(window, palette["button_bg"], palette["button_fg"])
     else:
         _set_colours(window, bg, fg)
 
     for child in _get_children(window):
-        _apply_palette(child, palette)
+        _apply_palette(child, palette, theme_name=theme_name)
 
 
 def _apply_system_theme(window, is_root=False):
+    if _is_wx_instance(window, "Button", "ToggleButton", "BitmapButton"):
+        _remove_dark_button_style(window)
+
     if is_root:
         bg = wx.SystemSettings.GetColour(wx.SYS_COLOUR_FRAMEBK)
         fg = wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOWTEXT)
