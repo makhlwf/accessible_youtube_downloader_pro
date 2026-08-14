@@ -636,7 +636,7 @@ class SettingsDialog(wx.Dialog):
                 caption = _("المتصفح مفتوح")
             elif error_type == "decrypt_failed":
                 msg = _(
-                    "تعذر فك تشفير كوكيز متصفح {browser}. قد تكون المحفظة محمية بواسطة النظام."
+                    "تعذر فك تشفير كوكيز متصفح {browser} مباشرة بسبب نظام الحماية (App-Bound Encryption). يمكنك استيراد الكوكيز بضغطة واحدة من خلال إضافة البرنامج للمتصفح (HexPlayer Link Helper) أو باستخدام متصفح Firefox."
                 ).format(browser=browser_name)
                 caption = _("خطأ في فك التشفير")
             elif error_type == "no_cookies":

@@ -267,7 +267,7 @@ To use the extension:
 - In the browser extensions page, enable Developer mode and choose Load unpacked.
 - Select the folder opened by HexPlayer.
 
-The extension can send supported YouTube links to HexPlayer from a right-click context menu or the toolbar button. Its options page includes diagnostics, a test link, log refresh, log copy, and log clear actions. Optional click interception can be enabled from the extension options page.
+The extension can send supported YouTube links to HexPlayer from a right-click context menu or the toolbar button. Its options page includes a 1-click button to export YouTube cookies directly to HexPlayer, diagnostics, a test link, log refresh, log copy, and log clear actions. Optional click interception can be enabled from the extension options page.
 
 Media player
 

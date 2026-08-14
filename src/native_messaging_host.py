@@ -95,11 +95,35 @@ def launch_or_forward_external_url(url):
 def handle_message(message):
     if not isinstance(message, dict):
         return {"ok": False, "error": "Invalid message"}
-    if message.get("type") != "open":
-        return {"ok": False, "error": "Unsupported message type"}
+    msg_type = message.get("type")
+    if msg_type == "open":
+        opened = launch_or_forward_external_url(message.get("url", ""))
+        return {"ok": opened}
+    elif msg_type == "save_cookies":
+        cookies = message.get("cookies", [])
+        try:
+            import cookies_manager
+            import settings_handler
 
-    opened = launch_or_forward_external_url(message.get("url", ""))
-    return {"ok": opened}
+            result = cookies_manager.save_raw_browser_cookies(cookies)
+            if result.get("success"):
+                settings_handler.config_set("cookiespath", result["path"])
+                try:
+                    send_ipc_message("cookies_updated", result["path"])
+                except Exception:
+                    pass
+                return {
+                    "ok": True,
+                    "count": result.get("count", 0),
+                    "path": result.get("path", ""),
+                }
+            return {
+                "ok": False,
+                "error": result.get("error", "Failed to save cookies"),
+            }
+        except Exception as exc:
+            return {"ok": False, "error": str(exc)}
+    return {"ok": False, "error": "Unsupported message type"}
 
 
 def main():

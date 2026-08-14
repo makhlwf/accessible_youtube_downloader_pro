@@ -222,6 +222,13 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     return true;
   }
 
+  if (message?.type === "export-cookies-to-hexplayer") {
+    exportCookiesToHexPlayer().then((response) => {
+      sendResponse(response);
+    });
+    return true;
+  }
+
   if (message?.type !== "open-in-hexplayer") {
     return false;
   }
@@ -240,3 +247,54 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   });
   return true;
 });
+
+async function fetchYouTubeCookies() {
+  const domains = [".youtube.com", "youtube.com", ".google.com", "google.com"];
+  const cookieMap = new Map();
+
+  for (const domain of domains) {
+    try {
+      const cookies = await chrome.cookies.getAll({domain});
+      for (const cookie of cookies) {
+        const key = `${cookie.domain}|${cookie.path}|${cookie.name}`;
+        cookieMap.set(key, cookie);
+      }
+    } catch (e) {
+      logEvent("Failed to get cookies for domain", {domain, error: String(e)});
+    }
+  }
+
+  return Array.from(cookieMap.values());
+}
+
+function sendNativeSaveCookiesMessage(cookies) {
+  return new Promise((resolve) => {
+    chrome.runtime.sendNativeMessage(
+      NATIVE_HOST_NAME,
+      {type: "save_cookies", cookies},
+      (response) => {
+        if (chrome.runtime.lastError) {
+          resolve({
+            ok: false,
+            error: chrome.runtime.lastError.message,
+          });
+          return;
+        }
+        resolve(response || {ok: false, error: "Empty native host response"});
+      },
+    );
+  });
+}
+
+async function exportCookiesToHexPlayer() {
+  logEvent("Exporting YouTube cookies to HexPlayer");
+  const cookies = await fetchYouTubeCookies();
+  if (!cookies.length) {
+    logEvent("No YouTube or Google cookies found to export");
+    return {ok: false, error: "No YouTube or Google cookies found in browser"};
+  }
+
+  const response = await sendNativeSaveCookiesMessage(cookies);
+  logEvent("Native host save cookies response", response);
+  return response;
+}

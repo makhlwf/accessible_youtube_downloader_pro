@@ -50,10 +50,10 @@ The current application version is **4.1.0**. The app is intended for modern 64-
 - **Downloads:** Download videos, playlists, channels, Shorts, and supported YouTube links as MP4, M4A, or MP3 using `yt-dlp`.
 - **Quality selection:** Choose available video quality before video downloads, and configure default playback quality.
 - **Favorites:** Save local favorite videos and quickly play or download them later.
-- **Account features:** Import YouTube cookies automatically from installed browsers or use a custom cookies file for YouTube Shorts recommendations, account watch history, home feed recommendations, likes, chapters, comment posting, and signed-in content.
+- **Account features:** Import YouTube cookies automatically from installed browsers, export directly with 1 click from the HexPlayer browser extension, or use a custom cookies file for YouTube Shorts recommendations, account watch history, home feed recommendations, likes, chapters, comment posting, and signed-in content.
 - **Resume playback:** Continue videos from the last saved local position.
 - **Clipboard detection:** Detect supported YouTube links at startup or continuously when background monitoring is enabled.
-- **Browser integration:** Use the included Chromium-compatible extension to send supported YouTube links to HexPlayer through Native Messaging or the `hexplayer://` fallback protocol.
+- **Browser integration:** Use the included Chromium-compatible extension to send supported YouTube links to HexPlayer through Native Messaging, export YouTube cookies with 1 click, or use the `hexplayer://` fallback protocol.
 - **External tools management:** Check and update `yt-dlp`, Deno, and the YouTube.js/Innertube library from the app.
 - **Universal Screen Reader Support:** Powered by [Prism](https://github.com/ethindp/prism), speech announcements automatically work with all active Windows screen readers (NVDA, JAWS, Narrator, System Access, etc.) and TTS engines.
 - **Localization and themes:** Arabic and English interfaces, automatic language detection, and system, light, dark, and high contrast dark themes.

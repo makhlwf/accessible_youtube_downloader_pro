@@ -138,14 +138,38 @@ def native_messaging_main():
         if not isinstance(message, dict):
             write_native_message({"ok": False, "error": "Invalid message"})
             return 1
-        if message.get("type") != "open":
-            write_native_message({"ok": False, "error": "Unsupported message type"})
+        msg_type = message.get("type")
+        if msg_type == "open":
+            url = message.get("url", "")
+            opened = launch_or_forward_external_url(url)
+            write_native_message({"ok": opened})
+            return 0 if opened else 1
+        elif msg_type == "save_cookies":
+            cookies = message.get("cookies", [])
+            import cookies_manager
+
+            result = cookies_manager.save_raw_browser_cookies(cookies)
+            if result.get("success"):
+                settings_handler.config_set("cookiespath", result["path"])
+                try:
+                    send_ipc_message("cookies_updated", result["path"])
+                except Exception:
+                    pass
+                write_native_message(
+                    {
+                        "ok": True,
+                        "count": result.get("count", 0),
+                        "path": result.get("path", ""),
+                    }
+                )
+                return 0
+            write_native_message(
+                {"ok": False, "error": result.get("error", "Failed to save cookies")}
+            )
             return 1
 
-        url = message.get("url", "")
-        opened = launch_or_forward_external_url(url)
-        write_native_message({"ok": opened})
-        return 0 if opened else 1
+        write_native_message({"ok": False, "error": "Unsupported message type"})
+        return 1
     except Exception as e:
         try:
             write_native_message({"ok": False, "error": str(e)})
@@ -838,6 +862,8 @@ class HomeScreen(wx.Frame):
                 wx.CallAfter(self.tray_icon.on_show, None)
             elif action == "open_url":
                 wx.CallAfter(self.handle_external_url, message.get("url", ""))
+            elif action == "cookies_updated":
+                wx.CallAfter(self.update_shorts_button_visibility)
 
         def listen():
             try:

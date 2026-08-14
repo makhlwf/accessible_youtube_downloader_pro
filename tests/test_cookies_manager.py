@@ -90,3 +90,40 @@ def test_extract_and_save_browser_cookies_no_cookies_found(tmp_path):
         )
         assert res["success"] is False
         assert "no_cookies" in res["error_type"]
+
+
+def test_save_raw_browser_cookies_success(tmp_path):
+    target_file = str(tmp_path / "browser_cookies.txt")
+    raw_cookies = [
+        {
+            "domain": ".youtube.com",
+            "name": "SAPISID",
+            "value": "secret_val",
+            "path": "/",
+            "secure": True,
+            "expirationDate": 1893456000,
+        },
+        {
+            "domain": "example.com",
+            "name": "unrelated",
+            "value": "123",
+            "path": "/",
+        },
+    ]
+    res = cookies_manager.save_raw_browser_cookies(raw_cookies, target_path=target_file)
+    assert res["success"] is True
+    assert res["count"] == 1
+    assert res["path"] == target_file
+    assert os.path.exists(target_file)
+    with open(target_file, "r", encoding="utf-8") as f:
+        content = f.read()
+        assert "SAPISID" in content
+        assert "secret_val" in content
+        assert "# Netscape HTTP Cookie File" in content
+
+
+def test_save_raw_browser_cookies_empty(tmp_path):
+    target_file = str(tmp_path / "browser_cookies.txt")
+    res = cookies_manager.save_raw_browser_cookies([], target_path=target_file)
+    assert res["success"] is False
+    assert res["error_type"] == "no_cookies"

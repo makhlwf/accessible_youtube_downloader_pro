@@ -5,7 +5,18 @@
   "version": "0.1.2",
   "description": "Open supported YouTube links in HexPlayer without changing browser defaults.",
   "homepage_url": "https://github.com/makhlwf/accessible_youtube_downloader_pro",
-  "permissions": ["contextMenus", "storage", "activeTab", "scripting", "nativeMessaging"],
+  "permissions": [
+    "contextMenus",
+    "storage",
+    "activeTab",
+    "scripting",
+    "nativeMessaging",
+    "cookies"
+  ],
+  "host_permissions": [
+    "*://*.youtube.com/*",
+    "*://*.google.com/*"
+  ],
   "optional_host_permissions": ["<all_urls>"],
   "background": {
     "service_worker": "background.js"

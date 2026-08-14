@@ -82,11 +82,22 @@ clearButton.addEventListener("click", async () => {
   setStatus("Logs cleared.");
 });
 
-testButton.addEventListener("click", () => {
-  chrome.runtime.sendMessage({
-    type: "open-url-in-hexplayer",
-    url: TEST_URL,
-  });
+const exportCookiesButton = document.getElementById("export-cookies");
+
+exportCookiesButton?.addEventListener("click", async () => {
+  setStatus("Exporting cookies to HexPlayer...");
+  try {
+    const response = await sendMessage({type: "export-cookies-to-hexplayer"});
+    if (response?.ok) {
+      setStatus(
+        `Successfully exported ${response.count || 0} YouTube cookies to HexPlayer.`,
+      );
+    } else {
+      setStatus(`Failed to export cookies: ${response?.error || "Unknown error"}`);
+    }
+  } catch (err) {
+    setStatus(`Error: ${err.message || String(err)}`);
+  }
 });
 
 refreshLogs();

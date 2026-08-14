@@ -113,3 +113,40 @@ def test_start_gui_process_detaches_from_native_messaging_pipe(monkeypatch):
             },
         )
     ]
+
+
+def test_handle_message_save_cookies_success(monkeypatch, tmp_path):
+    target_path = str(tmp_path / "browser_cookies.txt")
+    monkeypatch.setattr(
+        "cookies_manager.get_default_browser_cookies_path", lambda: target_path
+    )
+    saved_settings = {}
+    monkeypatch.setattr(
+        "settings_handler.config_set", lambda k, v: saved_settings.update({k: v})
+    )
+    ipc_calls = []
+    monkeypatch.setattr(host, "send_ipc_message", lambda a, u: ipc_calls.append((a, u)))
+
+    message = {
+        "type": "save_cookies",
+        "cookies": [
+            {
+                "domain": ".youtube.com",
+                "name": "LOGIN_INFO",
+                "value": "token_123",
+                "path": "/",
+                "secure": True,
+            }
+        ],
+    }
+    response = host.handle_message(message)
+    assert response["ok"] is True
+    assert response["count"] == 1
+    assert saved_settings.get("cookiespath") == target_path
+    assert ipc_calls == [("cookies_updated", target_path)]
+
+
+def test_handle_message_save_cookies_empty():
+    response = host.handle_message({"type": "save_cookies", "cookies": []})
+    assert response["ok"] is False
+    assert "No cookies provided" in response["error"]
