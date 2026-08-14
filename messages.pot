@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-08-14 02:02+0200\n"
+"POT-Creation-Date: 2026-08-14 02:27+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,171 +17,188 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
-#: src/accessible_youtube_downloader_pro.py:220
+#: src/accessible_youtube_downloader_pro.py:252
 msgid ""
 "اضغط على مفتاح القوائم alt للوصول إلى خيارات البرنامج, أو تنقل بزر التاب "
 "للوصول سريعًا إلى أهم الخيارات المتاحة."
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:225
-#: src/accessible_youtube_downloader_pro.py:269
+#: src/accessible_youtube_downloader_pro.py:257
+#: src/accessible_youtube_downloader_pro.py:301
 msgid "البحث في يوتيوب\tctrl+f"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:227
-#: src/accessible_youtube_downloader_pro.py:270
+#: src/accessible_youtube_downloader_pro.py:259
+#: src/accessible_youtube_downloader_pro.py:302
 msgid "التنزيل من خلال رابط\tctrl+d"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:230
-#: src/accessible_youtube_downloader_pro.py:272
+#: src/accessible_youtube_downloader_pro.py:262
+#: src/accessible_youtube_downloader_pro.py:304
 msgid "تشغيل فيديو يوتيوب من خلال الرابط\tctrl+y"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:233
-#: src/accessible_youtube_downloader_pro.py:274
+#: src/accessible_youtube_downloader_pro.py:265
+#: src/accessible_youtube_downloader_pro.py:306
 msgid "مشاهدة Shorts\tctrl+shift+s"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:236
-#: src/accessible_youtube_downloader_pro.py:275
+#: src/accessible_youtube_downloader_pro.py:268
+#: src/accessible_youtube_downloader_pro.py:307
 msgid "الفيديوهات المفضلة\tctrl+shift+f"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:238
-#: src/accessible_youtube_downloader_pro.py:276
+#: src/accessible_youtube_downloader_pro.py:270
+#: src/accessible_youtube_downloader_pro.py:308
 msgid "سجل المشاهدة\tctrl+h"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:244
+#: src/accessible_youtube_downloader_pro.py:276
 msgid "تحميل المزيد من الفيديوهات المقترحة"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:277
+#: src/accessible_youtube_downloader_pro.py:309
 msgid "فتح مجلد التنزيل\tctrl+p"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:278
+#: src/accessible_youtube_downloader_pro.py:310
 #: src/media_player/media_gui.py:221 src/youtube_browser/browser.py:105
 msgid "الإعدادات...\talt+s"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:279
+#: src/accessible_youtube_downloader_pro.py:311
 msgid "خروج\tctrl+w"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:281
+#: src/accessible_youtube_downloader_pro.py:313
 msgid "القائمة الرئيسية"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:285
+#: src/accessible_youtube_downloader_pro.py:317
 msgid "عرض إصدار واي تي دي إل بي"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:287
+#: src/accessible_youtube_downloader_pro.py:319
 msgid "التحقق من وجود تحديث لـ واي تي دي إل بي"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:289
+#: src/accessible_youtube_downloader_pro.py:321
 msgid "عرض إصدار دينو"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:290
+#: src/accessible_youtube_downloader_pro.py:322
 msgid "التحقق من وجود تحديث لـ دينو"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:292
+#: src/accessible_youtube_downloader_pro.py:324
 msgid "عرض إصدار YouTube.js (Innertube)"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:295
+#: src/accessible_youtube_downloader_pro.py:327
 msgid "التحقق من وجود تحديث لـ YouTube.js (Innertube)"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:298
+#: src/accessible_youtube_downloader_pro.py:330
 msgid "تحديث ذاكرة YouTube.js (Innertube) المؤقتة"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:301
+#: src/accessible_youtube_downloader_pro.py:333
 msgid "فتح مجلد إضافة المتصفح"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:303
+#: src/accessible_youtube_downloader_pro.py:336
+msgid "فتح ملف السجلات (hexplayer.log)"
+msgstr ""
+
+#: src/accessible_youtube_downloader_pro.py:338
 msgid "قائمة الأدوات الخارجية"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:307
+#: src/accessible_youtube_downloader_pro.py:342
 msgid "دليل المستخدم...\tf1"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:308
+#: src/accessible_youtube_downloader_pro.py:343
 msgid "البحث عن التحديثات"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:309
-#: src/accessible_youtube_downloader_pro.py:818
+#: src/accessible_youtube_downloader_pro.py:344
+#: src/accessible_youtube_downloader_pro.py:874
 msgid "سياسة الخصوصية"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:310
+#: src/accessible_youtube_downloader_pro.py:345
 msgid "عن البرنامج..."
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:313
+#: src/accessible_youtube_downloader_pro.py:348
 msgid "البريد الالكتروني..."
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:314
+#: src/accessible_youtube_downloader_pro.py:349
 msgid "تلجرام..."
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:315
+#: src/accessible_youtube_downloader_pro.py:350
 msgid "تواصل معي"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:317
-#: src/accessible_youtube_downloader_pro.py:833
+#: src/accessible_youtube_downloader_pro.py:352
+#: src/accessible_youtube_downloader_pro.py:889
 #: src/youtube_browser/search_handler.py:41
 msgid "حول"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:477
+#: src/accessible_youtube_downloader_pro.py:526
 msgid "لم يتم العثور على مكتبة واي تي دي إل بي أو تعذر الحصول على إصدارها"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:481
+#: src/accessible_youtube_downloader_pro.py:530
 msgid "إصدار واي تي دي إل بي"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:487
+#: src/accessible_youtube_downloader_pro.py:536
 msgid "لم يتم العثور على أداة دينو أو تعذر الحصول على إصدارها"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:491
+#: src/accessible_youtube_downloader_pro.py:540
 msgid "إصدار دينو"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:498
-msgid "لم يتم العثور على مكتبة YouTube.js (Innertube) أو تعذر الحصول على إصدارها"
+#: src/accessible_youtube_downloader_pro.py:546
+msgid "تعذر جلب إصدار YouTube.js (Innertube)"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:503
+#: src/accessible_youtube_downloader_pro.py:547 src/gui/comments_dialog.py:127
+#: src/gui/comments_dialog.py:349 src/gui/comments_dialog.py:565
+#: src/gui/settings_dialog.py:665 src/gui/settings_dialog.py:700
+#: src/utils.py:2404
+msgid "خطأ"
+msgstr ""
+
+#: src/accessible_youtube_downloader_pro.py:551
 msgid "إصدار YouTube.js (Innertube)"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:507
+#: src/accessible_youtube_downloader_pro.py:555
 msgid "جاري تحميل الاقتراحات... يرجى الانتظار"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:528
-#: src/accessible_youtube_downloader_pro.py:912 src/gui/history.py:111
-#: src/gui/settings_dialog.py:553 src/gui/settings_dialog.py:712
+#: src/accessible_youtube_downloader_pro.py:576
+#: src/accessible_youtube_downloader_pro.py:968 src/gui/history.py:111
+#: src/gui/settings_dialog.py:553 src/gui/settings_dialog.py:726
 #: src/utils.py:1050 src/utils.py:1067 src/utils.py:1088 src/utils.py:1115
 msgid "تنبيه"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:582
-#: src/accessible_youtube_downloader_pro.py:647
+#: src/accessible_youtube_downloader_pro.py:601
+msgid ""
+"لا توجد اقتراحات متاحة حاليًا في حسابك (قد يكون سجل المشاهدة متوقفًا في "
+"إعدادات YouTube)."
+msgstr ""
+
+#: src/accessible_youtube_downloader_pro.py:638
+#: src/accessible_youtube_downloader_pro.py:703
 #: src/gui/auto_detect_dialog.py:97 src/gui/channel_dialog.py:370
 #: src/gui/channel_dialog.py:393 src/gui/favorites.py:134
 #: src/gui/favorites.py:151 src/gui/history.py:171
@@ -190,65 +207,65 @@ msgstr ""
 msgid "جاري التشغيل"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:585
-#: src/accessible_youtube_downloader_pro.py:650 src/gui/channel_dialog.py:373
+#: src/accessible_youtube_downloader_pro.py:641
+#: src/accessible_youtube_downloader_pro.py:706 src/gui/channel_dialog.py:373
 #: src/gui/channel_dialog.py:396 src/gui/history.py:178
 msgid "لا يمكن تشغيل الرابط"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:630
+#: src/accessible_youtube_downloader_pro.py:686
 msgid "تعذر العثور على مجلد إضافة المتصفح"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:724
+#: src/accessible_youtube_downloader_pro.py:780
 msgid "يجب تحديد ملف الكوكيز من الإعدادات لاستخدام ميزة Shorts."
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:731
+#: src/accessible_youtube_downloader_pro.py:787
 msgid "جاري تحميل فيديوهات Shorts المقترحة..."
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:738
+#: src/accessible_youtube_downloader_pro.py:794
 msgid "تعذر تحميل فيديوهات Shorts. يرجى التحقق من ملف الكوكيز والاتصال بالإنترنت."
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:750
+#: src/accessible_youtube_downloader_pro.py:806
 msgid "جاري جلب رابط التشغيل..."
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:757
+#: src/accessible_youtube_downloader_pro.py:813
 msgid "تعذر استخراج رابط تشغيل الفيديو."
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:805
+#: src/accessible_youtube_downloader_pro.py:861
 msgid "دليل استخدام برنامج HexPlayer"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:820
+#: src/accessible_youtube_downloader_pro.py:876
 msgid "تعذر العثور على ملف سياسة الخصوصية"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:824
+#: src/accessible_youtube_downloader_pro.py:880
 msgid "جاري البحث عن التحديثات. يرجى الانتظار"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:829
+#: src/accessible_youtube_downloader_pro.py:885
 msgid "اسم البرنامج"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:830
+#: src/accessible_youtube_downloader_pro.py:886
 msgid "الإصدار"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:831
+#: src/accessible_youtube_downloader_pro.py:887
 msgid "طُوِر بواسطة"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:832 src/gui/description.py:21
+#: src/accessible_youtube_downloader_pro.py:888 src/gui/description.py:21
 msgid "الوصف: "
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:911
+#: src/accessible_youtube_downloader_pro.py:967
 msgid "البرنامج قيد التشغيل بالفعل."
 msgstr ""
 
@@ -636,12 +653,6 @@ msgstr ""
 
 #: src/utils.py:2381
 msgid "أنت تعمل الآن على آخر تحديث متوفر من التطبيق"
-msgstr ""
-
-#: src/gui/comments_dialog.py:127 src/gui/comments_dialog.py:349
-#: src/gui/comments_dialog.py:565 src/gui/settings_dialog.py:651
-#: src/gui/settings_dialog.py:686 src/utils.py:2404
-msgid "خطأ"
 msgstr ""
 
 #: src/utils.py:2478
@@ -1607,26 +1618,33 @@ msgstr ""
 msgid "اختر ملف الكوكيز"
 msgstr ""
 
-#: src/gui/settings_dialog.py:621
+#: src/gui/settings_dialog.py:631
 #, python-brace-format
 msgid "تم استيراد {count} من الكوكيز بنجاح من متصفح {browser}."
 msgstr ""
 
-#: src/gui/settings_dialog.py:626 src/gui/update_dialog.py:163
+#: src/gui/settings_dialog.py:636
+#, python-brace-format
+msgid ""
+"تم استيراد {count} من الكوكيز من متصفح {browser}، ولكن يبدو أنه لم يتم "
+"العثور على جلسة تسجيل دخول نشطة لحساب يوتيوب."
+msgstr ""
+
+#: src/gui/settings_dialog.py:640 src/gui/update_dialog.py:163
 #: src/gui/update_dialog.py:171
 msgid "نجاح"
 msgstr ""
 
-#: src/gui/settings_dialog.py:634
+#: src/gui/settings_dialog.py:648
 #, python-brace-format
 msgid "متصفح {browser} مفتوح حاليًا. يرجى إغلاق المتصفح وإعادة المحاولة."
 msgstr ""
 
-#: src/gui/settings_dialog.py:636
+#: src/gui/settings_dialog.py:650
 msgid "المتصفح مفتوح"
 msgstr ""
 
-#: src/gui/settings_dialog.py:639
+#: src/gui/settings_dialog.py:653
 #, python-brace-format
 msgid ""
 "تعذر فك تشفير كوكيز متصفح {browser} مباشرة بسبب نظام الحماية (App-Bound "
@@ -1634,29 +1652,29 @@ msgid ""
 "للمتصفح (HexPlayer Link Helper) أو باستخدام متصفح Firefox."
 msgstr ""
 
-#: src/gui/settings_dialog.py:641
+#: src/gui/settings_dialog.py:655
 msgid "خطأ في فك التشفير"
 msgstr ""
 
-#: src/gui/settings_dialog.py:643
+#: src/gui/settings_dialog.py:657
 #, python-brace-format
 msgid "لم يتم العثور على كوكيز في متصفح {browser}."
 msgstr ""
 
-#: src/gui/settings_dialog.py:646
+#: src/gui/settings_dialog.py:660
 msgid "لا توجد كوكيز"
 msgstr ""
 
-#: src/gui/settings_dialog.py:648
+#: src/gui/settings_dialog.py:662
 #, python-brace-format
 msgid "فشل استيراد الكوكيز من متصفح {browser}: {error}"
 msgstr ""
 
-#: src/gui/settings_dialog.py:685
+#: src/gui/settings_dialog.py:699
 msgid "تعذر تحديث تكامل المتصفح في Windows."
 msgstr ""
 
-#: src/gui/settings_dialog.py:710
+#: src/gui/settings_dialog.py:724
 #, python-brace-format
 msgid ""
 "لقد قمت بتغيير لغة البرنامج إلى {}, مما يعني أنه ينبغي عليك إعادة تشغيل "

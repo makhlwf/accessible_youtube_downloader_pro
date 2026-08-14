@@ -165,6 +165,18 @@ def extract_and_save_browser_cookies(browser_id, target_path=None):
             "browser": browser_display,
         }
 
+    AUTH_COOKIE_NAMES = {
+        "sapisid",
+        "__secure-3papisid",
+        "login_info",
+        "sid",
+        "hsid",
+        "ssid",
+    }
+    has_auth = any(
+        (c.name or "").lower() in AUTH_COOKIE_NAMES for c in filtered_cookies
+    )
+
     try:
         os.makedirs(os.path.dirname(os.path.abspath(target_path)), exist_ok=True)
         with open(target_path, "w", encoding="utf-8") as f:
@@ -174,6 +186,10 @@ def extract_and_save_browser_cookies(browser_id, target_path=None):
             for c in filtered_cookies:
                 f.write(cookie_to_netscape_line(c))
 
+        logger.info(
+            f"Extracted {len(filtered_cookies)} cookies for {browser_display} -> {target_path} (Authenticated: {has_auth})"
+        )
+
         return {
             "success": True,
             "count": len(filtered_cookies),
@@ -181,6 +197,7 @@ def extract_and_save_browser_cookies(browser_id, target_path=None):
             "error": None,
             "error_type": None,
             "browser": browser_display,
+            "is_authenticated": has_auth,
         }
     except Exception as exc:
         logger.error(f"Failed to write cookies file to {target_path}: {exc}")
@@ -191,13 +208,14 @@ def extract_and_save_browser_cookies(browser_id, target_path=None):
             "error": str(exc),
             "error_type": "write_failed",
             "browser": browser_display,
+            "is_authenticated": False,
         }
 
 
 def save_raw_browser_cookies(cookies, target_path=None):
     """
     Saves a list of cookie dicts (e.g. from browser extension) to a Netscape cookie file.
-    Returns: dict {'success': bool, 'count': int, 'path': str, 'error': str | None}
+    Returns: dict {'success': bool, 'count': int, 'path': str, 'error': str | None, 'is_authenticated': bool}
     """
     if target_path is None:
         target_path = get_default_browser_cookies_path()
@@ -209,6 +227,7 @@ def save_raw_browser_cookies(cookies, target_path=None):
             "path": target_path,
             "error": "No cookies provided.",
             "error_type": "no_cookies",
+            "is_authenticated": False,
         }
 
     filtered = []
@@ -229,7 +248,20 @@ def save_raw_browser_cookies(cookies, target_path=None):
             "path": target_path,
             "error": "No valid cookies found.",
             "error_type": "no_cookies",
+            "is_authenticated": False,
         }
+
+    AUTH_COOKIE_NAMES = {
+        "sapisid",
+        "__secure-3papisid",
+        "login_info",
+        "sid",
+        "hsid",
+        "ssid",
+    }
+    has_auth = any(
+        str(c.get("name", "")).lower() in AUTH_COOKIE_NAMES for c in filtered
+    )
 
     try:
         os.makedirs(os.path.dirname(os.path.abspath(target_path)), exist_ok=True)
@@ -250,12 +282,17 @@ def save_raw_browser_cookies(cookies, target_path=None):
                     f"{domain}\t{flag}\t{path}\t{secure}\t{expires}\t{name}\t{value}\n"
                 )
 
+        logger.info(
+            f"Saved {len(filtered)} raw cookies to {target_path} (Authenticated: {has_auth})"
+        )
+
         return {
             "success": True,
             "count": len(filtered),
             "path": target_path,
             "error": None,
             "error_type": None,
+            "is_authenticated": has_auth,
         }
     except Exception as exc:
         logger.error(f"Failed to write cookies file to {target_path}: {exc}")
@@ -265,4 +302,5 @@ def save_raw_browser_cookies(cookies, target_path=None):
             "path": target_path,
             "error": str(exc),
             "error_type": "write_failed",
+            "is_authenticated": False,
         }

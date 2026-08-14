@@ -30,6 +30,7 @@ legacy_settings_paths = [
 update_path = os.path.join(settings_path, "updates")
 db_path = os.path.join(settings_path, "aHexPlayer.db")
 js_runtime_path = os.path.join(settings_path, "js_runtime")
+log_path = os.path.join(settings_path, "hexplayer.log")
 
 
 def _get_yt_dlp_path():

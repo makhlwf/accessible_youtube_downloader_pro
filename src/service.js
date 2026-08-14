@@ -10,22 +10,35 @@ import { TextLineStream } from "https://deno.land/std@0.224.0/streams/text_line_
 function parseCookies(filePath) {
   try {
     const text = readFileSync(filePath, 'utf8');
-    const cookies = text.split('\n')
-      .filter(line => line.trim() && !line.startsWith('#'))
-      .map(line => {
-        const parts = line.split('\t');
-        if (parts.length < 7) return null;
-        return { name: parts[5], value: parts[6].trim() };
-      })
-      .filter(cookie => cookie !== null);
+    const cookieMap = new Map();
+    const lines = text.split('\n').filter(line => line.trim() && !line.startsWith('#'));
 
-    const hasSapisid = cookies.some(c => c.name === 'SAPISID');
-    const secure3papisid = cookies.find(c => c.name === '__Secure-3PAPISID');
-    if (!hasSapisid && secure3papisid) {
-      cookies.push({ name: 'SAPISID', value: secure3papisid.value });
+    // Process lines so that youtube.com lines are sorted last, giving them precedence
+    lines.sort((a, b) => {
+      const aIsYt = a.includes('youtube.com') ? 1 : 0;
+      const bIsYt = b.includes('youtube.com') ? 1 : 0;
+      return aIsYt - bIsYt;
+    });
+
+    for (const line of lines) {
+      const parts = line.split('\t');
+      if (parts.length < 7) continue;
+      const name = parts[5].trim();
+      const value = parts[6].trim();
+      if (name) {
+        cookieMap.set(name, value);
+      }
     }
 
-    return cookies.map(c => `${c.name}=${c.value}`).join('; ');
+    if (!cookieMap.has('SAPISID') && cookieMap.has('__Secure-3PAPISID')) {
+      cookieMap.set('SAPISID', cookieMap.get('__Secure-3PAPISID'));
+    }
+
+    const cookiePairs = [];
+    for (const [name, value] of cookieMap.entries()) {
+      cookiePairs.push(`${name}=${value}`);
+    }
+    return cookiePairs.join('; ');
   } catch (error) {
     return null;
   }

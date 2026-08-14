@@ -20,6 +20,7 @@ import wx
 import application
 import browser_extension_manager
 import database
+import paths
 import settings_handler
 import utils
 import windows_url_association
@@ -43,7 +44,39 @@ from youtube_browser.browser import YoutubeBrowser
 from youtube_browser.scraper import Scraper
 from youtube_browser.search_handler import SimpleResult
 
-logging.basicConfig(level=logging.INFO)
+
+def setup_logging():
+    os.makedirs(paths.settings_path, exist_ok=True)
+    root_logger = logging.getLogger()
+    for h in list(root_logger.handlers):
+        root_logger.removeHandler(h)
+
+    is_debug = False
+    try:
+        settings_handler.config_initialization()
+        is_debug = bool(settings_handler.config_get("debug"))
+    except Exception:
+        pass
+
+    root_logger.setLevel(logging.DEBUG if is_debug else logging.INFO)
+    formatter = logging.Formatter(
+        "%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
+
+    console_h = logging.StreamHandler(sys.stderr)
+    console_h.setFormatter(formatter)
+    root_logger.addHandler(console_h)
+
+    try:
+        file_h = logging.FileHandler(paths.log_path, encoding="utf-8", mode="a")
+        file_h.setFormatter(formatter)
+        root_logger.addHandler(file_h)
+    except Exception:
+        pass
+
+
+setup_logging()
 logger = logging.getLogger(__name__)
 IPC_HOST = "127.0.0.1"
 IPC_PORT = 57280
@@ -300,6 +333,9 @@ class HomeScreen(wx.Frame):
         self.openBrowserExtensionFolder = toolsMenu.Append(
             -1, _("فتح مجلد إضافة المتصفح")
         )
+        self.openLogFileItem = toolsMenu.Append(
+            -1, _("فتح ملف السجلات (hexplayer.log)")
+        )
         menuBar.Append(toolsMenu, _("قائمة الأدوات الخارجية"))
 
         # About Menu
@@ -363,6 +399,7 @@ class HomeScreen(wx.Frame):
             self.onOpenBrowserExtensionFolder,
             self.openBrowserExtensionFolder,
         )
+        self.Bind(wx.EVT_MENU, self.on_open_log_file, self.openLogFileItem)
 
         self.Bind(wx.EVT_MENU, self.onGuide, self.guideItem)
         self.Bind(wx.EVT_MENU, self.onCheckForUpdates, self.checkUpdatesItem)
@@ -387,14 +424,15 @@ class HomeScreen(wx.Frame):
         self.favBtn.Bind(wx.EVT_BUTTON, self.onFavorite)
         self.historyBtn.Bind(wx.EVT_BUTTON, self.onHistory)
         self.load_more_home_button.Bind(
-            wx.EVT_BUTTON, lambda e: self.load_home_feed(True)
+            wx.EVT_BUTTON, lambda event: self.load_home_feed(True)
         )
 
         # List box
         self.home_feed_list.Bind(wx.EVT_LISTBOX, self.on_home_feed_list_box)
-        self.home_feed_list.Bind(
+        self.Bind(
             wx.EVT_LISTBOX_DCLICK,
-            lambda e: self.on_home_feed_play(None, audio_mode=True),
+            lambda event: self.on_home_feed_play(event, audio_mode=False),
+            self.home_feed_list,
         )
         self.home_feed_list.Bind(wx.EVT_CHAR_HOOK, self.on_home_feed_hook)
 
@@ -402,6 +440,18 @@ class HomeScreen(wx.Frame):
         self.Bind(wx.EVT_CHAR_HOOK, self.onHook)
         self.Bind(wx.EVT_SHOW, self.onShow)
         self.Bind(wx.EVT_CLOSE, self.onClose)
+
+    def on_open_log_file(self, event=None):
+        if not os.path.exists(paths.log_path):
+            try:
+                with open(paths.log_path, "w", encoding="utf-8") as f:
+                    f.write("HexPlayer log initialized.\n")
+            except Exception:
+                pass
+        try:
+            os.startfile(paths.log_path)
+        except Exception as e:
+            logger.error(f"Failed to open log file: {e}")
 
     def _startup_logic(self):
         try:
@@ -490,13 +540,12 @@ class HomeScreen(wx.Frame):
             return
         wx.MessageBox(version, _("إصدار دينو"), parent=self)
 
-    def on_show_youtubei_version(self, event):
+    def on_show_youtubei_version(self, event=None):
         version = utils.get_youtubei_version()
         if not version:
-            utils.show_error(
-                _(
-                    "لم يتم العثور على مكتبة YouTube.js (Innertube) أو تعذر الحصول على إصدارها"
-                ),
+            wx.MessageBox(
+                _("تعذر جلب إصدار YouTube.js (Innertube)"),
+                _("خطأ"),
                 parent=self,
             )
             return
@@ -547,14 +596,22 @@ class HomeScreen(wx.Frame):
         self.home_feed_results.scraper = self.scraper
         self.scraper.set_results(self.home_feed_results)
 
-        titles = [f"{item['title']} - {item['author']}" for item in self.home_feed_data]
-        self.home_feed_list.Set(titles)
-
-        show_list = len(self.home_feed_data) > 0
-        self.home_feed_list.Show(show_list)
-        self.load_more_home_button.Show(
-            show_list and self.home_feed_continuation is not None
-        )
+        if not self.home_feed_data:
+            titles = [
+                _(
+                    "لا توجد اقتراحات متاحة حاليًا في حسابك (قد يكون سجل المشاهدة متوقفًا في إعدادات YouTube)."
+                )
+            ]
+            self.home_feed_list.Set(titles)
+            self.home_feed_list.Show(True)
+            self.load_more_home_button.Hide()
+        else:
+            titles = [
+                f"{item['title']} - {item['author']}" for item in self.home_feed_data
+            ]
+            self.home_feed_list.Set(titles)
+            self.home_feed_list.Show(True)
+            self.load_more_home_button.Show(self.home_feed_continuation is not None)
         self.Layout()
 
         # Add items to scraper using the async loop

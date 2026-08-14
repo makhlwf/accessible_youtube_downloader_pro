@@ -617,10 +617,24 @@ class SettingsDialog(wx.Dialog):
             self.cookiesPathField.Value = path
             self.preferences["cookiespath"] = path
             self.preferences["browser_cookies_source"] = browser_id
+            config_set("cookiespath", path)
+            config_set("browser_cookies_source", browser_id)
+            try:
+                import native_messaging_host
+
+                native_messaging_host.send_ipc_message("cookies_updated", path)
+            except Exception:
+                pass
             count = result.get("count", 0)
-            msg = _("تم استيراد {count} من الكوكيز بنجاح من متصفح {browser}.").format(
-                count=count, browser=browser_name
-            )
+            is_auth = result.get("is_authenticated", True)
+            if is_auth:
+                msg = _(
+                    "تم استيراد {count} من الكوكيز بنجاح من متصفح {browser}."
+                ).format(count=count, browser=browser_name)
+            else:
+                msg = _(
+                    "تم استيراد {count} من الكوكيز من متصفح {browser}، ولكن يبدو أنه لم يتم العثور على جلسة تسجيل دخول نشطة لحساب يوتيوب."
+                ).format(count=count, browser=browser_name)
             wx.MessageBox(
                 msg,
                 _("نجاح"),
