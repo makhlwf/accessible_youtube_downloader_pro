@@ -36,23 +36,85 @@ jobs:
         with:
           fetch-depth: 0
 
-      # NEW: Validate inputs based on logic GitHub UI can't handle
       - name: Validate Inputs
         shell: pwsh
+        env:
+          RELEASE_TYPE: ${{ github.event.inputs.release_type }}
+          VERSION: ${{ github.event.inputs.version }}
+          RELEASE_MESSAGE: ${{ github.event.inputs.release_message }}
+          WHATS_NEW: ${{ github.event.inputs.whats_new }}
         run: |
-          $type = "${{ github.event.inputs.release_type }}"
-          $ver = "${{ github.event.inputs.version }}"
-          $msg = "${{ github.event.inputs.release_message }}"
-          $news = "${{ github.event.inputs.whats_new }}"
+          $type = $env:RELEASE_TYPE
+          $ver = $env:VERSION
+          $msg = $env:RELEASE_MESSAGE
+          $news = $env:WHATS_NEW
 
           if ($type -eq 'stable') {
             if (-not $ver) { Write-Error "ERROR: 'Version' is required for Stable releases."; exit 1 }
             if (-not $msg) { Write-Error "ERROR: 'Release Message' is required for Stable releases."; exit 1 }
             if (-not $news) { Write-Error "ERROR: 'Whats New' is required for Stable releases."; exit 1 }
-          }
-          else {
+          } else {
             Write-Host "Beta release selected. Skipping strict input validation."
           }
+
+      - name: Determine Version
+        id: get_version
+        shell: pwsh
+        env:
+          RELEASE_TYPE: ${{ github.event.inputs.release_type }}
+          VERSION: ${{ github.event.inputs.version }}
+        run: |
+          if ($env:RELEASE_TYPE -eq "stable") {
+            $version = $env:VERSION
+          } else {
+            # Extract version from application.py for Beta
+            $content = Get-Content "src/application.py" -Raw
+            if ($content -match 'version\s*=\s*"(.*?)"') {
+                $version = $matches[1]
+            } else {
+                $version = "0.0.0-beta" # Fallback
+            }
+          }
+          Write-Host "Using Version: $version"
+          echo "VERSION=$version" >> $env:GITHUB_OUTPUT
+
+      - name: Bump Version Files and Commit (Stable only)
+        if: ${{ github.event.inputs.release_type == 'stable' }}
+        shell: pwsh
+        run: |
+          $ver = "${{ steps.get_version.outputs.VERSION }}"
+
+          # 1. pyproject.toml
+          $p = [System.IO.File]::ReadAllText("pyproject.toml", [System.Text.Encoding]::UTF8)
+          $p = $p -replace '(?m)^version\s*=\s*"[^"]*"', "version = `"$ver`""
+          [System.IO.File]::WriteAllText("pyproject.toml", $p, [System.Text.UTF8Encoding]::new($false))
+
+          # 2. uv.lock
+          $u = [System.IO.File]::ReadAllText("uv.lock", [System.Text.Encoding]::UTF8)
+          $u = $u -replace '(?s)(\[\[package\]\]\r?\nname\s*=\s*"accessible-youtube-downloader-pro"\r?\nversion\s*=\s*)"[^"]+"', "`$1`"$ver`""
+          [System.IO.File]::WriteAllText("uv.lock", $u, [System.Text.UTF8Encoding]::new($false))
+
+          # 3. readme.md
+          $r = [System.IO.File]::ReadAllText("readme.md", [System.Text.Encoding]::UTF8)
+          $r = $r -replace 'The current application version is \*\*[^*]+\*\*', "The current application version is **$ver**"
+          [System.IO.File]::WriteAllText("readme.md", $r, [System.Text.UTF8Encoding]::new($false))
+
+          # 4. packaging/windows/inno.iss
+          $i = [System.IO.File]::ReadAllText("packaging/windows/inno.iss", [System.Text.Encoding]::UTF8)
+          $i = $i -replace '(?m)^#define MyAppVersion\s+"[^"]*"', "#define MyAppVersion `"$ver`""
+          [System.IO.File]::WriteAllText("packaging/windows/inno.iss", $i, [System.Text.UTF8Encoding]::new($false))
+
+          # 5. src/application.py
+          $a = [System.IO.File]::ReadAllText("src/application.py", [System.Text.Encoding]::UTF8)
+          $a = $a -replace '(?m)^version\s*=\s*"[^"]*"', "version = `"$ver`""
+          [System.IO.File]::WriteAllText("src/application.py", $a, [System.Text.UTF8Encoding]::new($false))
+
+          # Commit and push version bump
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add pyproject.toml uv.lock readme.md packaging/windows/inno.iss src/application.py
+          git commit -m "bumping version"
+          git push origin HEAD:${{ github.ref }}
 
       - name: Install uv
         uses: astral-sh/setup-uv@v9.0.0
@@ -64,38 +126,6 @@ jobs:
 
       - name: Install dependencies
         run: uv sync --locked --no-dev --group build
-
-      # NEW: Determine the version to use
-      # If Stable: Use input. If Beta: Extract from src/application.py.
-      - name: Determine Version
-        id: get_version
-        shell: pwsh
-        run: |
-          if ("${{ github.event.inputs.release_type }}" -eq "stable") {
-            $version = "${{ github.event.inputs.version }}"
-          } else {
-            # Extract version from application.py for Beta
-            $content = Get-Content "src/application.py" -Raw
-            if ($content -match 'version = "(.*?)"') {
-                $version = $matches[1]
-            } else {
-                $version = "0.0.0-beta" # Fallback
-            }
-          }
-          Write-Host "Using Version: $version"
-          echo "VERSION=$version" >> $env:GITHUB_OUTPUT
-
-      - name: Update version files (Stable only)
-        if: ${{ github.event.inputs.release_type == 'stable' }}
-        shell: pwsh
-        run: |
-          $version = "${{ steps.get_version.outputs.VERSION }}"
-          
-          # Update src/application.py
-          (Get-Content "src/application.py") -replace 'version = ".*"', "version = `"$version`"" | Set-Content "src/application.py"
-          
-          # Update packaging/windows/inno.iss
-          (Get-Content "packaging/windows/inno.iss") -replace '#define MyAppVersion ".*"', "#define MyAppVersion `"$version`"" | Set-Content "packaging/windows/inno.iss"
 
       - name: Build Application
         run: uv run --no-dev --group build python scripts/build.py
@@ -111,12 +141,13 @@ jobs:
         shell: pwsh
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_MESSAGE: ${{ github.event.inputs.release_message }}
         run: |
           # Delete existing beta release/tag to keep it a "rolling" beta
           gh release delete beta --cleanup-tag -y 2>$null || Write-Host "No existing beta release to delete."
 
           $ver = "${{ steps.get_version.outputs.VERSION }}"
-          $inputMsg = "${{ github.event.inputs.release_message }}"
+          $inputMsg = $env:RELEASE_MESSAGE
           
           # Use input message if provided, otherwise default
           if (-not $inputMsg) { $inputMsg = "Automated Beta Build for version $ver" }
@@ -134,38 +165,46 @@ jobs:
         shell: pwsh
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_MESSAGE: ${{ github.event.inputs.release_message }}
+          WHATS_NEW: ${{ github.event.inputs.whats_new }}
         run: |
           $ver = "${{ steps.get_version.outputs.VERSION }}"
           $tag = "v$ver"
-          
           $installerPath = "HexPlayer\HexPlayer.exe"
 
-          # Create GitHub Release
+          # Write release notes to temp file to handle multiline / special chars safely
+          $env:RELEASE_MESSAGE | Set-Content -Path "release_notes.txt" -Encoding utf8
+
+          # Create GitHub Release and upload installer
           gh release create $tag $installerPath `
             --title "Version $ver" `
-            --notes "${{ github.event.inputs.release_message }}"
+            --notes-file "release_notes.txt"
+
+          Remove-Item "release_notes.txt" -Force -ErrorAction SilentlyContinue
 
           # Direct download link construction
           $downloadUrl = "https://github.com/${{ github.repository }}/releases/download/$tag/HexPlayer.exe"
 
           # Update update.json
-          $updateJson = @{
+          $updateObj = [ordered]@{
             version = $ver
             url = $downloadUrl
-            whats_new = "${{ github.event.inputs.whats_new }}"
-          } | ConvertTo-Json -Compress
-          $updateJson | Set-Content "update.json"
+            whats_new = $env:WHATS_NEW
+          }
+          $updateJson = $updateObj | ConvertTo-Json
+          [System.IO.File]::WriteAllText("update.json", $updateJson + "`n", [System.Text.UTF8Encoding]::new($false))
 
           # Update update_info.json (legacy)
-          $updateInfoJson = @{
+          $updateInfoObj = [ordered]@{
             version = $ver
             url = $downloadUrl
-          } | ConvertTo-Json -Compress
-          $updateInfoJson | Set-Content "update_info.json"
+          }
+          $updateInfoJson = $updateInfoObj | ConvertTo-Json -Compress
+          [System.IO.File]::WriteAllText("update_info.json", $updateInfoJson + "`n", [System.Text.UTF8Encoding]::new($false))
 
-          # Commit changes
+          # Commit and push update info
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add src/application.py packaging/windows/inno.iss update.json update_info.json
-          git commit -m "Release version $ver"
+          git add update.json update_info.json
+          git commit -m "pushing update"
           git push origin HEAD:${{ github.ref }}
