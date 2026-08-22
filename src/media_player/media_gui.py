@@ -275,6 +275,7 @@ class MediaGui(wx.Frame):
         nextButton.Bind(wx.EVT_BUTTON, lambda event: self.next())
         self.Bind(wx.EVT_CLOSE, self.onClose)
         self.Show()
+        playButton.SetFocus()
         if stream is None:
             utils.show_error(
                 diagnose_extraction_error("No playable stream"), parent=self

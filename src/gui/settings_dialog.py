@@ -5,6 +5,7 @@ import threading
 import wx
 
 import cookies_manager
+import utils
 import windows_url_association
 from language_handler import _, supported_languages
 from settings_handler import config_get, config_set
@@ -324,6 +325,21 @@ class SettingsDialog(wx.Dialog):
         )
         _set_accessible_name(self.audioQuality, audio_quality_label_text)
         self.audioQuality.Selection = int(config_get("defaultaudioquality"))
+        self.player_client_choices = utils.get_player_client_choices()
+        player_client_label_text = _("عميل مشغل يوتيوب: ")
+        self.playerClientLabel = wx.StaticText(
+            playerOptions, -1, player_client_label_text
+        )
+        self.playerClientBox = wx.Choice(
+            playerOptions,
+            -1,
+            choices=[label for _, label in self.player_client_choices],
+            name="player_client",
+        )
+        _set_accessible_name(self.playerClientBox, player_client_label_text)
+        self.playerClientBox.Selection = self.getPlayerClientSelection(
+            config_get("player_client")
+        )
         self.audioOutputDevices = _get_audio_output_device_choices()
         audio_output_label_text = _("جهاز إخراج الصوت: ")
         self.audioOutputDeviceLabel = wx.StaticText(
@@ -450,6 +466,7 @@ class SettingsDialog(wx.Dialog):
         player_grid.AddGrowableCol(1, 1)
         add_row(player_grid, self.videoQualityLabel, self.videoQuality)
         add_row(player_grid, self.audioQualityLabel, self.audioQuality)
+        add_row(player_grid, self.playerClientLabel, self.playerClientBox)
         add_row(player_grid, self.audioOutputDeviceLabel, self.audioOutputDevice)
         add_row(player_grid, self.playbackSpeedStepLabel, self.playbackSpeedStep)
         playerOptionsSizer.Add(player_grid, 0, wx.EXPAND | wx.ALL, 5)
@@ -491,6 +508,12 @@ class SettingsDialog(wx.Dialog):
         okButton.Bind(wx.EVT_BUTTON, self.onOk)
         apply_theme(self)
         self.ShowModal()
+
+    def getPlayerClientSelection(self, selected_client):
+        for index, (client_id, _label) in enumerate(self.player_client_choices):
+            if client_id == selected_client:
+                return index
+        return 0
 
     def getAudioOutputDeviceSelection(self, selected_device):
         selected_device = _normalise_audio_output_device(selected_device)
@@ -708,21 +731,36 @@ class SettingsDialog(wx.Dialog):
         ) if self.formats.Selection != int(config_get("defaultformat")) else None
         config_set("defaultvideoquality", self.videoQuality.Selection)
         config_set("defaultaudioquality", self.audioQuality.Selection)
+        if hasattr(self, "playerClientBox") and hasattr(self, "player_client_choices"):
+            config_set(
+                "player_client",
+                self.player_client_choices[self.playerClientBox.Selection][0],
+            )
         config_set(
             "audiooutputdevice",
             self.audioOutputDevices[self.audioOutputDevice.Selection]["id"],
         )
-        config_set("playback_speed_step", self.playbackSpeedStep.Value)
+        config_set(
+            "playback_speed_step",
+            self.playbackSpeedStep.GetValue()
+            if hasattr(self.playbackSpeedStep, "GetValue")
+            else getattr(self.playbackSpeedStep, "Value", 0.05),
+        )
         selected_theme = self.theme_keys[self.themeBox.Selection]
         config_set("theme", selected_theme)
         apply_theme_to_all_windows(selected_theme)
         lang = {value: key for key, value in languages.items()}
         if lang[self.languageBox.Selection] != config_get("lang"):
             config_set("lang", lang[self.languageBox.Selection])
+            selected_lang_str = (
+                self.languageBox.GetStringSelection()
+                if hasattr(self.languageBox, "GetStringSelection")
+                else getattr(self.languageBox, "StringSelection", "")
+            )
             msg = wx.MessageBox(
                 _(
                     "لقد قمت بتغيير لغة البرنامج إلى {}, مما يعني أنه ينبغي عليك إعادة تشغيل البرنامج لتطبيق التعديلات. هل تريد القيام بذلك حالًا?"
-                ).format(self.languageBox.StringSelection),
+                ).format(selected_lang_str),
                 _("تنبيه"),
                 style=wx.YES_NO,
                 parent=self,

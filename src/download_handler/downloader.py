@@ -223,13 +223,15 @@ class Downloader:
             "nocacheconfig": True,
             "extractor_args": {
                 "youtube": {
-                    "player_client": ["android"],
+                    "player_client": utils.get_configured_player_clients(),
                     "js_variant": "main",
                 }
             },
             "js_runtimes": {"deno": {}},
-            "quiet": True,
-            "no_warnings": True,
+            "quiet": False,
+            "verbose": True,
+            "no_warnings": False,
+            "logger": utils.YtDlpLogger(logger),
         }
 
         cookies_path = config_get("cookiespath")

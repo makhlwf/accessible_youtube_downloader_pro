@@ -123,8 +123,10 @@ def _channel_from_data(data, default_name="", default_url=""):
 
 def _yt_dlp_flat_options(start=1, end=30):
     options = {
-        "quiet": True,
-        "no_warnings": True,
+        "quiet": False,
+        "verbose": True,
+        "no_warnings": False,
+        "logger": utils.YtDlpLogger(),
         "skip_download": True,
         "extract_flat": "in_playlist",
         "playliststart": start,

@@ -34,6 +34,7 @@ defaults = {
     "eq_bands": "0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0",
     "eq_preset": "Flat",
     "theme": "System Default",
+    "player_client": "default",
 }
 
 _cache = {}

@@ -116,7 +116,7 @@ class Scraper:
                 try:
                     if results:
                         try:
-                            if (  # noqa: SIM102
+                            if (
                                 index < results.count
                                 and results.get_type(index) == "video"
                                 and any(
@@ -126,28 +126,26 @@ class Scraper:
                             ):
                                 if not utils.YoutubeDL:
                                     continue
-                                    url = results.get_url(index)
-                                    for audio_mode in self._prefetch_modes():
-                                        if results.get_stream(
-                                            index, audio_mode=audio_mode
-                                        ):
-                                            continue
-                                        stream = await (
-                                            asyncio.get_running_loop().run_in_executor(
-                                                None,
-                                                utils.get_playable_stream,
-                                                url,
-                                                audio_mode,
-                                            )
+                                url = results.get_url(index)
+                                for audio_mode in self._prefetch_modes():
+                                    if results.get_stream(index, audio_mode=audio_mode):
+                                        continue
+                                    stream = await (
+                                        asyncio.get_running_loop().run_in_executor(
+                                            None,
+                                            utils.get_playable_stream,
+                                            url,
+                                            audio_mode,
                                         )
-                                        if stream and results == self.results:
-                                            results.set_stream(
-                                                index,
-                                                stream,
-                                                audio_mode=audio_mode,
-                                            )
-                        except Exception as e:
-                            logger.debug(f"Scraper task failed for index {index}: {e}")
+                                    )
+                                    if stream and results == self.results:
+                                        results.set_stream(
+                                            index,
+                                            stream,
+                                            audio_mode=audio_mode,
+                                        )
+                        except Exception:
+                            logger.exception("Scraper task failed for index %s", index)
                 finally:
                     async with self.lock:
                         self.processing_indices.discard(index)

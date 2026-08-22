@@ -224,3 +224,4 @@ src/libmpv-2.dll
 HexPlayer/
 manifests/
 *YouTube.js/.worktrees/
+temp_pytest/

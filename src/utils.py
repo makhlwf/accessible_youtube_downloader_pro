@@ -618,13 +618,37 @@ def load_yt_dlp():
 
 load_yt_dlp()
 
+
+class YtDlpLogger:
+    """Routes yt-dlp internal messages to Python standard logging."""
+
+    def __init__(self, logger_instance=None):
+        self._logger = logger_instance or logging.getLogger("yt_dlp")
+
+    def debug(self, msg):
+        # yt-dlp routes screen output and verbose '[debug]' lines to debug().
+        # We log them as INFO so they are captured in log files and console.
+        self._logger.info(msg)
+
+    def info(self, msg):
+        self._logger.info(msg)
+
+    def warning(self, msg):
+        self._logger.warning(msg)
+
+    def error(self, msg):
+        self._logger.error(msg)
+
+
 PLAYER_OPTS = {
-    "quiet": True,
-    "no_warnings": True,
+    "quiet": False,
+    "verbose": True,
+    "no_warnings": False,
+    "logger": YtDlpLogger(),
     "noplaylist": True,
     "extractor_args": {
         "youtube": {
-            "player_client": ["android_vr"],
+            "player_client": ["android", "web"],
             "js_variant": "main",
         }
     },
@@ -640,13 +664,47 @@ YOUTUBEI_PACKAGE = "youtubei.js"
 YOUTUBEI_IMPORT_SPECIFIER = "youtubei.js"
 
 
-def get_ydl_instance(client, cookies_path=None):
+def get_player_client_choices():
+    return [
+        ("default", _("الافتراضي المفضل لـ yt-dlp")),
+        ("android", _("أندرويد (Android)")),
+        ("web", _("الويب (Web)")),
+        ("mweb", _("ويب الجوال (Mobile Web)")),
+        ("ios", _("آي أو إس (iOS)")),
+        ("tv", _("التلفزيون الذكي (Smart TV)")),
+        ("tv_embedded", _("تلفزيون مضمن (TV Embedded)")),
+        ("android_vr", _("أندرويد الواقع الافتراضي (Android VR)")),
+        ("web_creator", _("استوديو الويب (Web Creator)")),
+        ("web_safari", _("سفاري الويب (Web Safari)")),
+    ]
+
+
+def get_configured_player_clients(client_override=None):
+    """
+    Returns the player client list to pass to yt-dlp extractor_args.
+    If 'default' or not set, returns ['android', 'web'].
+    Otherwise returns [client_name] or the provided client_override.
+    """
+    if client_override is not None:
+        if isinstance(client_override, (list, tuple)):
+            return list(client_override)
+        if isinstance(client_override, str) and client_override != "default":
+            return [client_override]
+
+    selected_client = config_get("player_client")
+    if not selected_client or selected_client == "default":
+        return ["android", "web"]
+    return [str(selected_client)]
+
+
+def get_ydl_instance(client=None, cookies_path=None):
     """Returns a fresh YoutubeDL instance for thread-safe extraction."""
     if not YoutubeDL:
         return None
+    clients = get_configured_player_clients(client)
     opts = PLAYER_OPTS.copy()
     opts["extractor_args"] = {
-        "youtube": {"player_client": client, "js_variant": "main"}
+        "youtube": {"player_client": clients, "js_variant": "main"}
     }
     if cookies_path and os.path.exists(cookies_path):
         opts["cookiefile"] = cookies_path
@@ -1446,10 +1504,9 @@ def get_playable_stream(url, audio_mode=False):
                     entry = ydl.extract_info(url, download=False)
                 except Exception as e:
                     if "format" in str(e).lower():
-                        with YoutubeDL(
+                        retry_opts = PLAYER_OPTS.copy()
+                        retry_opts.update(
                             {
-                                "quiet": True,
-                                "no_warnings": True,
                                 "extractor_args": {
                                     "youtube": {
                                         "player_client": client,
@@ -1459,20 +1516,23 @@ def get_playable_stream(url, audio_mode=False):
                                 "js_runtimes": {"deno": {}},
                                 "socket_timeout": 5,
                             }
-                        ) as ydl_retry:
+                        )
+                        if cookies_path and os.path.exists(cookies_path):
+                            retry_opts["cookiefile"] = cookies_path
+                        with YoutubeDL(retry_opts) as ydl_retry:
                             entry = ydl_retry.extract_info(url, download=False)
                     else:
                         raise
 
             _info_cache.set(url, entry)
             return _stream_from_info(entry, audio_mode=audio_mode)
-        except Exception as e:
-            logger.debug(f"Extraction failed for client {client}: {e}")
+        except Exception:
+            logger.exception("Extraction failed for client %s", client)
             return None
 
     try:
-        # Try android (VR) only
-        result = _extract_task(["android_vr"])
+        clients = get_configured_player_clients()
+        result = _extract_task(clients)
 
         if result:
             _stream_cache.set(cache_key, result)
@@ -1499,10 +1559,11 @@ def get_media_info(url):
             with get_ydl_instance(client, cookies_path) as ydl:
                 return ydl.extract_info(url, download=False)
         except Exception:
+            logger.exception("get_media_info extraction failed for client %s", client)
             return None
 
-    # Try android (VR) only
-    info = _extract_info_task(["android_vr"])
+    clients = get_configured_player_clients()
+    info = _extract_info_task(clients)
 
     if info:
         _info_cache.set(url, info)
