@@ -1,5 +1,5 @@
 {
   "imports": {
-    "youtubei.js": "npm:youtubei.js@17.2.0"
+    "youtubei.js": "npm:youtubei.js@18.0.0"
   }
 }
