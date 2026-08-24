@@ -89,7 +89,7 @@ async def test_scraper_extracts_stream_without_skipping(monkeypatch):
     import asyncio
 
     task = asyncio.create_task(scraper._worker())
-    await asyncio.sleep(0.1)
+    await asyncio.wait_for(scraper.queue.join(), timeout=5.0)
     task.cancel()
     try:
         await task
