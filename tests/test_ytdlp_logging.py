@@ -80,6 +80,7 @@ async def test_scraper_extracts_stream_without_skipping(monkeypatch):
         extracted.append((url, audio_mode))
         return "https://stream.url/audio.m4a"
 
+    monkeypatch.setattr(utils, "YoutubeDL", object())
     monkeypatch.setattr(utils, "get_playable_stream", fake_get_playable_stream)
 
     scraper = Scraper(num_workers=1)
