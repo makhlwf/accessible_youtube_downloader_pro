@@ -30,7 +30,7 @@ jobs:
     if: github.event_name != 'release' || !github.event.release.prerelease
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Resolve Release Tag and Version
         id: resolve
