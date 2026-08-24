@@ -1,0 +1,99 @@
+name: Publish to WinGet
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Release Tag to publish (e.g. v4.2.0). Leave blank to use the latest published stable release.'
+        required: false
+        type: string
+      package_id:
+        description: 'WinGet Package Identifier'
+        required: false
+        default: 'makhlwf.HexPlayer'
+        type: string
+      version:
+        description: 'Override version number (leave blank to derive from release tag).'
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  publish-winget:
+    name: Submit Manifest to WinGet
+    runs-on: ubuntu-latest
+    # Skip beta / pre-releases when triggered automatically by a release event
+    if: github.event_name != 'release' || !github.event.release.prerelease
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Resolve Release Tag and Version
+        id: resolve
+        env:
+          GH_TOKEN: ${{ secrets.WINGET_TOKEN }}
+          INPUT_TAG: ${{ github.event.inputs.release_tag }}
+          INPUT_VERSION: ${{ github.event.inputs.version }}
+          EVENT_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          set -euo pipefail
+          
+          # 1. Determine release tag
+          if [ -n "$INPUT_TAG" ]; then
+            TAG="$INPUT_TAG"
+          elif [ -n "$EVENT_TAG" ]; then
+            TAG="$EVENT_TAG"
+          else
+            echo "Fetching latest stable release tag via GitHub CLI..."
+            TAG=$(gh release list --repo "${{ github.repository }}" --exclude-drafts --exclude-pre-releases --limit 1 --json tagName -q '.[0].tagName')
+          fi
+
+          if [ -z "$TAG" ] || [ "$TAG" = "null" ]; then
+            echo "::error::Could not determine a valid release tag to publish."
+            exit 1
+          fi
+
+          # 2. Determine version (strip leading 'v' if present)
+          if [ -n "$INPUT_VERSION" ]; then
+            VER="$INPUT_VERSION"
+          else
+            VER="${TAG#v}"
+          fi
+
+          echo "Target Release Tag: $TAG"
+          echo "Target Version: $VER"
+
+          echo "release_tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=$VER" >> "$GITHUB_OUTPUT"
+
+      - name: Sync WinGet Fork with Upstream
+        env:
+          GH_TOKEN: ${{ secrets.WINGET_TOKEN }}
+        run: |
+          echo "Syncing makhlwf/winget-pkgs with upstream master..."
+          gh repo sync makhlwf/winget-pkgs -b master || echo "Notice: Fork sync failed or already up to date; continuing..."
+
+      - name: Publish to Windows Package Manager
+        id: releaser
+        uses: vedantmgoyal9/winget-releaser@v2
+        with:
+          identifier: ${{ github.event.inputs.package_id || 'makhlwf.HexPlayer' }}
+          version: ${{ steps.resolve.outputs.version }}
+          release-tag: ${{ steps.resolve.outputs.release_tag }}
+          installers-regex: 'HexPlayer\.exe$'
+          token: ${{ secrets.WINGET_TOKEN }}
+          fork-user: makhlwf
+
+      - name: Output Job Summary
+        if: always()
+        run: |
+          echo "### WinGet Submission Summary" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Package Identifier**: \`${{ github.event.inputs.package_id || 'makhlwf.HexPlayer' }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Published Version**: \`${{ steps.resolve.outputs.version }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Release Tag**: \`${{ steps.resolve.outputs.release_tag }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Status**: ${{ job.status }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Check PRs**: [microsoft/winget-pkgs Pull Requests](https://github.com/microsoft/winget-pkgs/pulls?q=is%3Apr+author%3Amakhlwf)" >> "$GITHUB_STEP_SUMMARY"
