@@ -37,7 +37,7 @@
 
 HexPlayer is the current continuation of Accessible YouTube Downloader Pro. It is designed for blind and visually impaired Windows users who want a screen-reader friendly way to use YouTube without relying on the YouTube web interface. HexPlayer works with all Windows screen readers (NVDA, JAWS, Narrator, System Access, etc.) and Windows speech engines via [Prism](https://github.com/ethindp/prism).
 
-The current application version is **4.2.0**. The app is intended for modern 64-bit Windows systems, especially Windows 10 and Windows 11.
+The current application version is **4.2.5**. The app is intended for modern 64-bit Windows systems, especially Windows 10 and Windows 11.
 
 ---
 
