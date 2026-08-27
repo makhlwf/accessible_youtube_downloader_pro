@@ -1,5 +1,5 @@
 {
-  "version": "4.2.0",
-  "url": "https://github.com/makhlwf/accessible_youtube_downloader_pro/releases/download/v4.2.0/HexPlayer.exe",
-  "whats_new": "The recent issues with the YouTube client have been resolved. You can now select the client for yt-dlp via the settings. "
+  "version": "4.2.5",
+  "url": "https://github.com/makhlwf/accessible_youtube_downloader_pro/releases/download/v4.2.5/HexPlayer.exe",
+  "whats_new": "App size reduced from 92 MB to 76 MB. Added debug mode: launch with -d or --debug to open a debug terminal for investigating issues like video playback failures."
 }
