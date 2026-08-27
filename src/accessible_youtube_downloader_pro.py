@@ -1,3 +1,4 @@
+import ctypes
 import json
 import os
 import socket
@@ -45,18 +46,71 @@ from youtube_browser.scraper import Scraper
 from youtube_browser.search_handler import SimpleResult
 
 
-def setup_logging():
+def is_debug_invocation(argv=None):
+    if argv is None:
+        argv = sys.argv
+    return any(arg in ("-d", "--debug") for arg in argv[1:])
+
+
+def get_launch_url(argv):
+    for arg in argv[1:]:
+        if arg.startswith("-"):
+            continue
+        url = utils.extract_launch_youtube_url(arg)
+        if url:
+            return url
+    return ""
+
+
+def enable_console_output():
+    if sys.platform != "win32":
+        return True
+
+    try:
+        kernel32 = ctypes.windll.kernel32
+        ATTACH_PARENT_PROCESS = -1
+        if not kernel32.AttachConsole(ATTACH_PARENT_PROCESS):
+            kernel32.AllocConsole()
+
+        try:
+            sys.stdout = open(  # noqa: SIM115
+                "CONOUT$", "w", encoding="utf-8", errors="replace", buffering=1
+            )
+        except Exception:
+            pass
+        try:
+            sys.stderr = open(  # noqa: SIM115
+                "CONOUT$", "w", encoding="utf-8", errors="replace", buffering=1
+            )
+        except Exception:
+            pass
+        try:
+            sys.stdin = open("CONIN$", "r", encoding="utf-8", errors="replace")  # noqa: SIM115
+        except Exception:
+            pass
+        return True
+    except Exception:
+        return False
+
+
+def setup_logging(argv=None):
     os.makedirs(paths.settings_path, exist_ok=True)
     root_logger = logging.getLogger()
     for h in list(root_logger.handlers):
         root_logger.removeHandler(h)
 
-    is_debug = False
+    is_debug_cli = is_debug_invocation(argv)
+    is_debug_config = False
     try:
         settings_handler.config_initialization()
-        is_debug = bool(settings_handler.config_get("debug"))
+        is_debug_config = bool(settings_handler.config_get("debug"))
     except Exception:
         pass
+
+    is_debug = is_debug_cli or is_debug_config
+
+    if is_debug_cli:
+        enable_console_output()
 
     root_logger.setLevel(logging.DEBUG if is_debug else logging.INFO)
     formatter = logging.Formatter(
@@ -75,21 +129,17 @@ def setup_logging():
     except Exception:
         pass
 
+    if is_debug:
+        if is_debug_cli:
+            root_logger.debug("Debug logging initialized (terminal output enabled)")
+        else:
+            root_logger.debug("Debug logging initialized")
+
 
 setup_logging()
 logger = logging.getLogger(__name__)
 IPC_HOST = "127.0.0.1"
 IPC_PORT = 57280
-
-
-def get_launch_url(argv):
-    for arg in argv[1:]:
-        if arg.startswith("--"):
-            continue
-        url = utils.extract_launch_youtube_url(arg)
-        if url:
-            return url
-    return ""
 
 
 def send_ipc_message(action, url=""):
