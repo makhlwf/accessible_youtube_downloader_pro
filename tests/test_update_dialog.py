@@ -122,3 +122,23 @@ def test_update_dialog_on_open_browser(monkeypatch):
     assert dialog.download is False
     dialog.cleanupDownload.assert_called_once()
     dialog.EndModal.assert_called_once_with(update_dialog.wx.ID_CANCEL)
+
+
+def test_inno_setup_run_section_launches_on_silent_install():
+    from pathlib import Path
+
+    inno_path = (
+        Path(__file__).resolve().parent.parent / "packaging" / "windows" / "inno.iss"
+    )
+    assert inno_path.exists(), f"{inno_path} does not exist"
+
+    content = inno_path.read_text(encoding="utf-8")
+    run_section = content.split("[Run]", 1)[1].split("[", 1)[0]
+
+    # Verify that the main app launch entry exists in [Run]
+    assert 'Filename: "{app}\\{#MyAppExeName}"' in run_section
+    # Verify that skipifsilent is NOT present so the app runs after silent update installation
+    assert "skipifsilent" not in run_section
+    # Verify that postinstall and nowait flags are present
+    assert "nowait" in run_section
+    assert "postinstall" in run_section
