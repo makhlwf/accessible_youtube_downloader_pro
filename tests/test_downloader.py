@@ -72,7 +72,18 @@ def test_base_options_use_audio_fallback_for_mp3_conversion(monkeypatch):
     options = downloader._base_options()
 
     assert options["format"] == "bestaudio/best"
-    assert options["postprocessors"][0]["preferredcodec"] == "mp3"
+
+    # First PP is FFmpegMetadata, second is FFmpegExtractAudio
+    pp_extract = next(
+        (
+            pp
+            for pp in options["postprocessors"]
+            if pp.get("key") == "FFmpegExtractAudio"
+        ),
+        None,
+    )
+    assert pp_extract is not None
+    assert pp_extract["preferredcodec"] == "mp3"
 
 
 def test_download_prepares_runtime_path_and_output_directory(monkeypatch):
@@ -280,3 +291,120 @@ def test_diagnose_download_error_generic():
 
     msg = diagnose_download_error("Some unexpected error")
     assert "حدث خطأ أثناء التنزيل: Some unexpected error" in msg
+
+
+def test_metadata_postprocessor_is_attached():
+    from download_handler.downloader import Downloader
+
+    downloader = Downloader("url", ".", "best", None, None)
+    opts = downloader._base_options()
+    postprocessors = opts.get("postprocessors", [])
+    metadata_pp = next(
+        (pp for pp in postprocessors if pp.get("key") == "FFmpegMetadata"), None
+    )
+    assert metadata_pp is not None
+    assert metadata_pp.get("add_metadata") is True
+    assert metadata_pp.get("add_chapters") is True
+    assert metadata_pp.get("add_infojson") == "if_exists"
+
+
+def test_audio_postprocessor_wav_flac():
+    from download_handler.downloader import (
+        FORMAT_AUDIO_FLAC,
+        FORMAT_AUDIO_WAV,
+        Downloader,
+    )
+
+    dl_wav = Downloader("url", ".", "best", None, None, audio_format=FORMAT_AUDIO_WAV)
+    opts_wav = dl_wav._base_options()
+    pp_wav = next(
+        (
+            pp
+            for pp in opts_wav.get("postprocessors", [])
+            if pp.get("key") == "FFmpegExtractAudio"
+        ),
+        None,
+    )
+    assert pp_wav is not None
+    assert pp_wav.get("preferredcodec") == FORMAT_AUDIO_WAV
+
+    dl_flac = Downloader("url", ".", "best", None, None, audio_format=FORMAT_AUDIO_FLAC)
+    opts_flac = dl_flac._base_options()
+    pp_flac = next(
+        (
+            pp
+            for pp in opts_flac.get("postprocessors", [])
+            if pp.get("key") == "FFmpegExtractAudio"
+        ),
+        None,
+    )
+    assert pp_flac is not None
+    assert pp_flac.get("preferredcodec") == FORMAT_AUDIO_FLAC
+
+
+def test_mkv_video_options():
+    from download_handler.downloader import FORMAT_VIDEO_MKV, Downloader
+
+    dl = Downloader("url", ".", "best", None, None, video_format=FORMAT_VIDEO_MKV)
+    opts = dl._base_options()
+    assert opts.get("merge_output_format") == FORMAT_VIDEO_MKV
+    assert opts.get("remux_video") == FORMAT_VIDEO_MKV
+
+
+def test_start_media_download(monkeypatch):
+    from download_handler.downloader import start_media_download
+
+    calls = []
+    monkeypatch.setattr(
+        "download_handler.downloader.downloadAction",
+        lambda *args, **kwargs: calls.append((args, kwargs)) or True,
+    )
+    monkeypatch.setattr(
+        "download_handler.downloader.config_get",
+        lambda key: "C:\\default_path" if key == "path" else "",
+    )
+    monkeypatch.setattr(
+        "utils.sanitize_filename", lambda title: title.replace(" ", "_")
+    )
+
+    class MockDownloadProgress:
+        def __init__(self, parent, title):
+            self.gaugeProgress = "mock_gauge"
+            self.textProgress = "mock_status_label"
+
+    monkeypatch.setattr("gui.download_progress.DownloadProgress", MockDownloadProgress)
+
+    class FakeParent:
+        pass
+
+    # 1=mkv, quality=720
+    res = start_media_download("url", 1, FakeParent(), "path", "title", "720", False)
+    assert res is True
+    assert len(calls) == 1
+    _args, kwargs = calls[0]
+    assert kwargs.get("video_format") == "mkv"
+    assert "bestvideo[height<=720]" in _args[3]  # downloading_format
+
+    calls.clear()
+
+    # string format "wav", path=None
+    res = start_media_download(
+        "url", "wav", FakeParent(), None, "test title", None, False
+    )
+    assert res is True
+    assert len(calls) == 1
+    _args, kwargs = calls[0]
+    assert kwargs.get("audio_format") == "wav"
+    assert _args[1] == "C:\\default_path"  # default path used
+
+    calls.clear()
+
+    # string format "0", folder=True
+    res = start_media_download(
+        "url", "0", FakeParent(), "C:\\downloads", "test folder", None, True
+    )
+    assert res is True
+    assert len(calls) == 1
+    _args, kwargs = calls[0]
+    assert kwargs.get("video_format") == "mp4"
+    assert "test_folder" in _args[1]  # path joined with sanitized title

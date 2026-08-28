@@ -15,6 +15,12 @@ from settings_handler import config_get
 logger = logging.getLogger(__name__)
 
 ProgressChangedEvent, EVT_PROGRESS_CHANGED = NewEvent()
+FORMAT_VIDEO_MP4 = "mp4"
+FORMAT_VIDEO_MKV = "mkv"
+FORMAT_AUDIO_M4A = "m4a"
+FORMAT_AUDIO_MP3 = "mp3"
+FORMAT_AUDIO_WAV = "wav"
+FORMAT_AUDIO_FLAC = "flac"
 
 
 class DownloadCancelled(Exception):
@@ -58,8 +64,8 @@ def _fallback_format_for_kbps(kbps):
     return AUDIO_KBPS_FORMAT_MAP[AUDIO_KBPS_SORTED[0]]
 
 
-def get_audio_download_format(convert=False, kbps=None):
-    if convert:
+def get_audio_download_format(convert=False, kbps=None, audio_format=None):
+    if convert or audio_format in ("mp3", "wav", "flac"):
         return "bestaudio/best"
     if kbps is None:
         kbps = int(config_get("conversion"))
@@ -69,16 +75,14 @@ def get_audio_download_format(convert=False, kbps=None):
     return _fallback_format_for_kbps(kbps)
 
 
-def get_video_download_format(quality=None):
+def get_video_download_format(quality=None, container="mp4"):
     if quality:
         return (
-            f"bestvideo[height<={quality}][ext=mp4]+bestaudio[ext=m4a]/"
+            f"bestvideo[height<={quality}][ext={container}]+bestaudio[ext=m4a]/"
             f"bestvideo[height<={quality}]+bestaudio/"
-            f"best[height<={quality}][ext=mp4]/best[height<={quality}]/best"
+            f"best[height<={quality}][ext={container}]/best[height<={quality}]/best"
         )
-    return (
-        "bestvideo[ext=mp4]+bestaudio[ext=m4a]/bestvideo+bestaudio/best[ext=mp4]/best"
-    )
+    return f"bestvideo[ext={container}]+bestaudio[ext=m4a]/bestvideo+bestaudio/best[ext={container}]/best"
 
 
 class Downloader:
@@ -93,6 +97,8 @@ class Downloader:
         folder=False,
         cancel_checker=None,
         kbps=None,
+        audio_format=None,
+        video_format=None,
     ):
         # initializing class properties
         self.url = url
@@ -107,6 +113,8 @@ class Downloader:
         self.last_file = None
         self.started_at = None
         self.kbps = kbps
+        self.audio_format = audio_format
+        self.video_format = video_format
 
     def get_quality(self):
         qualities = {0: "96", 1: "128", 2: "192", 3: "320"}
@@ -238,23 +246,62 @@ class Downloader:
         if use_cookies and cookies_path and os.path.exists(cookies_path):
             ydl_opts["cookiefile"] = cookies_path
 
-        if self.convert:
-            ydl_opts["postprocessors"] = [
-                {
-                    "key": "FFmpegExtractAudio",
-                    "preferredcodec": "mp3",
-                    "preferredquality": self.get_quality(),
-                }
-            ]
+        if not ydl_opts.get("postprocessors"):
+            ydl_opts["postprocessors"] = []
+
+        ydl_opts["postprocessors"].append(
+            {
+                "key": "FFmpegMetadata",
+                "add_metadata": True,
+                "add_chapters": True,
+                "add_infojson": "if_exists",
+            }
+        )
+
+        if self.convert or self.audio_format in (
+            FORMAT_AUDIO_MP3,
+            FORMAT_AUDIO_WAV,
+            FORMAT_AUDIO_FLAC,
+        ):
+            pp = {
+                "key": "FFmpegExtractAudio",
+                "preferredcodec": self.audio_format or FORMAT_AUDIO_MP3,
+            }
+            if pp["preferredcodec"] == FORMAT_AUDIO_MP3:
+                pp["preferredquality"] = self.get_quality()
+            ydl_opts["postprocessors"].append(pp)
+
+        if self.video_format == FORMAT_VIDEO_MKV:
+            ydl_opts["merge_output_format"] = FORMAT_VIDEO_MKV
+            ydl_opts["remux_video"] = FORMAT_VIDEO_MKV
+        elif self.video_format == FORMAT_VIDEO_MP4:
+            ydl_opts["merge_output_format"] = FORMAT_VIDEO_MP4
+
         return ydl_opts
 
     def _effective_format(self):
-        if self.convert:
-            return get_audio_download_format(convert=True)
-        if self.downloading_format == "bestaudio[ext=m4a]":
-            return get_audio_download_format(kbps=self.kbps)
-        if self.downloading_format == "bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4":
-            return get_video_download_format()
+        if self.convert or self.audio_format in (
+            FORMAT_AUDIO_MP3,
+            FORMAT_AUDIO_WAV,
+            FORMAT_AUDIO_FLAC,
+        ):
+            return get_audio_download_format(
+                convert=True, audio_format=self.audio_format
+            )
+        if (
+            self.downloading_format == "bestaudio[ext=m4a]"
+            or self.audio_format == FORMAT_AUDIO_M4A
+        ):
+            return get_audio_download_format(
+                kbps=self.kbps, audio_format=self.audio_format
+            )
+        if (
+            self.downloading_format == "bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4"
+            or self.video_format
+        ):
+            return get_video_download_format(
+                container=self.video_format or FORMAT_VIDEO_MP4
+            )
         return self.downloading_format
 
     def _is_cookie_error(self, error):
@@ -363,6 +410,8 @@ def downloadAction(
     convert=False,
     folder=False,
     kbps=None,
+    audio_format=None,
+    video_format=None,
 ):
     if not utils.check_yt_dlp(wx.GetApp().GetTopWindow()):
         dlg.Destroy()
@@ -378,6 +427,8 @@ def downloadAction(
         folder=folder,
         cancel_checker=dlg.is_cancelled if hasattr(dlg, "is_cancelled") else None,
         kbps=kbps,
+        audio_format=audio_format,
+        video_format=video_format,
     )
     if hasattr(dlg, "set_cancel_callback"):
         dlg.set_cancel_callback(downloader.cancel)
@@ -448,3 +499,54 @@ def downloadAction(
     thread.daemon = True
     thread.start()
     return True
+
+
+def start_media_download(
+    url, format_type, parent, path=None, title=None, quality=None, folder=False
+):
+    from gui.download_progress import DownloadProgress
+
+    dlg = DownloadProgress(parent, title or "")
+
+    if path is None:
+        path = config_get("path")
+
+    if folder and title:
+        path = os.path.join(path, utils.sanitize_filename(title))
+
+    audio_format = None
+    video_format = None
+    convert = False
+
+    fmt = str(format_type).lower()
+    if fmt in ("0", "mp4"):
+        video_format = FORMAT_VIDEO_MP4
+    elif fmt in ("1", "mkv"):
+        video_format = FORMAT_VIDEO_MKV
+    elif fmt in ("2", "m4a"):
+        audio_format = FORMAT_AUDIO_M4A
+    elif fmt in ("3", "mp3"):
+        audio_format = FORMAT_AUDIO_MP3
+        convert = True
+    elif fmt in ("4", "wav"):
+        audio_format = FORMAT_AUDIO_WAV
+    elif fmt in ("5", "flac"):
+        audio_format = FORMAT_AUDIO_FLAC
+
+    if video_format and quality:
+        downloading_format = get_video_download_format(quality, container=video_format)
+    else:
+        downloading_format = "best"
+
+    return downloadAction(
+        url,
+        path,
+        dlg,
+        downloading_format,
+        dlg.gaugeProgress,
+        dlg.textProgress,
+        convert=convert,
+        folder=folder,
+        audio_format=audio_format,
+        video_format=video_format,
+    )
