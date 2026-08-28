@@ -5,11 +5,6 @@ import wx
 
 import application
 import utils
-from download_handler.downloader import (
-    downloadAction,
-    get_audio_download_format,
-    get_video_download_format,
-)
 from gui.activity_dialog import LoadingDialog
 from gui.channel_dialog import ChannelDialog
 from gui.download_progress import DownloadProgress
@@ -105,7 +100,7 @@ class PlaylistDialog(wx.Dialog):
 
     def _download_media(
         self,
-        option,
+        format_type,
         url,
         dlg,
         download_type="video",
@@ -113,25 +108,17 @@ class PlaylistDialog(wx.Dialog):
         title=None,
         quality=None,
     ):
-        if path is None:
-            path = config_get("path")
-        if option == 0:
-            format = get_video_download_format(quality)
-        else:
-            format = get_audio_download_format(convert=option == 2)
-        convert = option == 2
+        from download_handler.downloader import start_media_download
+
         folder = download_type != "video"
-        if folder and title:
-            path = os.path.join(path, utils.sanitize_filename(title))
-        downloadAction(
+        start_media_download(
             url,
-            path,
-            dlg,
-            format,
-            dlg.gaugeProgress,
-            dlg.textProgress,
-            convert,
-            folder,
+            format_type,
+            self,
+            path=path,
+            title=title,
+            quality=quality,
+            folder=folder,
         )
 
     def contextSetup(self):
@@ -140,12 +127,20 @@ class PlaylistDialog(wx.Dialog):
         self.videoPlayItemId = videoPlayItem.GetId()
         audioPlayItem = self.contextMenu.Append(-1, _("التشغيل كمقطع صوتي"))
         self.audioPlayItemId = audioPlayItem.GetId()
+
         self.downloadMenu = wx.Menu()
-        videoItem = self.downloadMenu.Append(-1, _("فيديو"))
-        audioMenu = wx.Menu()
-        m4aItem = audioMenu.Append(-1, "m4a")
-        mp3Item = audioMenu.Append(-1, "mp3")
-        self.downloadMenu.AppendSubMenu(audioMenu, _("صوت"))
+        videoSubMenu = wx.Menu()
+        self.mp4ItemId = videoSubMenu.Append(-1, "mp4").GetId()
+        self.mkvItemId = videoSubMenu.Append(-1, "mkv").GetId()
+        self.downloadMenu.AppendSubMenu(videoSubMenu, _("فيديو"))
+
+        audioSubMenu = wx.Menu()
+        self.m4aItemId = audioSubMenu.Append(-1, "m4a").GetId()
+        self.mp3ItemId = audioSubMenu.Append(-1, "mp3").GetId()
+        self.wavItemId = audioSubMenu.Append(-1, "wav").GetId()
+        self.flacItemId = audioSubMenu.Append(-1, "flac").GetId()
+        self.downloadMenu.AppendSubMenu(audioSubMenu, _("صوت"))
+
         self.downloadId = self.contextMenu.AppendSubMenu(
             self.downloadMenu, _("تنزيل")
         ).GetId()
@@ -177,9 +172,24 @@ class PlaylistDialog(wx.Dialog):
         self.videosBox.Bind(
             wx.EVT_MENU, lambda e: self.playAudio(), id=self.audioPlayItemId
         )
-        self.videosBox.Bind(wx.EVT_MENU, self.onVideoDownload, videoItem)
-        self.Bind(wx.EVT_MENU, self.onM4aDownload, m4aItem)
-        self.Bind(wx.EVT_MENU, self.onMp3Download, mp3Item)
+        self.Bind(
+            wx.EVT_MENU, lambda e: self.onVideoDownload(e, "mp4"), id=self.mp4ItemId
+        )
+        self.Bind(
+            wx.EVT_MENU, lambda e: self.onVideoDownload(e, "mkv"), id=self.mkvItemId
+        )
+        self.Bind(
+            wx.EVT_MENU, lambda e: self.onAudioDownload(e, "m4a"), id=self.m4aItemId
+        )
+        self.Bind(
+            wx.EVT_MENU, lambda e: self.onAudioDownload(e, "mp3"), id=self.mp3ItemId
+        )
+        self.Bind(
+            wx.EVT_MENU, lambda e: self.onAudioDownload(e, "wav"), id=self.wavItemId
+        )
+        self.Bind(
+            wx.EVT_MENU, lambda e: self.onAudioDownload(e, "flac"), id=self.flacItemId
+        )
         self.videosBox.Bind(
             wx.EVT_MENU, lambda e: self.directDownload(), id=self.directDownloadId
         )
@@ -258,7 +268,7 @@ class PlaylistDialog(wx.Dialog):
         gui.path = os.path.join(gui.path, utils.sanitize_filename(self.title))
         self.Hide()
 
-    def onVideoDownload(self, event):
+    def onVideoDownload(self, event, format_type):
         n = self.videosBox.Selection
         video_id = self.result.get_id(n)
         url = f"https://www.youtube.com/watch?v={video_id}"
@@ -281,7 +291,7 @@ class PlaylistDialog(wx.Dialog):
                 return
         dlg = DownloadProgress(self.Parent, title)
         self._download_media(
-            0,
+            format_type,
             url,
             dlg,
             "video",
@@ -303,28 +313,14 @@ class PlaylistDialog(wx.Dialog):
             os.path.join(config_get("path"), utils.sanitize_filename(self.title)),
         )
 
-    def onM4aDownload(self, event):
+    def onAudioDownload(self, event, format_type):
         n = self.videosBox.Selection
         video_id = self.result.get_id(n)
         url = f"https://www.youtube.com/watch?v={video_id}"
         title = self.result.get_title(n)
         dlg = DownloadProgress(wx.GetApp().GetTopWindow(), title)
         self._download_media(
-            1,
-            url,
-            dlg,
-            "video",
-            os.path.join(config_get("path"), utils.sanitize_filename(self.title)),
-        )
-
-    def onMp3Download(self, event):
-        n = self.videosBox.Selection
-        video_id = self.result.get_id(n)
-        url = f"https://www.youtube.com/watch?v={video_id}"
-        title = self.result.get_title(n)
-        dlg = DownloadProgress(wx.GetApp().GetTopWindow(), title)
-        self._download_media(
-            2,
+            format_type,
             url,
             dlg,
             "video",
@@ -354,14 +350,25 @@ class PlaylistDialog(wx.Dialog):
 
     def onDownload(self, event):
         downloadMenu = wx.Menu()
-        videoItem = downloadMenu.Append(-1, _("فيديو"))
+        videoSubMenu = wx.Menu()
+        mp4Id = videoSubMenu.Append(-1, "mp4").GetId()
+        mkvId = videoSubMenu.Append(-1, "mkv").GetId()
+        downloadMenu.AppendSubMenu(videoSubMenu, _("فيديو"))
+
         audioMenu = wx.Menu()
-        m4aItem = audioMenu.Append(-1, "m4a")
-        mp3Item = audioMenu.Append(-1, "mp3")
+        m4aId = audioMenu.Append(-1, "m4a").GetId()
+        mp3Id = audioMenu.Append(-1, "mp3").GetId()
+        wavId = audioMenu.Append(-1, "wav").GetId()
+        flacId = audioMenu.Append(-1, "flac").GetId()
         downloadMenu.AppendSubMenu(audioMenu, _("صوت"))
-        self.Bind(wx.EVT_MENU, self.onVideoDownload, videoItem)
-        self.Bind(wx.EVT_MENU, self.onM4aDownload, m4aItem)
-        self.Bind(wx.EVT_MENU, self.onMp3Download, mp3Item)
+
+        self.Bind(wx.EVT_MENU, lambda e: self.onVideoDownload(e, "mp4"), id=mp4Id)
+        self.Bind(wx.EVT_MENU, lambda e: self.onVideoDownload(e, "mkv"), id=mkvId)
+        self.Bind(wx.EVT_MENU, lambda e: self.onAudioDownload(e, "m4a"), id=m4aId)
+        self.Bind(wx.EVT_MENU, lambda e: self.onAudioDownload(e, "mp3"), id=mp3Id)
+        self.Bind(wx.EVT_MENU, lambda e: self.onAudioDownload(e, "wav"), id=wavId)
+        self.Bind(wx.EVT_MENU, lambda e: self.onAudioDownload(e, "flac"), id=flacId)
+
         self.PopupMenu(downloadMenu)
         self.videosBox.SetFocus()
 

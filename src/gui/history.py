@@ -5,17 +5,11 @@ import wx
 
 import utils
 from database import Favorite
-from download_handler.downloader import (
-    downloadAction,
-    get_audio_download_format,
-    get_video_download_format,
-)
 from gui.activity_dialog import LoadingDialog
 from gui.download_progress import DownloadProgress
 from gui.quality_selection import QualitySelectionDialog
 from language_handler import _
 from media_player.media_gui import MediaGui
-from settings_handler import config_get
 from speech_client import speak
 from theme_handler import apply_theme
 from youtube_browser.scraper import Scraper
@@ -216,11 +210,18 @@ class HistoryDialog(wx.Frame):
         self.audioPlayItemId = audioPlayItem.GetId()
 
         self.downloadMenu = wx.Menu()
-        videoItem = self.downloadMenu.Append(-1, _("فيديو"))
-        audioMenu = wx.Menu()
-        m4aItem = audioMenu.Append(-1, "m4a")
-        mp3Item = audioMenu.Append(-1, "mp3")
-        self.downloadMenu.AppendSubMenu(audioMenu, _("صوت"))
+        videoSubMenu = wx.Menu()
+        self.mp4ItemId = videoSubMenu.Append(-1, "mp4").GetId()
+        self.mkvItemId = videoSubMenu.Append(-1, "mkv").GetId()
+        self.downloadMenu.AppendSubMenu(videoSubMenu, _("فيديو"))
+
+        audioSubMenu = wx.Menu()
+        self.m4aItemId = audioSubMenu.Append(-1, "m4a").GetId()
+        self.mp3ItemId = audioSubMenu.Append(-1, "mp3").GetId()
+        self.wavItemId = audioSubMenu.Append(-1, "wav").GetId()
+        self.flacItemId = audioSubMenu.Append(-1, "flac").GetId()
+        self.downloadMenu.AppendSubMenu(audioSubMenu, _("صوت"))
+
         self.downloadId = self.contextMenu.AppendSubMenu(
             self.downloadMenu, _("تنزيل")
         ).GetId()
@@ -243,9 +244,24 @@ class HistoryDialog(wx.Frame):
         self.Bind(wx.EVT_MENU, self.onOpenInBrowser, webbrowserItem)
         self.historyList.Bind(wx.EVT_CONTEXT_MENU, lambda event: popup())
 
-        self.Bind(wx.EVT_MENU, self.onVideoDownload, videoItem)
-        self.Bind(wx.EVT_MENU, self.onM4aDownload, m4aItem)
-        self.Bind(wx.EVT_MENU, self.onMp3Download, mp3Item)
+        self.Bind(
+            wx.EVT_MENU, lambda e: self.onVideoDownload(e, "mp4"), id=self.mp4ItemId
+        )
+        self.Bind(
+            wx.EVT_MENU, lambda e: self.onVideoDownload(e, "mkv"), id=self.mkvItemId
+        )
+        self.Bind(
+            wx.EVT_MENU, lambda e: self.onAudioDownload(e, "m4a"), id=self.m4aItemId
+        )
+        self.Bind(
+            wx.EVT_MENU, lambda e: self.onAudioDownload(e, "mp3"), id=self.mp3ItemId
+        )
+        self.Bind(
+            wx.EVT_MENU, lambda e: self.onAudioDownload(e, "wav"), id=self.wavItemId
+        )
+        self.Bind(
+            wx.EVT_MENU, lambda e: self.onAudioDownload(e, "flac"), id=self.flacItemId
+        )
 
     def onOpenInBrowser(self, event):
         selection = self.historyList.GetSelection()
@@ -254,52 +270,49 @@ class HistoryDialog(wx.Frame):
 
     def onDownload(self, event):
         downloadMenu = wx.Menu()
-        videoItem = downloadMenu.Append(-1, _("فيديو"))
+        videoSubMenu = wx.Menu()
+        mp4Id = videoSubMenu.Append(-1, "mp4").GetId()
+        mkvId = videoSubMenu.Append(-1, "mkv").GetId()
+        downloadMenu.AppendSubMenu(videoSubMenu, _("فيديو"))
+
         audioMenu = wx.Menu()
-        m4aItem = audioMenu.Append(-1, "m4a")
-        mp3Item = audioMenu.Append(-1, "mp3")
+        m4aId = audioMenu.Append(-1, "m4a").GetId()
+        mp3Id = audioMenu.Append(-1, "mp3").GetId()
+        wavId = audioMenu.Append(-1, "wav").GetId()
+        flacId = audioMenu.Append(-1, "flac").GetId()
         downloadMenu.AppendSubMenu(audioMenu, _("صوت"))
-        self.Bind(wx.EVT_MENU, self.onVideoDownload, videoItem)
-        self.Bind(wx.EVT_MENU, self.onM4aDownload, m4aItem)
-        self.Bind(wx.EVT_MENU, self.onMp3Download, mp3Item)
+
+        self.Bind(wx.EVT_MENU, lambda e: self.onVideoDownload(e, "mp4"), id=mp4Id)
+        self.Bind(wx.EVT_MENU, lambda e: self.onVideoDownload(e, "mkv"), id=mkvId)
+        self.Bind(wx.EVT_MENU, lambda e: self.onAudioDownload(e, "m4a"), id=m4aId)
+        self.Bind(wx.EVT_MENU, lambda e: self.onAudioDownload(e, "mp3"), id=mp3Id)
+        self.Bind(wx.EVT_MENU, lambda e: self.onAudioDownload(e, "wav"), id=wavId)
+        self.Bind(wx.EVT_MENU, lambda e: self.onAudioDownload(e, "flac"), id=flacId)
         self.PopupMenu(downloadMenu)
 
-    def _download_media(self, option, url, dlg, title, quality=None):
-        if option == 0:
-            format = get_video_download_format(quality)
-        else:
-            format = get_audio_download_format(convert=option == 2)
-        convert = option == 2
-        downloadAction(
+    def _download_media(self, format_type, url, dlg, title, path=None, quality=None):
+        from download_handler.downloader import start_media_download
+
+        start_media_download(
             url,
-            config_get("path"),
-            dlg,
-            format,
-            dlg.gaugeProgress,
-            dlg.textProgress,
-            convert,
-            False,
+            format_type,
+            self,
+            path=path,
+            title=title,
+            quality=quality,
+            folder=False,
         )
 
-    def onM4aDownload(self, event):
+    def onAudioDownload(self, event, format_type):
         selection = self.historyList.GetSelection()
         if selection == wx.NOT_FOUND or not self.history_data:
             return
         url = self.history_data[selection]["url"]
         title = self.history_data[selection]["title"]
         dlg = DownloadProgress(self, title)
-        self._download_media(1, url, dlg, title)
+        self._download_media(format_type, url, dlg, title)
 
-    def onMp3Download(self, event):
-        selection = self.historyList.GetSelection()
-        if selection == wx.NOT_FOUND or not self.history_data:
-            return
-        url = self.history_data[selection]["url"]
-        title = self.history_data[selection]["title"]
-        dlg = DownloadProgress(self, title)
-        self._download_media(2, url, dlg, title)
-
-    def onVideoDownload(self, event):
+    def onVideoDownload(self, event, format_type):
         selection = self.historyList.GetSelection()
         if selection == wx.NOT_FOUND or not self.history_data:
             return
@@ -322,7 +335,7 @@ class HistoryDialog(wx.Frame):
             else:
                 return
         dlg = DownloadProgress(self, title)
-        self._download_media(0, url, dlg, title, quality=quality)
+        self._download_media(format_type, url, dlg, title, quality=quality)
 
     def onCopy(self, event):
         selection = self.historyList.GetSelection()

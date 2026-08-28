@@ -1,15 +1,9 @@
-import os
 import webbrowser
 
 import wx
 
 import application
 from database import Favorite
-from download_handler.downloader import (
-    downloadAction,
-    get_audio_download_format,
-    get_video_download_format,
-)
 from gui.activity_dialog import LoadingDialog
 from gui.channel_dialog import ChannelDialog
 from gui.download_progress import DownloadProgress
@@ -25,7 +19,6 @@ from utils import (
     get_audio_stream,
     get_available_qualities,
     get_video_stream,
-    sanitize_filename,
 )
 
 
@@ -80,7 +73,7 @@ class Favorites(wx.Frame):
 
     def _download_media(
         self,
-        option,
+        format_type,
         url,
         dlg,
         download_type="video",
@@ -88,25 +81,17 @@ class Favorites(wx.Frame):
         title=None,
         quality=None,
     ):
-        if path is None:
-            path = config_get("path")
-        if option == 0:
-            format = get_video_download_format(quality)
-        else:
-            format = get_audio_download_format(convert=option == 2)
-        convert = option == 2
+        from download_handler.downloader import start_media_download
+
         folder = download_type != "video"
-        if folder and title:
-            path = os.path.join(path, sanitize_filename(title))
-        downloadAction(
+        start_media_download(
             url,
-            path,
-            dlg,
-            format,
-            dlg.gaugeProgress,
-            dlg.textProgress,
-            convert,
-            folder,
+            format_type,
+            self,
+            path=path,
+            title=title,
+            quality=quality,
+            folder=folder,
         )
 
     def onDelete(self, event):
@@ -163,12 +148,20 @@ class Favorites(wx.Frame):
         self.videoPlayItemId = videoPlayItem.GetId()
         audioPlayItem = self.contextMenu.Append(-1, _("التشغيل كمقطع صوتي"))
         self.audioPlayItemId = audioPlayItem.GetId()
+
         self.downloadMenu = wx.Menu()
-        videoItem = self.downloadMenu.Append(-1, _("فيديو"))
-        audioMenu = wx.Menu()
-        m4aItem = audioMenu.Append(-1, "m4a")
-        mp3Item = audioMenu.Append(-1, "mp3")
-        self.downloadMenu.AppendSubMenu(audioMenu, _("صوت"))
+        videoSubMenu = wx.Menu()
+        self.mp4ItemId = videoSubMenu.Append(-1, "mp4").GetId()
+        self.mkvItemId = videoSubMenu.Append(-1, "mkv").GetId()
+        self.downloadMenu.AppendSubMenu(videoSubMenu, _("فيديو"))
+
+        audioSubMenu = wx.Menu()
+        self.m4aItemId = audioSubMenu.Append(-1, "m4a").GetId()
+        self.mp3ItemId = audioSubMenu.Append(-1, "mp3").GetId()
+        self.wavItemId = audioSubMenu.Append(-1, "wav").GetId()
+        self.flacItemId = audioSubMenu.Append(-1, "flac").GetId()
+        self.downloadMenu.AppendSubMenu(audioSubMenu, _("صوت"))
+
         self.downloadId = self.contextMenu.AppendSubMenu(
             self.downloadMenu, _("تنزيل")
         ).GetId()
@@ -200,10 +193,25 @@ class Favorites(wx.Frame):
         self.favList.Bind(
             wx.EVT_MENU, lambda e: self.directDownload(), id=self.directDownloadId
         )
-        self.Bind(wx.EVT_MENU, self.onVideoDownload, videoItem)
+        self.Bind(
+            wx.EVT_MENU, lambda e: self.onVideoDownload(e, "mp4"), id=self.mp4ItemId
+        )
+        self.Bind(
+            wx.EVT_MENU, lambda e: self.onVideoDownload(e, "mkv"), id=self.mkvItemId
+        )
+        self.Bind(
+            wx.EVT_MENU, lambda e: self.onAudioDownload(e, "m4a"), id=self.m4aItemId
+        )
+        self.Bind(
+            wx.EVT_MENU, lambda e: self.onAudioDownload(e, "mp3"), id=self.mp3ItemId
+        )
+        self.Bind(
+            wx.EVT_MENU, lambda e: self.onAudioDownload(e, "wav"), id=self.wavItemId
+        )
+        self.Bind(
+            wx.EVT_MENU, lambda e: self.onAudioDownload(e, "flac"), id=self.flacItemId
+        )
 
-        self.Bind(wx.EVT_MENU, self.onM4aDownload, m4aItem)
-        self.Bind(wx.EVT_MENU, self.onMp3Download, mp3Item)
         self.favList.Bind(wx.EVT_MENU, self.onOpenChannel, openChannelInAppItem)
         self.favList.Bind(
             wx.EVT_MENU, self.onOpenChannelInBrowser, openChannelInBrowserItem
@@ -253,24 +261,18 @@ class Favorites(wx.Frame):
         url = self.rows[n]["url"]
         title = self.rows[n]["title"]
         dlg = DownloadProgress(wx.GetApp().GetTopWindow(), title)
-        self._download_media(int(config_get("defaultformat")), url, dlg, "video")
+        self._download_media(
+            int(config_get("defaultformat")), url, dlg, "video", title=title
+        )
 
-    def onM4aDownload(self, event):
-        n = self.favList.Selection
-        url = self.rows[n]["url"]
-        title = self.rows[n]["title"]
-
-        dlg = DownloadProgress(wx.GetApp().GetTopWindow(), title)
-        self._download_media(1, url, dlg, "video")
-
-    def onMp3Download(self, event):
+    def onAudioDownload(self, event, format_type):
         n = self.favList.Selection
         url = self.rows[n]["url"]
         title = self.rows[n]["title"]
         dlg = DownloadProgress(wx.GetApp().GetTopWindow(), title)
-        self._download_media(2, url, dlg, "video")
+        self._download_media(format_type, url, dlg, "video", title=title)
 
-    def onVideoDownload(self, event):
+    def onVideoDownload(self, event, format_type):
         n = self.favList.Selection
         url = self.rows[n]["url"]
         title = self.rows[n]["title"]
@@ -291,18 +293,30 @@ class Favorites(wx.Frame):
             else:
                 return
         dlg = DownloadProgress(wx.GetApp().GetTopWindow(), title)
-        self._download_media(0, url, dlg, "video", quality=quality)
+        self._download_media(
+            format_type, url, dlg, "video", title=title, quality=quality
+        )
 
     def onDownload(self, event):
         downloadMenu = wx.Menu()
-        videoItem = downloadMenu.Append(-1, _("فيديو"))
+        videoSubMenu = wx.Menu()
+        mp4Id = videoSubMenu.Append(-1, "mp4").GetId()
+        mkvId = videoSubMenu.Append(-1, "mkv").GetId()
+        downloadMenu.AppendSubMenu(videoSubMenu, _("فيديو"))
+
         audioMenu = wx.Menu()
-        m4aItem = audioMenu.Append(-1, "m4a")
-        mp3Item = audioMenu.Append(-1, "mp3")
+        m4aId = audioMenu.Append(-1, "m4a").GetId()
+        mp3Id = audioMenu.Append(-1, "mp3").GetId()
+        wavId = audioMenu.Append(-1, "wav").GetId()
+        flacId = audioMenu.Append(-1, "flac").GetId()
         downloadMenu.AppendSubMenu(audioMenu, _("صوت"))
-        self.Bind(wx.EVT_MENU, self.onVideoDownload, videoItem)
-        self.Bind(wx.EVT_MENU, self.onM4aDownload, m4aItem)
-        self.Bind(wx.EVT_MENU, self.onMp3Download, mp3Item)
+
+        self.Bind(wx.EVT_MENU, lambda e: self.onVideoDownload(e, "mp4"), id=mp4Id)
+        self.Bind(wx.EVT_MENU, lambda e: self.onVideoDownload(e, "mkv"), id=mkvId)
+        self.Bind(wx.EVT_MENU, lambda e: self.onAudioDownload(e, "m4a"), id=m4aId)
+        self.Bind(wx.EVT_MENU, lambda e: self.onAudioDownload(e, "mp3"), id=mp3Id)
+        self.Bind(wx.EVT_MENU, lambda e: self.onAudioDownload(e, "wav"), id=wavId)
+        self.Bind(wx.EVT_MENU, lambda e: self.onAudioDownload(e, "flac"), id=flacId)
         self.PopupMenu(downloadMenu)
 
     def onHook(self, event):

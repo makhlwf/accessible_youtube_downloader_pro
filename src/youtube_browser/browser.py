@@ -1,5 +1,4 @@
 import logging
-import os
 import webbrowser
 from threading import Thread
 
@@ -8,11 +7,6 @@ import wx
 import utils
 from async_utils import run_in_async_loop
 from database import Favorite
-from download_handler.downloader import (
-    downloadAction,
-    get_audio_download_format,
-    get_video_download_format,
-)
 from gui.activity_dialog import LoadingDialog
 from gui.channel_dialog import ChannelDialog
 from gui.download_progress import DownloadProgress
@@ -125,10 +119,16 @@ class YoutubeBrowser(wx.Frame):
         ).GetId()
 
         self.downloadMenu = wx.Menu()
-        self.videoDownloadId = self.downloadMenu.Append(-1, _("فيديو")).GetId()
+        videoSubMenu = wx.Menu()
+        self.mp4DownloadId = videoSubMenu.Append(-1, "mp4").GetId()
+        self.mkvDownloadId = videoSubMenu.Append(-1, "mkv").GetId()
+        self.downloadMenu.AppendSubMenu(videoSubMenu, _("فيديو"))
+
         audioSubMenu = wx.Menu()
         self.m4aDownloadId = audioSubMenu.Append(-1, "m4a").GetId()
         self.mp3DownloadId = audioSubMenu.Append(-1, "mp3").GetId()
+        self.wavDownloadId = audioSubMenu.Append(-1, "wav").GetId()
+        self.flacDownloadId = audioSubMenu.Append(-1, "flac").GetId()
         self.downloadMenu.AppendSubMenu(audioSubMenu, _("صوت"))
 
         self.downloadId = self.contextMenu.AppendSubMenu(
@@ -170,9 +170,26 @@ class YoutubeBrowser(wx.Frame):
         self.Bind(wx.EVT_MENU, lambda e: self.playVideo(), id=self.videoPlayItemId)
         self.Bind(wx.EVT_MENU, lambda e: self.playAudio(), id=self.audioPlayItemId)
 
-        self.Bind(wx.EVT_MENU, self.onVideoDownload, id=self.videoDownloadId)
-        self.Bind(wx.EVT_MENU, self.onM4aDownload, id=self.m4aDownloadId)
-        self.Bind(wx.EVT_MENU, self.onMp3Download, id=self.mp3DownloadId)
+        self.Bind(
+            wx.EVT_MENU, lambda e: self.onVideoDownload(e, "mp4"), id=self.mp4DownloadId
+        )
+        self.Bind(
+            wx.EVT_MENU, lambda e: self.onVideoDownload(e, "mkv"), id=self.mkvDownloadId
+        )
+        self.Bind(
+            wx.EVT_MENU, lambda e: self.onAudioDownload(e, "m4a"), id=self.m4aDownloadId
+        )
+        self.Bind(
+            wx.EVT_MENU, lambda e: self.onAudioDownload(e, "mp3"), id=self.mp3DownloadId
+        )
+        self.Bind(
+            wx.EVT_MENU, lambda e: self.onAudioDownload(e, "wav"), id=self.wavDownloadId
+        )
+        self.Bind(
+            wx.EVT_MENU,
+            lambda e: self.onAudioDownload(e, "flac"),
+            id=self.flacDownloadId,
+        )
         self.Bind(wx.EVT_MENU, lambda e: self.directDownload(), id=1003)
         self.Bind(
             wx.EVT_MENU, lambda e: self.directDownload(), id=self.directDownloadId
@@ -200,7 +217,7 @@ class YoutubeBrowser(wx.Frame):
 
     def _download_media(
         self,
-        option,
+        format_type,
         url,
         dlg,
         download_type="video",
@@ -208,25 +225,18 @@ class YoutubeBrowser(wx.Frame):
         title=None,
         quality=None,
     ):
-        if path is None:
-            path = config_get("path")
-        if option == 0:
-            fmt = get_video_download_format(quality)
-        else:
-            fmt = get_audio_download_format(convert=option == 2)
-        convert = option == 2
+        from download_handler.downloader import start_media_download
+
         folder = download_type != "video"
-        if folder and title:
-            path = os.path.join(path, utils.sanitize_filename(title))
-        downloadAction(
+
+        start_media_download(
             url,
-            path,
-            dlg,
-            fmt,
-            dlg.gaugeProgress,
-            dlg.textProgress,
-            convert,
-            folder,
+            format_type,
+            self,
+            path=path,
+            title=title,
+            quality=quality,
+            folder=folder,
         )
 
     def searchAction(self, value=""):
@@ -399,18 +409,27 @@ class YoutubeBrowser(wx.Frame):
 
     def onDownload(self, event):
         downloadMenu = wx.Menu()
-        vId = downloadMenu.Append(-1, _("فيديو")).GetId()
+        videoSubMenu = wx.Menu()
+        mp4Id = videoSubMenu.Append(-1, "mp4").GetId()
+        mkvId = videoSubMenu.Append(-1, "mkv").GetId()
+        downloadMenu.AppendSubMenu(videoSubMenu, _("فيديو"))
+
         audioMenu = wx.Menu()
-        mId = audioMenu.Append(-1, "m4a").GetId()
-        mpId = audioMenu.Append(-1, "mp3").GetId()
+        m4aId = audioMenu.Append(-1, "m4a").GetId()
+        mp3Id = audioMenu.Append(-1, "mp3").GetId()
+        wavId = audioMenu.Append(-1, "wav").GetId()
+        flacId = audioMenu.Append(-1, "flac").GetId()
         downloadMenu.AppendSubMenu(audioMenu, _("صوت"))
 
-        self.Bind(wx.EVT_MENU, self.onVideoDownload, id=vId)
-        self.Bind(wx.EVT_MENU, self.onM4aDownload, id=mId)
-        self.Bind(wx.EVT_MENU, self.onMp3Download, id=mpId)
+        self.Bind(wx.EVT_MENU, lambda e: self.onVideoDownload(e, "mp4"), id=mp4Id)
+        self.Bind(wx.EVT_MENU, lambda e: self.onVideoDownload(e, "mkv"), id=mkvId)
+        self.Bind(wx.EVT_MENU, lambda e: self.onAudioDownload(e, "m4a"), id=m4aId)
+        self.Bind(wx.EVT_MENU, lambda e: self.onAudioDownload(e, "mp3"), id=mp3Id)
+        self.Bind(wx.EVT_MENU, lambda e: self.onAudioDownload(e, "wav"), id=wavId)
+        self.Bind(wx.EVT_MENU, lambda e: self.onAudioDownload(e, "flac"), id=flacId)
         self.PopupMenu(downloadMenu)
 
-    def onM4aDownload(self, event):
+    def onAudioDownload(self, event, format_type):
         n = self.searchResults.Selection
         if n == wx.NOT_FOUND:
             return
@@ -418,19 +437,9 @@ class YoutubeBrowser(wx.Frame):
         title = self.search.get_title(n)
         download_type = self.search.get_type(n)
         dlg = DownloadProgress(wx.GetApp().GetTopWindow(), title)
-        self._download_media(1, url, dlg, download_type, title=title)
+        self._download_media(format_type, url, dlg, download_type, title=title)
 
-    def onMp3Download(self, event):
-        n = self.searchResults.Selection
-        if n == wx.NOT_FOUND:
-            return
-        url = self.search.get_url(n)
-        title = self.search.get_title(n)
-        download_type = self.search.get_type(n)
-        dlg = DownloadProgress(wx.GetApp().GetTopWindow(), title)
-        self._download_media(2, url, dlg, download_type, title=title)
-
-    def onVideoDownload(self, event):
+    def onVideoDownload(self, event, format_type):
         n = self.searchResults.Selection
         if n == wx.NOT_FOUND:
             return
@@ -454,7 +463,9 @@ class YoutubeBrowser(wx.Frame):
             else:
                 return
         dlg = DownloadProgress(wx.GetApp().GetTopWindow(), title)
-        self._download_media(0, url, dlg, download_type, title=title, quality=quality)
+        self._download_media(
+            format_type, url, dlg, download_type, title=title, quality=quality
+        )
 
     def onCopy(self, event):
         n = self.searchResults.Selection

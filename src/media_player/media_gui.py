@@ -8,11 +8,6 @@ import wx
 import application
 import utils
 from database import Continue
-from download_handler.downloader import (
-    downloadAction,
-    get_audio_download_format,
-    get_video_download_format,
-)
 from gui.activity_dialog import LoadingDialog
 from gui.comments_dialog import CommentsDialog
 from gui.custom_controls import CustomButton
@@ -179,11 +174,18 @@ class MediaGui(wx.Frame):
         menuBar = wx.MenuBar()
         trackOptions = wx.Menu()
         downloadMenu = wx.Menu()
-        videoItem = downloadMenu.Append(-1, _("فيديو"))
+        videoSubMenu = wx.Menu()
+        mp4Item = videoSubMenu.Append(-1, "mp4")
+        mkvItem = videoSubMenu.Append(-1, "mkv")
+        downloadMenu.AppendSubMenu(videoSubMenu, _("فيديو"))
+
         audioMenu = wx.Menu()
         m4aItem = audioMenu.Append(-1, "m4a")
         mp3Item = audioMenu.Append(-1, "mp3")
+        wavItem = audioMenu.Append(-1, "wav")
+        flacItem = audioMenu.Append(-1, "flac")
         downloadMenu.AppendSubMenu(audioMenu, _("صوت"))
+
         downloadId = trackOptions.AppendSubMenu(downloadMenu, _("تنزيل")).GetId()
         trackOptions.Enable(downloadId, can_download)
         directDownloadItem = trackOptions.Append(-1, _("التنزيل المباشر...\tctrl+d"))
@@ -238,9 +240,12 @@ class MediaGui(wx.Frame):
         self.SetAcceleratorTable(hotKeys)
         menuBar.Append(trackOptions, _("خيارات المقطع"))
         self.SetMenuBar(menuBar)
-        self.Bind(wx.EVT_MENU, self.onVideoDownload, videoItem)
-        self.Bind(wx.EVT_MENU, self.onM4aDownload, m4aItem)
-        self.Bind(wx.EVT_MENU, self.onMp3Download, mp3Item)
+        self.Bind(wx.EVT_MENU, lambda e: self.onVideoDownload(e, "mp4"), mp4Item)
+        self.Bind(wx.EVT_MENU, lambda e: self.onVideoDownload(e, "mkv"), mkvItem)
+        self.Bind(wx.EVT_MENU, lambda e: self.onAudioDownload(e, "m4a"), m4aItem)
+        self.Bind(wx.EVT_MENU, lambda e: self.onAudioDownload(e, "mp3"), mp3Item)
+        self.Bind(wx.EVT_MENU, lambda e: self.onAudioDownload(e, "wav"), wavItem)
+        self.Bind(wx.EVT_MENU, lambda e: self.onAudioDownload(e, "flac"), flacItem)
         self.Bind(wx.EVT_MENU, self.onDirect, directDownloadItem)
         self.Bind(wx.EVT_MENU, self.onToggleSubtitles, self.subtitlesEnableItem)
         self.Bind(wx.EVT_MENU, self.onDescription, descriptionItem)
@@ -769,24 +774,17 @@ class MediaGui(wx.Frame):
 
         Thread(target=reload, daemon=True).start()
 
-    def _download_media(self, option, url, dlg, path=None, quality=None):
-        if path is None:
-            path = self.path
-        if option == 0:
-            format = get_video_download_format(quality)
-        else:
-            format = get_audio_download_format(convert=option == 2)
-        convert = option == 2
-        folder = False  # Not relevant for single video downloads in MediaGui
-        downloadAction(
+    def _download_media(self, format_type, url, dlg, path=None, quality=None):
+        from download_handler.downloader import start_media_download
+
+        start_media_download(
             url,
-            path,
-            dlg,
-            format,
-            dlg.gaugeProgress,
-            dlg.textProgress,
-            convert,
-            folder,
+            format_type,
+            self,
+            path=path,
+            title=self.title,
+            quality=quality,
+            folder=False,
         )
 
     @has_player
@@ -1634,15 +1632,11 @@ class MediaGui(wx.Frame):
 
         ChannelDialog(self, channel["url"], channel.get("name") or _("قناة"))
 
-    def onM4aDownload(self, event):
+    def onAudioDownload(self, event, format_type):
         dlg = DownloadProgress(wx.GetApp().GetTopWindow(), self.title)
-        self._download_media(1, self.url, dlg, path=self.path)
+        self._download_media(format_type, self.url, dlg, path=self.path)
 
-    def onMp3Download(self, event):
-        dlg = DownloadProgress(wx.GetApp().GetTopWindow(), self.title)
-        self._download_media(2, self.url, dlg, path=self.path)
-
-    def onVideoDownload(self, event):
+    def onVideoDownload(self, event, format_type):
         if not utils.check_yt_dlp(self):
             return
         qualities = LoadingDialog(
@@ -1659,7 +1653,9 @@ class MediaGui(wx.Frame):
             else:
                 return
         dlg = DownloadProgress(wx.GetApp().GetTopWindow(), self.title)
-        self._download_media(0, self.url, dlg, path=self.path, quality=quality)
+        self._download_media(
+            format_type, self.url, dlg, path=self.path, quality=quality
+        )
 
     def onDirect(self, event):
         dlg = DownloadProgress(wx.GetApp().GetTopWindow(), self.title)
