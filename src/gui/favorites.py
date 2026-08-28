@@ -3,6 +3,7 @@ import webbrowser
 import wx
 
 import application
+import utils
 from database import Favorite
 from gui.activity_dialog import LoadingDialog
 from gui.channel_dialog import ChannelDialog
@@ -13,13 +14,6 @@ from media_player.media_gui import MediaGui
 from settings_handler import config_get
 from speech_client import speak
 from theme_handler import apply_theme
-from utils import (
-    check_yt_dlp,
-    copy_to_clipboard,
-    get_audio_stream,
-    get_available_qualities,
-    get_video_stream,
-)
 
 
 class Favorites(wx.Frame):
@@ -114,9 +108,9 @@ class Favorites(wx.Frame):
         n = self.favList.Selection
         url = self.rows[n]["url"]
         title = self.rows[n]["title"]
-        if not check_yt_dlp(self):
+        if not utils.check_yt_dlp(self):
             return
-        stream = LoadingDialog(self, _("جاري التشغيل"), get_video_stream, url).res
+        stream = LoadingDialog(self, _("جاري التشغيل"), utils.get_video_stream, url).res
         MediaGui(
             self,
             title,
@@ -131,9 +125,9 @@ class Favorites(wx.Frame):
         n = self.favList.Selection
         url = self.rows[n]["url"]
         title = self.rows[n]["title"]
-        if not check_yt_dlp(self):
+        if not utils.check_yt_dlp(self):
             return
-        stream = LoadingDialog(self, _("جاري التشغيل"), get_audio_stream, url).res
+        stream = LoadingDialog(self, _("جاري التشغيل"), utils.get_audio_stream, url).res
         MediaGui(self, title, stream, url, audio_mode=True, results=self.rows)
         self.Hide()
 
@@ -252,7 +246,7 @@ class Favorites(wx.Frame):
         )
 
     def onCopy(self, event):
-        copy_to_clipboard(self.rows[self.favList.Selection]["url"])
+        utils.copy_to_clipboard(self.rows[self.favList.Selection]["url"])
         wx.MessageBox(_("تم نسخ رابط المقطع بنجاح"), _("اكتمال"), parent=self)
 
     def directDownload(self):
@@ -277,12 +271,12 @@ class Favorites(wx.Frame):
         url = self.rows[n]["url"]
         title = self.rows[n]["title"]
 
-        if not check_yt_dlp(self):
+        if not utils.check_yt_dlp(self):
             return
         qualities = LoadingDialog(
             self,
             _("جاري جلب الجودات المتاحة..."),
-            get_available_qualities,
+            utils.get_available_qualities,
             url,
         ).res
         quality = None
