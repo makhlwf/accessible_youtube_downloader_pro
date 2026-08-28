@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-08-28 05:03+0200\n"
+"POT-Creation-Date: 2026-08-28 05:18+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -200,8 +200,8 @@ msgstr ""
 #: src/accessible_youtube_downloader_pro.py:689
 #: src/accessible_youtube_downloader_pro.py:754
 #: src/gui/auto_detect_dialog.py:97 src/gui/channel_dialog.py:380
-#: src/gui/channel_dialog.py:403 src/gui/favorites.py:119
-#: src/gui/favorites.py:136 src/gui/history.py:165
+#: src/gui/channel_dialog.py:403 src/gui/favorites.py:113
+#: src/gui/favorites.py:130 src/gui/history.py:165
 #: src/gui/playlist_dialog.py:252 src/gui/playlist_dialog.py:266
 #: src/youtube_browser/browser.py:321 src/youtube_browser/browser.py:348
 msgid "جاري التشغيل"
@@ -791,8 +791,8 @@ msgstr ""
 
 #: src/gui/auto_detect_dialog.py:16 src/gui/auto_detect_dialog.py:49
 #: src/gui/channel_dialog.py:151 src/gui/channel_dialog.py:471
-#: src/gui/download_dialog.py:26 src/gui/favorites.py:156
-#: src/gui/favorites.py:305 src/gui/history.py:216 src/gui/history.py:276
+#: src/gui/download_dialog.py:26 src/gui/favorites.py:150
+#: src/gui/favorites.py:299 src/gui/history.py:216 src/gui/history.py:276
 #: src/gui/playlist_dialog.py:135 src/gui/playlist_dialog.py:356
 #: src/media_player/media_gui.py:180 src/youtube_browser/browser.py:125
 #: src/youtube_browser/browser.py:415
@@ -813,8 +813,8 @@ msgstr ""
 
 #: src/gui/auto_detect_dialog.py:44 src/gui/channel_dialog.py:52
 #: src/gui/channel_dialog.py:161 src/gui/download_dialog.py:15
-#: src/gui/download_dialog.py:36 src/gui/favorites.py:35
-#: src/gui/favorites.py:166 src/gui/history.py:33 src/gui/history.py:226
+#: src/gui/download_dialog.py:36 src/gui/favorites.py:29
+#: src/gui/favorites.py:160 src/gui/history.py:33 src/gui/history.py:226
 #: src/gui/playlist_dialog.py:32 src/gui/playlist_dialog.py:145
 #: src/gui/update_check_dialog.py:45 src/media_player/media_gui.py:189
 #: src/youtube_browser/browser.py:63 src/youtube_browser/browser.py:135
@@ -823,7 +823,7 @@ msgstr ""
 
 #: src/gui/auto_detect_dialog.py:45 src/gui/channel_dialog.py:51
 #: src/gui/channel_dialog.py:143 src/gui/channel_dialog.py:541
-#: src/gui/favorites.py:34 src/gui/favorites.py:147 src/gui/history.py:207
+#: src/gui/favorites.py:28 src/gui/favorites.py:141 src/gui/history.py:207
 #: src/gui/link_dlg.py:25 src/gui/playlist_dialog.py:31
 #: src/gui/playlist_dialog.py:126 src/youtube_browser/browser.py:116
 msgid "تشغيل"
@@ -849,54 +849,54 @@ msgstr ""
 msgid "رجوع"
 msgstr ""
 
-#: src/gui/channel_dialog.py:145 src/gui/favorites.py:149
+#: src/gui/channel_dialog.py:145 src/gui/favorites.py:143
 #: src/gui/history.py:209 src/gui/playlist_dialog.py:128
 #: src/youtube_browser/browser.py:118
 msgid "التشغيل كمقطع صوتي"
 msgstr ""
 
 #: src/gui/channel_dialog.py:158 src/gui/channel_dialog.py:478
-#: src/gui/download_dialog.py:26 src/gui/favorites.py:163
-#: src/gui/favorites.py:312 src/gui/history.py:223 src/gui/history.py:283
+#: src/gui/download_dialog.py:26 src/gui/favorites.py:157
+#: src/gui/favorites.py:306 src/gui/history.py:223 src/gui/history.py:283
 #: src/gui/playlist_dialog.py:142 src/gui/playlist_dialog.py:363
 #: src/media_player/media_gui.py:187 src/youtube_browser/browser.py:132
 #: src/youtube_browser/browser.py:422
 msgid "صوت"
 msgstr ""
 
-#: src/gui/channel_dialog.py:164 src/gui/favorites.py:169
+#: src/gui/channel_dialog.py:164 src/gui/favorites.py:163
 #: src/gui/playlist_dialog.py:148 src/media_player/media_gui.py:191
 #: src/youtube_browser/browser.py:138
 msgid "التنزيل المباشر...\tctrl+d"
 msgstr ""
 
-#: src/gui/channel_dialog.py:169 src/gui/favorites.py:173
+#: src/gui/channel_dialog.py:169 src/gui/favorites.py:167
 #: src/gui/playlist_dialog.py:152 src/youtube_browser/browser.py:142
 msgid "فتح داخل التطبيق"
 msgstr ""
 
-#: src/gui/channel_dialog.py:171 src/gui/favorites.py:174
+#: src/gui/channel_dialog.py:171 src/gui/favorites.py:168
 #: src/gui/playlist_dialog.py:154 src/youtube_browser/browser.py:144
 msgid "فتح في المتصفح"
 msgstr ""
 
-#: src/gui/channel_dialog.py:173 src/gui/favorites.py:175
+#: src/gui/channel_dialog.py:173 src/gui/favorites.py:169
 #: src/gui/playlist_dialog.py:156 src/youtube_browser/browser.py:146
 msgid "الانتقال إلى القناة"
 msgstr ""
 
-#: src/gui/channel_dialog.py:175 src/gui/favorites.py:176
+#: src/gui/channel_dialog.py:175 src/gui/favorites.py:170
 #: src/gui/playlist_dialog.py:157 src/youtube_browser/browser.py:147
 msgid "تنزيل القناة"
 msgstr ""
 
-#: src/gui/channel_dialog.py:177 src/gui/favorites.py:177
+#: src/gui/channel_dialog.py:177 src/gui/favorites.py:171
 #: src/gui/history.py:229 src/gui/playlist_dialog.py:159
 #: src/youtube_browser/browser.py:148
 msgid "نسخ رابط المقطع"
 msgstr ""
 
-#: src/gui/channel_dialog.py:179 src/gui/favorites.py:179
+#: src/gui/channel_dialog.py:179 src/gui/favorites.py:173
 #: src/gui/history.py:230 src/gui/playlist_dialog.py:161
 #: src/youtube_browser/browser.py:150
 msgid "الفتح من خلال متصفح الإنترنت"
@@ -931,19 +931,19 @@ msgstr ""
 msgid "تم تحميل المزيد من نتائج البحث"
 msgstr ""
 
-#: src/gui/channel_dialog.py:434 src/gui/favorites.py:284
+#: src/gui/channel_dialog.py:434 src/gui/favorites.py:278
 #: src/gui/history.py:326 src/gui/playlist_dialog.py:281
 #: src/media_player/media_gui.py:1644 src/youtube_browser/browser.py:454
 msgid "جاري جلب الجودات المتاحة..."
 msgstr ""
 
-#: src/gui/channel_dialog.py:528 src/gui/favorites.py:256
+#: src/gui/channel_dialog.py:528 src/gui/favorites.py:250
 #: src/gui/history.py:344 src/gui/playlist_dialog.py:215
 #: src/media_player/media_gui.py:1620 src/youtube_browser/browser.py:474
 msgid "تم نسخ رابط المقطع بنجاح"
 msgstr ""
 
-#: src/gui/channel_dialog.py:528 src/gui/favorites.py:256
+#: src/gui/channel_dialog.py:528 src/gui/favorites.py:250
 #: src/gui/history.py:344 src/gui/playlist_dialog.py:215
 #: src/media_player/media_gui.py:1620 src/youtube_browser/browser.py:474
 msgid "اكتمال"
@@ -1262,20 +1262,20 @@ msgstr ""
 msgid "مضخم الصوت"
 msgstr ""
 
-#: src/gui/favorites.py:32
+#: src/gui/favorites.py:26
 msgid "المفضلة: "
 msgstr ""
 
-#: src/gui/favorites.py:36
+#: src/gui/favorites.py:30
 msgid "إلغاء التفضيل"
 msgstr ""
 
-#: src/gui/favorites.py:37 src/gui/history.py:36
+#: src/gui/favorites.py:31 src/gui/history.py:36
 #: src/youtube_browser/browser.py:68
 msgid "العودة إلى النافذة الرئيسية"
 msgstr ""
 
-#: src/gui/favorites.py:111 src/gui/history.py:369
+#: src/gui/favorites.py:105 src/gui/history.py:369
 #: src/youtube_browser/browser.py:595
 msgid "تم حذف الفيديو من قائمة المفضلة"
 msgstr ""
