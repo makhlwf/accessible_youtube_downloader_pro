@@ -35,6 +35,7 @@ defaults = {
     "eq_preset": "Flat",
     "theme": "System Default",
     "player_client": "default",
+    "sponsorblock": False,
 }
 
 _cache = {}

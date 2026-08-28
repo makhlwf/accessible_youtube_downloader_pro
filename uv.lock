@@ -13,6 +13,7 @@ dependencies = [
     { name = "py-yt-search" },
     { name = "pyperclip" },
     { name = "requests" },
+    { name = "sponsorblock-py" },
     { name = "wxpython" },
 ]
 
@@ -36,6 +37,7 @@ requires-dist = [
     { name = "py-yt-search", specifier = "==0.7.5" },
     { name = "pyperclip", specifier = "==1.11.0" },
     { name = "requests", specifier = "==2.34.2" },
+    { name = "sponsorblock-py", specifier = ">=1.0.0" },
     { name = "wxpython", specifier = "==4.3.1" },
 ]
 
@@ -824,6 +826,18 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/d9/38/e12680bbe6b4f8f3d17adcaf38d26850aa756c85cf4a80e79fc12a018fe8/soupsieve-2.9.1.tar.gz", hash = "sha256:c33e6605bbc71dd628b00c632d58ae607c22bade247e52553928f83bbb75b4ba", size = 122261, upload-time = "2026-07-21T16:57:17.452Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/0f/2c/437fe806897c2d6cfdc3ee43a18da8bf8e568530a4ae9bac781541ca9896/soupsieve-2.9.1-py3-none-any.whl", hash = "sha256:4f4477399246b7a0c720a88ca2454b11cd6bb9ae4c9d170140786e916776c14c", size = 37404, upload-time = "2026-07-21T16:57:16.421Z" },
+]
+
+[[package]]
+name = "sponsorblock-py"
+version = "1.0.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "requests" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/47/0d/caf6e74eee6657d64b11ee09e072c1b8b35384274198c393e243df626ac8/sponsorblock_py-1.0.0.tar.gz", hash = "sha256:569d40a3d317ac6d8f7934ab804b772748c3e7b033a9106ff67a759e5e9010a6", size = 24981, upload-time = "2026-07-18T18:01:29.608Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/91/3d/db724896d65662546f4e903761e76b021bb2c29c67d4634dbf7dd1e9c247/sponsorblock_py-1.0.0-py3-none-any.whl", hash = "sha256:8f1d035375c631e86fda309566c8f25dced99470496c8d3f103db345094e7c67", size = 24787, upload-time = "2026-07-18T18:01:28.612Z" },
 ]
 
 [[package]]

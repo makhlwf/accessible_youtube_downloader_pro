@@ -14,6 +14,7 @@ sys.path.insert(
 class wxWindow:
     def __init__(self, *args, **kwargs):
         self.Parent = kwargs.get("parent", args[0] if args else None)
+        self.Name = kwargs.get("name", "")
         self._label = kwargs.get(
             "label", args[2] if len(args) > 2 and isinstance(args[2], str) else ""
         )

@@ -13,6 +13,7 @@ dependencies = [
     "py-yt-search==0.7.5",
     "pyperclip==1.11.0",
     "requests==2.34.2",
+    "sponsorblock-py>=1.0.0",
     "wxpython==4.3.1",
 ]
 

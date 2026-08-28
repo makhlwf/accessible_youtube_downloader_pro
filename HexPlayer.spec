@@ -241,6 +241,14 @@ try:
 except Exception:
     pass
 
+try:
+    ret_sb = collect_all("sponsorblock")
+    datas += ret_sb[0]
+    binaries += ret_sb[1]
+    hiddenimports += ret_sb[2]
+except Exception:
+    pass
+
 # Analysis and EXE for HexPlayer (GUI)
 a_main = Analysis(
     [os.path.join(SRC_DIR, "accessible_youtube_downloader_pro.py")],

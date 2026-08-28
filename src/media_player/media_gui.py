@@ -325,6 +325,46 @@ class MediaGui(wx.Frame):
         self.history_timer.Start(10000)  # 10 seconds
         self.subtitle_timer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.on_subtitle_timer, self.subtitle_timer)
+        self.sponsorblock_segments = []
+        self._last_sponsorblock_skip_time = 0
+        self._last_sponsorblock_target = None
+        if config_get("sponsorblock"):
+            if (
+                hasattr(stream, "sponsorblock_segments")
+                and stream.sponsorblock_segments is not None
+            ):
+                self.sponsorblock_segments = list(stream.sponsorblock_segments)
+            else:
+                try:
+                    from sponsorblock_handler import get_sponsorblock_segments
+
+                    self.sponsorblock_segments = get_sponsorblock_segments(self.url)
+                except Exception:
+                    logger.debug(
+                        "Could not fetch SponsorBlock segments on MediaGui init",
+                        exc_info=True,
+                    )
+            if self.sponsorblock_segments:
+                from sponsorblock_handler import find_skip_target
+
+                initial_sec = 0.0
+                if self.url in all_continue and config_get("continue"):
+                    pos = all_continue[self.url]
+                    if pos > 0:
+                        length = self.player.get_length()
+                        if length > 0:
+                            initial_sec = pos * (length / 1000.0)
+                target = find_skip_target(initial_sec, self.sponsorblock_segments)
+                if target is not None:
+                    self.player.media.set_time(int(target * 1000))
+                    self._last_sponsorblock_skip_time = time.time()
+                    self._last_sponsorblock_target = target
+                    speak(_("تم تخطي مقطع SponsorBlock"))
+
+        self.sponsorblock_timer = wx.Timer(self)
+        self.Bind(wx.EVT_TIMER, self.on_sponsorblock_timer, self.sponsorblock_timer)
+        if config_get("sponsorblock"):
+            self.sponsorblock_timer.Start(150)
         watched_seconds = (
             self.player.media.get_time() / 1000
             if self.player.media.get_time() != -1
@@ -690,6 +730,44 @@ class MediaGui(wx.Frame):
         except Exception:
             pass
 
+    def on_sponsorblock_timer(self, event):
+        if (
+            not config_get("sponsorblock")
+            or not self.sponsorblock_segments
+            or self.player is None
+            or self._closing
+        ):
+            return
+        try:
+            if self.player.media.get_state() != State.Playing:
+                return
+            current_ms = self.player.media.get_time()
+        except Exception:
+            return
+        if current_ms is None or current_ms < 0:
+            return
+        current_sec = current_ms / 1000.0
+        self._check_sponsorblock_skip(current_sec)
+
+    def _check_sponsorblock_skip(self, current_sec):
+        if self._last_sponsorblock_target is not None:
+            if (
+                time.time() - self._last_sponsorblock_skip_time < 1.0
+                and current_sec < self._last_sponsorblock_target
+            ):
+                return
+            self._last_sponsorblock_target = None
+
+        from sponsorblock_handler import find_skip_target
+
+        target = find_skip_target(current_sec, self.sponsorblock_segments)
+        if target is not None:
+            logger.info("SponsorBlock: skipping at %.2fs to %.2fs", current_sec, target)
+            self._last_sponsorblock_skip_time = time.time()
+            self._last_sponsorblock_target = target
+            self.player.media.set_time(int(target * 1000))
+            speak(_("تم تخطي مقطع SponsorBlock"))
+
     def fetch_qualities(self):
         qualities = utils.get_available_qualities(self.url, audio_mode=self.audio_mode)
         if self._closing:
@@ -901,6 +979,13 @@ class MediaGui(wx.Frame):
             except Exception:
                 logger.debug(
                     "Could not stop subtitle timer during close", exc_info=True
+                )
+        if hasattr(self, "sponsorblock_timer"):
+            try:
+                self.sponsorblock_timer.Stop()
+            except Exception:
+                logger.debug(
+                    "Could not stop sponsorblock timer during close", exc_info=True
                 )
         player = self.player
         self.player = None
@@ -1504,6 +1589,36 @@ class MediaGui(wx.Frame):
         self.fetch_like_count()
         self.player.media.play()
         self.player.media.audio_set_volume(self.player.volume)
+        self.sponsorblock_segments = []
+        self._last_sponsorblock_skip_time = 0
+        self._last_sponsorblock_target = None
+        if config_get("sponsorblock"):
+            if (
+                hasattr(stream, "sponsorblock_segments")
+                and stream.sponsorblock_segments is not None
+            ):
+                self.sponsorblock_segments = list(stream.sponsorblock_segments)
+            else:
+                try:
+                    from sponsorblock_handler import get_sponsorblock_segments
+
+                    self.sponsorblock_segments = get_sponsorblock_segments(url)
+                except Exception:
+                    pass
+            if self.sponsorblock_segments:
+                from sponsorblock_handler import find_skip_target
+
+                target = find_skip_target(0.0, self.sponsorblock_segments)
+                if target is not None:
+                    self.player.media.set_time(int(target * 1000))
+                    self._last_sponsorblock_skip_time = time.time()
+                    self._last_sponsorblock_target = target
+                    speak(_("تم تخطي مقطع SponsorBlock"))
+            if (
+                hasattr(self, "sponsorblock_timer")
+                and not self.sponsorblock_timer.IsRunning()
+            ):
+                self.sponsorblock_timer.Start(150)
         if not getattr(self, "shorts_mode", False):
             Thread(target=self.extract_description, daemon=True).start()
             for item in self.qualityMenu.GetMenuItems():

@@ -392,6 +392,13 @@ class SettingsDialog(wx.Dialog):
         )
         self.autoPlayNext.SetValue(config_get("autonext"))
         self.repeateTracks.SetValue(config_get("repeatTracks"))
+        self.sponsorBlock = SettingsCheckBox(
+            playerOptions,
+            -1,
+            _("تفعيل SponsorBlock لتخطي المقاطع الدعائية تلقائيًا"),
+            name="sponsorblock",
+        )
+        self.sponsorBlock.SetValue(bool(config_get("sponsorblock")))
         self.eqButton = wx.Button(playerOptions, -1, _("إعدادات المعادل..."))
         playback_speed_label_text = _("مقدار تغيير سرعة التشغيل: ")
         self.playbackSpeedStepLabel = wx.StaticText(
@@ -484,6 +491,7 @@ class SettingsDialog(wx.Dialog):
         playerOptionsSizer.Add(self.openPlayerFullscreen, 0, wx.EXPAND | wx.ALL, 5)
         playerOptionsSizer.Add(self.repeateTracks, 0, wx.EXPAND | wx.ALL, 5)
         playerOptionsSizer.Add(self.autoPlayNext, 0, wx.EXPAND | wx.ALL, 5)
+        playerOptionsSizer.Add(self.sponsorBlock, 0, wx.EXPAND | wx.ALL, 5)
         playerOptionsSizer.Add(self.eqButton, 0, wx.EXPAND | wx.ALL, 5)
         main_sizer.Add(playerOptionsSizer, 0, wx.EXPAND | wx.ALL, 8)
 
@@ -511,6 +519,7 @@ class SettingsDialog(wx.Dialog):
         self.browserIntegration.Bind(wx.EVT_CHECKBOX, self.onCheck)
         self.repeateTracks.Bind(wx.EVT_CHECKBOX, self.onCheck)
         self.autoPlayNext.Bind(wx.EVT_CHECKBOX, self.onCheck)
+        self.sponsorBlock.Bind(wx.EVT_CHECKBOX, self.onCheck)
         self.continueWatching.Bind(wx.EVT_CHECKBOX, self.onCheck)
         self.openPlayerFullscreen.Bind(wx.EVT_CHECKBOX, self.onCheck)
         self.eqButton.Bind(wx.EVT_BUTTON, self.onEqualizer)

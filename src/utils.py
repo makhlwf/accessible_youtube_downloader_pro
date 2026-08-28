@@ -1347,6 +1347,7 @@ class Stream:
         channel_url="",
         view_count=None,
         upload_date="",
+        sponsorblock_segments=None,
     ):
         self.title = title
         self.url = url
@@ -1358,6 +1359,22 @@ class Stream:
         self.channel_url = channel_url
         self.view_count = view_count
         self.upload_date = upload_date
+        self.sponsorblock_segments = sponsorblock_segments
+
+
+def _attach_sponsorblock_segments(stream, url):
+    if (
+        stream is not None
+        and config_get("sponsorblock")
+        and getattr(stream, "sponsorblock_segments", None) is None
+    ):
+        try:
+            from sponsorblock_handler import get_sponsorblock_segments
+
+            stream.sponsorblock_segments = get_sponsorblock_segments(url)
+        except Exception:
+            logger.debug("Failed to attach SponsorBlock segments", exc_info=True)
+    return stream
 
 
 def _stream_from_info(entry, audio_mode=False):
@@ -1427,14 +1444,14 @@ def get_playable_stream(url, audio_mode=False):
     cache_key = f"{url_full}_{'audio' if audio_mode else 'video'}"
     cached = _stream_cache.get(cache_key, ttl=1200)
     if cached:
-        return cached
+        return _attach_sponsorblock_segments(cached, url_full)
 
     cached_info = _info_cache.get(url_full, ttl=1200)
     if cached_info:
         stream = _stream_from_info(cached_info, audio_mode=audio_mode)
         if stream:
             _stream_cache.set(cache_key, stream)
-            return stream
+            return _attach_sponsorblock_segments(stream, url_full)
 
     # Handle Mix/Playlist URLs via deno service
     playlist_id = None
@@ -1473,8 +1490,8 @@ def get_playable_stream(url, audio_mode=False):
     if not YoutubeDL:
         logger.error("yt-dlp is not installed")
         if audio_mode:
-            return get_audio_stream(url_full)
-        return get_video_stream(url_full)
+            return _attach_sponsorblock_segments(get_audio_stream(url_full), url_full)
+        return _attach_sponsorblock_segments(get_video_stream(url_full), url_full)
 
     if paths.main_path not in os.environ.get("PATH", ""):
         os.environ["PATH"] = paths.main_path + os.pathsep + os.environ.get("PATH", "")
@@ -1485,13 +1502,13 @@ def get_playable_stream(url, audio_mode=False):
         event.wait(timeout=30)
         cached = _stream_cache.get(cache_key, ttl=1200)
         if cached:
-            return cached
+            return _attach_sponsorblock_segments(cached, url_full)
         cached_info = _info_cache.get(url_full, ttl=1200)
         if cached_info:
             stream = _stream_from_info(cached_info, audio_mode=audio_mode)
             if stream:
                 _stream_cache.set(cache_key, stream)
-                return stream
+                return _attach_sponsorblock_segments(stream, url_full)
         return None
 
     logger.info(f"Extracting URL: {url}")
@@ -1536,7 +1553,7 @@ def get_playable_stream(url, audio_mode=False):
 
         if result:
             _stream_cache.set(cache_key, result)
-            return result
+            return _attach_sponsorblock_segments(result, url_full)
 
         logger.error(f"Extraction failed for {url}")
         return None
