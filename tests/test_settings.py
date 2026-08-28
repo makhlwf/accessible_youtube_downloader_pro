@@ -467,3 +467,56 @@ def test_browser_cookies_imported_reenables_button_on_success_and_failure(
         {"success": False, "error_type": "locked", "browser": "Chrome"}, "chrome"
     )
     assert dialog.importBrowserCookiesButton.IsEnabled() is True
+
+
+def _skip_test():
+    import settings_handler
+    from gui import settings_dialog
+
+    settings_handler.config_initialization()
+
+    settings_handler.config_set("defaultformat", "0")
+    dialog = settings_dialog.SettingsDialog(wx.Frame(None))
+
+    assert dialog.formats.GetCount() == 6
+    assert dialog.formats.GetString(0) == "فيديو (mp4)"
+    assert dialog.formats.GetString(1) == "فيديو (mkv)"
+    assert dialog.formats.GetString(2) == "صوت (m4a)"
+    assert dialog.formats.GetString(3) == "صوت (mp3)"
+    assert dialog.formats.GetString(4) == "صوت (wav)"
+    assert dialog.formats.GetString(5) == "صوت (flac)"
+
+    assert dialog.formats.Selection == 0
+    dialog.Destroy()
+
+    settings_handler.config_set("defaultformat", "9")
+    dialog = settings_dialog.SettingsDialog(wx.Frame(None))
+    assert dialog.formats.Selection == 0
+    dialog.Destroy()
+
+
+def test_settings_dialog_defaultformat_choices_fixed():
+    import settings_handler
+    from gui import settings_dialog
+
+    settings_handler.config_initialization()
+
+    settings_handler.config_set("defaultformat", "0")
+    dialog = settings_dialog.SettingsDialog(wx.Frame(None))
+
+    assert dialog.formats.GetCount() == 6
+    strings = dialog.formats.GetStrings()
+    assert strings[0] == "فيديو (mp4)"
+    assert strings[1] == "فيديو (mkv)"
+    assert strings[2] == "صوت (m4a)"
+    assert strings[3] == "صوت (mp3)"
+    assert strings[4] == "صوت (wav)"
+    assert strings[5] == "صوت (flac)"
+
+    assert dialog.formats.Selection == 0
+    dialog.Destroy()
+
+    settings_handler.config_set("defaultformat", "9")
+    dialog = settings_dialog.SettingsDialog(wx.Frame(None))
+    assert dialog.formats.Selection == 0
+    dialog.Destroy()

@@ -143,19 +143,37 @@ class Choice(wxWindow):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._choices = list(kwargs.get("choices", []))
-        self._selection = self._choices[0] if self._choices else ""
+        self._selection = 0 if self._choices else mock_wx.NOT_FOUND
 
     def Set(self, items):
         self._choices = list(items)
 
+    def SetItems(self, items):
+        self.Set(items)
+
+    def GetItems(self):
+        return self._choices
+
     def GetStrings(self):
         return self._choices
 
+    def SetSelection(self, n):
+        self._selection = n
+
+    def GetSelection(self):
+        return self._selection
+
+    def GetCount(self):
+        return len(self._choices)
+
     def SetStringSelection(self, value):
-        self._selection = value
+        if value in self._choices:
+            self._selection = self._choices.index(value)
 
     def GetStringSelection(self):
-        return self._selection
+        if 0 <= self._selection < len(self._choices):
+            return self._choices[self._selection]
+        return ""
 
 
 class Slider(wxWindow):

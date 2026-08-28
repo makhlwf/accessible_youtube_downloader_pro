@@ -4,16 +4,10 @@ import pyperclip
 import wx
 
 import utils
-from download_handler.downloader import (
-    downloadAction,
-    get_audio_download_format,
-    get_video_download_format,
-)
+from download_handler.downloader import start_media_download
 from language_handler import _
 from settings_handler import config_get, config_set
 from theme_handler import apply_theme
-
-from .download_progress import DownloadProgress
 
 
 class DownloadDialog(wx.Frame):
@@ -33,9 +27,12 @@ class DownloadDialog(wx.Frame):
         )
         lbl2 = wx.StaticText(self.panel, -1, _("صيغة المقطع"), name="convert")
         self.convertingFormat = wx.Choice(
-            self.panel, -1, choices=["m4a", "mp3"], name="convert"
+            self.panel, -1, choices=["m4a", "mp3", "wav", "flac"], name="convert"
         )
-        self.convertingFormat.SetSelection(int(config_get("defaultaudio")))
+        default_audio = int(config_get("defaultaudio"))
+        if not (0 <= default_audio < self.convertingFormat.GetCount()):
+            default_audio = 0
+        self.convertingFormat.SetSelection(default_audio)
         self.downloadButton = wx.Button(self.panel, -1, _("تنزيل"))
         self.downloadButton.SetDefault()
         self.changePath = wx.Button(
@@ -59,17 +56,16 @@ class DownloadDialog(wx.Frame):
         self.Bind(wx.EVT_CHAR_HOOK, self.onHook)
         apply_theme(self)
 
-    # a method to show/hide the audio formats box depending on the downloading type
-    def toggleChoices(self):
-        for control in self.panel.GetChildren():
-            if self.downloadingFormat.Selection == 0 and control.Name == "convert":
-                control.Show()
-            elif self.downloadingFormat.Selection == 1 and control.Name == "convert":
-                control.Hide()
-
-    # an event method which is called when the radio box selection is changed
     def onRadioBox(self, event):
-        self.toggleChoices()
+        if self.downloadingFormat.GetSelection() == 0:
+            self.convertingFormat.SetItems(["m4a", "mp3", "wav", "flac"])
+            default_audio = int(config_get("defaultaudio"))
+            if not (0 <= default_audio < self.convertingFormat.GetCount()):
+                default_audio = 0
+            self.convertingFormat.SetSelection(default_audio)
+        else:
+            self.convertingFormat.SetItems(["mp4", "mkv"])
+            self.convertingFormat.SetSelection(0)
 
     # an event method to call the detect clipboard function when activating the window
     def onActivate(self, event):
@@ -116,34 +112,24 @@ class DownloadDialog(wx.Frame):
                 break
         else:
             folder = False
-        formats = {
-            0: get_audio_download_format(convert=self.convertingFormat.Selection == 1),
-            1: get_video_download_format(),
-        }
-        format = formats[self.downloadingFormat.GetSelection()]
-        if (
-            self.downloadingFormat.Selection == 0
-            and self.convertingFormat.Selection == 1
-        ):
-            convert = True
-        else:
-            convert = False
 
         if not utils.check_yt_dlp(self):
             return
 
-        config_set("defaultaudio", str(self.convertingFormat.Selection))
-        downloadFrame = DownloadProgress(wx.GetApp().GetTopWindow())
-        started = downloadAction(
+        is_audio = self.downloadingFormat.GetSelection() == 0
+        format_str = self.convertingFormat.GetStringSelection()
+
+        if is_audio:
+            config_set("defaultaudio", str(self.convertingFormat.GetSelection()))
+
+        started = start_media_download(
             url,
-            self.path,
-            downloadFrame,
-            format,
-            downloadFrame.gaugeProgress,
-            downloadFrame.textProgress,
-            convert=convert,
+            format_str,
+            self,
+            path=self.path,
             folder=folder,
         )
+
         if started:
             self.downloading = True
             self.Destroy()

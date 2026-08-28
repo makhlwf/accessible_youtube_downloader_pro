@@ -279,10 +279,20 @@ class SettingsDialog(wx.Dialog):
         self.formats = wx.Choice(
             downloadPreferencesBox,
             -1,
-            choices=[_("فيديو (mp4)"), _("صوت (m4a)"), _("صوت (mp3)")],
+            choices=[
+                _("فيديو (mp4)"),
+                _("فيديو (mkv)"),
+                _("صوت (m4a)"),
+                _("صوت (mp3)"),
+                _("صوت (wav)"),
+                _("صوت (flac)"),
+            ],
         )
         _set_accessible_name(self.formats, format_label_text)
-        self.formats.Selection = int(config_get("defaultformat"))
+        default_format = int(config_get("defaultformat"))
+        if not (0 <= default_format < 6):
+            default_format = 0
+        self.formats.Selection = default_format
         audio_quality_label_text = _("جودة الصوت: ")
         lbl3 = wx.StaticText(downloadPreferencesBox, -1, audio_quality_label_text)
         self.audioQuality2 = wx.Choice(
@@ -726,9 +736,8 @@ class SettingsDialog(wx.Dialog):
                 )
         if self.audioQuality2.Selection != int(config_get("conversion")):
             config_set("conversion", self.audioQuality2.Selection)
-        config_set(
-            "defaultformat", self.formats.Selection
-        ) if self.formats.Selection != int(config_get("defaultformat")) else None
+        if self.formats.Selection != int(config_get("defaultformat")):
+            config_set("defaultformat", str(self.formats.Selection))
         config_set("defaultvideoquality", self.videoQuality.Selection)
         config_set("defaultaudioquality", self.audioQuality.Selection)
         if hasattr(self, "playerClientBox") and hasattr(self, "player_client_choices"):
