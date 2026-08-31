@@ -231,3 +231,69 @@ def test_get_windows_region_mocked(monkeypatch):
         lambda buf, size: setattr(buf, "value", "DE") or 2,
     )
     assert utils.get_windows_region() == "DE"
+
+
+def test_update_watch_history_uses_deno_service_when_cookies_present(
+    monkeypatch, tmp_path
+):
+    calls = []
+    deno_calls = []
+
+    class FakeWatchHistory:
+        @classmethod
+        def add_or_update(cls, data):
+            calls.append(data)
+
+    cookie_file = tmp_path / "cookies.txt"
+    cookie_file.write_text("# Netscape HTTP Cookie File\n")
+
+    monkeypatch.setattr(utils, "WatchHistory", FakeWatchHistory)
+    monkeypatch.setattr(utils, "config_get", lambda key: str(cookie_file))
+    monkeypatch.setattr(
+        utils.deno_service,
+        "send_command",
+        lambda command, params: (
+            deno_calls.append((command, params)) or {"success": True}
+        ),
+    )
+
+    utils.update_watch_history(
+        "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        watched_seconds=42.0,
+        title="Sample Video",
+        channel_name="Sample Author",
+    )
+
+    assert len(calls) == 1
+    assert len(deno_calls) == 1
+    assert deno_calls[0][0] == "update_watch_history"
+    assert deno_calls[0][1]["videoId"] == "dQw4w9WgXcQ"
+    assert deno_calls[0][1]["watchedSeconds"] == "42.0"
+
+
+def test_info_cache_bounded_lru_and_expiration():
+    cache = utils.InfoCache(default_ttl=10, maxsize=3)
+    cache.set("k1", "v1")
+    cache.set("k2", "v2")
+    cache.set("k3", "v3")
+
+    assert cache.get("k1") == "v1"
+    assert cache.get("k2") == "v2"
+    assert cache.get("k3") == "v3"
+
+    # Adding a 4th key should evict the oldest accessed key (k1 was accessed before k2 and k3, so k1's access moved it to end)
+    # Access k1 and k2 to make k3 the oldest
+    cache.get("k1")
+    cache.get("k2")
+    cache.set("k4", "v4")
+
+    assert cache.get("k3") is None
+    assert cache.get("k1") == "v1"
+    assert cache.get("k2") == "v2"
+    assert cache.get("k4") == "v4"
+    assert len(cache.cache) <= 3
+
+    # Clear method
+    cache.clear()
+    assert len(cache.cache) == 0
+    assert cache.get("k1") is None

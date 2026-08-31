@@ -377,9 +377,7 @@ class HistoryDialog(wx.Frame):
         url = self.history_data[selection]["url"]
 
         def check_url(target_url):
-            favorites = self.favorites.get_all()
-            fav_urls = {f["url"] for f in favorites}
-            found = target_url in fav_urls
+            found = self.favorites.is_favorite(target_url)
 
             def update():
                 if self:

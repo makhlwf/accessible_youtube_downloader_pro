@@ -141,3 +141,6 @@ class DenoService:
 
 
 deno_service = DenoService()
+import atexit
+
+atexit.register(deno_service.stop)

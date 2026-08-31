@@ -336,5 +336,22 @@ def reset_gettext():
     builtins._ = lambda x: x
 
 
+@pytest.fixture(autouse=True)
+def mock_audio_devices(monkeypatch):
+    from media_player import mpv_backend
+
+    monkeypatch.setattr(
+        mpv_backend,
+        "get_available_audio_output_devices",
+        lambda force_refresh=False: [
+            {"id": "auto", "description": "Autoselect device"},
+            {
+                "id": "wasapi/{0.0.0.00000000}",
+                "description": "Speakers (Realtek Audio)",
+            },
+        ],
+    )
+
+
 if not hasattr(builtins, "_"):
     builtins._ = lambda x: x

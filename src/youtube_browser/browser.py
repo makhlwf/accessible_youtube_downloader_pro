@@ -606,9 +606,7 @@ class YoutubeBrowser(wx.Frame):
         url = self.search.get_url(n)
 
         def check_url(target_url):
-            favorites = self.favorites.get_all()
-            fav_urls = {f["url"] for f in favorites}
-            found = target_url in fav_urls
+            found = self.favorites.is_favorite(target_url)
 
             def update():
                 if self:

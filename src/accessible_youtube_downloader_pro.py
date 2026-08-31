@@ -26,6 +26,7 @@ import settings_handler
 import utils
 import windows_url_association
 from async_utils import start_async_loop, stop_async_loop
+from deno_service import deno_service
 from doc_handler import documentation_get
 from gui.activity_dialog import LoadingDialog
 from gui.auto_detect_dialog import AutoDetectDialog
@@ -944,6 +945,7 @@ class HomeScreen(wx.Frame):
         self.tray_icon.Destroy()
         database.disconnect()
         settings_handler.save_settings()
+        deno_service.stop()
         stop_async_loop()
         self.Destroy()
         wx.Exit()

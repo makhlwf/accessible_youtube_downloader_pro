@@ -12,7 +12,7 @@ import time
 import xml.etree.ElementTree as ET
 import zipfile
 import zipimport
-from concurrent.futures import ThreadPoolExecutor
+from collections import OrderedDict
 
 import requests
 import wx
@@ -499,9 +499,10 @@ def _parse_subtitle_cues(text, ext):
 
 
 class InfoCache:
-    def __init__(self, default_ttl=300):
-        self.cache = {}
+    def __init__(self, default_ttl=300, maxsize=256):
+        self.cache = OrderedDict()
         self.default_ttl = default_ttl
+        self.maxsize = maxsize
         self.lock = threading.Lock()
 
     def get(self, url, ttl=None):
@@ -511,6 +512,7 @@ class InfoCache:
             if url in self.cache:
                 info, timestamp = self.cache[url]
                 if time.time() - timestamp < ttl:
+                    self.cache.move_to_end(url)
                     return info
                 else:
                     del self.cache[url]
@@ -518,14 +520,23 @@ class InfoCache:
 
     def set(self, url, info):
         with self.lock:
-            self.cache[url] = (info, time.time())
+            now = time.time()
+            if url in self.cache:
+                self.cache.move_to_end(url)
+            self.cache[url] = (info, now)
+            while len(self.cache) > self.maxsize:
+                self.cache.popitem(last=False)
+
+    def clear(self):
+        with self.lock:
+            self.cache.clear()
 
 
-_info_cache = InfoCache()
-_stream_cache = InfoCache()
+_info_cache = InfoCache(maxsize=256, default_ttl=3600)
+_stream_cache = InfoCache(maxsize=256, default_ttl=1200)
+_subtitle_cues_cache = InfoCache(maxsize=128, default_ttl=3600)
 _stream_inflight = {}
 _stream_inflight_lock = threading.Lock()
-_extraction_executor = ThreadPoolExecutor(max_workers=20)
 
 
 yt_dlp_module = None
@@ -1655,6 +1666,12 @@ def get_subtitle_cues(url, language_code):
     if not track:
         return []
 
+    track_url = track.get("url")
+    if track_url:
+        cached = _subtitle_cues_cache.get(track_url)
+        if cached is not None:
+            return cached
+
     try:
         response = requests.get(track["url"], timeout=10)
         response.raise_for_status()
@@ -1667,7 +1684,10 @@ def get_subtitle_cues(url, language_code):
         )
         return []
 
-    return _parse_subtitle_cues(response.text, track.get("ext"))
+    cues = _parse_subtitle_cues(response.text, track.get("ext"))
+    if cues and track_url:
+        _subtitle_cues_cache.set(track_url, cues)
+    return cues
 
 
 def get_specific_quality_stream(url, height, audio_mode=False):
@@ -1816,6 +1836,21 @@ def update_watch_history(
     cookies_path = config_get("cookiespath")
     if not cookies_path or not os.path.exists(cookies_path):
         return
+
+    try:
+        result = deno_service.send_command(
+            "update_watch_history",
+            {
+                "cookiesPath": cookies_path,
+                "videoId": video_id,
+                "watchedSeconds": str(watched_seconds),
+                "location": get_windows_region(),
+            },
+        )
+        if isinstance(result, dict) and result.get("success"):
+            return
+    except Exception as e:
+        logger.debug("Deno service update_watch_history failed, falling back: %s", e)
 
     try:
         env = os.environ.copy()

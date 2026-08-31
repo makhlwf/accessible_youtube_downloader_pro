@@ -185,6 +185,11 @@ def test_mediagui_sponsorblock_skipping():
             side_effect=lambda k: k == "sponsorblock",
         ),
         patch.object(media_gui, "Player") as MockPlayer,
+        patch.object(media_gui.MediaGui, "fetch_qualities"),
+        patch.object(media_gui.MediaGui, "fetch_chapters"),
+        patch.object(media_gui.MediaGui, "fetch_subtitles"),
+        patch.object(media_gui.MediaGui, "extract_description"),
+        patch.object(media_gui.MediaGui, "fetch_like_count"),
     ):
         mock_player_instance = MagicMock()
         mock_player_instance.media.get_state.return_value = State.Playing

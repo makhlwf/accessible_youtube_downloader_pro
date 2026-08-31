@@ -926,6 +926,20 @@ async function handleGetShortsFeed(params) {
     }
 }
 
+async function handleUpdateWatchHistory(params) {
+    if (!params.cookiesPath || !params.videoId) {
+        throw new Error("videoId and cookiesPath are required for watch history");
+    }
+    const yt = await getYT(params.cookiesPath, params.location);
+    const info = await yt.getInfo(params.videoId);
+    await info.addToWatchHistory();
+    const watchedSeconds = parseFloat(params.watchedSeconds || '0');
+    if (watchedSeconds > 0) {
+        await info.updateWatchTime(watchedSeconds);
+    }
+    return { success: true };
+}
+
 async function main() {
     const lines = Deno.stdin.readable
         .pipeThrough(new TextDecoderStream())
@@ -948,6 +962,8 @@ async function main() {
                 result = await handleGetHomeFeed(params);
             } else if (command === 'get_watch_history') {
                 result = await handleGetWatchHistory(params);
+            } else if (command === 'update_watch_history') {
+                result = await handleUpdateWatchHistory(params);
             } else if (command === 'like_video') {
                 result = await handleLikeInteraction(params);
             } else if (command === 'get_video_likes') {
@@ -986,6 +1002,7 @@ export {
     handleLikeComment,
     handleLikeInteraction,
     handleReplyComment,
+    handleUpdateWatchHistory,
     normalizeChapter,
     normalizeComment,
     normalizeCommentThreads,
@@ -999,4 +1016,5 @@ if (import.meta.main) {
         Deno.exit(1);
     });
 }
+
 

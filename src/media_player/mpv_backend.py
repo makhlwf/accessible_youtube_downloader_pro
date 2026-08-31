@@ -1,8 +1,10 @@
 import ctypes
 import locale
+import logging
 import shutil
 import sys
 import threading
+import time
 import zipfile
 from enum import IntEnum
 from pathlib import Path
@@ -520,8 +522,14 @@ class MpvMediaPlayer:
 
     def _event_loop(self) -> None:
         while not self._closed:
-            event_ptr = self._lib.mpv_wait_event(self._handle, 0.1)
-            if not event_ptr:
+            handle = self._handle
+            if not handle or self._closed:
+                break
+            try:
+                event_ptr = self._lib.mpv_wait_event(handle, 0.1)
+            except Exception:
+                break
+            if not event_ptr or self._closed:
                 continue
             event = event_ptr.contents
             if event.event_id == MPV_EVENT_NONE:
@@ -740,11 +748,22 @@ class MpvMediaPlayer:
             if self._closed:
                 return
             self._closed = True
-            self._lib.mpv_wakeup(self._handle)
-            self._lib.mpv_terminate_destroy(self._handle)
+            handle = self._handle
+            try:
+                self._lib.mpv_wakeup(handle)
+            except Exception:
+                pass
 
         if threading.current_thread() is not self._event_thread:
             self._event_thread.join(timeout=1)
+
+        with self._lock:
+            if handle:
+                try:
+                    self._lib.mpv_terminate_destroy(handle)
+                except Exception:
+                    pass
+                self._handle = None
 
     def __del__(self) -> None:
         try:
@@ -753,9 +772,35 @@ class MpvMediaPlayer:
             pass
 
 
-def get_available_audio_output_devices() -> list[dict[str, str]]:
-    player = MpvMediaPlayer()
-    try:
-        return player.get_audio_output_devices()
-    finally:
-        player.close()
+logger = logging.getLogger(__name__)
+
+_audio_devices_cache: list[dict[str, str]] = []
+_audio_devices_cache_time: float = 0.0
+_audio_devices_lock = threading.Lock()
+
+
+def get_available_audio_output_devices(
+    force_refresh: bool = False,
+) -> list[dict[str, str]]:
+    global _audio_devices_cache, _audio_devices_cache_time
+    now = time.time()
+    with _audio_devices_lock:
+        if (
+            not force_refresh
+            and _audio_devices_cache
+            and (now - _audio_devices_cache_time < 15.0)
+        ):
+            return list(_audio_devices_cache)
+
+        try:
+            player = MpvMediaPlayer()
+            try:
+                devices = player.get_audio_output_devices()
+                _audio_devices_cache = devices
+                _audio_devices_cache_time = now
+                return list(devices)
+            finally:
+                player.close()
+        except Exception as exc:
+            logger.debug(f"Failed to query MPV audio devices: {exc}")
+            return list(_audio_devices_cache) if _audio_devices_cache else []

@@ -39,6 +39,11 @@ def test_favorite_operations(test_db):
         fav.remove_favorite(data["url"])
         favorites = fav.get_all()
         assert len(favorites) == 0
+        assert fav.is_favorite(data["url"]) is False
+
+        fav.add_favorite(data)
+        assert fav.is_favorite(data["url"]) is True
+        assert fav.is_favorite("https://youtube.com/watch?v=nonexistent") is False
 
 
 def test_continue_operations(test_db):

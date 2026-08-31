@@ -115,6 +115,8 @@ class Downloader:
         self.kbps = kbps
         self.audio_format = audio_format
         self.video_format = video_format
+        self._last_progress_time = 0.0
+        self._last_progress_percent = -1.0
 
     def get_quality(self):
         qualities = {0: "96", 1: "128", 2: "192", 3: "320"}
@@ -158,6 +160,27 @@ class Downloader:
             return None
         latest_file = None
         latest_time = 0
+        if not self.folder:
+            try:
+                with os.scandir(self.path) as it:
+                    for entry in it:
+                        if entry.is_file():
+                            try:
+                                modified = entry.stat().st_mtime
+                            except OSError:
+                                continue
+                            if (
+                                self.started_at is not None
+                                and modified < self.started_at - 2
+                            ):
+                                continue
+                            if modified > latest_time:
+                                latest_time = modified
+                                latest_file = entry.path
+                return latest_file
+            except OSError:
+                pass
+
         for root, dirs, files in os.walk(self.path):
             for filename in files:
                 path = os.path.join(root, filename)
@@ -178,7 +201,8 @@ class Downloader:
         if not self.monitor:
             return
 
-        if d.get("status") == "downloading":
+        status = d.get("status")
+        if status == "downloading":
             percent_str = clean_progress_text(d.get("_percent_str", "0%")).replace(
                 "%", ""
             )
@@ -187,23 +211,32 @@ class Downloader:
             except ValueError:
                 percent = 0.0
 
-            total = clean_progress_text(
-                d.get("_total_bytes_str") or d.get("_total_bytes_estimate_str", "")
-            )
-            downloaded = clean_progress_text(d.get("_downloaded_bytes_str", ""))
-            speed = clean_progress_text(d.get("_speed_str", ""))
-            eta = clean_progress_text(d.get("_eta_str", ""))
+            now = time.time()
+            if (
+                now - self._last_progress_time >= 0.08
+                or abs(percent - self._last_progress_percent) >= 1.0
+                or percent >= 99.9
+            ):
+                self._last_progress_time = now
+                self._last_progress_percent = percent
 
-            wx.PostEvent(
-                self.monitor,
-                ProgressChangedEvent(
-                    value=int(percent),
-                    total=total,
-                    downloaded=downloaded,
-                    speed=speed,
-                    eta=eta,
-                ),
-            )
+                total = clean_progress_text(
+                    d.get("_total_bytes_str") or d.get("_total_bytes_estimate_str", "")
+                )
+                downloaded = clean_progress_text(d.get("_downloaded_bytes_str", ""))
+                speed = clean_progress_text(d.get("_speed_str", ""))
+                eta = clean_progress_text(d.get("_eta_str", ""))
+
+                wx.PostEvent(
+                    self.monitor,
+                    ProgressChangedEvent(
+                        value=int(percent),
+                        total=total,
+                        downloaded=downloaded,
+                        speed=speed,
+                        eta=eta,
+                    ),
+                )
 
     def _base_options(self, use_cookies=True):
         abs_ffmpeg_dir = os.path.abspath(paths.ffmpeg_dir)

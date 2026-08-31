@@ -20,6 +20,7 @@ from media_player.player import Player, State
 from media_player.timecodes import format_timecode, parse_timecode
 from settings_handler import config_get, config_set
 from speech_client import speak
+from sponsorblock_handler import find_skip_target, get_sponsorblock_segments
 from theme_handler import apply_theme
 from utils import get_playable_stream
 
@@ -336,8 +337,6 @@ class MediaGui(wx.Frame):
                 self.sponsorblock_segments = list(stream.sponsorblock_segments)
             else:
                 try:
-                    from sponsorblock_handler import get_sponsorblock_segments
-
                     self.sponsorblock_segments = get_sponsorblock_segments(self.url)
                 except Exception:
                     logger.debug(
@@ -345,8 +344,6 @@ class MediaGui(wx.Frame):
                         exc_info=True,
                     )
             if self.sponsorblock_segments:
-                from sponsorblock_handler import find_skip_target
-
                 initial_sec = 0.0
                 if self.url in all_continue and config_get("continue"):
                     pos = all_continue[self.url]
@@ -757,8 +754,6 @@ class MediaGui(wx.Frame):
             ):
                 return
             self._last_sponsorblock_target = None
-
-        from sponsorblock_handler import find_skip_target
 
         target = find_skip_target(current_sec, self.sponsorblock_segments)
         if target is not None:
@@ -1600,14 +1595,10 @@ class MediaGui(wx.Frame):
                 self.sponsorblock_segments = list(stream.sponsorblock_segments)
             else:
                 try:
-                    from sponsorblock_handler import get_sponsorblock_segments
-
                     self.sponsorblock_segments = get_sponsorblock_segments(url)
                 except Exception:
                     pass
             if self.sponsorblock_segments:
-                from sponsorblock_handler import find_skip_target
-
                 target = find_skip_target(0.0, self.sponsorblock_segments)
                 if target is not None:
                     self.player.media.set_time(int(target * 1000))

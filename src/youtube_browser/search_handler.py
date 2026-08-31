@@ -662,38 +662,46 @@ class Search:
                     "video_stream": None,
                 }
 
+    def _format_item_title(self, data):
+        cached = data.get("_display_title")
+        if cached is not None:
+            return cached
+        title = [data["title"]]
+        if data["type"] == "video":
+            title += [
+                self.get_duration(data["duration"]),
+                f"{_('بواسطة')} {data['channel']['name']}",
+                self.views_part(data["views"]),
+                str(data.get("uploadDate", "")),
+            ]
+        elif data["type"] == "playlist":
+            title += [
+                _("قائمة تشغيل"),
+                f"{_('بواسطة')} {data['channel']['name']}",
+                _("تحتوي على {} من الفيديوهات").format(data["elements"]),
+            ]
+        elif data["type"] == "channel":
+            title += [
+                _("قناة"),
+                data.get("subscribers") or "",
+                _("تحتوي على {} من الفيديوهات").format(data["elements"])
+                if data.get("elements")
+                else "",
+            ]
+        formatted = ", ".join([element for element in title if element != ""])
+        data["_display_title"] = formatted
+        return formatted
+
     def get_titles(self):
-        titles = []
-        for number in sorted(self.results.keys()):
-            data = self.results[number]
-            title = [data["title"]]
-            if data["type"] == "video":
-                title += [
-                    self.get_duration(data["duration"]),
-                    f"{_('بواسطة')} {data['channel']['name']}",
-                    self.views_part(data["views"]),
-                    str(data.get("uploadDate", "")),
-                ]
-            elif data["type"] == "playlist":
-                title += [
-                    _("قائمة تشغيل"),
-                    f"{_('بواسطة')} {data['channel']['name']}",
-                    _("تحتوي على {} من الفيديوهات").format(data["elements"]),
-                ]
-            elif data["type"] == "channel":
-                title += [
-                    _("قناة"),
-                    data.get("subscribers") or "",
-                    _("تحتوي على {} من الفيديوهات").format(data["elements"])
-                    if data.get("elements")
-                    else "",
-                ]
-            titles.append(", ".join([element for element in title if element != ""]))
-        return titles
+        return [
+            self._format_item_title(self.results[number])
+            for number in sorted(self.results.keys())
+        ]
 
     def get_last_titles(self):
-        titles = self.get_titles()
-        return titles[len(titles) - self.new_videos : len(titles)]
+        keys = sorted(self.results.keys())
+        last_keys = keys[len(keys) - self.new_videos :] if self.new_videos > 0 else []
+        return [self._format_item_title(self.results[k]) for k in last_keys]
 
     def get_title(self, number):
         return self.results[number + 1]["title"]

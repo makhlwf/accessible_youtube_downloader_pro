@@ -5,6 +5,7 @@ import {
     handleGetShortsFeed,
     handleLikeComment,
     handleReplyComment,
+    handleUpdateWatchHistory,
     normalizeComment,
     normalizeReplyComments,
     parseCount
@@ -302,5 +303,17 @@ Deno.test('handleGetShortsFeed throws error if cookies path is missing', async (
     }
     assertEquals(threw, true);
 });
+
+Deno.test('handleUpdateWatchHistory throws error if videoId or cookies path is missing', async () => {
+    let threw = false;
+    try {
+        await handleUpdateWatchHistory({});
+    } catch (e) {
+        threw = true;
+        assertEquals(e.message, 'videoId and cookiesPath are required for watch history');
+    }
+    assertEquals(threw, true);
+});
+
 
 

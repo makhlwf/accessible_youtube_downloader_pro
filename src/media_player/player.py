@@ -36,7 +36,7 @@ class Player:
         if self._closing:
             return
         self.do_reset = True
-        Thread(target=self.reset).start()
+        Thread(target=self.reset, daemon=True).start()
 
     def get_length(self):
         if self._cached_length == -1:

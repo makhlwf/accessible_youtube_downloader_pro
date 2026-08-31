@@ -13,6 +13,11 @@ def db_init():
     try:
         connection = sql.connect(db_path, check_same_thread=False)
         connection.row_factory = sql.Row
+        try:
+            connection.execute("PRAGMA journal_mode=WAL")
+            connection.execute("PRAGMA synchronous=NORMAL")
+        except Exception:
+            pass
         return connection
     except Exception as e:
         logger.error(f"Database initialization failed: {e}")
@@ -45,6 +50,12 @@ def prepare_tables():
         channel_url TEXT NOT NULL
     )"""
     con.execute(favorites_query)
+    con.execute(
+        """
+        CREATE INDEX IF NOT EXISTS idx_favorite_url
+        ON favorite (url)
+        """
+    )
     continue_query = """
     CREATE TABLE IF NOT EXISTS continue (
         id INTEGER PRIMARY KEY,
@@ -52,6 +63,12 @@ def prepare_tables():
         position REAL NOT NULL
     )"""
     con.execute(continue_query)
+    con.execute(
+        """
+        CREATE INDEX IF NOT EXISTS idx_continue_url
+        ON continue (url)
+        """
+    )
     history_query = """
     CREATE TABLE IF NOT EXISTS watch_history (
         id INTEGER PRIMARY KEY,
@@ -74,9 +91,15 @@ def prepare_tables():
     con.commit()
 
 
-@is_valid
 def disconnect():
-    con.close()
+    global con
+    with _db_lock:
+        if con is not None:
+            try:
+                con.close()
+            except Exception:
+                pass
+            con = None
 
 
 class Favorite:
@@ -103,6 +126,11 @@ class Favorite:
     def remove_favorite(self, url):
         con.execute("DELETE FROM favorite WHERE url = ?", (url,))
         con.commit()
+
+    @is_valid
+    def is_favorite(self, url):
+        cursor = con.execute("SELECT 1 FROM favorite WHERE url = ? LIMIT 1", (url,))
+        return cursor.fetchone() is not None
 
     @is_valid
     def get_all(self):
