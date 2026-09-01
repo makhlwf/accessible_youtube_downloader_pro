@@ -2343,6 +2343,26 @@ msgstr "تحتوي على {} من الفيديوهات"
 msgid "عدد المشاهدات {}"
 msgstr "عدد المشاهدات {}"
 
+#: src/gui/settings_dialog.py:235
+msgid "عام"
+msgstr "عام"
+
+#: src/gui/settings_dialog.py:297
+msgid "التنزيل"
+msgstr "التنزيل"
+
+#: src/gui/settings_dialog.py:353
+msgid "المشغل"
+msgstr "المشغل"
+
+#: src/gui/settings_dialog.py:520
+msgid "الكوكيز"
+msgstr "الكوكيز"
+
+#: src/gui/settings_dialog.py:571
+msgid "متقدم"
+msgstr "متقدم"
+
 #~ msgid "جودة تحويل ملفات mp3: "
 #~ msgstr "جودة تحويل ملفات mp3: "
 

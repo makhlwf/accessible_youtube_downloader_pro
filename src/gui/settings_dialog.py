@@ -173,118 +173,83 @@ class SettingsCheckBox(wx.CheckBox):
                 self._accessible = None
 
 
+def _add_row(sizer, label, control):
+    """Place a label/control pair on a two-column grid sizer."""
+    sizer.Add(label, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
+    sizer.Add(control, 1, wx.EXPAND | wx.ALL, 5)
+
+
+def _labelled_grid():
+    grid = wx.FlexGridSizer(0, 2, 6, 8)
+    grid.AddGrowableCol(1, 1)
+    return grid
+
+
 class SettingsDialog(wx.Dialog):
     def __init__(self, parent):
         wx.Dialog.__init__(self, parent, title=_("الإعدادات"))
-        self.SetMinSize((560, 520))
-        self.SetSize((760, 680))
+        self.SetMinSize((600, 520))
+        self.SetSize((780, 680))
         self.Centre()
         self.preferences = {}
         self.theme_keys = list(THEMES.keys())
         self.theme_labels = _theme_labels()
-        panel = wx.ScrolledWindow(self)
-        panel.SetScrollRate(8, 8)
+        self.pages = []
+
+        self.notebook = wx.Notebook(self, -1, name="settings_tabs")
+        self._build_general_page()
+        self._build_download_page()
+        self._build_player_page()
+        self._build_sponsorblock_page()
+        self._build_cookies_page()
+        self._build_advanced_page()
+        okButton = wx.Button(self, wx.ID_OK, _("مواف&ق"), name="ok_cancel")
+        okButton.SetDefault()
+        cancelButton = wx.Button(self, wx.ID_CANCEL, _("إل&غاء"), name="ok_cancel")
+        okCancelSizer = wx.BoxSizer(wx.HORIZONTAL)
+        okCancelSizer.Add(okButton, 1, wx.EXPAND | wx.ALL, 5)
+        okCancelSizer.Add(cancelButton, 1, wx.EXPAND | wx.ALL, 5)
+
+        root_sizer = wx.BoxSizer(wx.VERTICAL)
+        root_sizer.Add(self.notebook, 1, wx.EXPAND | wx.ALL, 8)
+        root_sizer.Add(okCancelSizer, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 8)
+        self.SetSizer(root_sizer)
+        self.Layout()
+        for page in self.pages:
+            page.FitInside()
+
+        self._bind_events(okButton)
+        self._update_sponsorblock_controls()
+        apply_theme(self)
+        self.ShowModal()
+
+    def _new_page(self, title):
+        """Add a scrollable page to the notebook and return it with its sizer."""
+        page = wx.ScrolledWindow(self.notebook, -1)
+        page.SetScrollRate(0, 8)
+        self.notebook.AddPage(page, title)
+        self.pages.append(page)
+        return page, wx.BoxSizer(wx.VERTICAL)
+
+    def _build_general_page(self):
+        page, sizer = self._new_page(_("عام"))
+        grid = _labelled_grid()
 
         language_label_text = _("لغة البرنامج: ")
-        lbl = wx.StaticText(panel, -1, language_label_text, name="language")
-        self.languageBox = wx.Choice(panel, -1, name="language")
+        language_label = wx.StaticText(page, -1, language_label_text, name="language")
+        self.languageBox = wx.Choice(page, -1, name="language")
         self.languageBox.Set(list(supported_languages.keys()))
         _set_accessible_name(self.languageBox, language_label_text)
         try:
             self.languageBox.Selection = languages[config_get("lang")]
         except KeyError:
             self.languageBox.Selection = 0
-        self.pathField = wx.TextCtrl(
-            panel,
-            -1,
-            value=config_get("path"),
-            name="path",
-            style=wx.TE_READONLY | wx.TE_MULTILINE | wx.HSCROLL,
-        )
-        _set_accessible_name(self.pathField, _("مسار مجلد التنزيل: "))
-        changeButton = wx.Button(panel, -1, _("&تغيير المسار"), name="path")
-        browser_label_text = _("المتصفح لاستيراد الكوكيز: ")
-        browser_label = wx.StaticText(panel, -1, browser_label_text)
-        self.installed_browsers = cookies_manager.get_installed_browsers()
-        self.browserChoice = wx.Choice(
-            panel,
-            -1,
-            name="browser_cookies_source",
-            choices=[b["name"] for b in self.installed_browsers],
-        )
-        _set_accessible_name(self.browserChoice, browser_label_text)
-        saved_browser_source = config_get("browser_cookies_source")
-        selected_browser_idx = 0
-        for idx, b in enumerate(self.installed_browsers):
-            if b["id"] == saved_browser_source or b["name"] == saved_browser_source:
-                selected_browser_idx = idx
-                break
-        self.browserChoice.Selection = selected_browser_idx
+        _add_row(grid, language_label, self.languageBox)
 
-        self.importBrowserCookiesButton = wx.Button(
-            panel, -1, _("استيراد من المتصفح"), name="cookies"
-        )
-        self.cookiesPathField = wx.TextCtrl(
-            panel,
-            -1,
-            value=config_get("cookiespath"),
-            name="cookies",
-            style=wx.TE_READONLY | wx.TE_MULTILINE | wx.HSCROLL,
-        )
-        _set_accessible_name(self.cookiesPathField, _("مسار ملف الكوكيز: "))
-        changeCookiesButton = wx.Button(panel, -1, _("تغيير"), name="cookies")
-        clearCookiesButton = wx.Button(panel, -1, _("حذف"), name="cookies")
-        preferencesBox = wx.StaticBox(panel, -1, _("التفضيلات العامة"))
-        self.autoDetectItem = SettingsCheckBox(
-            preferencesBox,
-            -1,
-            _("اكتشاف الروابط تلقائيًا عند فتح البرنامج"),
-            name="autodetect",
-        )
-        self.autoCheckForUpdates = SettingsCheckBox(
-            preferencesBox,
-            -1,
-            _("الكشف عن التحديثات الجديدة تلقائيًا عند فتح البرنامج"),
-            name="checkupdates",
-        )
-        self.autoLoadItem = SettingsCheckBox(
-            preferencesBox,
-            -1,
-            _(
-                "تحميل المزيد من نتائج البحث عند الوصول إلى نهاية قائمة الفيديوهات المعروضة"
-            ),
-            name="autoload",
-        )
-        self.debugMode = SettingsCheckBox(
-            preferencesBox,
-            -1,
-            _("تفعيل رسائل تصحيح الأخطاء للمطورين فقط"),
-            name="debug",
-        )
-        self.backgroundMonitoring = SettingsCheckBox(
-            preferencesBox,
-            -1,
-            _("التشغيل في الخلفية ومراقبة الحافظة عند بدء تشغيل النظام"),
-            name="background_monitoring",
-        )
-        self.browserIntegration = SettingsCheckBox(
-            preferencesBox,
-            -1,
-            _("تفعيل التكامل الآمن مع إضافة المتصفح"),
-            name="browser_integration",
-        )
-        self.autoCheckForUpdates.SetValue(config_get("checkupdates"))
-        self.autoDetectItem.SetValue(config_get("autodetect"))
-        self.autoLoadItem.SetValue(config_get("autoload"))
-        self.debugMode.SetValue(config_get("debug"))
-        self.backgroundMonitoring.SetValue(config_get("background_monitoring"))
-        self.browserIntegration.SetValue(config_get("browser_integration"))
-        if sys.platform != "win32":
-            self.browserIntegration.Disable()
         theme_label_text = _("مظهر البرنامج: ")
-        theme_label = wx.StaticText(preferencesBox, -1, theme_label_text)
+        theme_label = wx.StaticText(page, -1, theme_label_text)
         self.themeBox = wx.Choice(
-            preferencesBox,
+            page,
             -1,
             name="theme",
             choices=[self.theme_labels.get(theme, theme) for theme in self.theme_keys],
@@ -294,12 +259,65 @@ class SettingsDialog(wx.Dialog):
             self.themeBox.Selection = self.theme_keys.index(config_get("theme"))
         except ValueError:
             self.themeBox.Selection = 0
+        _add_row(grid, theme_label, self.themeBox)
+        sizer.Add(grid, 0, wx.EXPAND | wx.ALL, 8)
 
-        downloadPreferencesBox = wx.StaticBox(panel, -1, _("إعدادات التنزيل"))
+        self.autoDetectItem = SettingsCheckBox(
+            page,
+            -1,
+            _("اكتشاف الروابط تلقائيًا عند فتح البرنامج"),
+            name="autodetect",
+        )
+        self.autoDetectItem.SetValue(config_get("autodetect"))
+        self.autoCheckForUpdates = SettingsCheckBox(
+            page,
+            -1,
+            _("الكشف عن التحديثات الجديدة تلقائيًا عند فتح البرنامج"),
+            name="checkupdates",
+        )
+        self.autoCheckForUpdates.SetValue(config_get("checkupdates"))
+        self.autoLoadItem = SettingsCheckBox(
+            page,
+            -1,
+            _(
+                "تحميل المزيد من نتائج البحث عند الوصول إلى نهاية قائمة الفيديوهات المعروضة"
+            ),
+            name="autoload",
+        )
+        self.autoLoadItem.SetValue(config_get("autoload"))
+        for checkbox in (
+            self.autoDetectItem,
+            self.autoCheckForUpdates,
+            self.autoLoadItem,
+        ):
+            sizer.Add(checkbox, 0, wx.EXPAND | wx.ALL, 5)
+        page.SetSizer(sizer)
+
+    def _build_download_page(self):
+        page, sizer = self._new_page(_("التنزيل"))
+        grid = _labelled_grid()
+
+        path_label_text = _("مسار مجلد التنزيل: ")
+        path_label = wx.StaticText(page, -1, path_label_text)
+        self.pathField = wx.TextCtrl(
+            page,
+            -1,
+            value=config_get("path"),
+            name="path",
+            style=wx.TE_READONLY | wx.TE_MULTILINE | wx.HSCROLL,
+        )
+        self.pathField.SetMinSize((-1, 56))
+        _set_accessible_name(self.pathField, path_label_text)
+        self.changePathButton = wx.Button(page, -1, _("&تغيير المسار"), name="path")
+        path_controls = wx.BoxSizer(wx.HORIZONTAL)
+        path_controls.Add(self.pathField, 1, wx.EXPAND | wx.RIGHT, 5)
+        path_controls.Add(self.changePathButton, 0, wx.EXPAND)
+        _add_row(grid, path_label, path_controls)
+
         format_label_text = _("صيغة التحميل المباشر: ")
-        lbl2 = wx.StaticText(downloadPreferencesBox, -1, format_label_text)
+        format_label = wx.StaticText(page, -1, format_label_text)
         self.formats = wx.Choice(
-            downloadPreferencesBox,
+            page,
             -1,
             choices=[
                 _("فيديو (mp4)"),
@@ -315,23 +333,30 @@ class SettingsDialog(wx.Dialog):
         if not (0 <= default_format < 6):
             default_format = 0
         self.formats.Selection = default_format
-        audio_quality_label_text = _("جودة الصوت: ")
-        lbl3 = wx.StaticText(downloadPreferencesBox, -1, audio_quality_label_text)
+        _add_row(grid, format_label, self.formats)
+        conversion_label_text = _("جودة الصوت: ")
+        conversion_label = wx.StaticText(page, -1, conversion_label_text)
         self.audioQuality2 = wx.Choice(
-            downloadPreferencesBox,
+            page,
             -1,
             choices=[_("96 ك.ب/ث"), _("128 ك.ب/ث"), _("192 ك.ب/ث"), _("320 ك.ب/ث")],
             name="conversion",
         )
-        _set_accessible_name(self.audioQuality2, audio_quality_label_text)
+        _set_accessible_name(self.audioQuality2, conversion_label_text)
         self.audioQuality2.Selection = int(config_get("conversion"))
-        playerOptions = wx.StaticBox(panel, -1, _("إعدادات المشغل"))
+        _add_row(grid, conversion_label, self.audioQuality2)
+
+        sizer.Add(grid, 0, wx.EXPAND | wx.ALL, 8)
+        page.SetSizer(sizer)
+
+    def _build_player_page(self):
+        page, sizer = self._new_page(_("المشغل"))
+        grid = _labelled_grid()
+
         video_quality_label_text = _("جودة الفيديو الافتراضية: ")
-        self.videoQualityLabel = wx.StaticText(
-            playerOptions, -1, video_quality_label_text
-        )
+        self.videoQualityLabel = wx.StaticText(page, -1, video_quality_label_text)
         self.videoQuality = wx.Choice(
-            playerOptions,
+            page,
             -1,
             choices=[
                 _("144ب"),
@@ -346,24 +371,211 @@ class SettingsDialog(wx.Dialog):
         )
         _set_accessible_name(self.videoQuality, video_quality_label_text)
         self.videoQuality.Selection = int(config_get("defaultvideoquality"))
+        _add_row(grid, self.videoQualityLabel, self.videoQuality)
+
         audio_quality_label_text = _("جودة الصوت الافتراضية: ")
-        self.audioQualityLabel = wx.StaticText(
-            playerOptions, -1, audio_quality_label_text
-        )
+        self.audioQualityLabel = wx.StaticText(page, -1, audio_quality_label_text)
         self.audioQuality = wx.Choice(
-            playerOptions,
+            page,
             -1,
             choices=[_("منخفضة"), _("متوسطة"), _("عالية")],
         )
         _set_accessible_name(self.audioQuality, audio_quality_label_text)
         self.audioQuality.Selection = int(config_get("defaultaudioquality"))
+        _add_row(grid, self.audioQualityLabel, self.audioQuality)
+
+        self.audioOutputDevices = _get_audio_output_device_choices()
+        audio_output_label_text = _("جهاز إخراج الصوت: ")
+        self.audioOutputDeviceLabel = wx.StaticText(page, -1, audio_output_label_text)
+        self.audioOutputDevice = wx.Choice(
+            page,
+            -1,
+            choices=[device["description"] for device in self.audioOutputDevices],
+        )
+        _set_accessible_name(self.audioOutputDevice, audio_output_label_text)
+        self.audioOutputDevice.Selection = self.getAudioOutputDeviceSelection(
+            config_get("audiooutputdevice")
+        )
+        _add_row(grid, self.audioOutputDeviceLabel, self.audioOutputDevice)
+        playback_speed_label_text = _("مقدار تغيير سرعة التشغيل: ")
+        self.playbackSpeedStepLabel = wx.StaticText(page, -1, playback_speed_label_text)
+        self.playbackSpeedStep = wx.SpinCtrlDouble(
+            page,
+            -1,
+            value=str(config_get("playback_speed_step")),
+            min=0.01,
+            max=1.0,
+            inc=0.01,
+        )
+        _set_accessible_name(self.playbackSpeedStep, playback_speed_label_text)
+        _add_row(grid, self.playbackSpeedStepLabel, self.playbackSpeedStep)
+        sizer.Add(grid, 0, wx.EXPAND | wx.ALL, 8)
+        self.continueWatching = SettingsCheckBox(
+            page,
+            -1,
+            _("متابعة المشاهدة بعد إغلاق الفيديو وتشغيله من جديد"),
+            name="continue",
+        )
+        self.continueWatching.SetValue(config_get("continue"))
+        self.openPlayerFullscreen = SettingsCheckBox(
+            page,
+            -1,
+            _("فتح مشغل الوسائط في وضع ملء الشاشة افتراضيًا"),
+            name="player_fullscreen_default",
+        )
+        self.openPlayerFullscreen.SetValue(config_get("player_fullscreen_default"))
+        self.repeateTracks = SettingsCheckBox(
+            page,
+            -1,
+            _("إعادة تشغيل المقطع تلقائيًا عند انتهائه"),
+            name="repeatTracks",
+        )
+        self.repeateTracks.SetValue(config_get("repeatTracks"))
+        self.autoPlayNext = SettingsCheckBox(
+            page,
+            -1,
+            _("الانتقال إلى المقطع التالي تلقائيًا عند انتهاء المقطع الحالي"),
+            name="autonext",
+        )
+        self.autoPlayNext.SetValue(config_get("autonext"))
+        for checkbox in (
+            self.continueWatching,
+            self.openPlayerFullscreen,
+            self.repeateTracks,
+            self.autoPlayNext,
+        ):
+            sizer.Add(checkbox, 0, wx.EXPAND | wx.ALL, 5)
+
+        self.eqButton = wx.Button(page, -1, _("إعدادات المعادل..."))
+        sizer.Add(self.eqButton, 0, wx.EXPAND | wx.ALL, 5)
+        page.SetSizer(sizer)
+
+    def _build_sponsorblock_page(self):
+        page, sizer = self._new_page("SponsorBlock")
+        self.sponsorBlock = SettingsCheckBox(
+            page,
+            -1,
+            _("تفعيل SponsorBlock لتخطي المقاطع الدعائية تلقائيًا"),
+            name="sponsorblock",
+        )
+        self.sponsorBlock.SetValue(bool(config_get("sponsorblock")))
+        sizer.Add(self.sponsorBlock, 0, wx.EXPAND | wx.ALL, 5)
+        self.sponsorBlockNotify = SettingsCheckBox(
+            page,
+            -1,
+            _("الإعلان عن كل مقطع يتم تخطيه"),
+            name="sponsorblock_notify",
+        )
+        self.sponsorBlockNotify.SetValue(bool(config_get("sponsorblock_notify")))
+        sizer.Add(self.sponsorBlockNotify, 0, wx.EXPAND | wx.ALL, 5)
+
+        self.sponsorBlockCategoriesLabel = wx.StaticText(
+            page, -1, _("الفئات التي يتم تخطيها:")
+        )
+        sizer.Add(self.sponsorBlockCategoriesLabel, 0, wx.EXPAND | wx.ALL, 5)
+        enabled_categories = parse_categories(config_get("sponsorblock_categories"))
+        self.sponsorBlockCategories = {}
+        categories_grid = wx.FlexGridSizer(0, 2, 4, 8)
+        categories_grid.AddGrowableCol(0, 1)
+        categories_grid.AddGrowableCol(1, 1)
+        for category, label in category_labels().items():
+            categoryBox = SettingsCheckBox(
+                page, -1, label, name=f"sponsorblock_category_{category}"
+            )
+            categoryBox.SetValue(category in enabled_categories)
+            self.sponsorBlockCategories[category] = categoryBox
+            categories_grid.Add(categoryBox, 0, wx.EXPAND | wx.ALL, 3)
+        sizer.Add(categories_grid, 0, wx.EXPAND | wx.LEFT | wx.RIGHT, 12)
+
+        grid = _labelled_grid()
+        min_duration_label_text = _("تجاهل المقاطع الأقصر من (بالثواني): ")
+        self.sponsorBlockMinDurationLabel = wx.StaticText(
+            page, -1, min_duration_label_text
+        )
+        self.sponsorBlockMinDuration = wx.SpinCtrlDouble(
+            page,
+            -1,
+            value=str(_as_float(config_get("sponsorblock_min_duration"), 0.0)),
+            min=0.0,
+            max=60.0,
+            inc=0.5,
+        )
+        _set_accessible_name(self.sponsorBlockMinDuration, min_duration_label_text)
+        _add_row(grid, self.sponsorBlockMinDurationLabel, self.sponsorBlockMinDuration)
+
+        api_url_label_text = _("عنوان خادم SponsorBlock: ")
+        self.sponsorBlockApiUrlLabel = wx.StaticText(page, -1, api_url_label_text)
+        self.sponsorBlockApiUrl = wx.TextCtrl(
+            page,
+            -1,
+            value=_normalise_api_url(config_get("sponsorblock_api_url")),
+            name="sponsorblock_api_url",
+        )
+        _set_accessible_name(self.sponsorBlockApiUrl, api_url_label_text)
+        _add_row(grid, self.sponsorBlockApiUrlLabel, self.sponsorBlockApiUrl)
+        sizer.Add(grid, 0, wx.EXPAND | wx.ALL, 5)
+        page.SetSizer(sizer)
+
+    def _build_cookies_page(self):
+        page, sizer = self._new_page(_("الكوكيز"))
+        grid = _labelled_grid()
+
+        browser_label_text = _("المتصفح لاستيراد الكوكيز: ")
+        browser_label = wx.StaticText(page, -1, browser_label_text)
+        self.installed_browsers = cookies_manager.get_installed_browsers()
+        self.browserChoice = wx.Choice(
+            page,
+            -1,
+            name="browser_cookies_source",
+            choices=[b["name"] for b in self.installed_browsers],
+        )
+        _set_accessible_name(self.browserChoice, browser_label_text)
+        saved_browser_source = config_get("browser_cookies_source")
+        selected_browser_idx = 0
+        for idx, b in enumerate(self.installed_browsers):
+            if b["id"] == saved_browser_source or b["name"] == saved_browser_source:
+                selected_browser_idx = idx
+                break
+        self.browserChoice.Selection = selected_browser_idx
+        self.importBrowserCookiesButton = wx.Button(
+            page, -1, _("استيراد من المتصفح"), name="cookies"
+        )
+        browser_controls = wx.BoxSizer(wx.HORIZONTAL)
+        browser_controls.Add(self.browserChoice, 1, wx.EXPAND | wx.RIGHT, 5)
+        browser_controls.Add(self.importBrowserCookiesButton, 0, wx.EXPAND)
+        _add_row(grid, browser_label, browser_controls)
+
+        cookies_label_text = _("مسار ملف الكوكيز: ")
+        cookies_label = wx.StaticText(page, -1, cookies_label_text)
+        self.cookiesPathField = wx.TextCtrl(
+            page,
+            -1,
+            value=config_get("cookiespath"),
+            name="cookies",
+            style=wx.TE_READONLY | wx.TE_MULTILINE | wx.HSCROLL,
+        )
+        self.cookiesPathField.SetMinSize((-1, 56))
+        _set_accessible_name(self.cookiesPathField, cookies_label_text)
+        self.changeCookiesButton = wx.Button(page, -1, _("تغيير"), name="cookies")
+        self.clearCookiesButton = wx.Button(page, -1, _("حذف"), name="cookies")
+        cookies_controls = wx.BoxSizer(wx.HORIZONTAL)
+        cookies_controls.Add(self.cookiesPathField, 1, wx.EXPAND | wx.RIGHT, 5)
+        cookies_controls.Add(self.changeCookiesButton, 0, wx.EXPAND | wx.RIGHT, 5)
+        cookies_controls.Add(self.clearCookiesButton, 0, wx.EXPAND)
+        _add_row(grid, cookies_label, cookies_controls)
+
+        sizer.Add(grid, 0, wx.EXPAND | wx.ALL, 8)
+        page.SetSizer(sizer)
+
+    def _build_advanced_page(self):
+        page, sizer = self._new_page(_("متقدم"))
+        grid = _labelled_grid()
+
         self.player_client_choices = utils.get_player_client_choices()
         player_client_label_text = _("عميل مشغل يوتيوب: ")
-        self.playerClientLabel = wx.StaticText(
-            playerOptions, -1, player_client_label_text
-        )
+        self.playerClientLabel = wx.StaticText(page, -1, player_client_label_text)
         self.playerClientBox = wx.Choice(
-            playerOptions,
+            page,
             -1,
             choices=[label for _, label in self.player_client_choices],
             name="player_client",
@@ -372,255 +584,63 @@ class SettingsDialog(wx.Dialog):
         self.playerClientBox.Selection = self.getPlayerClientSelection(
             config_get("player_client")
         )
-        self.audioOutputDevices = _get_audio_output_device_choices()
-        audio_output_label_text = _("جهاز إخراج الصوت: ")
-        self.audioOutputDeviceLabel = wx.StaticText(
-            playerOptions, -1, audio_output_label_text
-        )
-        self.audioOutputDevice = wx.Choice(
-            playerOptions,
-            -1,
-            choices=[device["description"] for device in self.audioOutputDevices],
-        )
-        _set_accessible_name(self.audioOutputDevice, audio_output_label_text)
-        self.audioOutputDevice.Selection = self.getAudioOutputDeviceSelection(
-            config_get("audiooutputdevice")
-        )
-        self.continueWatching = SettingsCheckBox(
-            playerOptions,
-            -1,
-            _("متابعة المشاهدة بعد إغلاق الفيديو وتشغيله من جديد"),
-            name="continue",
-        )
-        self.continueWatching.SetValue(config_get("continue"))
-        self.openPlayerFullscreen = SettingsCheckBox(
-            playerOptions,
-            -1,
-            _("فتح مشغل الوسائط في وضع ملء الشاشة افتراضيًا"),
-            name="player_fullscreen_default",
-        )
-        self.openPlayerFullscreen.SetValue(config_get("player_fullscreen_default"))
-        self.repeateTracks = SettingsCheckBox(
-            playerOptions,
-            -1,
-            _("إعادة تشغيل المقطع تلقائيًا عند انتهائه"),
-            name="repeatTracks",
-        )
-        self.autoPlayNext = SettingsCheckBox(
-            playerOptions,
-            -1,
-            _("الانتقال إلى المقطع التالي تلقائيًا عند انتهاء المقطع الحالي"),
-            name="autonext",
-        )
-        self.autoPlayNext.SetValue(config_get("autonext"))
-        self.repeateTracks.SetValue(config_get("repeatTracks"))
-        self.eqButton = wx.Button(playerOptions, -1, _("إعدادات المعادل..."))
-        sponsorBlockBox = wx.StaticBox(panel, -1, _("إعدادات SponsorBlock"))
-        self.sponsorBlock = SettingsCheckBox(
-            sponsorBlockBox,
-            -1,
-            _("تفعيل SponsorBlock لتخطي المقاطع الدعائية تلقائيًا"),
-            name="sponsorblock",
-        )
-        self.sponsorBlock.SetValue(bool(config_get("sponsorblock")))
-        self.sponsorBlockNotify = SettingsCheckBox(
-            sponsorBlockBox,
-            -1,
-            _("الإعلان عن كل مقطع يتم تخطيه"),
-            name="sponsorblock_notify",
-        )
-        self.sponsorBlockNotify.SetValue(bool(config_get("sponsorblock_notify")))
-        self.sponsorBlockCategoriesLabel = wx.StaticText(
-            sponsorBlockBox, -1, _("الفئات التي يتم تخطيها:")
-        )
-        enabled_categories = parse_categories(config_get("sponsorblock_categories"))
-        self.sponsorBlockCategories = {}
-        for category, label in category_labels().items():
-            categoryBox = SettingsCheckBox(
-                sponsorBlockBox,
-                -1,
-                label,
-                name=f"sponsorblock_category_{category}",
-            )
-            categoryBox.SetValue(category in enabled_categories)
-            self.sponsorBlockCategories[category] = categoryBox
-        min_duration_label_text = _("تجاهل المقاطع الأقصر من (بالثواني): ")
-        self.sponsorBlockMinDurationLabel = wx.StaticText(
-            sponsorBlockBox, -1, min_duration_label_text
-        )
-        self.sponsorBlockMinDuration = wx.SpinCtrlDouble(
-            sponsorBlockBox,
-            -1,
-            value=str(_as_float(config_get("sponsorblock_min_duration"), 0.0)),
-            min=0.0,
-            max=60.0,
-            inc=0.5,
-        )
-        _set_accessible_name(self.sponsorBlockMinDuration, min_duration_label_text)
-        api_url_label_text = _("عنوان خادم SponsorBlock: ")
-        self.sponsorBlockApiUrlLabel = wx.StaticText(
-            sponsorBlockBox, -1, api_url_label_text
-        )
-        self.sponsorBlockApiUrl = wx.TextCtrl(
-            sponsorBlockBox,
-            -1,
-            value=_normalise_api_url(config_get("sponsorblock_api_url")),
-            name="sponsorblock_api_url",
-        )
-        _set_accessible_name(self.sponsorBlockApiUrl, api_url_label_text)
-        playback_speed_label_text = _("مقدار تغيير سرعة التشغيل: ")
-        self.playbackSpeedStepLabel = wx.StaticText(
-            playerOptions, -1, playback_speed_label_text
-        )
-        self.playbackSpeedStep = wx.SpinCtrlDouble(
-            playerOptions,
-            -1,
-            value=str(config_get("playback_speed_step")),
-            min=0.01,
-            max=1.0,
-            inc=0.01,
-        )
-        _set_accessible_name(self.playbackSpeedStep, playback_speed_label_text)
-        okButton = wx.Button(panel, wx.ID_OK, _("مواف&ق"), name="ok_cancel")
-        okButton.SetDefault()
-        wx.Button(panel, wx.ID_CANCEL, _("إل&غاء"), name="ok_cancel")
+        _add_row(grid, self.playerClientLabel, self.playerClientBox)
+        sizer.Add(grid, 0, wx.EXPAND | wx.ALL, 8)
 
-        def add_row(sizer, label, control):
-            sizer.Add(label, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
-            sizer.Add(control, 1, wx.EXPAND | wx.ALL, 5)
+        self.backgroundMonitoring = SettingsCheckBox(
+            page,
+            -1,
+            _("التشغيل في الخلفية ومراقبة الحافظة عند بدء تشغيل النظام"),
+            name="background_monitoring",
+        )
+        self.backgroundMonitoring.SetValue(config_get("background_monitoring"))
+        self.browserIntegration = SettingsCheckBox(
+            page,
+            -1,
+            _("تفعيل التكامل الآمن مع إضافة المتصفح"),
+            name="browser_integration",
+        )
+        self.browserIntegration.SetValue(config_get("browser_integration"))
+        if sys.platform != "win32":
+            self.browserIntegration.Disable()
+        self.debugMode = SettingsCheckBox(
+            page,
+            -1,
+            _("تفعيل رسائل تصحيح الأخطاء للمطورين فقط"),
+            name="debug",
+        )
+        self.debugMode.SetValue(config_get("debug"))
+        for checkbox in (
+            self.backgroundMonitoring,
+            self.browserIntegration,
+            self.debugMode,
+        ):
+            sizer.Add(checkbox, 0, wx.EXPAND | wx.ALL, 5)
+        page.SetSizer(sizer)
 
-        main_sizer = wx.BoxSizer(wx.VERTICAL)
-
-        general_grid = wx.FlexGridSizer(0, 2, 6, 8)
-        general_grid.AddGrowableCol(1, 1)
-        add_row(general_grid, lbl, self.languageBox)
-
-        path_controls = wx.BoxSizer(wx.HORIZONTAL)
-        self.pathField.SetMinSize((-1, 56))
-        path_controls.Add(self.pathField, 1, wx.EXPAND | wx.RIGHT, 5)
-        path_controls.Add(changeButton, 0, wx.EXPAND)
-        path_label_text = _("مسار مجلد التنزيل: ")
-        path_label = wx.StaticText(panel, -1, path_label_text)
-        _set_accessible_name(self.pathField, path_label_text)
-        add_row(general_grid, path_label, path_controls)
-
-        browser_controls = wx.BoxSizer(wx.HORIZONTAL)
-        browser_controls.Add(self.browserChoice, 1, wx.EXPAND | wx.RIGHT, 5)
-        browser_controls.Add(self.importBrowserCookiesButton, 0, wx.EXPAND)
-        add_row(general_grid, browser_label, browser_controls)
-
-        cookies_controls = wx.BoxSizer(wx.HORIZONTAL)
-        self.cookiesPathField.SetMinSize((-1, 56))
-        cookies_controls.Add(self.cookiesPathField, 1, wx.EXPAND | wx.RIGHT, 5)
-        cookies_controls.Add(changeCookiesButton, 0, wx.EXPAND | wx.RIGHT, 5)
-        cookies_controls.Add(clearCookiesButton, 0, wx.EXPAND)
-        cookies_label_text = _("مسار ملف الكوكيز: ")
-        cookies_label = wx.StaticText(panel, -1, cookies_label_text)
-        _set_accessible_name(self.cookiesPathField, cookies_label_text)
-        add_row(general_grid, cookies_label, cookies_controls)
-        main_sizer.Add(general_grid, 0, wx.EXPAND | wx.ALL, 8)
-
-        preferencesSizer = wx.StaticBoxSizer(preferencesBox, wx.VERTICAL)
-        for item in (
+    def _bind_events(self, okButton):
+        self.changePathButton.Bind(wx.EVT_BUTTON, self.onChange)
+        self.changeCookiesButton.Bind(wx.EVT_BUTTON, self.onChangeCookies)
+        self.clearCookiesButton.Bind(wx.EVT_BUTTON, self.onClearCookies)
+        self.importBrowserCookiesButton.Bind(wx.EVT_BUTTON, self.onImportBrowserCookies)
+        for checkbox in (
             self.autoDetectItem,
-            self.autoCheckForUpdates,
             self.autoLoadItem,
+            self.autoCheckForUpdates,
             self.debugMode,
             self.backgroundMonitoring,
             self.browserIntegration,
+            self.repeateTracks,
+            self.autoPlayNext,
+            self.sponsorBlockNotify,
+            self.continueWatching,
+            self.openPlayerFullscreen,
         ):
-            preferencesSizer.Add(item, 0, wx.EXPAND | wx.ALL, 5)
-        theme_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        theme_sizer.Add(theme_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
-        theme_sizer.Add(self.themeBox, 1, wx.EXPAND)
-        preferencesSizer.Add(theme_sizer, 0, wx.EXPAND | wx.ALL, 5)
-        main_sizer.Add(preferencesSizer, 0, wx.EXPAND | wx.ALL, 8)
-
-        download_grid = wx.FlexGridSizer(0, 2, 6, 8)
-        download_grid.AddGrowableCol(1, 1)
-        add_row(download_grid, lbl2, self.formats)
-        add_row(download_grid, lbl3, self.audioQuality2)
-        downloadPreferencesSizer = wx.StaticBoxSizer(
-            downloadPreferencesBox, wx.VERTICAL
-        )
-        downloadPreferencesSizer.Add(download_grid, 0, wx.EXPAND | wx.ALL, 5)
-        main_sizer.Add(downloadPreferencesSizer, 0, wx.EXPAND | wx.ALL, 8)
-
-        playerOptionsSizer = wx.StaticBoxSizer(playerOptions, wx.VERTICAL)
-        player_grid = wx.FlexGridSizer(0, 2, 6, 8)
-        player_grid.AddGrowableCol(1, 1)
-        add_row(player_grid, self.videoQualityLabel, self.videoQuality)
-        add_row(player_grid, self.audioQualityLabel, self.audioQuality)
-        add_row(player_grid, self.playerClientLabel, self.playerClientBox)
-        add_row(player_grid, self.audioOutputDeviceLabel, self.audioOutputDevice)
-        add_row(player_grid, self.playbackSpeedStepLabel, self.playbackSpeedStep)
-        playerOptionsSizer.Add(player_grid, 0, wx.EXPAND | wx.ALL, 5)
-        playerOptionsSizer.Add(self.continueWatching, 0, wx.EXPAND | wx.ALL, 5)
-        playerOptionsSizer.Add(self.openPlayerFullscreen, 0, wx.EXPAND | wx.ALL, 5)
-        playerOptionsSizer.Add(self.repeateTracks, 0, wx.EXPAND | wx.ALL, 5)
-        playerOptionsSizer.Add(self.autoPlayNext, 0, wx.EXPAND | wx.ALL, 5)
-        playerOptionsSizer.Add(self.eqButton, 0, wx.EXPAND | wx.ALL, 5)
-        main_sizer.Add(playerOptionsSizer, 0, wx.EXPAND | wx.ALL, 8)
-
-        sponsorBlockSizer = wx.StaticBoxSizer(sponsorBlockBox, wx.VERTICAL)
-        sponsorBlockSizer.Add(self.sponsorBlock, 0, wx.EXPAND | wx.ALL, 5)
-        sponsorBlockSizer.Add(self.sponsorBlockNotify, 0, wx.EXPAND | wx.ALL, 5)
-        sponsorBlockSizer.Add(
-            self.sponsorBlockCategoriesLabel, 0, wx.EXPAND | wx.ALL, 5
-        )
-        categories_grid = wx.FlexGridSizer(0, 2, 4, 8)
-        categories_grid.AddGrowableCol(0, 1)
-        categories_grid.AddGrowableCol(1, 1)
-        for categoryBox in self.sponsorBlockCategories.values():
-            categories_grid.Add(categoryBox, 0, wx.EXPAND | wx.ALL, 3)
-        sponsorBlockSizer.Add(categories_grid, 0, wx.EXPAND | wx.LEFT | wx.RIGHT, 12)
-        sponsorblock_grid = wx.FlexGridSizer(0, 2, 6, 8)
-        sponsorblock_grid.AddGrowableCol(1, 1)
-        add_row(
-            sponsorblock_grid,
-            self.sponsorBlockMinDurationLabel,
-            self.sponsorBlockMinDuration,
-        )
-        add_row(
-            sponsorblock_grid, self.sponsorBlockApiUrlLabel, self.sponsorBlockApiUrl
-        )
-        sponsorBlockSizer.Add(sponsorblock_grid, 0, wx.EXPAND | wx.ALL, 5)
-        main_sizer.Add(sponsorBlockSizer, 0, wx.EXPAND | wx.ALL, 8)
-
-        okCancelSizer = wx.BoxSizer(wx.HORIZONTAL)
-        for control in panel.GetChildren():
-            if control.Name == "ok_cancel":
-                okCancelSizer.Add(control, 1, wx.EXPAND | wx.ALL, 5)
-        main_sizer.Add(okCancelSizer, 0, wx.EXPAND | wx.ALL, 8)
-
-        panel.SetSizer(main_sizer)
-        root_sizer = wx.BoxSizer(wx.VERTICAL)
-        root_sizer.Add(panel, 1, wx.EXPAND)
-        self.SetSizer(root_sizer)
-        self.Layout()
-        panel.FitInside()
-        changeButton.Bind(wx.EVT_BUTTON, self.onChange)
-        changeCookiesButton.Bind(wx.EVT_BUTTON, self.onChangeCookies)
-        clearCookiesButton.Bind(wx.EVT_BUTTON, self.onClearCookies)
-        self.importBrowserCookiesButton.Bind(wx.EVT_BUTTON, self.onImportBrowserCookies)
-        self.autoDetectItem.Bind(wx.EVT_CHECKBOX, self.onCheck)
-        self.autoLoadItem.Bind(wx.EVT_CHECKBOX, self.onCheck)
-        self.autoCheckForUpdates.Bind(wx.EVT_CHECKBOX, self.onCheck)
-        self.debugMode.Bind(wx.EVT_CHECKBOX, self.onCheck)
-        self.backgroundMonitoring.Bind(wx.EVT_CHECKBOX, self.onCheck)
-        self.browserIntegration.Bind(wx.EVT_CHECKBOX, self.onCheck)
-        self.repeateTracks.Bind(wx.EVT_CHECKBOX, self.onCheck)
-        self.autoPlayNext.Bind(wx.EVT_CHECKBOX, self.onCheck)
+            checkbox.Bind(wx.EVT_CHECKBOX, self.onCheck)
         self.sponsorBlock.Bind(wx.EVT_CHECKBOX, self.onSponsorBlockToggle)
-        self.sponsorBlockNotify.Bind(wx.EVT_CHECKBOX, self.onCheck)
-        self.continueWatching.Bind(wx.EVT_CHECKBOX, self.onCheck)
-        self.openPlayerFullscreen.Bind(wx.EVT_CHECKBOX, self.onCheck)
         self.eqButton.Bind(wx.EVT_BUTTON, self.onEqualizer)
         self.themeBox.Bind(wx.EVT_CHOICE, self.onThemeChange)
         okButton.Bind(wx.EVT_BUTTON, self.onOk)
-        self._update_sponsorblock_controls()
-        apply_theme(self)
-        self.ShowModal()
 
     def getPlayerClientSelection(self, selected_client):
         for index, (client_id, _label) in enumerate(self.player_client_choices):
