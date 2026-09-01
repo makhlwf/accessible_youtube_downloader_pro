@@ -2500,3 +2500,222 @@ msgstr "{} views"
 #~ "YouTube.js (Innertube) library not found "
 #~ "or version could not be retrieved"
 
+#: src/sponsorblock_handler.py:41
+msgid "إعلان مدفوع"
+msgstr "Paid promotion"
+
+#: src/sponsorblock_handler.py:42
+msgid "ترويج ذاتي أو طلب تبرع"
+msgstr "Self-promotion or donation request"
+
+#: src/sponsorblock_handler.py:43
+msgid "طلب التفاعل والاشتراك"
+msgstr "Subscribe and like reminders"
+
+#: src/sponsorblock_handler.py:44
+msgid "مقدمة أو فاصل بدون محتوى"
+msgstr "Intro or intermission"
+
+#: src/sponsorblock_handler.py:45
+msgid "خاتمة وبطاقات النهاية"
+msgstr "Outro and end cards"
+
+#: src/sponsorblock_handler.py:46
+msgid "ملخص أو معاينة للمحتوى"
+msgstr "Recap or preview"
+
+#: src/sponsorblock_handler.py:47
+msgid "مقدمة تشويقية"
+msgstr "Hook"
+
+#: src/sponsorblock_handler.py:48
+msgid "حشو ومزاح خارج الموضوع"
+msgstr "Filler and off-topic jokes"
+
+#: src/sponsorblock_handler.py:49
+msgid "مقاطع غير موسيقية في الأغاني"
+msgstr "Non-music sections in songs"
+
+#: src/gui/equalizer_dialog.py:20
+msgid "أكوستيك"
+msgstr "Acoustic"
+
+#: src/gui/equalizer_dialog.py:21
+msgid "بلوز"
+msgstr "Blues"
+
+#: src/gui/equalizer_dialog.py:22
+msgid "نادي ليلي"
+msgstr "Club"
+
+#: src/gui/equalizer_dialog.py:23
+msgid "ريفي"
+msgstr "Country"
+
+#: src/gui/equalizer_dialog.py:24
+msgid "رقص"
+msgstr "Dance"
+
+#: src/gui/equalizer_dialog.py:25
+msgid "إلكتروني"
+msgstr "Electronic"
+
+#: src/gui/equalizer_dialog.py:26
+msgid "هيب هوب"
+msgstr "Hip Hop"
+
+#: src/gui/equalizer_dialog.py:27
+msgid "قاعة كبيرة"
+msgstr "Large Hall"
+
+#: src/gui/equalizer_dialog.py:28
+msgid "لاتيني"
+msgstr "Latin"
+
+#: src/gui/equalizer_dialog.py:29
+msgid "حفل مباشر"
+msgstr "Live"
+
+#: src/gui/equalizer_dialog.py:30
+msgid "ميتال"
+msgstr "Metal"
+
+#: src/gui/equalizer_dialog.py:31
+msgid "حفلة"
+msgstr "Party"
+
+#: src/gui/equalizer_dialog.py:32
+msgid "بيانو"
+msgstr "Piano"
+
+#: src/gui/equalizer_dialog.py:33
+msgid "آر أند بي"
+msgstr "R&B"
+
+#: src/gui/equalizer_dialog.py:34
+msgid "ريغي"
+msgstr "Reggae"
+
+#: src/gui/equalizer_dialog.py:35
+msgid "سكا"
+msgstr "Ska"
+
+#: src/gui/equalizer_dialog.py:36
+msgid "روك هادئ"
+msgstr "Soft Rock"
+
+#: src/gui/equalizer_dialog.py:37
+msgid "تكنو"
+msgstr "Techno"
+
+#: src/gui/equalizer_dialog.py:38
+msgid "تعزيز الجهير"
+msgstr "Bass Boost"
+
+#: src/gui/equalizer_dialog.py:39
+msgid "تقليل الجهير"
+msgstr "Bass Reducer"
+
+#: src/gui/equalizer_dialog.py:40
+msgid "تعزيز الترددات العالية"
+msgstr "Treble Boost"
+
+#: src/gui/equalizer_dialog.py:41
+msgid "تقليل الترددات العالية"
+msgstr "Treble Reducer"
+
+#: src/gui/equalizer_dialog.py:42
+msgid "جهير كامل"
+msgstr "Full Bass"
+
+#: src/gui/equalizer_dialog.py:43
+msgid "ترددات عالية كاملة"
+msgstr "Full Treble"
+
+#: src/gui/equalizer_dialog.py:44
+msgid "جهير وترددات عالية"
+msgstr "Full Bass & Treble"
+
+#: src/gui/equalizer_dialog.py:45
+msgid "جهارة الصوت"
+msgstr "Loudness"
+
+#: src/gui/equalizer_dialog.py:46
+msgid "ناعم"
+msgstr "Soft"
+
+#: src/gui/equalizer_dialog.py:47
+msgid "عميق"
+msgstr "Deep"
+
+#: src/gui/equalizer_dialog.py:48
+msgid "تعزيز الأصوات"
+msgstr "Vocal Boost"
+
+#: src/gui/equalizer_dialog.py:49
+msgid "كلام وبودكاست"
+msgstr "Speech and podcasts"
+
+#: src/gui/equalizer_dialog.py:50
+msgid "قرآن وتلاوة"
+msgstr "Quran and recitation"
+
+#: src/gui/equalizer_dialog.py:51
+msgid "كتاب صوتي"
+msgstr "Audiobook"
+
+#: src/gui/equalizer_dialog.py:52
+msgid "أفلام"
+msgstr "Movie"
+
+#: src/gui/equalizer_dialog.py:53
+msgid "ألعاب"
+msgstr "Gaming"
+
+#: src/gui/equalizer_dialog.py:54
+msgid "وضع ليلي"
+msgstr "Night mode"
+
+#: src/gui/equalizer_dialog.py:55
+msgid "سماعات رأس"
+msgstr "Headphones"
+
+#: src/gui/equalizer_dialog.py:56
+msgid "سماعات أذن"
+msgstr "Earbuds"
+
+#: src/gui/equalizer_dialog.py:57
+msgid "مكبرات صوت صغيرة"
+msgstr "Small speakers"
+
+#: src/gui/equalizer_dialog.py:58
+msgid "سيارة"
+msgstr "Car"
+
+#: src/gui/equalizer_dialog.py:59
+msgid "مخصص"
+msgstr "Custom"
+
+#: src/gui/settings_dialog.py:418
+msgid "إعدادات SponsorBlock"
+msgstr "SponsorBlock settings"
+
+#: src/gui/settings_dialog.py:429
+msgid "الإعلان عن كل مقطع يتم تخطيه"
+msgstr "Announce every skipped segment"
+
+#: src/gui/settings_dialog.py:434
+msgid "الفئات التي يتم تخطيها:"
+msgstr "Categories to skip:"
+
+#: src/gui/settings_dialog.py:447
+msgid "تجاهل المقاطع الأقصر من (بالثواني): "
+msgstr "Ignore segments shorter than (seconds): "
+
+#: src/gui/settings_dialog.py:460
+msgid "عنوان خادم SponsorBlock: "
+msgstr "SponsorBlock server URL: "
+
+#: src/media_player/media_gui.py:760
+msgid "تم تخطي مقطع {category}"
+msgstr "Skipped: {category}"

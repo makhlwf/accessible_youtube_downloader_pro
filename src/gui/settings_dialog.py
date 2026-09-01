@@ -9,6 +9,12 @@ import utils
 import windows_url_association
 from language_handler import _, supported_languages
 from settings_handler import config_get, config_set
+from sponsorblock_handler import (
+    DEFAULT_API_URL,
+    category_labels,
+    format_categories,
+    parse_categories,
+)
 from theme_handler import THEMES, apply_theme, apply_theme_to_all_windows
 
 languages = {
@@ -31,6 +37,22 @@ def _normalise_audio_output_device(device_id):
     if device_id is None or device_id == "None":
         return DEFAULT_AUDIO_OUTPUT_DEVICE
     return str(device_id)
+
+
+def _as_float(value, fallback):
+    try:
+        return float(value)
+    except TypeError, ValueError:
+        return fallback
+
+
+def _normalise_api_url(value):
+    url = str(value or "").strip().rstrip("/")
+    if not url:
+        return DEFAULT_API_URL
+    if "://" not in url:
+        url = f"https://{url}"
+    return url
 
 
 def _get_audio_output_device_choices():
@@ -392,14 +414,60 @@ class SettingsDialog(wx.Dialog):
         )
         self.autoPlayNext.SetValue(config_get("autonext"))
         self.repeateTracks.SetValue(config_get("repeatTracks"))
+        self.eqButton = wx.Button(playerOptions, -1, _("إعدادات المعادل..."))
+        sponsorBlockBox = wx.StaticBox(panel, -1, _("إعدادات SponsorBlock"))
         self.sponsorBlock = SettingsCheckBox(
-            playerOptions,
+            sponsorBlockBox,
             -1,
             _("تفعيل SponsorBlock لتخطي المقاطع الدعائية تلقائيًا"),
             name="sponsorblock",
         )
         self.sponsorBlock.SetValue(bool(config_get("sponsorblock")))
-        self.eqButton = wx.Button(playerOptions, -1, _("إعدادات المعادل..."))
+        self.sponsorBlockNotify = SettingsCheckBox(
+            sponsorBlockBox,
+            -1,
+            _("الإعلان عن كل مقطع يتم تخطيه"),
+            name="sponsorblock_notify",
+        )
+        self.sponsorBlockNotify.SetValue(bool(config_get("sponsorblock_notify")))
+        self.sponsorBlockCategoriesLabel = wx.StaticText(
+            sponsorBlockBox, -1, _("الفئات التي يتم تخطيها:")
+        )
+        enabled_categories = parse_categories(config_get("sponsorblock_categories"))
+        self.sponsorBlockCategories = {}
+        for category, label in category_labels().items():
+            categoryBox = SettingsCheckBox(
+                sponsorBlockBox,
+                -1,
+                label,
+                name=f"sponsorblock_category_{category}",
+            )
+            categoryBox.SetValue(category in enabled_categories)
+            self.sponsorBlockCategories[category] = categoryBox
+        min_duration_label_text = _("تجاهل المقاطع الأقصر من (بالثواني): ")
+        self.sponsorBlockMinDurationLabel = wx.StaticText(
+            sponsorBlockBox, -1, min_duration_label_text
+        )
+        self.sponsorBlockMinDuration = wx.SpinCtrlDouble(
+            sponsorBlockBox,
+            -1,
+            value=str(_as_float(config_get("sponsorblock_min_duration"), 0.0)),
+            min=0.0,
+            max=60.0,
+            inc=0.5,
+        )
+        _set_accessible_name(self.sponsorBlockMinDuration, min_duration_label_text)
+        api_url_label_text = _("عنوان خادم SponsorBlock: ")
+        self.sponsorBlockApiUrlLabel = wx.StaticText(
+            sponsorBlockBox, -1, api_url_label_text
+        )
+        self.sponsorBlockApiUrl = wx.TextCtrl(
+            sponsorBlockBox,
+            -1,
+            value=_normalise_api_url(config_get("sponsorblock_api_url")),
+            name="sponsorblock_api_url",
+        )
+        _set_accessible_name(self.sponsorBlockApiUrl, api_url_label_text)
         playback_speed_label_text = _("مقدار تغيير سرعة التشغيل: ")
         self.playbackSpeedStepLabel = wx.StaticText(
             playerOptions, -1, playback_speed_label_text
@@ -491,9 +559,33 @@ class SettingsDialog(wx.Dialog):
         playerOptionsSizer.Add(self.openPlayerFullscreen, 0, wx.EXPAND | wx.ALL, 5)
         playerOptionsSizer.Add(self.repeateTracks, 0, wx.EXPAND | wx.ALL, 5)
         playerOptionsSizer.Add(self.autoPlayNext, 0, wx.EXPAND | wx.ALL, 5)
-        playerOptionsSizer.Add(self.sponsorBlock, 0, wx.EXPAND | wx.ALL, 5)
         playerOptionsSizer.Add(self.eqButton, 0, wx.EXPAND | wx.ALL, 5)
         main_sizer.Add(playerOptionsSizer, 0, wx.EXPAND | wx.ALL, 8)
+
+        sponsorBlockSizer = wx.StaticBoxSizer(sponsorBlockBox, wx.VERTICAL)
+        sponsorBlockSizer.Add(self.sponsorBlock, 0, wx.EXPAND | wx.ALL, 5)
+        sponsorBlockSizer.Add(self.sponsorBlockNotify, 0, wx.EXPAND | wx.ALL, 5)
+        sponsorBlockSizer.Add(
+            self.sponsorBlockCategoriesLabel, 0, wx.EXPAND | wx.ALL, 5
+        )
+        categories_grid = wx.FlexGridSizer(0, 2, 4, 8)
+        categories_grid.AddGrowableCol(0, 1)
+        categories_grid.AddGrowableCol(1, 1)
+        for categoryBox in self.sponsorBlockCategories.values():
+            categories_grid.Add(categoryBox, 0, wx.EXPAND | wx.ALL, 3)
+        sponsorBlockSizer.Add(categories_grid, 0, wx.EXPAND | wx.LEFT | wx.RIGHT, 12)
+        sponsorblock_grid = wx.FlexGridSizer(0, 2, 6, 8)
+        sponsorblock_grid.AddGrowableCol(1, 1)
+        add_row(
+            sponsorblock_grid,
+            self.sponsorBlockMinDurationLabel,
+            self.sponsorBlockMinDuration,
+        )
+        add_row(
+            sponsorblock_grid, self.sponsorBlockApiUrlLabel, self.sponsorBlockApiUrl
+        )
+        sponsorBlockSizer.Add(sponsorblock_grid, 0, wx.EXPAND | wx.ALL, 5)
+        main_sizer.Add(sponsorBlockSizer, 0, wx.EXPAND | wx.ALL, 8)
 
         okCancelSizer = wx.BoxSizer(wx.HORIZONTAL)
         for control in panel.GetChildren():
@@ -519,12 +611,14 @@ class SettingsDialog(wx.Dialog):
         self.browserIntegration.Bind(wx.EVT_CHECKBOX, self.onCheck)
         self.repeateTracks.Bind(wx.EVT_CHECKBOX, self.onCheck)
         self.autoPlayNext.Bind(wx.EVT_CHECKBOX, self.onCheck)
-        self.sponsorBlock.Bind(wx.EVT_CHECKBOX, self.onCheck)
+        self.sponsorBlock.Bind(wx.EVT_CHECKBOX, self.onSponsorBlockToggle)
+        self.sponsorBlockNotify.Bind(wx.EVT_CHECKBOX, self.onCheck)
         self.continueWatching.Bind(wx.EVT_CHECKBOX, self.onCheck)
         self.openPlayerFullscreen.Bind(wx.EVT_CHECKBOX, self.onCheck)
         self.eqButton.Bind(wx.EVT_BUTTON, self.onEqualizer)
         self.themeBox.Bind(wx.EVT_CHOICE, self.onThemeChange)
         okButton.Bind(wx.EVT_BUTTON, self.onOk)
+        self._update_sponsorblock_controls()
         apply_theme(self)
         self.ShowModal()
 
@@ -552,6 +646,57 @@ class SettingsDialog(wx.Dialog):
         dlg = EqualizerDialog(self, EqualizerService())
         dlg.ShowModal()
         dlg.Destroy()
+
+    def onSponsorBlockToggle(self, event):
+        self.onCheck(event)
+        self._update_sponsorblock_controls()
+
+    def _update_sponsorblock_controls(self):
+        """Grey out the SponsorBlock details while the feature itself is off."""
+        enabled = self._checkbox_value(self.sponsorBlock)
+        controls = [
+            self.sponsorBlockNotify,
+            self.sponsorBlockCategoriesLabel,
+            self.sponsorBlockMinDurationLabel,
+            self.sponsorBlockMinDuration,
+            self.sponsorBlockApiUrlLabel,
+            self.sponsorBlockApiUrl,
+            *self.sponsorBlockCategories.values(),
+        ]
+        for control in controls:
+            control.Enable(enabled)
+
+    def _selected_sponsorblock_categories(self):
+        return [
+            category
+            for category, control in self.sponsorBlockCategories.items()
+            if self._checkbox_value(control)
+        ]
+
+    def _save_sponsorblock_settings(self):
+        if not hasattr(self, "sponsorBlockCategories"):
+            return
+        config_set(
+            "sponsorblock_categories",
+            format_categories(self._selected_sponsorblock_categories()),
+        )
+        config_set(
+            "sponsorblock_min_duration",
+            _as_float(
+                self.sponsorBlockMinDuration.GetValue()
+                if hasattr(self.sponsorBlockMinDuration, "GetValue")
+                else getattr(self.sponsorBlockMinDuration, "Value", 0.0),
+                0.0,
+            ),
+        )
+        config_set(
+            "sponsorblock_api_url",
+            _normalise_api_url(
+                self.sponsorBlockApiUrl.GetValue()
+                if hasattr(self.sponsorBlockApiUrl, "GetValue")
+                else getattr(self.sponsorBlockApiUrl, "Value", "")
+            ),
+        )
 
     def onCheck(self, event):
         obj = event.EventObject
@@ -764,6 +909,7 @@ class SettingsDialog(wx.Dialog):
             if hasattr(self.playbackSpeedStep, "GetValue")
             else getattr(self.playbackSpeedStep, "Value", 0.05),
         )
+        self._save_sponsorblock_settings()
         selected_theme = self.theme_keys[self.themeBox.Selection]
         config_set("theme", selected_theme)
         apply_theme_to_all_windows(selected_theme)

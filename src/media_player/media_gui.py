@@ -20,7 +20,12 @@ from media_player.player import Player, State
 from media_player.timecodes import format_timecode, parse_timecode
 from settings_handler import config_get, config_set
 from speech_client import speak
-from sponsorblock_handler import find_skip_target, get_sponsorblock_segments
+from sponsorblock_handler import (
+    category_label,
+    find_skip_segment,
+    get_sponsorblock_segments,
+    should_announce_skips,
+)
 from theme_handler import apply_theme
 from utils import get_playable_stream
 
@@ -351,12 +356,12 @@ class MediaGui(wx.Frame):
                         length = self.player.get_length()
                         if length > 0:
                             initial_sec = pos * (length / 1000.0)
-                target = find_skip_target(initial_sec, self.sponsorblock_segments)
-                if target is not None:
-                    self.player.media.set_time(int(target * 1000))
+                match = find_skip_segment(initial_sec, self.sponsorblock_segments)
+                if match is not None:
+                    self.player.media.set_time(int(match[0] * 1000))
                     self._last_sponsorblock_skip_time = time.time()
-                    self._last_sponsorblock_target = target
-                    speak(_("تم تخطي مقطع SponsorBlock"))
+                    self._last_sponsorblock_target = match[0]
+                    self._announce_sponsorblock_skip(match[1])
 
         self.sponsorblock_timer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.on_sponsorblock_timer, self.sponsorblock_timer)
@@ -746,6 +751,16 @@ class MediaGui(wx.Frame):
         current_sec = current_ms / 1000.0
         self._check_sponsorblock_skip(current_sec)
 
+    def _announce_sponsorblock_skip(self, category=""):
+        """Tell the user which kind of segment was just skipped, if enabled."""
+        if not should_announce_skips():
+            return
+        label = category_label(category)
+        if label:
+            speak(_("تم تخطي مقطع {category}").format(category=label))
+        else:
+            speak(_("تم تخطي مقطع SponsorBlock"))
+
     def _check_sponsorblock_skip(self, current_sec):
         if self._last_sponsorblock_target is not None:
             if (
@@ -755,13 +770,14 @@ class MediaGui(wx.Frame):
                 return
             self._last_sponsorblock_target = None
 
-        target = find_skip_target(current_sec, self.sponsorblock_segments)
-        if target is not None:
+        match = find_skip_segment(current_sec, self.sponsorblock_segments)
+        if match is not None:
+            target, category = match
             logger.info("SponsorBlock: skipping at %.2fs to %.2fs", current_sec, target)
             self._last_sponsorblock_skip_time = time.time()
             self._last_sponsorblock_target = target
             self.player.media.set_time(int(target * 1000))
-            speak(_("تم تخطي مقطع SponsorBlock"))
+            self._announce_sponsorblock_skip(category)
 
     def fetch_qualities(self):
         qualities = utils.get_available_qualities(self.url, audio_mode=self.audio_mode)
@@ -1599,12 +1615,12 @@ class MediaGui(wx.Frame):
                 except Exception:
                     pass
             if self.sponsorblock_segments:
-                target = find_skip_target(0.0, self.sponsorblock_segments)
-                if target is not None:
-                    self.player.media.set_time(int(target * 1000))
+                match = find_skip_segment(0.0, self.sponsorblock_segments)
+                if match is not None:
+                    self.player.media.set_time(int(match[0] * 1000))
                     self._last_sponsorblock_skip_time = time.time()
-                    self._last_sponsorblock_target = target
-                    speak(_("تم تخطي مقطع SponsorBlock"))
+                    self._last_sponsorblock_target = match[0]
+                    self._announce_sponsorblock_skip(match[1])
             if (
                 hasattr(self, "sponsorblock_timer")
                 and not self.sponsorblock_timer.IsRunning()
