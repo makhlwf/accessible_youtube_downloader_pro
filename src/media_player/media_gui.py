@@ -287,7 +287,11 @@ class MediaGui(wx.Frame):
         nextButton.Bind(wx.EVT_BUTTON, lambda event: self.next())
         self.Bind(wx.EVT_CLOSE, self.onClose)
         self.Show()
-        playButton.SetFocus()
+        # Focus the frame, not a control button: a focused wx.Button consumes the
+        # space bar to activate itself, which toggles playback a second time on top
+        # of onKeyDown and cancels the first toggle out. The frame also keeps focus
+        # when the controls are hidden in fullscreen.
+        self.SetFocus()
         if stream is None:
             utils.show_error(
                 diagnose_extraction_error("No playable stream"), parent=self
@@ -1139,6 +1143,9 @@ class MediaGui(wx.Frame):
             event.Skip(False)
             self.onContextMenu(event)
         elif event.GetKeyCode() in (wx.WXK_SPACE, wx.WXK_PAUSE):
+            # Consume the key so a control button that has focus (after a mouse
+            # click, say) does not also activate and undo the toggle.
+            event.Skip(False)
             self.playAction()
         elif event.GetKeyCode() == wx.WXK_RIGHT and not event.HasAnyModifiers():
             self.forwardAction()
