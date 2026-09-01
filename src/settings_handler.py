@@ -36,6 +36,12 @@ defaults = {
     "theme": "System Default",
     "player_client": "default",
     "sponsorblock": False,
+    "sponsorblock_categories": (
+        "sponsor,selfpromo,interaction,intro,outro,preview,hook,filler,music_offtopic"
+    ),
+    "sponsorblock_notify": True,
+    "sponsorblock_min_duration": 0.0,
+    "sponsorblock_api_url": "https://sponsor.ajay.app",
 }
 
 _cache = {}

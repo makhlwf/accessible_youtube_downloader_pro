@@ -2420,3 +2420,222 @@ msgstr "عدد المشاهدات {}"
 #~ "لم يتم العثور على مكتبة YouTube.js "
 #~ "(Innertube) أو تعذر الحصول على إصدارها"
 
+#: src/sponsorblock_handler.py:41
+msgid "إعلان مدفوع"
+msgstr "إعلان مدفوع"
+
+#: src/sponsorblock_handler.py:42
+msgid "ترويج ذاتي أو طلب تبرع"
+msgstr "ترويج ذاتي أو طلب تبرع"
+
+#: src/sponsorblock_handler.py:43
+msgid "طلب التفاعل والاشتراك"
+msgstr "طلب التفاعل والاشتراك"
+
+#: src/sponsorblock_handler.py:44
+msgid "مقدمة أو فاصل بدون محتوى"
+msgstr "مقدمة أو فاصل بدون محتوى"
+
+#: src/sponsorblock_handler.py:45
+msgid "خاتمة وبطاقات النهاية"
+msgstr "خاتمة وبطاقات النهاية"
+
+#: src/sponsorblock_handler.py:46
+msgid "ملخص أو معاينة للمحتوى"
+msgstr "ملخص أو معاينة للمحتوى"
+
+#: src/sponsorblock_handler.py:47
+msgid "مقدمة تشويقية"
+msgstr "مقدمة تشويقية"
+
+#: src/sponsorblock_handler.py:48
+msgid "حشو ومزاح خارج الموضوع"
+msgstr "حشو ومزاح خارج الموضوع"
+
+#: src/sponsorblock_handler.py:49
+msgid "مقاطع غير موسيقية في الأغاني"
+msgstr "مقاطع غير موسيقية في الأغاني"
+
+#: src/gui/equalizer_dialog.py:20
+msgid "أكوستيك"
+msgstr "أكوستيك"
+
+#: src/gui/equalizer_dialog.py:21
+msgid "بلوز"
+msgstr "بلوز"
+
+#: src/gui/equalizer_dialog.py:22
+msgid "نادي ليلي"
+msgstr "نادي ليلي"
+
+#: src/gui/equalizer_dialog.py:23
+msgid "ريفي"
+msgstr "ريفي"
+
+#: src/gui/equalizer_dialog.py:24
+msgid "رقص"
+msgstr "رقص"
+
+#: src/gui/equalizer_dialog.py:25
+msgid "إلكتروني"
+msgstr "إلكتروني"
+
+#: src/gui/equalizer_dialog.py:26
+msgid "هيب هوب"
+msgstr "هيب هوب"
+
+#: src/gui/equalizer_dialog.py:27
+msgid "قاعة كبيرة"
+msgstr "قاعة كبيرة"
+
+#: src/gui/equalizer_dialog.py:28
+msgid "لاتيني"
+msgstr "لاتيني"
+
+#: src/gui/equalizer_dialog.py:29
+msgid "حفل مباشر"
+msgstr "حفل مباشر"
+
+#: src/gui/equalizer_dialog.py:30
+msgid "ميتال"
+msgstr "ميتال"
+
+#: src/gui/equalizer_dialog.py:31
+msgid "حفلة"
+msgstr "حفلة"
+
+#: src/gui/equalizer_dialog.py:32
+msgid "بيانو"
+msgstr "بيانو"
+
+#: src/gui/equalizer_dialog.py:33
+msgid "آر أند بي"
+msgstr "آر أند بي"
+
+#: src/gui/equalizer_dialog.py:34
+msgid "ريغي"
+msgstr "ريغي"
+
+#: src/gui/equalizer_dialog.py:35
+msgid "سكا"
+msgstr "سكا"
+
+#: src/gui/equalizer_dialog.py:36
+msgid "روك هادئ"
+msgstr "روك هادئ"
+
+#: src/gui/equalizer_dialog.py:37
+msgid "تكنو"
+msgstr "تكنو"
+
+#: src/gui/equalizer_dialog.py:38
+msgid "تعزيز الجهير"
+msgstr "تعزيز الجهير"
+
+#: src/gui/equalizer_dialog.py:39
+msgid "تقليل الجهير"
+msgstr "تقليل الجهير"
+
+#: src/gui/equalizer_dialog.py:40
+msgid "تعزيز الترددات العالية"
+msgstr "تعزيز الترددات العالية"
+
+#: src/gui/equalizer_dialog.py:41
+msgid "تقليل الترددات العالية"
+msgstr "تقليل الترددات العالية"
+
+#: src/gui/equalizer_dialog.py:42
+msgid "جهير كامل"
+msgstr "جهير كامل"
+
+#: src/gui/equalizer_dialog.py:43
+msgid "ترددات عالية كاملة"
+msgstr "ترددات عالية كاملة"
+
+#: src/gui/equalizer_dialog.py:44
+msgid "جهير وترددات عالية"
+msgstr "جهير وترددات عالية"
+
+#: src/gui/equalizer_dialog.py:45
+msgid "جهارة الصوت"
+msgstr "جهارة الصوت"
+
+#: src/gui/equalizer_dialog.py:46
+msgid "ناعم"
+msgstr "ناعم"
+
+#: src/gui/equalizer_dialog.py:47
+msgid "عميق"
+msgstr "عميق"
+
+#: src/gui/equalizer_dialog.py:48
+msgid "تعزيز الأصوات"
+msgstr "تعزيز الأصوات"
+
+#: src/gui/equalizer_dialog.py:49
+msgid "كلام وبودكاست"
+msgstr "كلام وبودكاست"
+
+#: src/gui/equalizer_dialog.py:50
+msgid "قرآن وتلاوة"
+msgstr "قرآن وتلاوة"
+
+#: src/gui/equalizer_dialog.py:51
+msgid "كتاب صوتي"
+msgstr "كتاب صوتي"
+
+#: src/gui/equalizer_dialog.py:52
+msgid "أفلام"
+msgstr "أفلام"
+
+#: src/gui/equalizer_dialog.py:53
+msgid "ألعاب"
+msgstr "ألعاب"
+
+#: src/gui/equalizer_dialog.py:54
+msgid "وضع ليلي"
+msgstr "وضع ليلي"
+
+#: src/gui/equalizer_dialog.py:55
+msgid "سماعات رأس"
+msgstr "سماعات رأس"
+
+#: src/gui/equalizer_dialog.py:56
+msgid "سماعات أذن"
+msgstr "سماعات أذن"
+
+#: src/gui/equalizer_dialog.py:57
+msgid "مكبرات صوت صغيرة"
+msgstr "مكبرات صوت صغيرة"
+
+#: src/gui/equalizer_dialog.py:58
+msgid "سيارة"
+msgstr "سيارة"
+
+#: src/gui/equalizer_dialog.py:59
+msgid "مخصص"
+msgstr "مخصص"
+
+#: src/gui/settings_dialog.py:418
+msgid "إعدادات SponsorBlock"
+msgstr "إعدادات SponsorBlock"
+
+#: src/gui/settings_dialog.py:429
+msgid "الإعلان عن كل مقطع يتم تخطيه"
+msgstr "الإعلان عن كل مقطع يتم تخطيه"
+
+#: src/gui/settings_dialog.py:434
+msgid "الفئات التي يتم تخطيها:"
+msgstr "الفئات التي يتم تخطيها:"
+
+#: src/gui/settings_dialog.py:447
+msgid "تجاهل المقاطع الأقصر من (بالثواني): "
+msgstr "تجاهل المقاطع الأقصر من (بالثواني): "
+
+#: src/gui/settings_dialog.py:460
+msgid "عنوان خادم SponsorBlock: "
+msgstr "عنوان خادم SponsorBlock: "
+
+#: src/media_player/media_gui.py:760
+msgid "تم تخطي مقطع {category}"
+msgstr "تم تخطي مقطع {category}"

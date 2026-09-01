@@ -6,14 +6,57 @@ from media_player.media_gui import MediaGui
 from settings_handler import config_get, config_set
 from theme_handler import apply_theme
 
+CUSTOM_PRESET = "Custom"
+
 
 def _preset_labels():
+    """Translated labels for every preset key, in dropdown order."""
     return {
         "Flat": _("مستو"),
         "Rock": _("روك"),
         "Pop": _("بوب"),
         "Classical": _("كلاسيكي"),
         "Jazz": _("جاز"),
+        "Acoustic": _("أكوستيك"),
+        "Blues": _("بلوز"),
+        "Club": _("نادي ليلي"),
+        "Country": _("ريفي"),
+        "Dance": _("رقص"),
+        "Electronic": _("إلكتروني"),
+        "Hip Hop": _("هيب هوب"),
+        "Large Hall": _("قاعة كبيرة"),
+        "Latin": _("لاتيني"),
+        "Live": _("حفل مباشر"),
+        "Metal": _("ميتال"),
+        "Party": _("حفلة"),
+        "Piano": _("بيانو"),
+        "R&B": _("آر أند بي"),
+        "Reggae": _("ريغي"),
+        "Ska": _("سكا"),
+        "Soft Rock": _("روك هادئ"),
+        "Techno": _("تكنو"),
+        "Bass Boost": _("تعزيز الجهير"),
+        "Bass Reducer": _("تقليل الجهير"),
+        "Treble Boost": _("تعزيز الترددات العالية"),
+        "Treble Reducer": _("تقليل الترددات العالية"),
+        "Full Bass": _("جهير كامل"),
+        "Full Treble": _("ترددات عالية كاملة"),
+        "Full Bass & Treble": _("جهير وترددات عالية"),
+        "Loudness": _("جهارة الصوت"),
+        "Soft": _("ناعم"),
+        "Deep": _("عميق"),
+        "Vocal Boost": _("تعزيز الأصوات"),
+        "Speech": _("كلام وبودكاست"),
+        "Quran": _("قرآن وتلاوة"),
+        "Audiobook": _("كتاب صوتي"),
+        "Movie": _("أفلام"),
+        "Gaming": _("ألعاب"),
+        "Night": _("وضع ليلي"),
+        "Headphones": _("سماعات رأس"),
+        "Earbuds": _("سماعات أذن"),
+        "Small Speakers": _("مكبرات صوت صغيرة"),
+        "Car": _("سيارة"),
+        CUSTOM_PRESET: _("مخصص"),
     }
 
 
@@ -23,7 +66,7 @@ class EqualizerDialog(wx.Dialog):
         self.equalizer_service = equalizer_service
         self.equalizer_service.load_settings()
         self.preset_labels = _preset_labels()
-        self.preset_keys = list(self.preset_labels.keys())
+        self.preset_keys = [*EqualizerService.PRESETS, CUSTOM_PRESET]
 
         self.update_timer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.on_update_timer, self.update_timer)
@@ -32,19 +75,20 @@ class EqualizerDialog(wx.Dialog):
 
         # Presets
         preset_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        preset_label_text = _("الإعداد المسبق:")
         preset_sizer.Add(
-            wx.StaticText(self, label=_("الإعداد المسبق:")),
+            wx.StaticText(self, label=preset_label_text),
             0,
             wx.ALL | wx.CENTER,
             5,
         )
         self.preset_choice = wx.Choice(
-            self, choices=[self.preset_labels[key] for key in self.preset_keys]
+            self, choices=[self.preset_labels.get(key, key) for key in self.preset_keys]
         )
-        current_preset = config_get("eq_preset") or "Flat"
-        if current_preset not in self.preset_keys:
-            current_preset = "Flat"
-        self.preset_choice.Selection = self.preset_keys.index(current_preset)
+        self.preset_choice.SetName(preset_label_text.rstrip(":"))
+        self.preset_choice.Selection = self.preset_keys.index(
+            self._current_preset_key()
+        )
         self.preset_choice.Bind(wx.EVT_CHOICE, self.on_preset_change)
         preset_sizer.Add(self.preset_choice, 1, wx.ALL, 5)
 
@@ -80,6 +124,34 @@ class EqualizerDialog(wx.Dialog):
         self.SetSizer(sizer)
         self.Layout()
         apply_theme(self)
+
+    def _preset_matches_current(self, key):
+        preset = EqualizerService.PRESETS.get(key)
+        if not preset:
+            return False
+        if (
+            abs(float(preset["preamp"]) - float(self.equalizer_service.get_preamp()))
+            > 0.01
+        ):
+            return False
+        return all(
+            abs(float(gain) - float(self.equalizer_service.get_band(index))) <= 0.01
+            for index, gain in enumerate(preset["bands"])
+        )
+
+    def _current_preset_key(self):
+        """Pick the dropdown entry matching the values currently in the service."""
+        saved = config_get("eq_preset")
+        if saved in EqualizerService.PRESETS and self._preset_matches_current(saved):
+            return saved
+        for key in EqualizerService.PRESETS:
+            if self._preset_matches_current(key):
+                return key
+        return CUSTOM_PRESET
+
+    def _select_preset_key(self, key):
+        if key in self.preset_keys:
+            self.preset_choice.Selection = self.preset_keys.index(key)
 
     def add_slider(self, sizer, parent, label, slider_id, min_val, max_val):
         vbox = wx.BoxSizer(wx.VERTICAL)
@@ -119,6 +191,11 @@ class EqualizerDialog(wx.Dialog):
             index = int(slider_id.split("_")[1])
             self.equalizer_service.set_band(index, float(value))
 
+        # Moving a slider by hand no longer matches the chosen preset.
+        preset = self._current_preset_key()
+        config_set("eq_preset", preset)
+        self._select_preset_key(preset)
+
         # Start/Restart the debounce timer
         self.update_timer.Start(100, oneShot=True)
 
@@ -140,6 +217,10 @@ class EqualizerDialog(wx.Dialog):
     def on_preset_change(self, event):
         preset = self.preset_keys[self.preset_choice.Selection]
         config_set("eq_preset", preset)
+        if preset == CUSTOM_PRESET:
+            # "Custom" only labels the current sliders, there is nothing to apply.
+            return
+        config_set("eq_enabled", True)
         self.equalizer_service.apply_preset(preset)
         self.update_ui_from_service()
         self.on_update_timer(None)
@@ -148,6 +229,7 @@ class EqualizerDialog(wx.Dialog):
         self.equalizer_service.reset()
         self.preset_choice.Selection = self.preset_keys.index("Flat")
         config_set("eq_preset", "Flat")
+        config_set("eq_enabled", False)
         self.update_ui_from_service()
         self.on_update_timer(None)
 

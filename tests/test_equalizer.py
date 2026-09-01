@@ -143,3 +143,36 @@ def test_reset():
     eq.reset()
     assert eq.preamp == 0.0
     assert eq.get_band(0) == 0.0
+
+
+def test_preset_catalogue_is_large():
+    assert len(EqualizerService.PRESETS) >= 40
+    for name in ("Flat", "Rock", "Pop", "Jazz", "Classical"):
+        assert name in EqualizerService.PRESETS
+    for name in ("Bass Boost", "Speech", "Quran", "Night", "Headphones", "Car"):
+        assert name in EqualizerService.PRESETS
+
+
+def test_every_preset_has_ten_valid_bands():
+    for name, preset in EqualizerService.PRESETS.items():
+        bands = preset["bands"]
+        assert len(bands) == 10, name
+        assert -20.0 <= float(preset["preamp"]) <= 20.0, name
+        for gain in bands:
+            assert -20.0 <= float(gain) <= 20.0, name
+
+
+def test_every_preset_can_be_applied():
+    eq = EqualizerService()
+    for name, preset in EqualizerService.PRESETS.items():
+        eq.apply_preset(name)
+        assert eq.get_preamp() == preset["preamp"], name
+        assert [eq.get_band(index) for index in range(10)] == preset["bands"], name
+
+
+def test_flat_preset_clears_previous_preset():
+    eq = EqualizerService()
+    eq.apply_preset("Bass Boost")
+    eq.apply_preset("Flat")
+    assert eq.get_preamp() == 0.0
+    assert all(eq.get_band(index) == 0.0 for index in range(10))
