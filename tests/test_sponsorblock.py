@@ -10,6 +10,7 @@ from sponsorblock_handler import (
     category_label,
     category_labels,
     extract_video_id,
+    filter_skippable_segments,
     find_skip_segment,
     find_skip_target,
     format_categories,
@@ -183,6 +184,93 @@ def test_find_skip_segment_reports_the_category():
     assert find_skip_segment(12.0, segments) == (20.0, "intro")
     assert find_skip_segment(0.0, segments) is None
     assert find_skip_target(12.0, segments) == 20.0
+
+
+def test_filter_skippable_segments_reapplies_current_settings(monkeypatch):
+    # A list fetched while every category was enabled.
+    segments = [
+        FakeSegment(100.0, 120.0, category="intro"),
+        FakeSegment(0.0, 20.0),
+        FakeSegment(50.0, 51.0),
+        FakeSegment(200.0, 260.0, action_type="mute"),
+    ]
+    values = {
+        "sponsorblock_categories": "sponsor",
+        "sponsorblock_min_duration": 5.0,
+    }
+    monkeypatch.setattr(sponsorblock_handler, "config_get", values.get)
+
+    # Sorted by start time, with the disabled category, the short segment and the
+    # non-skip segment dropped.
+    assert [(s.start, s.end) for s in filter_skippable_segments(segments)] == [
+        (0.0, 20.0)
+    ]
+
+    values["sponsorblock_categories"] = "sponsor,intro"
+    values["sponsorblock_min_duration"] = 0.0
+    assert [(s.start, s.end) for s in filter_skippable_segments(segments)] == [
+        (0.0, 20.0),
+        (50.0, 51.0),
+        (100.0, 120.0),
+    ]
+
+    values["sponsorblock_categories"] = ""
+    assert filter_skippable_segments(segments) == []
+    assert filter_skippable_segments(None) == []
+    assert filter_skippable_segments([]) == []
+
+
+def test_mediagui_refilters_segments_attached_to_the_stream(monkeypatch):
+    from media_player import media_gui
+    from media_player.mpv_backend import State
+
+    # The stream carries a list fetched before "intro" was turned off.
+    stream = Stream(
+        "Test",
+        "http://stream.url",
+        sponsorblock_segments=[
+            FakeSegment(10.0, 25.0, category="intro"),
+            FakeSegment(40.0, 60.0),
+        ],
+    )
+    monkeypatch.setattr(
+        sponsorblock_handler,
+        "config_get",
+        lambda key: "sponsor" if key == "sponsorblock_categories" else None,
+    )
+
+    with (
+        patch.object(
+            media_gui,
+            "config_get",
+            side_effect=lambda k: k == "sponsorblock",
+        ),
+        patch.object(media_gui, "Player") as MockPlayer,
+        patch.object(media_gui.MediaGui, "fetch_qualities"),
+        patch.object(media_gui.MediaGui, "fetch_chapters"),
+        patch.object(media_gui.MediaGui, "fetch_subtitles"),
+        patch.object(media_gui.MediaGui, "extract_description"),
+        patch.object(media_gui.MediaGui, "fetch_like_count"),
+    ):
+        mock_player_instance = MagicMock()
+        mock_player_instance.media.get_state.return_value = State.Playing
+        mock_player_instance.media.get_time.return_value = 0
+        MockPlayer.return_value = mock_player_instance
+
+        gui = media_gui.MediaGui(
+            None,
+            "Test Title",
+            stream,
+            "https://www.youtube.com/watch?v=kJQP7kiw5Fk",
+        )
+
+        # Only the sponsor segment survives, so the intro is no longer skipped.
+        assert [(s.start, s.end) for s in gui.sponsorblock_segments] == [(40.0, 60.0)]
+        mock_player_instance.media.get_time.return_value = 12000
+        gui.on_sponsorblock_timer(None)
+        mock_player_instance.media.set_time.assert_not_called()
+
+        gui.closeAction()
 
 
 def test_sponsorblock_setting_persistence():

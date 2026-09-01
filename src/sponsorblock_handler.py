@@ -147,6 +147,28 @@ def is_skippable_segment(
     return str(category).casefold() in wanted
 
 
+def filter_skippable_segments(segments: Any) -> list[Any]:
+    """Apply the current settings to a segment list, sorted by start time.
+
+    Segments fetched earlier are cached with the stream, so a list may predate a
+    change to the enabled categories or the minimum duration. Filtering again on
+    use keeps playback in line with the settings as they are now.
+    """
+    if not segments:
+        return []
+    categories = get_enabled_categories()
+    if not categories:
+        return []
+    min_duration = get_min_segment_duration()
+    filtered = [
+        segment
+        for segment in segments
+        if is_skippable_segment(segment, categories, min_duration)
+    ]
+    filtered.sort(key=lambda segment: getattr(segment, "start", 0))
+    return filtered
+
+
 def get_sponsorblock_segments(url_or_id: str) -> list[Any]:
     """Fetch the skip segments of a YouTube video, honouring the user settings.
 
@@ -161,21 +183,11 @@ def get_sponsorblock_segments(url_or_id: str) -> list[Any]:
     if not categories:
         logger.debug("SponsorBlock is enabled but every category is turned off")
         return []
-    min_duration = get_min_segment_duration()
 
     try:
         client = get_sponsorblock_client()
         segments = client.get_skip_segments(video_id, categories=list(categories))
-        if not segments:
-            return []
-
-        valid_segments = [
-            segment
-            for segment in segments
-            if is_skippable_segment(segment, categories, min_duration)
-        ]
-
-        valid_segments.sort(key=lambda s: getattr(s, "start", 0))
+        valid_segments = filter_skippable_segments(segments)
         logger.info(
             "Found %d SponsorBlock segments for video %s",
             len(valid_segments),

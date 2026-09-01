@@ -22,6 +22,7 @@ from settings_handler import config_get, config_set
 from speech_client import speak
 from sponsorblock_handler import (
     category_label,
+    filter_skippable_segments,
     find_skip_segment,
     get_sponsorblock_segments,
     should_announce_skips,
@@ -339,7 +340,9 @@ class MediaGui(wx.Frame):
                 hasattr(stream, "sponsorblock_segments")
                 and stream.sponsorblock_segments is not None
             ):
-                self.sponsorblock_segments = list(stream.sponsorblock_segments)
+                self.sponsorblock_segments = filter_skippable_segments(
+                    stream.sponsorblock_segments
+                )
             else:
                 try:
                     self.sponsorblock_segments = get_sponsorblock_segments(self.url)
@@ -1608,7 +1611,9 @@ class MediaGui(wx.Frame):
                 hasattr(stream, "sponsorblock_segments")
                 and stream.sponsorblock_segments is not None
             ):
-                self.sponsorblock_segments = list(stream.sponsorblock_segments)
+                self.sponsorblock_segments = filter_skippable_segments(
+                    stream.sponsorblock_segments
+                )
             else:
                 try:
                     self.sponsorblock_segments = get_sponsorblock_segments(url)
