@@ -1,4 +1,5 @@
 import atexit
+import hashlib
 import json
 import logging
 import os
@@ -20,6 +21,15 @@ logger = logging.getLogger(__name__)
 GITHUB_REPO = "jim60105/bgutil-ytdlp-pot-provider-rs"
 DOWNLOAD_EXE_NAME = "bgutil-pot-windows-x86_64.exe"
 DOWNLOAD_ZIP_NAME = "bgutil-ytdlp-pot-provider-rs.zip"
+EXPECTED_URL_PREFIX = (
+    "https://github.com/jim60105/bgutil-ytdlp-pot-provider-rs/releases/download/"
+)
+PINNED_RELEASE_HASHES = {
+    "v0.8.1": {
+        "exe": "25d6b05c79176aa792454c3d1727922ca47e56cf11cb1e866615d751819b14a0",
+        "zip": "99fd83b98fa93b193d6a3b69dc74410d76e7a2b889868c54d16121cac9060344",
+    }
+}
 
 
 class PotProviderService:
@@ -269,6 +279,15 @@ class PotProviderService:
             logger.error("Required release assets not found.")
             return False
 
+        if not (
+            exe_url.startswith(EXPECTED_URL_PREFIX)
+            and zip_url.startswith(EXPECTED_URL_PREFIX)
+        ):
+            logger.error(
+                "Rejecting download: Asset URLs do not match trusted GitHub release path."
+            )
+            return False
+
         was_running = self.is_running()
 
         tmp_exe = os.path.join(paths.pot_provider_dir, "bgutil-pot.exe.download")
@@ -294,7 +313,7 @@ class PotProviderService:
         if not os.path.exists(tmp_exe):
             return False
 
-        # Validate executable size and binary header
+        # Validate executable size, binary header, and pinned digest if known
         if exe_size is not None and os.path.getsize(tmp_exe) != exe_size:
             logger.error(
                 f"Binary size mismatch for {tmp_exe}: expected {exe_size}, got {os.path.getsize(tmp_exe)}"
@@ -325,6 +344,20 @@ class PotProviderService:
                 pass
             return False
 
+        pinned_hashes = PINNED_RELEASE_HASHES.get(tag_name)
+        if pinned_hashes and "exe" in pinned_hashes:
+            with open(tmp_exe, "rb") as f:
+                actual_exe_hash = hashlib.sha256(f.read()).hexdigest()
+            if actual_exe_hash.lower() != pinned_hashes["exe"].lower():
+                logger.error(
+                    f"SHA-256 mismatch for {tmp_exe}: expected {pinned_hashes['exe']}, got {actual_exe_hash}"
+                )
+                try:
+                    os.remove(tmp_exe)
+                except OSError:
+                    pass
+                return False
+
         # Download zip while service is still running
         UpdateDialog(
             parent,
@@ -340,7 +373,7 @@ class PotProviderService:
                 pass
             return False
 
-        # Validate zip size
+        # Validate zip size and pinned digest if known
         if zip_size is not None and os.path.getsize(tmp_zip) != zip_size:
             logger.error(
                 f"Zip size mismatch for {tmp_zip}: expected {zip_size}, got {os.path.getsize(tmp_zip)}"
@@ -352,6 +385,21 @@ class PotProviderService:
                     except OSError:
                         pass
             return False
+
+        if pinned_hashes and "zip" in pinned_hashes:
+            with open(tmp_zip, "rb") as f:
+                actual_zip_hash = hashlib.sha256(f.read()).hexdigest()
+            if actual_zip_hash.lower() != pinned_hashes["zip"].lower():
+                logger.error(
+                    f"SHA-256 mismatch for {tmp_zip}: expected {pinned_hashes['zip']}, got {actual_zip_hash}"
+                )
+                for cleanup_path in (tmp_exe, tmp_zip):
+                    if os.path.exists(cleanup_path):
+                        try:
+                            os.remove(cleanup_path)
+                        except OSError:
+                            pass
+                return False
 
         # Validate and extract zip into staging directory
         os.makedirs(staging_plugins_dir, exist_ok=True)
