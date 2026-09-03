@@ -1162,6 +1162,41 @@ def check_deno(parent=None):
     return True
 
 
+def get_pot_provider_version():
+    return pot_service.get_installed_version()
+
+
+def update_pot_provider(parent=None):
+    current = get_pot_provider_version()
+    latest = get_latest_github_release("jim60105/bgutil-ytdlp-pot-provider-rs")
+    if not latest:
+        show_error(
+            _("تعذر الحصول على معلومات التحديث من غيت هاب"),
+            parent=parent or (wx.GetApp().GetTopWindow() if wx.GetApp() else None),
+        )
+        return False
+
+    if current == latest:
+        wx.MessageBox(
+            _("أنت تستخدم بالفعل أحدث إصدار من مولد رموز POT ({})").format(current),
+            _("لا يوجد تحديث"),
+            parent=parent or (wx.GetApp().GetTopWindow() if wx.GetApp() else None),
+        )
+        return False
+    else:
+        msg = wx.MessageBox(
+            _(
+                "هناك إصدار جديد متوفر من مولد رموز POT\nالإصدار الحالي: {}\nالإصدار الأحدث: {}\nهل تريد التحديث الآن؟"
+            ).format(current or _("غير معروف"), latest),
+            _("تحديث متوفر"),
+            style=wx.YES_NO | wx.ICON_INFORMATION,
+            parent=parent or (wx.GetApp().GetTopWindow() if wx.GetApp() else None),
+        )
+        if msg == wx.YES:
+            return pot_service.download_and_install(parent=parent)
+        return False
+
+
 def check_pot_provider(parent=None):
     if not config_get("pot_provider_enabled"):
         return False
