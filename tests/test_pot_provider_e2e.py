@@ -55,6 +55,24 @@ def test_e2e_pot_provider_lifecycle_and_live_ytdlp(tmp_path, monkeypatch):
     monkeypatch.setattr(paths, "pot_provider_plugins_dir", str(test_plugins))
     monkeypatch.setattr(paths, "pot_provider_version_file", str(test_vfile))
 
+    # Isolate configuration so user settings.ini cannot disable provider during test
+    monkeypatch.setattr(
+        "utils.config_get",
+        lambda k, default=None: (
+            True
+            if k == "pot_provider_enabled"
+            else (4416 if k == "pot_provider_port" else default)
+        ),
+    )
+    monkeypatch.setattr(
+        "pot_provider_service.config_get",
+        lambda k, default=None: (
+            True
+            if k == "pot_provider_enabled"
+            else (4416 if k == "pot_provider_port" else default)
+        ),
+    )
+
     pot_service._initialized = False
 
     try:

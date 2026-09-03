@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-09-03 08:17+0200\n"
+"POT-Creation-Date: 2026-09-03 08:32+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -302,11 +302,11 @@ msgstr ""
 msgid "البرنامج قيد التشغيل بالفعل."
 msgstr ""
 
-#: src/pot_provider_service.py:285
+#: src/pot_provider_service.py:291
 msgid "جاري تنزيل أداة مولد رموز POT"
 msgstr ""
 
-#: src/pot_provider_service.py:296
+#: src/pot_provider_service.py:333
 msgid "جاري تنزيل ملحق واي تي دي إل بي لـ POT"
 msgstr ""
 
