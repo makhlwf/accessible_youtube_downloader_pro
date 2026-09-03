@@ -34,7 +34,9 @@ class PotProviderService:
             port = int(val)
             if 1 <= port <= 65535:
                 return port
-        except ValueError, TypeError:
+        except ValueError:
+            pass
+        except TypeError:
             pass
         return 4416
 
@@ -253,11 +255,15 @@ class PotProviderService:
 
         exe_url = None
         zip_url = None
+        exe_size = None
+        zip_size = None
         for asset in assets:
             if asset.get("name") == DOWNLOAD_EXE_NAME:
                 exe_url = asset.get("browser_download_url")
+                exe_size = asset.get("size")
             elif asset.get("name") == DOWNLOAD_ZIP_NAME:
                 zip_url = asset.get("browser_download_url")
+                zip_size = asset.get("size")
 
         if not exe_url or not zip_url:
             logger.error("Required release assets not found.")
@@ -288,6 +294,37 @@ class PotProviderService:
         if not os.path.exists(tmp_exe):
             return False
 
+        # Validate executable size and binary header
+        if exe_size is not None and os.path.getsize(tmp_exe) != exe_size:
+            logger.error(
+                f"Binary size mismatch for {tmp_exe}: expected {exe_size}, got {os.path.getsize(tmp_exe)}"
+            )
+            try:
+                os.remove(tmp_exe)
+            except OSError:
+                pass
+            return False
+
+        try:
+            with open(tmp_exe, "rb") as f:
+                header = f.read(2)
+            if header != b"MZ":
+                logger.error(
+                    f"Invalid executable format for {tmp_exe}: missing PE header"
+                )
+                try:
+                    os.remove(tmp_exe)
+                except OSError:
+                    pass
+                return False
+        except Exception as e:
+            logger.error(f"Failed to inspect binary header: {e}")
+            try:
+                os.remove(tmp_exe)
+            except OSError:
+                pass
+            return False
+
         # Download zip while service is still running
         UpdateDialog(
             parent,
@@ -303,13 +340,52 @@ class PotProviderService:
                 pass
             return False
 
+        # Validate zip size
+        if zip_size is not None and os.path.getsize(tmp_zip) != zip_size:
+            logger.error(
+                f"Zip size mismatch for {tmp_zip}: expected {zip_size}, got {os.path.getsize(tmp_zip)}"
+            )
+            for cleanup_path in (tmp_exe, tmp_zip):
+                if os.path.exists(cleanup_path):
+                    try:
+                        os.remove(cleanup_path)
+                    except OSError:
+                        pass
+            return False
+
         # Validate and extract zip into staging directory
         os.makedirs(staging_plugins_dir, exist_ok=True)
         try:
+            if not zipfile.is_zipfile(tmp_zip):
+                raise zipfile.BadZipFile("Not a valid zip file")
             with zipfile.ZipFile(tmp_zip, "r") as z:
                 if z.testzip() is not None:
                     raise zipfile.BadZipFile("Zip file checksum mismatch")
                 z.extractall(staging_plugins_dir)
+
+            # Locate yt_dlp_plugins directory in extracted content
+            direct_plugins = os.path.join(staging_plugins_dir, "yt_dlp_plugins")
+            if not os.path.isdir(direct_plugins):
+                # Look for nested yt_dlp_plugins (e.g. inside bgutil-ytdlp-pot-provider/)
+                found_dir = None
+                for root, dirs, _ in os.walk(staging_plugins_dir):
+                    if "yt_dlp_plugins" in dirs:
+                        found_dir = os.path.join(root, "yt_dlp_plugins")
+                        break
+                if found_dir:
+                    temp_promote = os.path.join(
+                        paths.pot_provider_dir, "yt_dlp_plugins.staging_promote"
+                    )
+                    if os.path.exists(temp_promote):
+                        shutil.rmtree(temp_promote, ignore_errors=True)
+                    shutil.move(found_dir, temp_promote)
+                    shutil.rmtree(staging_plugins_dir, ignore_errors=True)
+                    os.makedirs(staging_plugins_dir, exist_ok=True)
+                    shutil.move(temp_promote, direct_plugins)
+                else:
+                    raise ValueError(
+                        "Archive layout invalid: missing yt_dlp_plugins directory"
+                    )
         except Exception as e:
             logger.error(f"Failed to validate and extract POT plugins staging: {e}")
             for cleanup_path in (tmp_exe, tmp_zip):

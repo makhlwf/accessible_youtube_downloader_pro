@@ -281,13 +281,13 @@ def test_service_download_and_install(tmp_path, monkeypatch):
 
     zip_bytes_io = io.BytesIO()
     with zipfile.ZipFile(zip_bytes_io, "w") as zf:
-        zf.writestr("test_plugin.py", "print('plugin')")
+        zf.writestr("yt_dlp_plugins/test_plugin.py", "print('plugin')")
     zip_bytes = zip_bytes_io.getvalue()
 
     def fake_update_dialog(parent, url, dest_path, title, is_zip=False):
         if dest_path.endswith(".exe.download"):
             with open(dest_path, "wb") as f:
-                f.write(b"dummy_exe_content")
+                f.write(b"MZ_dummy_exe_content")
         elif dest_path.endswith(".zip.download"):
             with open(dest_path, "wb") as f:
                 f.write(zip_bytes)
@@ -300,11 +300,109 @@ def test_service_download_and_install(tmp_path, monkeypatch):
         success = service.download_and_install()
         assert success is True
         assert pexe.exists()
-        assert (pplugins / "test_plugin.py").exists()
+        assert (pplugins / "yt_dlp_plugins" / "test_plugin.py").exists()
         assert pvfile.exists()
         assert json.loads(pvfile.read_text())["version"] == "v0.8.1"
         mock_get.assert_called_once()
         assert mock_get.call_args[1]["headers"]["User-Agent"] == "HexPlayer"
+
+
+def test_service_download_and_install_nested_zip_structure(tmp_path, monkeypatch):
+    pdir = tmp_path / "pot_provider"
+    pexe = pdir / "bgutil-pot.exe"
+    pplugins = pdir / "plugins"
+    pvfile = pdir / "version.json"
+
+    monkeypatch.setattr("paths.pot_provider_dir", str(pdir))
+    monkeypatch.setattr("paths.pot_provider_exe", str(pexe))
+    monkeypatch.setattr("paths.pot_provider_plugins_dir", str(pplugins))
+    monkeypatch.setattr("paths.pot_provider_version_file", str(pvfile))
+
+    service = PotProviderService()
+
+    mock_release_resp = MagicMock()
+    mock_release_resp.status_code = 200
+    mock_release_resp.json.return_value = {
+        "tag_name": "v0.8.1",
+        "assets": [
+            {
+                "name": "bgutil-pot-windows-x86_64.exe",
+                "browser_download_url": "https://example.com/bgutil-pot.exe",
+            },
+            {
+                "name": "bgutil-ytdlp-pot-provider-rs.zip",
+                "browser_download_url": "https://example.com/plugins.zip",
+            },
+        ],
+    }
+
+    # Nested structure inside archive (e.g. bgutil-ytdlp-pot-provider/yt_dlp_plugins)
+    zip_bytes_io = io.BytesIO()
+    with zipfile.ZipFile(zip_bytes_io, "w") as zf:
+        zf.writestr(
+            "bgutil-ytdlp-pot-provider/yt_dlp_plugins/extractor/getpot.py",
+            "print('nested')",
+        )
+    zip_bytes = zip_bytes_io.getvalue()
+
+    def fake_update_dialog(parent, url, dest_path, title, is_zip=False):
+        if dest_path.endswith(".exe.download"):
+            with open(dest_path, "wb") as f:
+                f.write(b"MZ_dummy")
+        elif dest_path.endswith(".zip.download"):
+            with open(dest_path, "wb") as f:
+                f.write(zip_bytes)
+
+    with (
+        patch("requests.get", return_value=mock_release_resp),
+        patch("gui.update_dialog.UpdateDialog", side_effect=fake_update_dialog),
+        patch.object(service, "start", return_value=True),
+    ):
+        success = service.download_and_install()
+        assert success is True
+        assert pexe.exists()
+        # Should be normalized so yt_dlp_plugins is directly under pplugins
+        assert (pplugins / "yt_dlp_plugins" / "extractor" / "getpot.py").exists()
+
+
+def test_service_download_and_install_invalid_header_fails(tmp_path, monkeypatch):
+    pdir = tmp_path / "pot_provider"
+    pexe = pdir / "bgutil-pot.exe"
+    pplugins = pdir / "plugins"
+
+    monkeypatch.setattr("paths.pot_provider_dir", str(pdir))
+    monkeypatch.setattr("paths.pot_provider_exe", str(pexe))
+    monkeypatch.setattr("paths.pot_provider_plugins_dir", str(pplugins))
+
+    service = PotProviderService()
+
+    mock_release_resp = MagicMock()
+    mock_release_resp.status_code = 200
+    mock_release_resp.json.return_value = {
+        "tag_name": "v0.8.1",
+        "assets": [
+            {
+                "name": "bgutil-pot-windows-x86_64.exe",
+                "browser_download_url": "https://example.com/bgutil-pot.exe",
+            },
+            {
+                "name": "bgutil-ytdlp-pot-provider-rs.zip",
+                "browser_download_url": "https://example.com/plugins.zip",
+            },
+        ],
+    }
+
+    def fake_update_dialog(parent, url, dest_path, title, is_zip=False):
+        if dest_path.endswith(".exe.download"):
+            with open(dest_path, "wb") as f:
+                f.write(b"NOT_MZ_HEADER")
+
+    with (
+        patch("requests.get", return_value=mock_release_resp),
+        patch("gui.update_dialog.UpdateDialog", side_effect=fake_update_dialog),
+    ):
+        assert service.download_and_install() is False
+        assert not pexe.exists()
 
 
 def test_service_download_and_install_replace_failure(tmp_path, monkeypatch):
@@ -338,7 +436,7 @@ def test_service_download_and_install_replace_failure(tmp_path, monkeypatch):
 
     zip_bytes_io = io.BytesIO()
     with zipfile.ZipFile(zip_bytes_io, "w") as zf:
-        zf.writestr("test_plugin.py", "print('plugin')")
+        zf.writestr("yt_dlp_plugins/test_plugin.py", "print('plugin')")
     zip_bytes = zip_bytes_io.getvalue()
 
     # Pre-populate existing files to verify rollback
@@ -350,7 +448,7 @@ def test_service_download_and_install_replace_failure(tmp_path, monkeypatch):
     def fake_update_dialog(parent, url, dest_path, title, is_zip=False):
         if dest_path.endswith(".exe.download"):
             with open(dest_path, "wb") as f:
-                f.write(b"new_exe")
+                f.write(b"MZ_new_exe")
         elif dest_path.endswith(".zip.download"):
             with open(dest_path, "wb") as f:
                 f.write(zip_bytes)
