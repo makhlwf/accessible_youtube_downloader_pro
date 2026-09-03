@@ -389,6 +389,11 @@ def test_service_download_and_install_size_mismatch_fails(tmp_path, monkeypatch)
 
 
 def test_service_download_and_install_untrusted_url_fails(tmp_path, monkeypatch):
+    pdir = tmp_path / "pot_provider"
+    monkeypatch.setattr("paths.pot_provider_dir", str(pdir))
+    monkeypatch.setattr("paths.pot_provider_exe", str(pdir / "bgutil-pot.exe"))
+    monkeypatch.setattr("paths.pot_provider_plugins_dir", str(pdir / "plugins"))
+
     service = PotProviderService()
     mock_release = MagicMock()
     mock_release.status_code = 200
@@ -420,6 +425,9 @@ def test_service_download_and_install_pinned_hash_mismatch_fails(tmp_path, monke
 
     service = PotProviderService()
 
+    wrong_exe_bytes = b"MZ_wrong_hash_bytes"
+    wrong_zip_bytes = b"wrong_zip_bytes"
+
     mock_release = MagicMock()
     mock_release.status_code = 200
     mock_release.json.return_value = {
@@ -428,7 +436,49 @@ def test_service_download_and_install_pinned_hash_mismatch_fails(tmp_path, monke
             {
                 "name": "bgutil-pot-windows-x86_64.exe",
                 "browser_download_url": "https://github.com/jim60105/bgutil-ytdlp-pot-provider-rs/releases/download/v0.8.1/bgutil-pot-windows-x86_64.exe",
-                "size": 7,
+                "size": len(wrong_exe_bytes),
+            },
+            {
+                "name": "bgutil-ytdlp-pot-provider-rs.zip",
+                "browser_download_url": "https://github.com/jim60105/bgutil-ytdlp-pot-provider-rs/releases/download/v0.8.1/bgutil-ytdlp-pot-provider-rs.zip",
+                "size": len(wrong_zip_bytes),
+            },
+        ],
+    }
+
+    def fake_dialog(parent, url, dest_path, title, is_zip=False):
+        if dest_path.endswith(".exe.download"):
+            with open(dest_path, "wb") as f:
+                f.write(wrong_exe_bytes)
+        elif dest_path.endswith(".zip.download"):
+            with open(dest_path, "wb") as f:
+                f.write(wrong_zip_bytes)
+
+    with (
+        patch("requests.get", return_value=mock_release),
+        patch("gui.update_dialog.UpdateDialog", side_effect=fake_dialog),
+    ):
+        assert service.download_and_install() is False
+
+
+def test_service_download_and_install_hash_io_error_fails(tmp_path, monkeypatch):
+    pdir = tmp_path / "pot_provider"
+    monkeypatch.setattr("paths.pot_provider_dir", str(pdir))
+    monkeypatch.setattr("paths.pot_provider_exe", str(pdir / "bgutil-pot.exe"))
+    monkeypatch.setattr("paths.pot_provider_plugins_dir", str(pdir / "plugins"))
+
+    service = PotProviderService()
+
+    exe_bytes = b"MZ_valid_header"
+    mock_release = MagicMock()
+    mock_release.status_code = 200
+    mock_release.json.return_value = {
+        "tag_name": "v0.8.1",
+        "assets": [
+            {
+                "name": "bgutil-pot-windows-x86_64.exe",
+                "browser_download_url": "https://github.com/jim60105/bgutil-ytdlp-pot-provider-rs/releases/download/v0.8.1/bgutil-pot-windows-x86_64.exe",
+                "size": len(exe_bytes),
             },
             {
                 "name": "bgutil-ytdlp-pot-provider-rs.zip",
@@ -439,12 +489,17 @@ def test_service_download_and_install_pinned_hash_mismatch_fails(tmp_path, monke
     }
 
     def fake_dialog(parent, url, dest_path, title, is_zip=False):
-        with open(dest_path, "wb") as f:
-            f.write(b"MZ_wrong_hash")
+        if dest_path.endswith(".exe.download"):
+            with open(dest_path, "wb") as f:
+                f.write(exe_bytes)
 
     with (
         patch("requests.get", return_value=mock_release),
         patch("gui.update_dialog.UpdateDialog", side_effect=fake_dialog),
+        patch(
+            "pot_provider_service._sha256_file",
+            side_effect=OSError("Antivirus lock"),
+        ),
     ):
         assert service.download_and_install() is False
 
