@@ -88,40 +88,45 @@ class PotProviderService:
 
     def start(self):
         with self.lock:
-            if self.process and self.process.poll() is None and self.is_healthy():
-                return True
+            if self.process and self.process.poll() is None:
+                if self.is_healthy():
+                    return True
+                # Process is already running/starting up: do not spawn a second instance.
+                # Fall through to the polling loop outside the lock.
+            else:
+                if not os.path.isfile(paths.pot_provider_exe):
+                    logger.warning("POT provider binary does not exist.")
+                    return False
 
-            if not os.path.isfile(paths.pot_provider_exe):
-                logger.warning("POT provider binary does not exist.")
-                return False
+                self.initialize()
+                port = self.get_port()
+                cmd = [
+                    paths.pot_provider_exe,
+                    "server",
+                    "--host",
+                    "127.0.0.1",
+                    "--port",
+                    str(port),
+                ]
 
-            self.initialize()
-            port = self.get_port()
-            cmd = [
-                paths.pot_provider_exe,
-                "server",
-                "--host",
-                "127.0.0.1",
-                "--port",
-                str(port),
-            ]
-
-            try:
-                creationflags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
-                self.process = subprocess.Popen(
-                    cmd,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                    creationflags=creationflags,
-                    text=True,
-                    encoding="utf-8",
-                )
-                self._drain_output(self.process)
-                logger.info(f"Started POT provider background server on port {port}.")
-            except Exception as e:
-                logger.error(f"Failed to start POT provider process: {e}")
-                self.process = None
-                return False
+                try:
+                    creationflags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+                    self.process = subprocess.Popen(
+                        cmd,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE,
+                        creationflags=creationflags,
+                        text=True,
+                        encoding="utf-8",
+                    )
+                    self._drain_output(self.process)
+                    logger.info(
+                        f"Started POT provider background server on port {port}."
+                    )
+                except Exception as e:
+                    logger.error(f"Failed to start POT provider process: {e}")
+                    self.process = None
+                    return False
 
         # Wait for health check up to 3 seconds outside the lock
         start_time = time.time()
@@ -150,7 +155,25 @@ class PotProviderService:
             except Exception:
                 pass
             self.process = None
-            logger.info("POT provider server stopped.")
+            try:
+                can_log = not (
+                    sys.is_finalizing() if hasattr(sys, "is_finalizing") else False
+                )
+                if can_log:
+                    curr = logger
+                    while curr:
+                        for h in getattr(curr, "handlers", []):
+                            stream = getattr(h, "stream", None)
+                            if stream and getattr(stream, "closed", False):
+                                can_log = False
+                                break
+                        if not can_log or not getattr(curr, "propagate", True):
+                            break
+                        curr = getattr(curr, "parent", None)
+                if can_log:
+                    logger.info("POT provider server stopped.")
+            except Exception:
+                pass
 
     def ensure_started(self):
         if not config_get("pot_provider_enabled"):
