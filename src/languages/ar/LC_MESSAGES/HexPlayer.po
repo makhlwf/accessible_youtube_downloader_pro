@@ -2363,6 +2363,90 @@ msgstr "الكوكيز"
 msgid "متقدم"
 msgstr "متقدم"
 
+#: src/accessible_youtube_downloader_pro.py:385
+msgid "عرض إصدار مولد رموز POT"
+msgstr "عرض إصدار مولد رموز POT"
+
+#: src/accessible_youtube_downloader_pro.py:387
+msgid "التحقق من وجود تحديث لـ مولد رموز POT"
+msgstr "التحقق من وجود تحديث لـ مولد رموز POT"
+
+#: src/accessible_youtube_downloader_pro.py:624
+msgid "أداة مولد رموز POT غير مثبتة حالياً."
+msgstr "أداة مولد رموز POT غير مثبتة حالياً."
+
+#: src/accessible_youtube_downloader_pro.py:625
+#: src/accessible_youtube_downloader_pro.py:635
+msgid "معلومات الإصدار"
+msgstr "معلومات الإصدار"
+
+#: src/accessible_youtube_downloader_pro.py:630
+msgid "قيد التشغيل"
+msgstr "قيد التشغيل"
+
+#: src/accessible_youtube_downloader_pro.py:630
+msgid "متوقف"
+msgstr "متوقف"
+
+#: src/accessible_youtube_downloader_pro.py:632
+#, python-brace-format
+msgid ""
+"إصدار مولد رموز POT: {}\n"
+"حالة الخادم المحلي: {}"
+msgstr ""
+"إصدار مولد رموز POT: {}\n"
+"حالة الخادم المحلي: {}"
+
+#: src/gui/settings_dialog.py:609
+msgid "تفعيل مولد رموز POT لتجاوز قيود يوتيوب (bgutil-pot)"
+msgstr "تفعيل مولد رموز POT لتجاوز قيود يوتيوب (bgutil-pot)"
+
+#: src/pot_provider_service.py:319
+msgid "جاري تنزيل أداة مولد رموز POT"
+msgstr "جاري تنزيل أداة مولد رموز POT"
+
+#: src/pot_provider_service.py:383
+msgid "جاري تنزيل ملحق واي تي دي إل بي لـ POT"
+msgstr "جاري تنزيل ملحق واي تي دي إل بي لـ POT"
+
+#: src/sponsorblock_handler.py:41
+msgid "إعلان مدفوع"
+msgstr "إعلان مدفوع"
+
+#: src/utils.py:1185
+#, python-brace-format
+msgid "أنت تستخدم بالفعل أحدث إصدار من مولد رموز POT ({})"
+msgstr "أنت تستخدم بالفعل أحدث إصدار من مولد رموز POT ({})"
+
+#: src/utils.py:1193
+#, python-brace-format
+msgid ""
+"هناك إصدار جديد متوفر من مولد رموز POT\n"
+"الإصدار الحالي: {}\n"
+"الإصدار الأحدث: {}\n"
+"هل تريد التحديث الآن؟"
+msgstr ""
+"هناك إصدار جديد متوفر من مولد رموز POT\n"
+"الإصدار الحالي: {}\n"
+"الإصدار الأحدث: {}\n"
+"هل تريد التحديث الآن؟"
+
+#: src/utils.py:1211
+msgid ""
+"لم يتم العثور على أداة مولد رموز POT (bgutil-pot)، وهي تساعد في حل قيود "
+"يوتيوب وتحسين التنزيل. هل تريد تنزيلها الآن؟"
+msgstr ""
+"لم يتم العثور على أداة مولد رموز POT (bgutil-pot)، وهي تساعد في حل قيود "
+"يوتيوب وتحسين التنزيل. هل تريد تنزيلها الآن؟"
+
+#: src/utils.py:2668
+msgid "مشاهدة Shorts"
+msgstr "مشاهدة Shorts"
+
+#: src/gui/comments_dialog.py:561
+msgid "حدث خطأ أثناء تنفيذ الإجراء على التعليق."
+msgstr "حدث خطأ أثناء تنفيذ الإجراء على التعليق."
+
 #~ msgid "جودة تحويل ملفات mp3: "
 #~ msgstr "جودة تحويل ملفات mp3: "
 
