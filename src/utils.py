@@ -721,8 +721,10 @@ def get_ydl_instance(client=None, cookies_path=None):
     if config_get("pot_provider_enabled"):
         try:
             pot_service.initialize()
-            pot_service.ensure_started()
-            if "youtubepot-bgutilhttp" not in opts["extractor_args"]:
+            if (
+                pot_service.ensure_started()
+                and "youtubepot-bgutilhttp" not in opts["extractor_args"]
+            ):
                 opts["extractor_args"]["youtubepot-bgutilhttp"] = {
                     "base_url": [pot_service.get_base_url()]
                 }

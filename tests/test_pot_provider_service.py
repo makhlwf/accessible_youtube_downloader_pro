@@ -11,6 +11,30 @@ def test_pot_service_singleton():
     assert isinstance(pot_service, PotProviderService)
 
 
+def test_service_get_port_validation(monkeypatch):
+    service = PotProviderService()
+
+    # Valid int
+    monkeypatch.setattr("pot_provider_service.config_get", lambda k: 8080)
+    assert service.get_port() == 8080
+
+    # Valid string
+    monkeypatch.setattr("pot_provider_service.config_get", lambda k: "5000")
+    assert service.get_port() == 5000
+
+    # Out of range low / high
+    monkeypatch.setattr("pot_provider_service.config_get", lambda k: 0)
+    assert service.get_port() == 4416
+    monkeypatch.setattr("pot_provider_service.config_get", lambda k: 70000)
+    assert service.get_port() == 4416
+
+    # Malformed / None
+    monkeypatch.setattr("pot_provider_service.config_get", lambda k: "invalid")
+    assert service.get_port() == 4416
+    monkeypatch.setattr("pot_provider_service.config_get", lambda k: None)
+    assert service.get_port() == 4416
+
+
 def test_service_plugin_sys_path(tmp_path, monkeypatch):
     plugins_dir = tmp_path / "plugins"
     plugins_dir.mkdir(parents=True)
@@ -312,9 +336,24 @@ def test_service_download_and_install_replace_failure(tmp_path, monkeypatch):
         ],
     }
 
+    zip_bytes_io = io.BytesIO()
+    with zipfile.ZipFile(zip_bytes_io, "w") as zf:
+        zf.writestr("test_plugin.py", "print('plugin')")
+    zip_bytes = zip_bytes_io.getvalue()
+
+    # Pre-populate existing files to verify rollback
+    pdir.mkdir(parents=True, exist_ok=True)
+    pexe.write_text("old_exe")
+    pplugins.mkdir(parents=True, exist_ok=True)
+    (pplugins / "old_plugin.py").write_text("old_plugin")
+
     def fake_update_dialog(parent, url, dest_path, title, is_zip=False):
-        with open(dest_path, "wb") as f:
-            f.write(b"dummy")
+        if dest_path.endswith(".exe.download"):
+            with open(dest_path, "wb") as f:
+                f.write(b"new_exe")
+        elif dest_path.endswith(".zip.download"):
+            with open(dest_path, "wb") as f:
+                f.write(zip_bytes)
 
     with (
         patch("requests.get", return_value=mock_release_resp),
@@ -323,3 +362,6 @@ def test_service_download_and_install_replace_failure(tmp_path, monkeypatch):
     ):
         success = service.download_and_install()
         assert success is False
+        # Old exe and plugins should be preserved
+        assert pexe.read_text() == "old_exe"
+        assert (pplugins / "old_plugin.py").exists()

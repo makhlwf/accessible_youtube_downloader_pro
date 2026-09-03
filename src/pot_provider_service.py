@@ -2,6 +2,7 @@ import atexit
 import json
 import logging
 import os
+import shutil
 import subprocess
 import sys
 import threading
@@ -28,7 +29,14 @@ class PotProviderService:
         self._initialized = False
 
     def get_port(self):
-        return int(config_get("pot_provider_port") or 4416)
+        val = config_get("pot_provider_port")
+        try:
+            port = int(val)
+            if 1 <= port <= 65535:
+                return port
+        except ValueError, TypeError:
+            pass
+        return 4416
 
     def get_base_url(self):
         return f"http://127.0.0.1:{self.get_port()}"
@@ -255,18 +263,21 @@ class PotProviderService:
             logger.error("Required release assets not found.")
             return False
 
-        self.stop()
+        was_running = self.is_running()
 
         tmp_exe = os.path.join(paths.pot_provider_dir, "bgutil-pot.exe.download")
         tmp_zip = os.path.join(paths.pot_provider_dir, "plugins.zip.download")
+        staging_plugins_dir = os.path.join(paths.pot_provider_dir, "plugins.staging")
         for stale in (tmp_exe, tmp_zip):
             if os.path.exists(stale):
                 try:
                     os.remove(stale)
                 except OSError:
                     pass
+        if os.path.exists(staging_plugins_dir):
+            shutil.rmtree(staging_plugins_dir, ignore_errors=True)
 
-        # Download exe
+        # Download exe first while service is still running
         UpdateDialog(
             parent,
             exe_url,
@@ -277,7 +288,7 @@ class PotProviderService:
         if not os.path.exists(tmp_exe):
             return False
 
-        # Download zip
+        # Download zip while service is still running
         UpdateDialog(
             parent,
             zip_url,
@@ -292,31 +303,90 @@ class PotProviderService:
                 pass
             return False
 
-        # Replace exe
-        if os.path.exists(paths.pot_provider_exe):
-            try:
-                os.remove(paths.pot_provider_exe)
-            except OSError:
-                pass
-        try:
-            os.replace(tmp_exe, paths.pot_provider_exe)
-        except OSError as e:
-            logger.error(f"Failed to replace POT binary: {e}")
-            try:
-                os.remove(tmp_exe)
-            except OSError:
-                pass
-            return False
-
-        # Extract zip into plugins directory
-        os.makedirs(paths.pot_provider_plugins_dir, exist_ok=True)
+        # Validate and extract zip into staging directory
+        os.makedirs(staging_plugins_dir, exist_ok=True)
         try:
             with zipfile.ZipFile(tmp_zip, "r") as z:
-                z.extractall(paths.pot_provider_plugins_dir)
-            os.remove(tmp_zip)
+                if z.testzip() is not None:
+                    raise zipfile.BadZipFile("Zip file checksum mismatch")
+                z.extractall(staging_plugins_dir)
         except Exception as e:
-            logger.error(f"Failed to extract POT plugins: {e}")
+            logger.error(f"Failed to validate and extract POT plugins staging: {e}")
+            for cleanup_path in (tmp_exe, tmp_zip):
+                if os.path.exists(cleanup_path):
+                    try:
+                        os.remove(cleanup_path)
+                    except OSError:
+                        pass
+            shutil.rmtree(staging_plugins_dir, ignore_errors=True)
             return False
+
+        # Both assets are validated in staging. Stop service now to perform swap.
+        self.stop()
+
+        backup_exe = os.path.join(paths.pot_provider_dir, "bgutil-pot.exe.backup")
+        backup_plugins = os.path.join(paths.pot_provider_dir, "plugins.backup")
+        for b in (backup_exe, backup_plugins):
+            if os.path.exists(b):
+                if os.path.isdir(b):
+                    shutil.rmtree(b, ignore_errors=True)
+                else:
+                    try:
+                        os.remove(b)
+                    except OSError:
+                        pass
+
+        swap_success = False
+        try:
+            if os.path.exists(paths.pot_provider_exe):
+                os.replace(paths.pot_provider_exe, backup_exe)
+            os.replace(tmp_exe, paths.pot_provider_exe)
+
+            if os.path.exists(paths.pot_provider_plugins_dir):
+                os.replace(paths.pot_provider_plugins_dir, backup_plugins)
+            os.replace(staging_plugins_dir, paths.pot_provider_plugins_dir)
+            swap_success = True
+        except Exception as e:
+            logger.error(f"Failed to swap POT provider assets, rolling back: {e}")
+            if os.path.exists(backup_exe):
+                try:
+                    if os.path.exists(paths.pot_provider_exe):
+                        os.remove(paths.pot_provider_exe)
+                    os.replace(backup_exe, paths.pot_provider_exe)
+                except Exception:
+                    pass
+            if os.path.exists(backup_plugins):
+                try:
+                    if os.path.exists(paths.pot_provider_plugins_dir):
+                        shutil.rmtree(
+                            paths.pot_provider_plugins_dir, ignore_errors=True
+                        )
+                    os.replace(backup_plugins, paths.pot_provider_plugins_dir)
+                except Exception:
+                    pass
+        finally:
+            for stale in (tmp_exe, tmp_zip):
+                if os.path.exists(stale):
+                    try:
+                        os.remove(stale)
+                    except OSError:
+                        pass
+            if os.path.exists(staging_plugins_dir):
+                shutil.rmtree(staging_plugins_dir, ignore_errors=True)
+
+        if not swap_success:
+            if was_running:
+                self.start()
+            return False
+
+        # Swap completed cleanly; clean up backups
+        if os.path.exists(backup_exe):
+            try:
+                os.remove(backup_exe)
+            except OSError:
+                pass
+        if os.path.exists(backup_plugins):
+            shutil.rmtree(backup_plugins, ignore_errors=True)
 
         # Write version file
         try:

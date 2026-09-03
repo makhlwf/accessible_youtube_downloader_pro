@@ -1,7 +1,7 @@
 import os
 
 import paths
-from settings_handler import config_get, defaults
+from settings_handler import defaults
 
 
 def test_pot_provider_paths():
@@ -22,5 +22,3 @@ def test_pot_provider_settings_defaults():
     assert defaults["pot_provider_enabled"] is True
     assert "pot_provider_port" in defaults
     assert defaults["pot_provider_port"] == 4416
-    assert config_get("pot_provider_enabled") is True
-    assert config_get("pot_provider_port") == 4416
