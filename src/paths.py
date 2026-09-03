@@ -31,6 +31,10 @@ update_path = os.path.join(settings_path, "updates")
 db_path = os.path.join(settings_path, "aHexPlayer.db")
 js_runtime_path = os.path.join(settings_path, "js_runtime")
 log_path = os.path.join(settings_path, "hexplayer.log")
+pot_provider_dir = os.path.join(settings_path, "pot_provider")
+pot_provider_exe = os.path.join(pot_provider_dir, "bgutil-pot.exe")
+pot_provider_plugins_dir = os.path.join(pot_provider_dir, "plugins")
+pot_provider_version_file = os.path.join(pot_provider_dir, "version.json")
 
 
 def _get_yt_dlp_path():
