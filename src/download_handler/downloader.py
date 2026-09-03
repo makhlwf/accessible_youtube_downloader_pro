@@ -10,6 +10,7 @@ from wx.lib.newevent import NewEvent
 import paths
 import utils
 from language_handler import _
+from pot_provider_service import pot_service
 from settings_handler import config_get
 
 logger = logging.getLogger(__name__)
@@ -274,6 +275,26 @@ class Downloader:
             "no_warnings": False,
             "logger": utils.YtDlpLogger(logger),
         }
+
+        if config_get("pot_provider_enabled"):
+            try:
+                pot_service.initialize()
+                if (
+                    pot_service.ensure_started()
+                    and "youtubepot-bgutilhttp" not in ydl_opts["extractor_args"]
+                ):
+                    ydl_opts["extractor_args"]["youtubepot-bgutilhttp"] = {
+                        "base_url": [pot_service.get_base_url()]
+                    }
+                if (
+                    pot_service.has_binary()
+                    and "youtubepot-bgutilcli" not in ydl_opts["extractor_args"]
+                ):
+                    ydl_opts["extractor_args"]["youtubepot-bgutilcli"] = {
+                        "cli_path": [paths.pot_provider_exe]
+                    }
+            except Exception as e:
+                logger.debug(f"Failed to attach POT provider to downloader: {e}")
 
         cookies_path = config_get("cookiespath")
         if use_cookies and cookies_path and os.path.exists(cookies_path):

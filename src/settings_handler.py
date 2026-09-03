@@ -42,6 +42,8 @@ defaults = {
     "sponsorblock_notify": True,
     "sponsorblock_min_duration": 0.0,
     "sponsorblock_api_url": "https://sponsor.ajay.app",
+    "pot_provider_enabled": True,
+    "pot_provider_port": 4416,
 }
 
 _cache = {}
