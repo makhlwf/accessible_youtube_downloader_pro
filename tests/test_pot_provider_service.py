@@ -93,6 +93,8 @@ def test_service_start_stop(tmp_path, monkeypatch):
     ):
         mock_proc = MagicMock()
         mock_proc.poll.return_value = None
+        mock_proc.stdout = ["Started server\n"]
+        mock_proc.stderr = []
         mock_popen.return_value = mock_proc
 
         started = service.start()
@@ -102,6 +104,30 @@ def test_service_start_stop(tmp_path, monkeypatch):
         service.stop()
         mock_proc.kill.assert_called_once()
         assert not service.is_running()
+
+
+def test_service_start_timeout_stops_process(tmp_path, monkeypatch):
+    exe = tmp_path / "bgutil-pot.exe"
+    exe.write_text("dummy")
+    monkeypatch.setattr("paths.pot_provider_exe", str(exe))
+
+    service = PotProviderService()
+    with (
+        patch("subprocess.Popen") as mock_popen,
+        patch.object(service, "is_healthy", return_value=False),
+        patch.object(service, "stop") as mock_stop,
+        patch("time.time", side_effect=[0, 0.5, 3.5, 4.0]),
+        patch("time.sleep"),
+    ):
+        mock_proc = MagicMock()
+        mock_proc.poll.return_value = None
+        mock_proc.stdout = []
+        mock_proc.stderr = []
+        mock_popen.return_value = mock_proc
+
+        started = service.start()
+        assert started is False
+        mock_stop.assert_called_once()
 
 
 def test_service_ensure_started(tmp_path, monkeypatch):
@@ -146,11 +172,16 @@ def test_service_get_installed_version(tmp_path, monkeypatch):
     vfile.write_text(json.dumps({"version": "v0.8.1"}))
     assert service.get_installed_version() == "v0.8.1"
 
-    # From binary fallback
+    # From binary fallback - without v prefix
     vfile.unlink()
     exe.write_text("dummy")
     with patch("subprocess.run") as mock_run:
         mock_run.return_value = MagicMock(returncode=0, stdout="bgutil-pot 0.8.1\n")
+        assert service.get_installed_version() == "v0.8.1"
+
+    # From binary fallback - already with v prefix
+    with patch("subprocess.run") as mock_run:
+        mock_run.return_value = MagicMock(returncode=0, stdout="bgutil-pot v0.8.1\n")
         assert service.get_installed_version() == "v0.8.1"
 
 
@@ -197,7 +228,7 @@ def test_service_download_and_install(tmp_path, monkeypatch):
                 f.write(zip_bytes)
 
     with (
-        patch("requests.get", return_value=mock_release_resp),
+        patch("requests.get", return_value=mock_release_resp) as mock_get,
         patch("gui.update_dialog.UpdateDialog", side_effect=fake_update_dialog),
         patch.object(service, "start", return_value=True),
     ):
@@ -207,3 +238,47 @@ def test_service_download_and_install(tmp_path, monkeypatch):
         assert (pplugins / "test_plugin.py").exists()
         assert pvfile.exists()
         assert json.loads(pvfile.read_text())["version"] == "v0.8.1"
+        mock_get.assert_called_once()
+        assert mock_get.call_args[1]["headers"]["User-Agent"] == "HexPlayer"
+
+
+def test_service_download_and_install_replace_failure(tmp_path, monkeypatch):
+    pdir = tmp_path / "pot_provider"
+    pexe = pdir / "bgutil-pot.exe"
+    pplugins = pdir / "plugins"
+    pvfile = pdir / "version.json"
+
+    monkeypatch.setattr("paths.pot_provider_dir", str(pdir))
+    monkeypatch.setattr("paths.pot_provider_exe", str(pexe))
+    monkeypatch.setattr("paths.pot_provider_plugins_dir", str(pplugins))
+    monkeypatch.setattr("paths.pot_provider_version_file", str(pvfile))
+
+    service = PotProviderService()
+
+    mock_release_resp = MagicMock()
+    mock_release_resp.status_code = 200
+    mock_release_resp.json.return_value = {
+        "tag_name": "v0.8.1",
+        "assets": [
+            {
+                "name": "bgutil-pot-windows-x86_64.exe",
+                "browser_download_url": "https://example.com/bgutil-pot.exe",
+            },
+            {
+                "name": "bgutil-ytdlp-pot-provider-rs.zip",
+                "browser_download_url": "https://example.com/plugins.zip",
+            },
+        ],
+    }
+
+    def fake_update_dialog(parent, url, dest_path, title, is_zip=False):
+        with open(dest_path, "wb") as f:
+            f.write(b"dummy")
+
+    with (
+        patch("requests.get", return_value=mock_release_resp),
+        patch("gui.update_dialog.UpdateDialog", side_effect=fake_update_dialog),
+        patch("os.replace", side_effect=OSError("Permission denied")),
+    ):
+        success = service.download_and_install()
+        assert success is False

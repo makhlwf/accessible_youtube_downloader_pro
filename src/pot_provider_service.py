@@ -66,6 +66,26 @@ class PotProviderService:
     def is_available(self):
         return self.is_installed() and (self.is_running() or self.is_healthy())
 
+    def _drain_output(self, proc):
+        def _reader(stream, name):
+            if not stream:
+                return
+            try:
+                for line in stream:
+                    if line:
+                        logger.debug(f"POT provider {name}: {line.strip()}")
+            except Exception:
+                pass
+
+        if proc.stdout:
+            threading.Thread(
+                target=_reader, args=(proc.stdout, "stdout"), daemon=True
+            ).start()
+        if proc.stderr:
+            threading.Thread(
+                target=_reader, args=(proc.stderr, "stderr"), daemon=True
+            ).start()
+
     def start(self):
         with self.lock:
             if self.process and self.process.poll() is None and self.is_healthy():
@@ -96,6 +116,7 @@ class PotProviderService:
                     text=True,
                     encoding="utf-8",
                 )
+                self._drain_output(self.process)
                 logger.info(f"Started POT provider background server on port {port}.")
             except Exception as e:
                 logger.error(f"Failed to start POT provider process: {e}")
@@ -113,7 +134,10 @@ class PotProviderService:
                 return False
             time.sleep(0.15)
 
-        logger.warning("POT provider server started but ping check timed out.")
+        logger.warning(
+            "POT provider server started but ping check timed out. Stopping process."
+        )
+        self.stop()
         return False
 
     def stop(self):
@@ -160,9 +184,10 @@ class PotProviderService:
                 if res.returncode == 0:
                     line = res.stdout.strip()
                     parts = line.split(" ")
-                    if len(parts) >= 2:
-                        return f"v{parts[1]}"
-                    return line
+                    version = parts[1] if len(parts) >= 2 else line
+                    if not version.startswith("v"):
+                        version = f"v{version}"
+                    return version
             except Exception:
                 pass
         return None
@@ -181,7 +206,11 @@ class PotProviderService:
 
         api_url = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
         try:
-            r = requests.get(api_url, timeout=10)
+            r = requests.get(
+                api_url,
+                headers={"User-Agent": "HexPlayer"},
+                timeout=10,
+            )
             if r.status_code != 200:
                 return False
             release_data = r.json()
@@ -205,8 +234,16 @@ class PotProviderService:
 
         self.stop()
 
-        # Download exe
         tmp_exe = os.path.join(paths.pot_provider_dir, "bgutil-pot.exe.download")
+        tmp_zip = os.path.join(paths.pot_provider_dir, "plugins.zip.download")
+        for stale in (tmp_exe, tmp_zip):
+            if os.path.exists(stale):
+                try:
+                    os.remove(stale)
+                except OSError:
+                    pass
+
+        # Download exe
         UpdateDialog(
             parent,
             exe_url,
@@ -218,7 +255,6 @@ class PotProviderService:
             return False
 
         # Download zip
-        tmp_zip = os.path.join(paths.pot_provider_dir, "plugins.zip.download")
         UpdateDialog(
             parent,
             zip_url,
@@ -239,7 +275,15 @@ class PotProviderService:
                 os.remove(paths.pot_provider_exe)
             except OSError:
                 pass
-        os.replace(tmp_exe, paths.pot_provider_exe)
+        try:
+            os.replace(tmp_exe, paths.pot_provider_exe)
+        except OSError as e:
+            logger.error(f"Failed to replace POT binary: {e}")
+            try:
+                os.remove(tmp_exe)
+            except OSError:
+                pass
+            return False
 
         # Extract zip into plugins directory
         os.makedirs(paths.pot_provider_plugins_dir, exist_ok=True)
