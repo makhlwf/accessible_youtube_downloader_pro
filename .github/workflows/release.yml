@@ -29,6 +29,9 @@ jobs:
     runs-on: windows-latest
     permissions:
       contents: write
+    outputs:
+      version: ${{ steps.get_version.outputs.VERSION }}
+      release_tag: ${{ steps.get_version.outputs.RELEASE_TAG }}
 
     steps:
       - name: Checkout code
@@ -77,6 +80,7 @@ jobs:
           }
           Write-Host "Using Version: $version"
           echo "VERSION=$version" >> $env:GITHUB_OUTPUT
+          echo "RELEASE_TAG=v$version" >> $env:GITHUB_OUTPUT
 
       - name: Bump Version Files and Commit (Stable only)
         if: ${{ github.event.inputs.release_type == 'stable' }}
@@ -208,3 +212,13 @@ jobs:
           git add update.json update_info.json
           git commit -m "pushing update"
           git push origin HEAD:${{ github.ref }}
+
+  publish-winget:
+    name: Publish to WinGet
+    needs: build-and-release
+    if: success() && github.event.inputs.release_type == 'stable'
+    uses: ./.github/workflows/winget.yml
+    secrets: inherit
+    with:
+      release_tag: ${{ needs.build-and-release.outputs.release_tag }}
+      version: ${{ needs.build-and-release.outputs.version }}
