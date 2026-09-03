@@ -22,6 +22,7 @@ import paths
 from database import WatchHistory
 from deno_service import deno_service
 from language_handler import _
+from pot_provider_service import pot_service
 from settings_handler import config_get
 from youtube_url_utils import (  # noqa: F401
     extract_launch_youtube_url,
@@ -717,6 +718,25 @@ def get_ydl_instance(client=None, cookies_path=None):
     opts["extractor_args"] = {
         "youtube": {"player_client": clients, "js_variant": "main"}
     }
+    if config_get("pot_provider_enabled"):
+        try:
+            pot_service.initialize()
+            if (
+                pot_service.ensure_started()
+                and "youtubepot-bgutilhttp" not in opts["extractor_args"]
+            ):
+                opts["extractor_args"]["youtubepot-bgutilhttp"] = {
+                    "base_url": [pot_service.get_base_url()]
+                }
+            if (
+                pot_service.has_binary()
+                and "youtubepot-bgutilcli" not in opts["extractor_args"]
+            ):
+                opts["extractor_args"]["youtubepot-bgutilcli"] = {
+                    "cli_path": [paths.pot_provider_exe]
+                }
+        except Exception as e:
+            logger.debug(f"Failed to inject POT provider args: {e}")
     if cookies_path and os.path.exists(cookies_path):
         opts["cookiefile"] = cookies_path
     return YoutubeDL(opts)
@@ -1141,6 +1161,63 @@ def check_deno(parent=None):
             download_deno()
             return os.path.exists(paths.deno_path)
         return False
+    return True
+
+
+def get_pot_provider_version():
+    """Returns the installed version string of bgutil-pot, or None if not installed."""
+    return pot_service.get_installed_version()
+
+
+def update_pot_provider(parent=None):
+    """Checks for bgutil-pot updates on GitHub and prompts the user to download if newer."""
+    current = get_pot_provider_version()
+    latest = get_latest_github_release("jim60105/bgutil-ytdlp-pot-provider-rs")
+    if not latest:
+        show_error(
+            _("تعذر الحصول على معلومات التحديث من غيت هاب"),
+            parent=parent or (wx.GetApp().GetTopWindow() if wx.GetApp() else None),
+        )
+        return False
+
+    if (current or "").lstrip("v") == (latest or "").lstrip("v"):
+        wx.MessageBox(
+            _("أنت تستخدم بالفعل أحدث إصدار من مولد رموز POT ({})").format(current),
+            _("لا يوجد تحديث"),
+            parent=parent or (wx.GetApp().GetTopWindow() if wx.GetApp() else None),
+        )
+        return False
+    else:
+        msg = wx.MessageBox(
+            _(
+                "هناك إصدار جديد متوفر من مولد رموز POT\nالإصدار الحالي: {}\nالإصدار الأحدث: {}\nهل تريد التحديث الآن؟"
+            ).format(current or _("غير معروف"), latest),
+            _("تحديث متوفر"),
+            style=wx.YES_NO | wx.ICON_INFORMATION,
+            parent=parent or (wx.GetApp().GetTopWindow() if wx.GetApp() else None),
+        )
+        if msg == wx.YES:
+            return pot_service.download_and_install(parent=parent)
+        return False
+
+
+def check_pot_provider(parent=None):
+    """Ensures bgutil-pot is installed and running if enabled, prompting download if missing."""
+    if not config_get("pot_provider_enabled"):
+        return False
+    if not pot_service.is_installed():
+        msg = wx.MessageBox(
+            _(
+                "لم يتم العثور على أداة مولد رموز POT (bgutil-pot)، وهي تساعد في حل قيود يوتيوب وتحسين التنزيل. هل تريد تنزيلها الآن؟"
+            ),
+            _("تنبيه"),
+            style=wx.YES_NO | wx.ICON_INFORMATION,
+            parent=parent or (wx.GetApp().GetTopWindow() if wx.GetApp() else None),
+        )
+        if msg == wx.YES:
+            return pot_service.download_and_install(parent=parent)
+        return False
+    pot_service.ensure_started()
     return True
 
 

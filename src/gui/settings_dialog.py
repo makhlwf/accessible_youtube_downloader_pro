@@ -603,6 +603,13 @@ class SettingsDialog(wx.Dialog):
         self.browserIntegration.SetValue(config_get("browser_integration"))
         if sys.platform != "win32":
             self.browserIntegration.Disable()
+        self.potProvider = SettingsCheckBox(
+            page,
+            -1,
+            _("تفعيل مولد رموز POT لتجاوز قيود يوتيوب (bgutil-pot)"),
+            name="pot_provider_enabled",
+        )
+        self.potProvider.SetValue(config_get("pot_provider_enabled"))
         self.debugMode = SettingsCheckBox(
             page,
             -1,
@@ -611,6 +618,7 @@ class SettingsDialog(wx.Dialog):
         )
         self.debugMode.SetValue(config_get("debug"))
         for checkbox in (
+            self.potProvider,
             self.backgroundMonitoring,
             self.browserIntegration,
             self.debugMode,
@@ -630,6 +638,7 @@ class SettingsDialog(wx.Dialog):
             self.debugMode,
             self.backgroundMonitoring,
             self.browserIntegration,
+            self.potProvider,
             self.repeateTracks,
             self.autoPlayNext,
             self.sponsorBlockNotify,
@@ -892,8 +901,17 @@ class SettingsDialog(wx.Dialog):
         if not self.validate_cookies_path(cookies_path):
             return
         old_browser_integration = config_get("browser_integration")
+        old_pot_provider = config_get("pot_provider_enabled")
         for key, item in self.preferences.items():
             config_set(key, item)
+        new_pot_provider = config_get("pot_provider_enabled")
+        if new_pot_provider != old_pot_provider:
+            from pot_provider_service import pot_service
+
+            if new_pot_provider:
+                pot_service.ensure_started()
+            else:
+                pot_service.stop()
         new_browser_integration = config_get("browser_integration")
         if new_browser_integration != old_browser_integration:
             if new_browser_integration:

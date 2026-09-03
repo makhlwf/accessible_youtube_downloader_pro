@@ -40,6 +40,7 @@ from gui.text_viewer import Viewer
 from gui.tray_icon import TaskBarIcon
 from language_handler import _, codes, init_translation
 from media_player.media_gui import MediaGui
+from pot_provider_service import pot_service
 from speech_client import speak
 from theme_handler import apply_theme
 from youtube_browser.browser import YoutubeBrowser
@@ -381,6 +382,10 @@ class HomeScreen(wx.Frame):
         self.refreshYoutubeiCache = toolsMenu.Append(
             -1, _("تحديث ذاكرة YouTube.js (Innertube) المؤقتة")
         )
+        self.showPotProviderVer = toolsMenu.Append(-1, _("عرض إصدار مولد رموز POT"))
+        self.updatePotProvider = toolsMenu.Append(
+            -1, _("التحقق من وجود تحديث لـ مولد رموز POT")
+        )
         self.openBrowserExtensionFolder = toolsMenu.Append(
             -1, _("فتح مجلد إضافة المتصفح")
         )
@@ -444,6 +449,16 @@ class HomeScreen(wx.Frame):
             wx.EVT_MENU,
             self.on_refresh_youtubei_cache,
             self.refreshYoutubeiCache,
+        )
+        self.Bind(
+            wx.EVT_MENU,
+            self.on_show_pot_provider_version,
+            self.showPotProviderVer,
+        )
+        self.Bind(
+            wx.EVT_MENU,
+            self.on_update_pot_provider,
+            self.updatePotProvider,
         )
         self.Bind(
             wx.EVT_MENU,
@@ -602,6 +617,25 @@ class HomeScreen(wx.Frame):
             return
         wx.MessageBox(version, _("إصدار YouTube.js (Innertube)"), parent=self)
 
+    def on_show_pot_provider_version(self, event):
+        version = utils.get_pot_provider_version()
+        if not version:
+            wx.MessageBox(
+                _("أداة مولد رموز POT غير مثبتة حالياً."),
+                _("معلومات الإصدار"),
+                parent=self,
+            )
+            return
+
+        status = _("قيد التشغيل") if pot_service.is_healthy() else _("متوقف")
+        wx.MessageBox(
+            _("إصدار مولد رموز POT: {}\nحالة الخادم المحلي: {}").format(
+                version, status
+            ),
+            _("معلومات الإصدار"),
+            parent=self,
+        )
+
     def load_home_feed(self, load_more=False):
         if not load_more:
             self.home_feed_list.Set([_("جاري تحميل الاقتراحات... يرجى الانتظار")])
@@ -727,6 +761,9 @@ class HomeScreen(wx.Frame):
 
     def on_refresh_youtubei_cache(self, event):
         utils.refresh_youtubei_cache(parent=self)
+
+    def on_update_pot_provider(self, event):
+        utils.update_pot_provider(parent=self)
 
     def onOpenBrowserExtensionFolder(self, event):
         try:
@@ -906,6 +943,7 @@ class HomeScreen(wx.Frame):
     def startup_dependency_checks(self):
         if utils.check_yt_dlp(self) and utils.check_deno(self):
             utils.ensure_js_dependencies()
+        utils.check_pot_provider(self)
 
     def onGuide(self, event):
         content = documentation_get()
@@ -946,6 +984,7 @@ class HomeScreen(wx.Frame):
         database.disconnect()
         settings_handler.save_settings()
         deno_service.stop()
+        pot_service.stop()
         stop_async_loop()
         self.Destroy()
         wx.Exit()
