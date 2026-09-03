@@ -7,7 +7,14 @@ import utils
 from download_handler.downloader import Downloader
 
 
+class FakeYoutubeDL:
+    def __init__(self, params=None):
+        self.params = params or {}
+        self.opts = self.params
+
+
 def test_get_ydl_instance_injects_pot_args_when_enabled(monkeypatch):
+    monkeypatch.setattr(utils, "YoutubeDL", FakeYoutubeDL)
     monkeypatch.setattr(
         "utils.config_get",
         lambda k, default=None: (
@@ -39,7 +46,35 @@ def test_get_ydl_instance_injects_pot_args_when_enabled(monkeypatch):
         ]
 
 
+def test_get_ydl_instance_omits_http_when_service_fails_to_start(monkeypatch):
+    monkeypatch.setattr(utils, "YoutubeDL", FakeYoutubeDL)
+    monkeypatch.setattr(
+        "utils.config_get",
+        lambda k, default=None: (
+            True
+            if k == "pot_provider_enabled"
+            else (4416 if k == "pot_provider_port" else default)
+        ),
+    )
+
+    with (
+        patch("pot_provider_service.pot_service.is_available", return_value=True),
+        patch("pot_provider_service.pot_service.has_binary", return_value=True),
+        patch(
+            "pot_provider_service.pot_service.get_base_url",
+            return_value="http://127.0.0.1:4416",
+        ),
+        patch("pot_provider_service.pot_service.ensure_started", return_value=False),
+    ):
+        ydl = utils.get_ydl_instance()
+        assert ydl is not None
+        extractor_args = ydl.params.get("extractor_args", {})
+        assert "youtubepot-bgutilhttp" not in extractor_args
+        assert "youtubepot-bgutilcli" in extractor_args
+
+
 def test_get_ydl_instance_omits_pot_args_when_disabled(monkeypatch):
+    monkeypatch.setattr(utils, "YoutubeDL", FakeYoutubeDL)
     monkeypatch.setattr(
         "utils.config_get",
         lambda k, default=None: False if k == "pot_provider_enabled" else default,
@@ -84,6 +119,34 @@ def test_downloader_base_options_injects_pot_args(monkeypatch):
         assert extractor_args["youtubepot-bgutilcli"]["cli_path"] == [
             paths.pot_provider_exe
         ]
+
+
+def test_downloader_base_options_omits_http_when_service_fails_to_start(monkeypatch):
+    monkeypatch.setattr(
+        "download_handler.downloader.config_get",
+        lambda k, default=None: (
+            True
+            if k == "pot_provider_enabled"
+            else (4416 if k == "pot_provider_port" else default)
+        ),
+    )
+
+    with (
+        patch("pot_provider_service.pot_service.is_available", return_value=True),
+        patch("pot_provider_service.pot_service.has_binary", return_value=True),
+        patch(
+            "pot_provider_service.pot_service.get_base_url",
+            return_value="http://127.0.0.1:4416",
+        ),
+        patch("pot_provider_service.pot_service.ensure_started", return_value=False),
+    ):
+        dl = Downloader(
+            "https://www.youtube.com/watch?v=dummy", "C:/tmp", "video", None, None
+        )
+        opts = dl._base_options()
+        extractor_args = opts.get("extractor_args", {})
+        assert "youtubepot-bgutilhttp" not in extractor_args
+        assert "youtubepot-bgutilcli" in extractor_args
 
 
 def test_downloader_base_options_omits_pot_args_when_disabled(monkeypatch):
