@@ -10,6 +10,9 @@ sys.path.insert(
 )
 
 
+_focused_window = None
+
+
 # Mock wx module
 class wxWindow:
     def __init__(self, *args, **kwargs):
@@ -44,8 +47,8 @@ class wxWindow:
         self.Enable = lambda enable=True: setattr(self, "_is_enabled", bool(enable))
         self.Disable = lambda: setattr(self, "_is_enabled", False)
         self.IsEnabled = lambda: self._is_enabled
-        self.HasFocus = lambda: getattr(self, "_has_focus", False)
-        self.SetFocus = MagicMock()
+        self.HasFocus = lambda: _focused_window is self
+        self.SetFocus = MagicMock(side_effect=self._handle_set_focus)
         self.ShowModal = MagicMock()
         self.ShowFullScreen = MagicMock()
         self.IsFullScreen = MagicMock(return_value=False)
@@ -57,11 +60,25 @@ class wxWindow:
         self.GetParent = lambda: self.Parent
         self.SetTitle = MagicMock()
 
+    def _handle_set_focus(self):
+        global _focused_window
+        _focused_window = self
+
+    @staticmethod
+    def FindFocus():
+        return _focused_window
+
     def GetLabel(self):
         return self._label
 
     def SetLabel(self, label):
         self._label = str(label)
+
+    def GetName(self):
+        return self.Name
+
+    def SetName(self, name):
+        self.Name = str(name)
 
 
 _next_control_id = 1000
@@ -138,6 +155,12 @@ class ListBox(wxWindow):
 
     def GetCount(self):
         return len(self.Items)
+
+    def SetSelection(self, n):
+        self.Selection = n
+
+    def GetSelection(self):
+        return self.Selection
 
 
 class Choice(wxWindow):
@@ -281,6 +304,10 @@ mock_wx.Locale = MagicMock()
 mock_wx.GetApp = MagicMock()
 mock_wx.GetActiveWindow = MagicMock(return_value=None)
 mock_wx.GetTopLevelWindows = MagicMock(return_value=[])
+mock_wx.Window = wxWindow
+mock_wx.FindFocus = staticmethod(lambda: _focused_window)
+mock_wx.WXK_ESCAPE = 27
+mock_wx.WXK_TAB = 9
 mock_wx.Timer = MagicMock()
 
 sys.modules["wx"] = mock_wx

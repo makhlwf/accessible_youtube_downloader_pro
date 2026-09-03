@@ -17,6 +17,7 @@ from gui.quality_selection import QualitySelectionDialog
 from gui.settings_dialog import SettingsDialog
 from language_handler import _
 from media_player.player import Player, State
+from media_player.suggestions_service import SuggestionsService
 from media_player.timecodes import format_timecode, parse_timecode
 from settings_handler import config_get, config_set
 from speech_client import speak
@@ -167,13 +168,39 @@ class MediaGui(wx.Frame):
             forwardButton,
             nextButton,
         ]
+        self.suggestions_data = []
+        self.suggestions_continuation = None
+        self._loading_suggestions = False
+
+        self.suggestions_list = wx.ListBox(
+            self, -1, name="suggestions_list", style=wx.LB_SINGLE
+        )
+        self.suggestions_list.Bind(wx.EVT_SET_FOCUS, self.on_suggestions_set_focus)
+        self.suggestions_list.Bind(wx.EVT_CHAR_HOOK, self.on_suggestions_char_hook)
+        self.suggestions_list.Bind(wx.EVT_KEY_DOWN, self.on_suggestions_key_down)
+        self.suggestions_list.Bind(
+            wx.EVT_LISTBOX_DCLICK,
+            lambda event: self.on_activate_suggestion(audio_mode=False),
+        )
+        self.suggestions_list.Bind(
+            wx.EVT_CONTEXT_MENU, self.on_suggestions_context_menu
+        )
+        self.load_more_suggestions_btn = CustomButton(
+            self, -1, _("تحميل المزيد من الاقتراحات"), name="controls"
+        )
+        self.load_more_suggestions_btn.Bind(
+            wx.EVT_BUTTON, self.on_load_more_suggestions
+        )
+        self.load_more_suggestions_btn.Hide()
+
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer1 = wx.BoxSizer(wx.HORIZONTAL)
-        for control in self.GetChildren():
-            if control.Name == "controls":
-                sizer1.Add(control, 1)
-        sizer.AddStretchSpacer()
-        sizer.Add(sizer1)
+        for control in self._player_controls:
+            sizer1.Add(control, 1)
+        sizer.AddStretchSpacer(1)
+        sizer.Add(self.suggestions_list, 0, wx.EXPAND | wx.ALL, 5)
+        sizer.Add(self.load_more_suggestions_btn, 0, wx.ALIGN_CENTER | wx.ALL, 5)
+        sizer.Add(sizer1, 0, wx.EXPAND)
         self.SetSizer(sizer)
         apply_theme(self)
         if not self.audio_mode:
@@ -277,6 +304,8 @@ class MediaGui(wx.Frame):
         for hot_id in [self.prev_id, self.play_pause_id, self.next_id]:
             self.Bind(wx.EVT_HOTKEY, self.onHot, id=hot_id)
         for control in self.GetChildren():
+            if control is self.suggestions_list:
+                continue
             control.Bind(wx.EVT_KEY_DOWN, self.onKeyDown)
             control.Bind(wx.EVT_CONTEXT_MENU, self.onContextMenu)
         previousButton.Bind(wx.EVT_BUTTON, lambda event: self.previous())
@@ -331,6 +360,7 @@ class MediaGui(wx.Frame):
         if self.url in all_continue and config_get("continue"):
             self.player.media.set_position(all_continue[self.url])
         Thread(target=self.extract_description, daemon=True).start()
+        Thread(target=self.fetch_suggestions, daemon=True).start()
         self.history_timer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.on_history_timer, self.history_timer)
         self.history_timer.Start(10000)  # 10 seconds
@@ -792,6 +822,116 @@ class MediaGui(wx.Frame):
             return
         wx.CallAfter(self.populate_quality_menu, qualities)
 
+    def fetch_suggestions(self, load_more=False):
+        if getattr(self, "_loading_suggestions", False):
+            return
+        self._loading_suggestions = True
+        try:
+            if not load_more and not self.suggestions_data:
+
+                def _set_placeholder():
+                    if not self or getattr(self, "_closing", False):
+                        return
+                    if not self.suggestions_data:
+                        self.suggestions_list.Set(
+                            [_("جاري تحميل الاقتراحات... يرجى الانتظار")]
+                        )
+
+                if wx.IsMainThread():
+                    _set_placeholder()
+                else:
+                    wx.CallAfter(_set_placeholder)
+
+            target_url = self.url
+            continuation = self.suggestions_continuation if load_more else None
+            res = SuggestionsService.fetch_related(
+                target_url, limit=20, continuation=continuation
+            )
+            if getattr(self, "_closing", False) or self.url != target_url:
+                return
+
+            videos = res.get("videos", [])
+            new_continuation = res.get("continuation")
+
+            def _update_ui():
+                if (
+                    not self
+                    or getattr(self, "_closing", False)
+                    or self.url != target_url
+                ):
+                    return
+                try:
+                    self.suggestions_continuation = new_continuation
+
+                    if load_more:
+                        self.suggestions_data.extend(videos)
+                        new_titles = []
+                        for v in videos:
+                            title = v.get("title", "")
+                            duration = v.get("duration", "")
+                            channel_name = (v.get("channel") or {}).get("name", "")
+                            if duration and channel_name:
+                                new_titles.append(
+                                    f"{title}, {duration}, {_('بواسطة')} {channel_name}"
+                                )
+                            elif duration:
+                                new_titles.append(f"{title}, {duration}")
+                            elif channel_name:
+                                new_titles.append(
+                                    f"{title}, {_('بواسطة')} {channel_name}"
+                                )
+                            else:
+                                new_titles.append(title)
+                        current_sel = self.suggestions_list.GetSelection()
+                        self.suggestions_list.Append(new_titles)
+                        if current_sel != wx.NOT_FOUND:
+                            self.suggestions_list.SetSelection(current_sel)
+                    else:
+                        self.suggestions_data = list(videos)
+                        if not self.suggestions_data:
+                            items = [_("لا تتوفر اقتراحات لهذا المقطع")]
+                        else:
+                            items = []
+                            for v in self.suggestions_data:
+                                title = v.get("title", "")
+                                duration = v.get("duration", "")
+                                channel_name = (v.get("channel") or {}).get("name", "")
+                                if duration and channel_name:
+                                    items.append(
+                                        f"{title}, {duration}, {_('بواسطة')} {channel_name}"
+                                    )
+                                elif duration:
+                                    items.append(f"{title}, {duration}")
+                                elif channel_name:
+                                    items.append(
+                                        f"{title}, {_('بواسطة')} {channel_name}"
+                                    )
+                                else:
+                                    items.append(title)
+                        self.suggestions_list.Set(items)
+
+                    if not self.IsFullScreen():
+                        self.load_more_suggestions_btn.Show(
+                            self.suggestions_continuation is not None
+                        )
+                        self.Layout()
+                except Exception:
+                    logger.debug("Could not update suggestions list UI", exc_info=True)
+
+            wx.CallAfter(_update_ui)
+        except Exception as e:
+            logger.debug(f"Error in fetch_suggestions: {e}", exc_info=True)
+
+            def _set_error():
+                if not self or getattr(self, "_closing", False):
+                    return
+                if not self.suggestions_data:
+                    self.suggestions_list.Set([_("تعذر تحميل الاقتراحات")])
+
+            wx.CallAfter(_set_error)
+        finally:
+            self._loading_suggestions = False
+
     def fetch_like_count(self):
         def _task():
             import logging
@@ -870,7 +1010,9 @@ class MediaGui(wx.Frame):
 
         Thread(target=reload, daemon=True).start()
 
-    def _download_media(self, format_type, url, dlg, path=None, quality=None):
+    def _download_media(
+        self, format_type, url, dlg, path=None, quality=None, title=None
+    ):
         from download_handler.downloader import start_media_download
 
         start_media_download(
@@ -878,7 +1020,7 @@ class MediaGui(wx.Frame):
             format_type,
             self,
             path=path,
-            title=self.title,
+            title=title or self.title,
             quality=quality,
             folder=False,
         )
@@ -972,10 +1114,252 @@ class MediaGui(wx.Frame):
     def onClose(self, event):
         self.closeAction()
 
+    def _get_first_visible_player_control(self):
+        for control in getattr(self, "_player_controls", []):
+            if control.IsShown():
+                return control
+        return None
+
+    def on_suggestions_set_focus(self, event):
+        event.Skip()
+        if (
+            self.suggestions_list.GetCount() > 0
+            and self.suggestions_list.GetSelection() == wx.NOT_FOUND
+        ):
+            self.suggestions_list.SetSelection(0)
+
+    def on_load_more_suggestions(self, event=None):
+        Thread(
+            target=lambda: self.fetch_suggestions(load_more=True), daemon=True
+        ).start()
+
+    def on_activate_suggestion(self, audio_mode=False, index=None):
+        if index is None:
+            idx = self.suggestions_list.GetSelection()
+        else:
+            idx = index
+        if idx == wx.NOT_FOUND or not (0 <= idx < len(self.suggestions_data)):
+            return
+        self._suggestions_mode = True
+        self.results = self.suggestions_data
+        self.current_index = idx
+        self._previous_button.Show(True)
+        self._next_button.Show(True)
+        self.Layout()
+        self.audio_mode = audio_mode
+        self.changeTrack(idx)
+
+    def create_suggestions_context_menu(self, idx):
+        if idx == wx.NOT_FOUND or not (0 <= idx < len(self.suggestions_data)):
+            return None
+
+        video = self.suggestions_data[idx]
+        video_url = video.get("url") or (
+            f"https://www.youtube.com/watch?v={video.get('id')}"
+            if video.get("id")
+            else ""
+        )
+        video_title = video.get("title", "")
+        channel = video.get("channel") or {}
+        channel_name = channel.get("name", "")
+        channel_url = channel.get("url", "")
+
+        menu = wx.Menu()
+        play_item = menu.Append(-1, _("تشغيل"))
+        play_audio_item = menu.Append(-1, _("التشغيل كمقطع صوتي"))
+
+        download_menu = wx.Menu()
+        video_sub_menu = wx.Menu()
+        mp4_item = video_sub_menu.Append(-1, "mp4")
+        mkv_item = video_sub_menu.Append(-1, "mkv")
+        download_menu.AppendSubMenu(video_sub_menu, _("فيديو"))
+
+        audio_sub_menu = wx.Menu()
+        m4a_item = audio_sub_menu.Append(-1, "m4a")
+        mp3_item = audio_sub_menu.Append(-1, "mp3")
+        wav_item = audio_sub_menu.Append(-1, "wav")
+        flac_item = audio_sub_menu.Append(-1, "flac")
+        download_menu.AppendSubMenu(audio_sub_menu, _("صوت"))
+
+        download_item = menu.AppendSubMenu(download_menu, _("تنزيل"))
+        can_dl = getattr(self, "can_download", True)
+        download_item.Enable(can_dl)
+
+        direct_download_item = menu.Append(-1, _("التنزيل المباشر..."))
+        direct_download_item.Enable(can_dl)
+
+        copy_link_item = menu.Append(-1, _("نسخ رابط المقطع"))
+        channel_item = menu.Append(-1, _("الانتقال إلى القناة"))
+        browser_item = menu.Append(-1, _("الفتح من خلال متصفح الإنترنت"))
+
+        self.Bind(
+            wx.EVT_MENU,
+            lambda e: self.on_activate_suggestion(audio_mode=False, index=idx),
+            play_item,
+        )
+        self.Bind(
+            wx.EVT_MENU,
+            lambda e: self.on_activate_suggestion(audio_mode=True, index=idx),
+            play_audio_item,
+        )
+
+        def _on_dl_video(fmt):
+            if not utils.check_yt_dlp(self):
+                return
+            qualities = LoadingDialog(
+                self,
+                _("جاري جلب الجودات المتاحة..."),
+                utils.get_available_qualities,
+                video_url,
+            ).res
+            quality = None
+            if qualities:
+                quality_dlg = QualitySelectionDialog(self, qualities)
+                if quality_dlg.ShowModal() == wx.ID_OK:
+                    quality = quality_dlg.get_selected_quality()
+                else:
+                    return
+            dlg = DownloadProgress(wx.GetApp().GetTopWindow(), video_title)
+            self._download_media(
+                fmt, video_url, dlg, path=self.path, quality=quality, title=video_title
+            )
+
+        def _on_dl_audio(fmt):
+            dlg = DownloadProgress(wx.GetApp().GetTopWindow(), video_title)
+            self._download_media(fmt, video_url, dlg, path=self.path, title=video_title)
+
+        def _on_direct(e):
+            dlg = DownloadProgress(wx.GetApp().GetTopWindow(), video_title)
+            self._download_media(
+                int(config_get("defaultformat")),
+                video_url,
+                dlg,
+                path=self.path,
+                title=video_title,
+            )
+
+        def _on_copy(e):
+            utils.copy_to_clipboard(video_url)
+
+        def _on_channel(e):
+            if not channel_url:
+                speak(_("رابط القناة غير متوفر"))
+                return
+            from gui.channel_dialog import ChannelDialog
+
+            ChannelDialog(self, channel_url, channel_name or _("قناة"))
+
+        def _on_browser(e):
+            webbrowser.open(video_url)
+
+        self.Bind(wx.EVT_MENU, lambda e: _on_dl_video("mp4"), mp4_item)
+        self.Bind(wx.EVT_MENU, lambda e: _on_dl_video("mkv"), mkv_item)
+        self.Bind(wx.EVT_MENU, lambda e: _on_dl_audio("m4a"), m4a_item)
+        self.Bind(wx.EVT_MENU, lambda e: _on_dl_audio("mp3"), mp3_item)
+        self.Bind(wx.EVT_MENU, lambda e: _on_dl_audio("wav"), wav_item)
+        self.Bind(wx.EVT_MENU, lambda e: _on_dl_audio("flac"), flac_item)
+        self.Bind(wx.EVT_MENU, _on_direct, direct_download_item)
+        self.Bind(wx.EVT_MENU, _on_copy, copy_link_item)
+        self.Bind(wx.EVT_MENU, _on_channel, channel_item)
+        self.Bind(wx.EVT_MENU, _on_browser, browser_item)
+
+        return menu
+
+    def on_suggestions_context_menu(self, event=None):
+        if not self.suggestions_data:
+            return
+        idx = self.suggestions_list.GetSelection()
+        if idx == wx.NOT_FOUND or not (0 <= idx < len(self.suggestions_data)):
+            return
+        menu = self.create_suggestions_context_menu(idx)
+        if menu:
+            self.suggestions_list.PopupMenu(menu)
+            menu.Destroy()
+
+    def on_suggestions_char_hook(self, event):
+        key_code = event.GetKeyCode()
+        if key_code == wx.WXK_ESCAPE:
+            self.SetFocus()
+            return
+        if key_code == wx.WXK_TAB and event.ShiftDown():
+            self.SetFocus()
+            return
+        if key_code == wx.WXK_TAB and not event.ShiftDown():
+            target = (
+                self.load_more_suggestions_btn
+                if self.load_more_suggestions_btn.IsShown()
+                else self._get_first_visible_player_control()
+            )
+            if target:
+                target.SetFocus()
+                return
+        if key_code in (wx.WXK_RETURN, wx.WXK_NUMPAD_ENTER):
+            if event.ControlDown():
+                self.on_activate_suggestion(audio_mode=True)
+            else:
+                self.on_activate_suggestion(audio_mode=False)
+            return
+        if self._is_context_menu_key(event):
+            self.on_suggestions_context_menu(event)
+            return
+        event.Skip()
+
+    def on_suggestions_key_down(self, event):
+        key_code = event.GetKeyCode()
+        if key_code in (wx.WXK_RETURN, wx.WXK_NUMPAD_ENTER):
+            if event.ControlDown():
+                self.on_activate_suggestion(audio_mode=True)
+            else:
+                self.on_activate_suggestion(audio_mode=False)
+            return
+        event.Skip()
+
     def onCharHook(self, event):
-        if event.GetKeyCode() == wx.WXK_ESCAPE:
+        key_code = event.GetKeyCode()
+        focused = self.FindFocus()
+
+        if focused == self.suggestions_list and (
+            key_code
+            in (
+                wx.WXK_ESCAPE,
+                wx.WXK_TAB,
+                wx.WXK_RETURN,
+                wx.WXK_NUMPAD_ENTER,
+            )
+            or self._is_context_menu_key(event)
+        ):
+            self.on_suggestions_char_hook(event)
+            return
+
+        if key_code == wx.WXK_ESCAPE:
             self.closeAction()
             return
+
+        if key_code == wx.WXK_TAB:
+            if not event.ShiftDown():
+                if focused == self:
+                    if self.suggestions_list.IsShown():
+                        self.suggestions_list.SetFocus()
+                        return
+                elif focused == self.load_more_suggestions_btn:
+                    first_ctrl = self._get_first_visible_player_control()
+                    if first_ctrl:
+                        first_ctrl.SetFocus()
+                        return
+            else:
+                if focused == self.load_more_suggestions_btn:
+                    self.suggestions_list.SetFocus()
+                    return
+                elif focused and focused == self._get_first_visible_player_control():
+                    target = (
+                        self.load_more_suggestions_btn
+                        if self.load_more_suggestions_btn.IsShown()
+                        else self.suggestions_list
+                    )
+                    if target and target.IsShown():
+                        target.SetFocus()
+                        return
+
         if self._is_context_menu_key(event):
             event.Skip(False)
             self.onContextMenu(event)
@@ -1452,9 +1836,12 @@ class MediaGui(wx.Frame):
             and isinstance(self.results, list)
             and 0 <= index < len(self.results)
         ):
-            author = self.results[index].get("author")
-            if author:
-                return {"name": author, "url": ""}
+            item = self.results[index]
+            ch = item.get("channel") if isinstance(item.get("channel"), dict) else {}
+            name = item.get("channel_name") or ch.get("name") or item.get("author")
+            url = item.get("channel_url") or ch.get("url") or ""
+            if name or url:
+                return {"name": name or _("قناة"), "url": url}
         return {"name": _("قناةغيرمعروفة"), "url": ""}
 
     def _set_player_controls_visible(self, visible):
@@ -1466,6 +1853,13 @@ class MediaGui(wx.Frame):
                 control.Show(show)
             except RuntimeError:
                 logger.debug("Could not update fullscreen controls", exc_info=True)
+        try:
+            self.suggestions_list.Show(bool(visible))
+            self.load_more_suggestions_btn.Show(
+                bool(visible) and (self.suggestions_continuation is not None)
+            )
+        except (RuntimeError, AttributeError):  # fmt: skip
+            pass
         try:
             self.Layout()
         except RuntimeError:
@@ -1649,6 +2043,8 @@ class MediaGui(wx.Frame):
             self.chaptersMenu.Append(-1, _("جاري التحميل...")).Enable(False)
             Thread(target=self.fetch_chapters, daemon=True).start()
             Thread(target=self.fetch_subtitles, daemon=True).start()
+            self.suggestions_continuation = None
+            Thread(target=self.fetch_suggestions, daemon=True).start()
         # Report new track to history
         self._report_watch_history(0)
 
@@ -1656,8 +2052,10 @@ class MediaGui(wx.Frame):
         if self.results is None:
             return
 
-        if getattr(self, "shorts_mode", False) or (
-            isinstance(self.results, list) and not self._has_parent_listbox()
+        if (
+            getattr(self, "shorts_mode", False)
+            or getattr(self, "_suggestions_mode", False)
+            or (isinstance(self.results, list) and not self._has_parent_listbox())
         ):
             count = len(self.results)
             if self.current_index >= count - 1:
@@ -1715,8 +2113,10 @@ class MediaGui(wx.Frame):
         if self.results is None:
             return
 
-        if getattr(self, "shorts_mode", False) or (
-            isinstance(self.results, list) and not self._has_parent_listbox()
+        if (
+            getattr(self, "shorts_mode", False)
+            or getattr(self, "_suggestions_mode", False)
+            or (isinstance(self.results, list) and not self._has_parent_listbox())
         ):
             if self.current_index <= 0:
                 speak(_("بداية القائمة"))
