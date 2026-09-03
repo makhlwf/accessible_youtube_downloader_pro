@@ -130,6 +130,47 @@ def test_service_start_timeout_stops_process(tmp_path, monkeypatch):
         mock_stop.assert_called_once()
 
 
+def test_service_start_does_not_spawn_duplicate_process(tmp_path, monkeypatch):
+    exe = tmp_path / "bgutil-pot.exe"
+    exe.write_text("dummy")
+    monkeypatch.setattr("paths.pot_provider_exe", str(exe))
+
+    service = PotProviderService()
+    mock_proc = MagicMock()
+    mock_proc.poll.return_value = None
+    service.process = mock_proc
+
+    with (
+        patch("subprocess.Popen") as mock_popen,
+        patch.object(service, "is_healthy", side_effect=[False, True]),
+    ):
+        result = service.start()
+        assert result is True
+        mock_popen.assert_not_called()
+
+    # Also verify when already healthy
+    with (
+        patch("subprocess.Popen") as mock_popen,
+        patch.object(service, "is_healthy", return_value=True),
+    ):
+        result = service.start()
+        assert result is True
+        mock_popen.assert_not_called()
+
+
+def test_service_stop_safe_logger_exception():
+    service = PotProviderService()
+    mock_proc = MagicMock()
+    service.process = mock_proc
+    with patch(
+        "pot_provider_service.logger.info",
+        side_effect=ValueError("I/O operation on closed file"),
+    ):
+        service.stop()
+        assert service.process is None
+        mock_proc.kill.assert_called_once()
+
+
 def test_service_ensure_started(tmp_path, monkeypatch):
     exe = tmp_path / "bgutil-pot.exe"
     exe.write_text("dummy")
