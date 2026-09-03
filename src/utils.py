@@ -1163,10 +1163,12 @@ def check_deno(parent=None):
 
 
 def get_pot_provider_version():
+    """Returns the installed version string of bgutil-pot, or None if not installed."""
     return pot_service.get_installed_version()
 
 
 def update_pot_provider(parent=None):
+    """Checks for bgutil-pot updates on GitHub and prompts the user to download if newer."""
     current = get_pot_provider_version()
     latest = get_latest_github_release("jim60105/bgutil-ytdlp-pot-provider-rs")
     if not latest:
@@ -1176,7 +1178,7 @@ def update_pot_provider(parent=None):
         )
         return False
 
-    if current == latest:
+    if (current or "").lstrip("v") == (latest or "").lstrip("v"):
         wx.MessageBox(
             _("أنت تستخدم بالفعل أحدث إصدار من مولد رموز POT ({})").format(current),
             _("لا يوجد تحديث"),
@@ -1198,6 +1200,7 @@ def update_pot_provider(parent=None):
 
 
 def check_pot_provider(parent=None):
+    """Ensures bgutil-pot is installed and running if enabled, prompting download if missing."""
     if not config_get("pot_provider_enabled"):
         return False
     if not pot_service.is_installed():
