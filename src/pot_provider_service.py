@@ -32,6 +32,15 @@ PINNED_RELEASE_HASHES = {
 }
 
 
+def _sha256_file(file_path, chunk_size=1024 * 1024):
+    """Compute SHA-256 digest of a file in chunks."""
+    digest = hashlib.sha256()
+    with open(file_path, "rb") as f:
+        for chunk in iter(lambda: f.read(chunk_size), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
 class PotProviderService:
     def __init__(self):
         self.process = None
@@ -346,8 +355,16 @@ class PotProviderService:
 
         pinned_hashes = PINNED_RELEASE_HASHES.get(tag_name)
         if pinned_hashes and "exe" in pinned_hashes:
-            with open(tmp_exe, "rb") as f:
-                actual_exe_hash = hashlib.sha256(f.read()).hexdigest()
+            try:
+                actual_exe_hash = _sha256_file(tmp_exe)
+            except OSError as e:
+                logger.error(f"Failed to hash executable {tmp_exe}: {e}")
+                try:
+                    os.remove(tmp_exe)
+                except OSError:
+                    pass
+                return False
+
             if actual_exe_hash.lower() != pinned_hashes["exe"].lower():
                 logger.error(
                     f"SHA-256 mismatch for {tmp_exe}: expected {pinned_hashes['exe']}, got {actual_exe_hash}"
@@ -387,8 +404,18 @@ class PotProviderService:
             return False
 
         if pinned_hashes and "zip" in pinned_hashes:
-            with open(tmp_zip, "rb") as f:
-                actual_zip_hash = hashlib.sha256(f.read()).hexdigest()
+            try:
+                actual_zip_hash = _sha256_file(tmp_zip)
+            except OSError as e:
+                logger.error(f"Failed to hash zip {tmp_zip}: {e}")
+                for cleanup_path in (tmp_exe, tmp_zip):
+                    if os.path.exists(cleanup_path):
+                        try:
+                            os.remove(cleanup_path)
+                        except OSError:
+                            pass
+                return False
+
             if actual_zip_hash.lower() != pinned_hashes["zip"].lower():
                 logger.error(
                     f"SHA-256 mismatch for {tmp_zip}: expected {pinned_hashes['zip']}, got {actual_zip_hash}"
