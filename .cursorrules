@@ -1,0 +1,11 @@
+# HexPlayer (Accessible YouTube Downloader Pro) - Cursor Rules
+
+You are working on HexPlayer, a specialized Windows desktop YouTube client for blind and visually impaired users.
+
+Rules & Invariants:
+1. wxPython Thread Safety: NEVER access UI from background threads; use `wx.CallAfter(callable, *args)`.
+2. Accessibility First: Full keyboard navigation (wx.TAB_TRAVERSAL, Enter, Space, Escape) and speech announcements via `speech_client.speak(msg)`.
+3. Internationalization: Wrap all user text in `_()`. Use named placeholders: `_("{n} items").format(n=count)`. Update `messages.pot` if strings change.
+4. Path Portability: Use `paths.py` resolvers; never hardcode paths.
+5. Domain Skills: Consult `.agents/skills/` for all subsystem procedures.
+6. Verification: Always run `uv run python scripts/agent_preflight.py` to verify lints, translations, and pytest tests before reporting completion.

@@ -227,3 +227,8 @@ HexPlayer/
 manifests/
 *YouTube.js/.worktrees/
 temp_pytest/
+
+# Claude Code local settings and skills junction
+.claude/*.local.json
+.claude/skills
+
