@@ -7,6 +7,8 @@ from youtube_browser.search_handler import (
     PlaylistResult,
     Search,
     SimpleResult,
+    fetch_search_suggestions,
+    fetch_search_suggestions_async,
 )
 
 
@@ -370,3 +372,39 @@ def test_local_watch_history_response_handles_invalid_continuation(monkeypatch):
     res = utils._local_watch_history_response(continuation="not_an_int")
     assert res["source"] == "local"
     assert res["videos"] == []
+
+
+@pytest.mark.asyncio
+async def test_fetch_search_suggestions_async_success():
+    with patch(
+        "youtube_browser.search_handler.Suggestions.get", new_callable=AsyncMock
+    ) as mock_get:
+        mock_get.return_value = {"result": ["python tutorial", "python for beginners"]}
+        res = await fetch_search_suggestions_async("python", language="en", region="US")
+        assert res == ["python tutorial", "python for beginners"]
+        mock_get.assert_awaited_once_with("python", language="en", region="US")
+
+
+@pytest.mark.asyncio
+async def test_fetch_search_suggestions_async_empty_query():
+    res = await fetch_search_suggestions_async("   ")
+    assert res == []
+
+
+@pytest.mark.asyncio
+async def test_fetch_search_suggestions_async_error_handling():
+    with patch(
+        "youtube_browser.search_handler.Suggestions.get", new_callable=AsyncMock
+    ) as mock_get:
+        mock_get.side_effect = RuntimeError("Network error")
+        res = await fetch_search_suggestions_async("python")
+        assert res == []
+
+
+def test_fetch_search_suggestions_sync():
+    with patch(
+        "youtube_browser.search_handler.Suggestions.get", new_callable=AsyncMock
+    ) as mock_get:
+        mock_get.return_value = {"result": ["python basics"]}
+        res = fetch_search_suggestions("python", language="en", region="US")
+        assert res == ["python basics"]

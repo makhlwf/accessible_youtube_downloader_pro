@@ -33,7 +33,9 @@ class wxWindow:
         self.GetChildren = MagicMock(return_value=[])
         self.Refresh = MagicMock()
         self.Update = MagicMock()
-        self.SetName = MagicMock()
+        self.SetName = MagicMock(
+            side_effect=lambda name: setattr(self, "Name", str(name))
+        )
         self.Centre = MagicMock()
         self.Center = MagicMock()
         self.SetSize = MagicMock()
@@ -59,6 +61,7 @@ class wxWindow:
         self.GetHandle = MagicMock(return_value=12345)
         self.GetParent = lambda: self.Parent
         self.SetTitle = MagicMock()
+        self.GetClientSize = lambda: mock_wx.Size(500, 300)
 
     def _handle_set_focus(self):
         global _focused_window
@@ -134,6 +137,9 @@ class TextCtrl(wxWindow):
     def Value(self, val):
         self._value = str(val)
 
+    def SetInsertionPointEnd(self):
+        pass
+
 
 class ListBox(wxWindow):
     def __init__(self, *args, **kwargs):
@@ -161,6 +167,19 @@ class ListBox(wxWindow):
 
     def GetSelection(self):
         return self.Selection
+
+    def GetString(self, n):
+        if 0 <= n < len(self.Items):
+            return self.Items[n]
+        return ""
+
+    def GetStringSelection(self):
+        if 0 <= self.Selection < len(self.Items):
+            return self.Items[self.Selection]
+        return ""
+
+    def HitTest(self, point):
+        return self.Selection if self.Selection != mock_wx.NOT_FOUND else 0
 
 
 class Choice(wxWindow):
@@ -301,6 +320,39 @@ mock_wx.ALIGN_RIGHT = 2
 mock_wx.SL_VERTICAL = 4
 mock_wx.NOT_FOUND = -1
 mock_wx.Locale = MagicMock()
+
+
+class MockTimer:
+    def __init__(self, owner=None, id=-1):
+        self.owner = owner
+        self.id = id
+        self._running = False
+
+    def Start(self, milliseconds=-1, oneShot=False):
+        self._running = True
+
+    def StartOnce(self, milliseconds=-1):
+        self._running = True
+
+    def Stop(self):
+        self._running = False
+
+    def IsRunning(self):
+        return self._running
+
+
+class Point:
+    def __init__(self, x=0, y=0):
+        self.x = x
+        self.y = y
+
+
+class Size:
+    def __init__(self, width=0, height=0):
+        self.width = width
+        self.height = height
+
+
 mock_wx.GetApp = MagicMock()
 mock_wx.GetActiveWindow = MagicMock(return_value=None)
 mock_wx.GetTopLevelWindows = MagicMock(return_value=[])
@@ -308,7 +360,13 @@ mock_wx.Window = wxWindow
 mock_wx.FindFocus = staticmethod(lambda: _focused_window)
 mock_wx.WXK_ESCAPE = 27
 mock_wx.WXK_TAB = 9
-mock_wx.Timer = MagicMock()
+mock_wx.WXK_RETURN = 13
+mock_wx.WXK_DOWN = 317
+mock_wx.WXK_UP = 315
+mock_wx.WXK_RIGHT = 316
+mock_wx.Timer = MockTimer
+mock_wx.Point = Point
+mock_wx.Size = Size
 
 sys.modules["wx"] = mock_wx
 sys.modules["wx.adv"] = MagicMock()
@@ -345,11 +403,18 @@ class ChannelsSearch(metaclass=MockType):
     pass
 
 
+class Suggestions(metaclass=MockType):
+    @staticmethod
+    async def get(query, language="en", region="US"):
+        return {"result": []}
+
+
 mock_py_yt = MagicMock()
 mock_py_yt.Playlist = Playlist
 mock_py_yt.VideosSearch = VideosSearch
 mock_py_yt.PlaylistsSearch = PlaylistsSearch
 mock_py_yt.ChannelsSearch = ChannelsSearch
+mock_py_yt.Suggestions = Suggestions
 sys.modules["py_yt"] = mock_py_yt
 sys.modules["pyperclip"] = MagicMock()
 

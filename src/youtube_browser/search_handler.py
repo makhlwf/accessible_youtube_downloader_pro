@@ -7,6 +7,7 @@ from py_yt import (
     ChannelsSearch,
     Playlist,
     PlaylistsSearch,
+    Suggestions,
     VideosSearch,
 )
 
@@ -746,3 +747,57 @@ class Search:
 
     def get_duration(self, data):  # get the duration of the video
         return format_duration(data)
+
+
+async def fetch_search_suggestions_async(
+    query: str, language: str | None = None, region: str | None = None
+) -> list[str]:
+    clean_query = query.strip() if query else ""
+    if not clean_query:
+        return []
+
+    if language is None:
+        language = config_get("lang") or "en"
+
+    if region is None:
+        try:
+            import ctypes
+            import locale
+
+            windll = ctypes.windll.kernel32
+            lang_id = windll.GetUserDefaultUILanguage()
+            loc_str = locale.windows_locale.get(lang_id, "en_US")
+            region = loc_str.split("_")[1] if "_" in loc_str else "US"
+        except Exception:
+            region = "US"
+
+    try:
+        data = await Suggestions.get(clean_query, language=language, region=region)
+        if isinstance(data, dict):
+            res = data.get("result", [])
+            if isinstance(res, list):
+                return [str(item) for item in res if item]
+        return []
+    except Exception as e:
+        logger.debug(f"Failed to fetch search suggestions for '{clean_query}': {e}")
+        return []
+
+
+def fetch_search_suggestions(
+    query: str, language: str | None = None, region: str | None = None
+) -> list[str]:
+    if not query or not query.strip():
+        return []
+    try:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            return loop.run_until_complete(
+                fetch_search_suggestions_async(query, language=language, region=region)
+            )
+        finally:
+            loop.close()
+            asyncio.set_event_loop(None)
+    except Exception as e:
+        logger.debug(f"Failed in fetch_search_suggestions: {e}")
+        return []

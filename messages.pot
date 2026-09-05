@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-09-05 05:07+0200\n"
+"POT-Creation-Date: 2026-09-05 06:37+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -153,7 +153,7 @@ msgstr ""
 
 #: src/accessible_youtube_downloader_pro.py:409
 #: src/accessible_youtube_downloader_pro.py:979
-#: src/youtube_browser/search_handler.py:41
+#: src/youtube_browser/search_handler.py:42
 msgid "حول"
 msgstr ""
 
@@ -179,7 +179,7 @@ msgstr ""
 
 #: src/accessible_youtube_downloader_pro.py:614 src/gui/comments_dialog.py:127
 #: src/gui/comments_dialog.py:349 src/gui/comments_dialog.py:565
-#: src/gui/settings_dialog.py:881 src/gui/settings_dialog.py:925
+#: src/gui/settings_dialog.py:890 src/gui/settings_dialog.py:934
 #: src/utils.py:2594
 msgid "خطأ"
 msgstr ""
@@ -219,7 +219,7 @@ msgstr ""
 
 #: src/accessible_youtube_downloader_pro.py:662
 #: src/accessible_youtube_downloader_pro.py:1060 src/gui/history.py:105
-#: src/gui/settings_dialog.py:769 src/gui/settings_dialog.py:966
+#: src/gui/settings_dialog.py:778 src/gui/settings_dialog.py:975
 #: src/utils.py:1139 src/utils.py:1156 src/utils.py:1213 src/utils.py:1234
 #: src/utils.py:1261
 msgid "تنبيه"
@@ -486,10 +486,10 @@ msgstr ""
 #: src/gui/comments_dialog.py:13 src/gui/comments_dialog.py:47
 #: src/utils.py:1007 src/utils.py:1062 src/utils.py:1126 src/utils.py:1194
 #: src/utils.py:2135 src/utils.py:2497
-#: src/youtube_browser/search_handler.py:111
-#: src/youtube_browser/search_handler.py:211
-#: src/youtube_browser/search_handler.py:446
-#: src/youtube_browser/search_handler.py:619
+#: src/youtube_browser/search_handler.py:112
+#: src/youtube_browser/search_handler.py:212
+#: src/youtube_browser/search_handler.py:447
+#: src/youtube_browser/search_handler.py:620
 msgid "غير معروف"
 msgstr ""
 
@@ -871,10 +871,10 @@ msgid "إلغاء"
 msgstr ""
 
 #: src/gui/auto_detect_dialog.py:12 src/gui/auto_detect_dialog.py:47
-#: src/gui/auto_detect_dialog.py:87 src/gui/search_dialog.py:25
-#: src/youtube_browser/search_handler.py:186
-#: src/youtube_browser/search_handler.py:498
-#: src/youtube_browser/search_handler.py:679
+#: src/gui/auto_detect_dialog.py:87 src/gui/search_dialog.py:61
+#: src/youtube_browser/search_handler.py:187
+#: src/youtube_browser/search_handler.py:499
+#: src/youtube_browser/search_handler.py:680
 msgid "قائمة تشغيل"
 msgstr ""
 
@@ -882,11 +882,11 @@ msgstr ""
 #: src/media_player/media_gui.py:424 src/media_player/media_gui.py:435
 #: src/media_player/media_gui.py:441 src/media_player/media_gui.py:1250
 #: src/media_player/media_gui.py:1833 src/media_player/media_gui.py:1844
-#: src/media_player/media_gui.py:2167 src/youtube_browser/search_handler.py:360
-#: src/youtube_browser/search_handler.py:370
-#: src/youtube_browser/search_handler.py:404
-#: src/youtube_browser/search_handler.py:505
-#: src/youtube_browser/search_handler.py:685
+#: src/media_player/media_gui.py:2167 src/youtube_browser/search_handler.py:361
+#: src/youtube_browser/search_handler.py:371
+#: src/youtube_browser/search_handler.py:405
+#: src/youtube_browser/search_handler.py:506
+#: src/youtube_browser/search_handler.py:686
 msgid "قناة"
 msgstr ""
 
@@ -1136,7 +1136,7 @@ msgid "نشر التعليق"
 msgstr ""
 
 #: src/gui/comments_dialog.py:196 src/gui/description.py:35
-#: src/gui/link_dlg.py:27 src/gui/search_dialog.py:33 src/gui/text_viewer.py:21
+#: src/gui/link_dlg.py:27 src/gui/search_dialog.py:77 src/gui/text_viewer.py:21
 msgid "إغلاق"
 msgstr ""
 
@@ -1302,11 +1302,11 @@ msgid "صيغة المقطع"
 msgstr ""
 
 #: src/gui/download_dialog.py:39 src/gui/download_dialog.py:88
-#: src/gui/settings_dialog.py:300
+#: src/gui/settings_dialog.py:308
 msgid "مسار مجلد التنزيل: "
 msgstr ""
 
-#: src/gui/download_dialog.py:81 src/gui/settings_dialog.py:754
+#: src/gui/download_dialog.py:81 src/gui/settings_dialog.py:763
 msgid "اختر مجلد التنزيل"
 msgstr ""
 
@@ -1651,48 +1651,56 @@ msgstr ""
 msgid "ك.ب/ث"
 msgstr ""
 
-#: src/gui/search_dialog.py:9
+#: src/gui/search_dialog.py:19
 msgid "بحث"
 msgstr ""
 
-#: src/gui/search_dialog.py:13
+#: src/gui/search_dialog.py:31
 msgid "ابحث في youtube: "
 msgstr ""
 
-#: src/gui/search_dialog.py:15
+#: src/gui/search_dialog.py:33
 msgid "ابحث في youtube"
 msgstr ""
 
-#: src/gui/search_dialog.py:16
+#: src/gui/search_dialog.py:47
+msgid "اقتراحات البحث"
+msgstr ""
+
+#: src/gui/search_dialog.py:52
 msgid "فلتر: "
 msgstr ""
 
-#: src/gui/search_dialog.py:21
+#: src/gui/search_dialog.py:57
 msgid "بلا فلتر"
 msgstr ""
 
-#: src/gui/search_dialog.py:22 src/youtube_browser/search_handler.py:745
+#: src/gui/search_dialog.py:58 src/youtube_browser/search_handler.py:746
 msgid "بث مباشر"
 msgstr ""
 
-#: src/gui/search_dialog.py:23
+#: src/gui/search_dialog.py:59
 msgid "تاريخ الرفع"
 msgstr ""
 
-#: src/gui/search_dialog.py:24
+#: src/gui/search_dialog.py:60
 msgid "عدد المشاهدات"
 msgstr ""
 
-#: src/gui/search_dialog.py:26
+#: src/gui/search_dialog.py:62
 msgid "قنوات"
 msgstr ""
 
-#: src/gui/search_dialog.py:30
+#: src/gui/search_dialog.py:66
+msgid "فلتر"
+msgstr ""
+
+#: src/gui/search_dialog.py:74
 msgid "ابحث"
 msgstr ""
 
-#: src/gui/search_dialog.py:47
-msgid "فلتر"
+#: src/gui/search_dialog.py:178
+msgid "تم عرض اقتراحات البحث"
 msgstr ""
 
 #: src/gui/settings_dialog.py:29
@@ -1751,253 +1759,257 @@ msgstr ""
 msgid "تحميل المزيد من نتائج البحث عند الوصول إلى نهاية قائمة الفيديوهات المعروضة"
 msgstr ""
 
-#: src/gui/settings_dialog.py:297
+#: src/gui/settings_dialog.py:291
+msgid "تفعيل اقتراحات البحث أثناء الكتابة"
+msgstr ""
+
+#: src/gui/settings_dialog.py:305
 msgid "التنزيل"
 msgstr ""
 
-#: src/gui/settings_dialog.py:311
+#: src/gui/settings_dialog.py:319
 msgid "&تغيير المسار"
 msgstr ""
 
-#: src/gui/settings_dialog.py:317
+#: src/gui/settings_dialog.py:325
 msgid "صيغة التحميل المباشر: "
 msgstr ""
 
-#: src/gui/settings_dialog.py:323
+#: src/gui/settings_dialog.py:331
 msgid "فيديو (mp4)"
 msgstr ""
 
-#: src/gui/settings_dialog.py:324
+#: src/gui/settings_dialog.py:332
 msgid "فيديو (mkv)"
 msgstr ""
 
-#: src/gui/settings_dialog.py:325
+#: src/gui/settings_dialog.py:333
 msgid "صوت (m4a)"
 msgstr ""
 
-#: src/gui/settings_dialog.py:326
+#: src/gui/settings_dialog.py:334
 msgid "صوت (mp3)"
 msgstr ""
 
-#: src/gui/settings_dialog.py:327
+#: src/gui/settings_dialog.py:335
 msgid "صوت (wav)"
 msgstr ""
 
-#: src/gui/settings_dialog.py:328
+#: src/gui/settings_dialog.py:336
 msgid "صوت (flac)"
 msgstr ""
 
-#: src/gui/settings_dialog.py:337
+#: src/gui/settings_dialog.py:345
 msgid "جودة الصوت: "
 msgstr ""
 
-#: src/gui/settings_dialog.py:342
+#: src/gui/settings_dialog.py:350
 msgid "96 ك.ب/ث"
 msgstr ""
 
-#: src/gui/settings_dialog.py:342
+#: src/gui/settings_dialog.py:350
 msgid "128 ك.ب/ث"
 msgstr ""
 
-#: src/gui/settings_dialog.py:342
+#: src/gui/settings_dialog.py:350
 msgid "192 ك.ب/ث"
 msgstr ""
 
-#: src/gui/settings_dialog.py:342
+#: src/gui/settings_dialog.py:350
 msgid "320 ك.ب/ث"
 msgstr ""
 
-#: src/gui/settings_dialog.py:353
+#: src/gui/settings_dialog.py:361
 msgid "المشغل"
 msgstr ""
 
-#: src/gui/settings_dialog.py:356
+#: src/gui/settings_dialog.py:364
 msgid "جودة الفيديو الافتراضية: "
 msgstr ""
 
-#: src/gui/settings_dialog.py:362
+#: src/gui/settings_dialog.py:370
 msgid "144ب"
 msgstr ""
 
-#: src/gui/settings_dialog.py:363
+#: src/gui/settings_dialog.py:371
 msgid "240ب"
 msgstr ""
 
-#: src/gui/settings_dialog.py:364
+#: src/gui/settings_dialog.py:372
 msgid "360ب"
 msgstr ""
 
-#: src/gui/settings_dialog.py:365
+#: src/gui/settings_dialog.py:373
 msgid "480ب"
 msgstr ""
 
-#: src/gui/settings_dialog.py:366
+#: src/gui/settings_dialog.py:374
 msgid "720ب"
 msgstr ""
 
-#: src/gui/settings_dialog.py:367
+#: src/gui/settings_dialog.py:375
 msgid "1080ب"
 msgstr ""
 
-#: src/gui/settings_dialog.py:368
+#: src/gui/settings_dialog.py:376
 msgid "1440ب"
 msgstr ""
 
-#: src/gui/settings_dialog.py:369
+#: src/gui/settings_dialog.py:377
 msgid "2160ب"
 msgstr ""
 
-#: src/gui/settings_dialog.py:376
+#: src/gui/settings_dialog.py:384
 msgid "جودة الصوت الافتراضية: "
 msgstr ""
 
-#: src/gui/settings_dialog.py:381
+#: src/gui/settings_dialog.py:389
 msgid "منخفضة"
 msgstr ""
 
-#: src/gui/settings_dialog.py:381
+#: src/gui/settings_dialog.py:389
 msgid "متوسطة"
 msgstr ""
 
-#: src/gui/settings_dialog.py:381
+#: src/gui/settings_dialog.py:389
 msgid "عالية"
 msgstr ""
 
-#: src/gui/settings_dialog.py:388 src/media_player/media_gui.py:46
+#: src/gui/settings_dialog.py:396 src/media_player/media_gui.py:46
 msgid "جهاز إخراج الصوت: "
 msgstr ""
 
-#: src/gui/settings_dialog.py:400
+#: src/gui/settings_dialog.py:408
 msgid "مقدار تغيير سرعة التشغيل: "
 msgstr ""
 
-#: src/gui/settings_dialog.py:416
+#: src/gui/settings_dialog.py:424
 msgid "متابعة المشاهدة بعد إغلاق الفيديو وتشغيله من جديد"
 msgstr ""
 
-#: src/gui/settings_dialog.py:423
+#: src/gui/settings_dialog.py:431
 msgid "فتح مشغل الوسائط في وضع ملء الشاشة افتراضيًا"
 msgstr ""
 
-#: src/gui/settings_dialog.py:430
+#: src/gui/settings_dialog.py:438
 msgid "إعادة تشغيل المقطع تلقائيًا عند انتهائه"
 msgstr ""
 
-#: src/gui/settings_dialog.py:437
+#: src/gui/settings_dialog.py:445
 msgid "الانتقال إلى المقطع التالي تلقائيًا عند انتهاء المقطع الحالي"
 msgstr ""
 
-#: src/gui/settings_dialog.py:449
+#: src/gui/settings_dialog.py:457
 msgid "إعدادات المعادل..."
 msgstr ""
 
-#: src/gui/settings_dialog.py:458
+#: src/gui/settings_dialog.py:466
 msgid "تفعيل SponsorBlock لتخطي المقاطع الدعائية تلقائيًا"
 msgstr ""
 
-#: src/gui/settings_dialog.py:466
+#: src/gui/settings_dialog.py:474
 msgid "الإعلان عن كل مقطع يتم تخطيه"
 msgstr ""
 
-#: src/gui/settings_dialog.py:473
+#: src/gui/settings_dialog.py:481
 msgid "الفئات التي يتم تخطيها:"
 msgstr ""
 
-#: src/gui/settings_dialog.py:491
+#: src/gui/settings_dialog.py:499
 msgid "تجاهل المقاطع الأقصر من (بالثواني): "
 msgstr ""
 
-#: src/gui/settings_dialog.py:506
+#: src/gui/settings_dialog.py:514
 msgid "عنوان خادم SponsorBlock: "
 msgstr ""
 
-#: src/gui/settings_dialog.py:520
+#: src/gui/settings_dialog.py:528
 msgid "الكوكيز"
 msgstr ""
 
-#: src/gui/settings_dialog.py:523
+#: src/gui/settings_dialog.py:531
 msgid "المتصفح لاستيراد الكوكيز: "
 msgstr ""
 
-#: src/gui/settings_dialog.py:541
+#: src/gui/settings_dialog.py:549
 msgid "استيراد من المتصفح"
 msgstr ""
 
-#: src/gui/settings_dialog.py:548
+#: src/gui/settings_dialog.py:556
 msgid "مسار ملف الكوكيز: "
 msgstr ""
 
-#: src/gui/settings_dialog.py:559
+#: src/gui/settings_dialog.py:567
 msgid "تغيير"
 msgstr ""
 
-#: src/gui/settings_dialog.py:560
+#: src/gui/settings_dialog.py:568
 msgid "حذف"
 msgstr ""
 
-#: src/gui/settings_dialog.py:571
+#: src/gui/settings_dialog.py:579
 msgid "متقدم"
 msgstr ""
 
-#: src/gui/settings_dialog.py:575
+#: src/gui/settings_dialog.py:583
 msgid "عميل مشغل يوتيوب: "
 msgstr ""
 
-#: src/gui/settings_dialog.py:593
+#: src/gui/settings_dialog.py:601
 msgid "التشغيل في الخلفية ومراقبة الحافظة عند بدء تشغيل النظام"
 msgstr ""
 
-#: src/gui/settings_dialog.py:600
+#: src/gui/settings_dialog.py:608
 msgid "تفعيل التكامل الآمن مع إضافة المتصفح"
 msgstr ""
 
-#: src/gui/settings_dialog.py:609
+#: src/gui/settings_dialog.py:617
 msgid "تفعيل مولد رموز POT لتجاوز قيود يوتيوب (bgutil-pot)"
 msgstr ""
 
-#: src/gui/settings_dialog.py:616
+#: src/gui/settings_dialog.py:624
 msgid "تفعيل رسائل تصحيح الأخطاء للمطورين فقط"
 msgstr ""
 
-#: src/gui/settings_dialog.py:768
+#: src/gui/settings_dialog.py:777
 msgid "ملف الكوكيز المختار غير موجود."
 msgstr ""
 
-#: src/gui/settings_dialog.py:777
+#: src/gui/settings_dialog.py:786
 msgid "ملفات نصية (*.txt)|*.txt"
 msgstr ""
 
-#: src/gui/settings_dialog.py:780
+#: src/gui/settings_dialog.py:789
 msgid "اختر ملف الكوكيز"
 msgstr ""
 
-#: src/gui/settings_dialog.py:848
+#: src/gui/settings_dialog.py:857
 #, python-brace-format
 msgid "تم استيراد {count} من الكوكيز بنجاح من متصفح {browser}."
 msgstr ""
 
-#: src/gui/settings_dialog.py:852
+#: src/gui/settings_dialog.py:861
 #, python-brace-format
 msgid ""
 "تم استيراد {count} من الكوكيز من متصفح {browser}، ولكن يبدو أنه لم يتم "
 "العثور على جلسة تسجيل دخول نشطة لحساب يوتيوب."
 msgstr ""
 
-#: src/gui/settings_dialog.py:856 src/gui/update_dialog.py:163
+#: src/gui/settings_dialog.py:865 src/gui/update_dialog.py:163
 #: src/gui/update_dialog.py:171
 msgid "نجاح"
 msgstr ""
 
-#: src/gui/settings_dialog.py:864
+#: src/gui/settings_dialog.py:873
 #, python-brace-format
 msgid "متصفح {browser} مفتوح حاليًا. يرجى إغلاق المتصفح وإعادة المحاولة."
 msgstr ""
 
-#: src/gui/settings_dialog.py:866
+#: src/gui/settings_dialog.py:875
 msgid "المتصفح مفتوح"
 msgstr ""
 
-#: src/gui/settings_dialog.py:869
+#: src/gui/settings_dialog.py:878
 #, python-brace-format
 msgid ""
 "تعذر فك تشفير كوكيز متصفح {browser} مباشرة بسبب نظام الحماية (App-Bound "
@@ -2005,29 +2017,29 @@ msgid ""
 "للمتصفح (HexPlayer Link Helper) أو باستخدام متصفح Firefox."
 msgstr ""
 
-#: src/gui/settings_dialog.py:871
+#: src/gui/settings_dialog.py:880
 msgid "خطأ في فك التشفير"
 msgstr ""
 
-#: src/gui/settings_dialog.py:873
+#: src/gui/settings_dialog.py:882
 #, python-brace-format
 msgid "لم يتم العثور على كوكيز في متصفح {browser}."
 msgstr ""
 
-#: src/gui/settings_dialog.py:876
+#: src/gui/settings_dialog.py:885
 msgid "لا توجد كوكيز"
 msgstr ""
 
-#: src/gui/settings_dialog.py:878
+#: src/gui/settings_dialog.py:887
 #, python-brace-format
 msgid "فشل استيراد الكوكيز من متصفح {browser}: {error}"
 msgstr ""
 
-#: src/gui/settings_dialog.py:924
+#: src/gui/settings_dialog.py:933
 msgid "تعذر تحديث تكامل المتصفح في Windows."
 msgstr ""
 
-#: src/gui/settings_dialog.py:964
+#: src/gui/settings_dialog.py:973
 #, python-brace-format
 msgid ""
 "لقد قمت بتغيير لغة البرنامج إلى {}, مما يعني أنه ينبغي عليك إعادة تشغيل "
@@ -2296,11 +2308,11 @@ msgstr ""
 
 #: src/media_player/media_gui.py:875 src/media_player/media_gui.py:881
 #: src/media_player/media_gui.py:901 src/media_player/media_gui.py:907
-#: src/youtube_browser/search_handler.py:252
-#: src/youtube_browser/search_handler.py:491
-#: src/youtube_browser/search_handler.py:499
-#: src/youtube_browser/search_handler.py:673
-#: src/youtube_browser/search_handler.py:680
+#: src/youtube_browser/search_handler.py:253
+#: src/youtube_browser/search_handler.py:492
+#: src/youtube_browser/search_handler.py:500
+#: src/youtube_browser/search_handler.py:674
+#: src/youtube_browser/search_handler.py:681
 msgid "بواسطة"
 msgstr ""
 
@@ -2523,72 +2535,72 @@ msgstr ""
 msgid "لم يتمكن البرنامج من تحميل المزيد من النتائج"
 msgstr ""
 
-#: src/youtube_browser/search_handler.py:34
+#: src/youtube_browser/search_handler.py:35
 msgid "الرئيسية"
 msgstr ""
 
-#: src/youtube_browser/search_handler.py:35
+#: src/youtube_browser/search_handler.py:36
 msgid "الفيديوهات"
 msgstr ""
 
-#: src/youtube_browser/search_handler.py:36
+#: src/youtube_browser/search_handler.py:37
 msgid "المقاطع القصيرة"
 msgstr ""
 
-#: src/youtube_browser/search_handler.py:37
+#: src/youtube_browser/search_handler.py:38
 msgid "البث المباشر"
 msgstr ""
 
-#: src/youtube_browser/search_handler.py:38
+#: src/youtube_browser/search_handler.py:39
 msgid "قوائم التشغيل"
 msgstr ""
 
-#: src/youtube_browser/search_handler.py:39
+#: src/youtube_browser/search_handler.py:40
 msgid "المجتمع"
 msgstr ""
 
-#: src/youtube_browser/search_handler.py:40
+#: src/youtube_browser/search_handler.py:41
 msgid "القنوات"
 msgstr ""
 
-#: src/youtube_browser/search_handler.py:352
+#: src/youtube_browser/search_handler.py:353
 msgid "yt-dlp is not installed"
-msgstr ""
-
-#: src/youtube_browser/search_handler.py:407
-#, python-brace-format
-msgid "القناة: {}"
 msgstr ""
 
 #: src/youtube_browser/search_handler.py:408
 #, python-brace-format
-msgid "الرابط: {}"
+msgid "القناة: {}"
 msgstr ""
 
-#: src/youtube_browser/search_handler.py:411
+#: src/youtube_browser/search_handler.py:409
 #, python-brace-format
-msgid "عدد المشتركين: {}"
+msgid "الرابط: {}"
 msgstr ""
 
 #: src/youtube_browser/search_handler.py:412
 #, python-brace-format
-msgid "عدد المشاهدات: {}"
+msgid "عدد المشتركين: {}"
 msgstr ""
 
 #: src/youtube_browser/search_handler.py:413
 #, python-brace-format
+msgid "عدد المشاهدات: {}"
+msgstr ""
+
+#: src/youtube_browser/search_handler.py:414
+#, python-brace-format
 msgid "الوصف: {}"
 msgstr ""
 
-#: src/youtube_browser/search_handler.py:500
-#: src/youtube_browser/search_handler.py:681
-#: src/youtube_browser/search_handler.py:687
+#: src/youtube_browser/search_handler.py:501
+#: src/youtube_browser/search_handler.py:682
+#: src/youtube_browser/search_handler.py:688
 #, python-brace-format
 msgid "تحتوي على {} من الفيديوهات"
 msgstr ""
 
-#: src/youtube_browser/search_handler.py:551
-#: src/youtube_browser/search_handler.py:743
+#: src/youtube_browser/search_handler.py:552
+#: src/youtube_browser/search_handler.py:744
 #, python-brace-format
 msgid "عدد المشاهدات {}"
 msgstr ""

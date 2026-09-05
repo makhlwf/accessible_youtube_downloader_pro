@@ -285,10 +285,18 @@ class SettingsDialog(wx.Dialog):
             name="autoload",
         )
         self.autoLoadItem.SetValue(config_get("autoload"))
+        self.searchSuggestions = SettingsCheckBox(
+            page,
+            -1,
+            _("تفعيل اقتراحات البحث أثناء الكتابة"),
+            name="search_suggestions",
+        )
+        self.searchSuggestions.SetValue(config_get("search_suggestions"))
         for checkbox in (
             self.autoDetectItem,
             self.autoCheckForUpdates,
             self.autoLoadItem,
+            self.searchSuggestions,
         ):
             sizer.Add(checkbox, 0, wx.EXPAND | wx.ALL, 5)
         page.SetSizer(sizer)
@@ -635,6 +643,7 @@ class SettingsDialog(wx.Dialog):
             self.autoDetectItem,
             self.autoLoadItem,
             self.autoCheckForUpdates,
+            self.searchSuggestions,
             self.debugMode,
             self.backgroundMonitoring,
             self.browserIntegration,
