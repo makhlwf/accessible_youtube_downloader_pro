@@ -252,6 +252,11 @@ class Downloader:
         if prepend_path:
             os.environ["PATH"] = prepend_path + os.pathsep + current_path
 
+        cookies_path = config_get("cookiespath")
+        has_cookies = bool(
+            use_cookies and cookies_path and os.path.exists(cookies_path)
+        )
+
         ydl_opts = {
             "nocheckcertificate": True,
             "outtmpl": os.path.join(self.path, "%(title)s.%(ext)s"),
@@ -265,7 +270,9 @@ class Downloader:
             "nocacheconfig": True,
             "extractor_args": {
                 "youtube": {
-                    "player_client": utils.get_configured_player_clients(),
+                    "player_client": utils.get_configured_player_clients(
+                        has_cookies=has_cookies
+                    ),
                     "js_variant": "main",
                 }
             },
@@ -296,8 +303,7 @@ class Downloader:
             except Exception as e:
                 logger.debug(f"Failed to attach POT provider to downloader: {e}")
 
-        cookies_path = config_get("cookiespath")
-        if use_cookies and cookies_path and os.path.exists(cookies_path):
+        if has_cookies:
             ydl_opts["cookiefile"] = cookies_path
 
         if not ydl_opts.get("postprocessors"):

@@ -61,7 +61,7 @@ def test_e2e_pot_provider_lifecycle_and_live_ytdlp(tmp_path, monkeypatch):
         lambda k, default=None: (
             True
             if k == "pot_provider_enabled"
-            else (4416 if k == "pot_provider_port" else default)
+            else (4499 if k == "pot_provider_port" else default)
         ),
     )
     monkeypatch.setattr(
@@ -69,7 +69,7 @@ def test_e2e_pot_provider_lifecycle_and_live_ytdlp(tmp_path, monkeypatch):
         lambda k, default=None: (
             True
             if k == "pot_provider_enabled"
-            else (4416 if k == "pot_provider_port" else default)
+            else (4499 if k == "pot_provider_port" else default)
         ),
     )
 

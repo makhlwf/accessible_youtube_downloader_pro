@@ -127,3 +127,56 @@ def test_save_raw_browser_cookies_empty(tmp_path):
     res = cookies_manager.save_raw_browser_cookies([], target_path=target_file)
     assert res["success"] is False
     assert res["error_type"] == "no_cookies"
+
+
+def test_cookies_player_client_integration(tmp_path, monkeypatch):
+    import download_handler.downloader
+    import settings_handler
+    import utils
+    from download_handler.downloader import Downloader
+
+    cookie_file = tmp_path / "browser_cookies.txt"
+    cookie_file.write_text(
+        "# Netscape HTTP Cookie File\n.youtube.com\tTRUE\t/\tTRUE\t1893456000\tLOGIN_INFO\taaa\n"
+    )
+
+    monkeypatch.setattr(
+        settings_handler,
+        "config_get",
+        lambda k: str(cookie_file) if k == "cookiespath" else "default",
+    )
+    monkeypatch.setattr(
+        download_handler.downloader,
+        "config_get",
+        lambda k: str(cookie_file) if k == "cookiespath" else "default",
+    )
+    monkeypatch.setattr(
+        utils,
+        "config_get",
+        lambda k: str(cookie_file) if k == "cookiespath" else "default",
+    )
+
+    # get_ydl_instance with cookies should use ['default']
+    class DummyYDL:
+        def __init__(self, opts):
+            self.opts = opts
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            pass
+
+    monkeypatch.setattr(utils, "YoutubeDL", DummyYDL)
+
+    ydl = utils.get_ydl_instance(cookies_path=str(cookie_file))
+    assert ydl.opts["extractor_args"]["youtube"]["player_client"] == ["default"]
+    assert ydl.opts["cookiefile"] == str(cookie_file)
+
+    # Downloader with cookies should use ['default']
+    downloader = Downloader(
+        "https://www.youtube.com/watch?v=test", "output", "best", None, None
+    )
+    opts = downloader._base_options(use_cookies=True)
+    assert opts["extractor_args"]["youtube"]["player_client"] == ["default"]
+    assert opts["cookiefile"] == str(cookie_file)

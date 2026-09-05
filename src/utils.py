@@ -660,7 +660,7 @@ PLAYER_OPTS = {
     "noplaylist": True,
     "extractor_args": {
         "youtube": {
-            "player_client": ["android", "web"],
+            "player_client": ["default"],
             "js_variant": "main",
         }
     },
@@ -691,29 +691,61 @@ def get_player_client_choices():
     ]
 
 
-def get_configured_player_clients(client_override=None):
+AUTHED_INCOMPATIBLE_CLIENTS = {
+    "android",
+    "android_vr",
+    "ios",
+    "tv_simply",
+    "web",
+    "web_safari",
+}
+
+
+def get_configured_player_clients(client_override=None, has_cookies=None):
     """
     Returns the player client list to pass to yt-dlp extractor_args.
-    If 'default' or not set, returns ['android', 'web'].
+    If 'default' or not set, returns ['default'].
+    If has_cookies is True (or cookiespath exists) and the requested client
+    does not support cookies or fails with SABR streaming, automatically falls back to ['default'].
     Otherwise returns [client_name] or the provided client_override.
     """
+    if has_cookies is None:
+        cookies_path = config_get("cookiespath")
+        has_cookies = bool(cookies_path and os.path.exists(cookies_path))
+
     if client_override is not None:
         if isinstance(client_override, (list, tuple)):
-            return list(client_override)
-        if isinstance(client_override, str) and client_override != "default":
-            return [client_override]
+            clients = list(client_override)
+        elif isinstance(client_override, str) and client_override != "default":
+            clients = [client_override]
+        else:
+            clients = ["default"]
+    else:
+        selected_client = config_get("player_client")
+        if not selected_client or selected_client == "default":
+            clients = ["default"]
+        else:
+            clients = [str(selected_client)]
 
-    selected_client = config_get("player_client")
-    if not selected_client or selected_client == "default":
-        return ["android", "web"]
-    return [str(selected_client)]
+    # Map legacy/alias client names if present
+    clients = ["web_embedded" if c == "tv_embedded" else c for c in clients]
+
+    if has_cookies and any(c in AUTHED_INCOMPATIBLE_CLIENTS for c in clients):
+        logger.warning(
+            "Player client(s) %s are incompatible with cookies or SABR streaming; falling back to 'default'",
+            clients,
+        )
+        return ["default"]
+
+    return clients
 
 
 def get_ydl_instance(client=None, cookies_path=None):
     """Returns a fresh YoutubeDL instance for thread-safe extraction."""
     if not YoutubeDL:
         return None
-    clients = get_configured_player_clients(client)
+    has_cookies = bool(cookies_path and os.path.exists(cookies_path))
+    clients = get_configured_player_clients(client, has_cookies=has_cookies)
     opts = PLAYER_OPTS.copy()
     opts["extractor_args"] = {
         "youtube": {"player_client": clients, "js_variant": "main"}
@@ -1614,7 +1646,7 @@ def get_playable_stream(url, audio_mode=False):
                             {
                                 "extractor_args": {
                                     "youtube": {
-                                        "player_client": client,
+                                        "player_client": ["default"],
                                         "js_variant": "main",
                                     }
                                 },
@@ -1636,8 +1668,15 @@ def get_playable_stream(url, audio_mode=False):
             return None
 
     try:
-        clients = get_configured_player_clients()
+        has_cookies = bool(cookies_path and os.path.exists(cookies_path))
+        clients = get_configured_player_clients(has_cookies=has_cookies)
         result = _extract_task(clients)
+        if not result and clients != ["default"]:
+            logger.warning(
+                "Extraction failed with client %s, retrying with 'default' client",
+                clients,
+            )
+            result = _extract_task(["default"])
 
         if result:
             _stream_cache.set(cache_key, result)
@@ -1658,6 +1697,7 @@ def get_media_info(url):
         return None
 
     cookies_path = config_get("cookiespath")
+    has_cookies = bool(cookies_path and os.path.exists(cookies_path))
 
     def _extract_info_task(client):
         try:
@@ -1667,8 +1707,14 @@ def get_media_info(url):
             logger.exception("get_media_info extraction failed for client %s", client)
             return None
 
-    clients = get_configured_player_clients()
+    clients = get_configured_player_clients(has_cookies=has_cookies)
     info = _extract_info_task(clients)
+    if not info and clients != ["default"]:
+        logger.warning(
+            "get_media_info failed for client %s; retrying with 'default' client",
+            clients,
+        )
+        info = _extract_info_task(["default"])
 
     if info:
         _info_cache.set(url, info)
