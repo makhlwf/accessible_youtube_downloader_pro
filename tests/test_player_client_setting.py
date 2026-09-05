@@ -45,14 +45,14 @@ def test_get_configured_player_clients_default(monkeypatch):
     monkeypatch.setattr(
         utils, "config_get", lambda k: "default" if k == "player_client" else None
     )
-    clients = utils.get_configured_player_clients()
-    assert clients == ["android", "web"]
+    clients = utils.get_configured_player_clients(has_cookies=False)
+    assert clients == ["default"]
 
     monkeypatch.setattr(
         utils, "config_get", lambda k: "" if k == "player_client" else None
     )
-    clients = utils.get_configured_player_clients()
-    assert clients == ["android", "web"]
+    clients = utils.get_configured_player_clients(has_cookies=False)
+    assert clients == ["default"]
 
 
 def test_get_configured_player_clients_specific_settings(monkeypatch):
@@ -70,15 +70,43 @@ def test_get_configured_player_clients_specific_settings(monkeypatch):
         monkeypatch.setattr(
             utils, "config_get", lambda k, c=client: c if k == "player_client" else None
         )
-        clients = utils.get_configured_player_clients()
-        assert clients == [client]
+        clients = utils.get_configured_player_clients(has_cookies=False)
+        expected = ["web_embedded"] if client == "tv_embedded" else [client]
+        assert clients == expected
 
 
 def test_get_configured_player_clients_override(monkeypatch):
     monkeypatch.setattr(utils, "config_get", lambda k: "default")
-    assert utils.get_configured_player_clients("android") == ["android"]
-    assert utils.get_configured_player_clients(["ios", "web"]) == ["ios", "web"]
-    assert utils.get_configured_player_clients("default") == ["android", "web"]
+    assert utils.get_configured_player_clients("android", has_cookies=False) == [
+        "android"
+    ]
+    assert utils.get_configured_player_clients(["ios", "web"], has_cookies=False) == [
+        "ios",
+        "web",
+    ]
+    assert utils.get_configured_player_clients("default", has_cookies=False) == [
+        "default"
+    ]
+
+
+def test_get_configured_player_clients_with_cookies(monkeypatch):
+    # Incompatible clients fall back to default when cookies are present
+    for client in ["android", "ios", "android_vr", "tv_simply", "web", "web_safari"]:
+        monkeypatch.setattr(
+            utils,
+            "config_get",
+            lambda k, c=client: c if k == "player_client" else "/cookies.txt",
+        )
+        assert utils.get_configured_player_clients(has_cookies=True) == ["default"]
+
+    # Compatible clients are preserved
+    for client in ["web_creator", "mweb", "tv", "tv_downgraded"]:
+        monkeypatch.setattr(
+            utils,
+            "config_get",
+            lambda k, c=client: c if k == "player_client" else "/cookies.txt",
+        )
+        assert utils.get_configured_player_clients(has_cookies=True) == [client]
 
 
 def test_get_ydl_instance_uses_configured_client(monkeypatch):
@@ -99,9 +127,9 @@ def test_get_ydl_instance_uses_configured_client(monkeypatch):
         utils, "config_get", lambda k: "default" if k == "player_client" else None
     )
     ydl = utils.get_ydl_instance()
-    assert ydl.opts["extractor_args"]["youtube"]["player_client"] == ["android", "web"]
+    assert ydl.opts["extractor_args"]["youtube"]["player_client"] == ["default"]
 
-    # With specific setting
+    # With specific setting without cookies
     monkeypatch.setattr(
         utils, "config_get", lambda k: "ios" if k == "player_client" else None
     )
@@ -120,14 +148,14 @@ def test_downloader_base_options_uses_configured_client(monkeypatch):
     downloader = Downloader(
         "https://www.youtube.com/watch?v=test", "output", "best", None, None
     )
-    opts = downloader._base_options()
+    opts = downloader._base_options(use_cookies=False)
     assert opts["extractor_args"]["youtube"]["player_client"] == ["web"]
 
     monkeypatch.setattr(
         utils, "config_get", lambda k: "default" if k == "player_client" else None
     )
-    opts = downloader._base_options()
-    assert opts["extractor_args"]["youtube"]["player_client"] == ["android", "web"]
+    opts = downloader._base_options(use_cookies=False)
+    assert opts["extractor_args"]["youtube"]["player_client"] == ["default"]
 
 
 def test_settings_dialog_player_client_selection_helper():
