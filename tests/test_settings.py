@@ -57,6 +57,10 @@ def test_player_fullscreen_default_setting_exists():
     assert defaults["player_fullscreen_default"] is False
 
 
+def test_search_suggestions_default_setting_exists():
+    assert defaults["search_suggestions"] is True
+
+
 def test_settings_checkbox_accessible_role_uses_checkbutton():
     from gui import settings_dialog
 

@@ -44,6 +44,7 @@ defaults = {
     "sponsorblock_api_url": "https://sponsor.ajay.app",
     "pot_provider_enabled": True,
     "pot_provider_port": 4416,
+    "search_suggestions": True,
 }
 
 _cache = {}
