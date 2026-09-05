@@ -1312,6 +1312,18 @@ class MediaGui(wx.Frame):
             else:
                 self.on_activate_suggestion(audio_mode=False)
             return
+        if (
+            event.ControlDown()
+            and not event.ShiftDown()
+            and not event.AltDown()
+            and (
+                event.GetKeyCode() in (ord("B"), ord("b"))
+                or event.GetUnicodeKey() in (ord("B"), ord("b"))
+            )
+        ):
+            event.Skip(False)
+            self.onBrowser(event)
+            return
         event.Skip()
 
     def onCharHook(self, event):
@@ -1580,6 +1592,17 @@ class MediaGui(wx.Frame):
         ):
             event.Skip(False)
             self.onJumpToTime(event)
+        elif (
+            event.ControlDown()
+            and not event.ShiftDown()
+            and not event.AltDown()
+            and (
+                event.GetKeyCode() in (ord("B"), ord("b"))
+                or event.GetUnicodeKey() in (ord("B"), ord("b"))
+            )
+        ):
+            event.Skip(False)
+            self.onBrowser(event)
         elif event.GetKeyCode() == ord("L") and not event.HasAnyModifiers():
             self.onLike()
         elif event.GetKeyCode() == ord("D") and not event.HasAnyModifiers():
@@ -2153,7 +2176,9 @@ class MediaGui(wx.Frame):
         utils.copy_to_clipboard(self.url)
         wx.MessageBox(_("تم نسخ رابط المقطع بنجاح"), _("اكتمال"), parent=self)
 
-    def onBrowser(self, event):
+    def onBrowser(self, event=None):
+        if not getattr(self, "url", None):
+            return
         speak(_("جاري الفتح"))
         webbrowser.open(self.url)
 
