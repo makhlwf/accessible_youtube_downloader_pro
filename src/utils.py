@@ -1,4 +1,5 @@
 import html as html_parser
+import importlib
 import json
 import logging
 import math
@@ -33,6 +34,28 @@ from youtube_url_utils import (  # noqa: F401
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
+
+
+class _WindowlessSubprocess:
+    def __init__(self, module):
+        self._module = module
+
+    def __getattr__(self, name):
+        return getattr(self._module, name)
+
+    def check_output(self, *args, **kwargs):
+        kwargs["creationflags"] = (
+            kwargs.get("creationflags", 0) | subprocess.CREATE_NO_WINDOW
+        )
+        return self._module.check_output(*args, **kwargs)
+
+
+def configure_py_yt_subprocess():
+    if sys.platform != "win32":
+        return
+    module = importlib.import_module("py_yt.botGuard.bot_guard")
+    if not isinstance(module.subprocess, _WindowlessSubprocess):
+        module.subprocess = _WindowlessSubprocess(module.subprocess)
 
 
 def _coerce_bool(value):
