@@ -283,9 +283,7 @@ if sys.platform == "linux":
     a_main.exclude_system_libraries()
     # wxPython links libjpeg.so.8, which modern distros (e.g. Fedora) do
     # not provide, so it must be bundled explicitly.
-    for _libjpeg in glob.glob("/usr/lib*/libjpeg.so.8*") + glob.glob(
-        "/lib*/libjpeg.so.8*"
-    ):
+    for _libjpeg in glob.glob("/usr/lib/**/libjpeg.so.8*", recursive=True):
         a_main.binaries.append((_libjpeg, _libjpeg, "BINARY"))
 pyz_main = PYZ(a_main.pure)
 
@@ -325,9 +323,7 @@ a_host = Analysis(
 )
 if sys.platform == "linux":
     a_host.exclude_system_libraries()
-    for _libjpeg in glob.glob("/usr/lib*/libjpeg.so.8*") + glob.glob(
-        "/lib*/libjpeg.so.8*"
-    ):
+    for _libjpeg in glob.glob("/usr/lib/**/libjpeg.so.8*", recursive=True):
         a_host.binaries.append((_libjpeg, _libjpeg, "BINARY"))
 pyz_host = PYZ(a_host.pure)
 
