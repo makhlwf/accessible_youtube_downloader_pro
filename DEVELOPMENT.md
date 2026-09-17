@@ -24,7 +24,16 @@ Welcome to the definitive Developer & AI Agent Guide for **HexPlayer (Accessible
 
 ## 1. Executive Overview & Technology Stack
 
-HexPlayer is a full-featured, screen-reader friendly Windows desktop application for searching, browsing, playing, and downloading YouTube content. Designed specifically for blind and visually impaired users, every control, modal, and interaction is engineered around keyboard-first navigation and immediate screen-reader feedback.
+HexPlayer is a screen-reader friendly desktop application for searching, browsing, playing, and downloading YouTube content on Windows and Linux. Designed specifically for blind and visually impaired users, its interface prioritizes keyboard navigation and screen-reader feedback.
+
+### Supported operating systems
+
+- **Windows:** Windows 10 and 11, x64 installer.
+- **Linux:** Ubuntu 24.04 amd64 (also called x86_64) is the only Linux release target. Packages are built natively on Ubuntu 24.04 against glibc 2.39; they are not universal Linux binaries and are not intended for older glibc systems. Other distributions are unverified source-development environments, not supported package targets.
+- **macOS:** Unsupported. There is no macOS build or installer.
+- **ARM:** No Linux ARM package is provided or promised. Linux release packaging requires native amd64/x86_64.
+
+Linux requires a graphical desktop, system libmpv and FFmpeg, and a working desktop audio session. Frozen startup checks and automated tests do not establish full playback or screen-reader accessibility; validate these interactively on the target desktop. See [Linux installation and source setup](#linux-release-installation) below.
 
 ### Technology Stack Summary
 
@@ -33,11 +42,11 @@ HexPlayer is a full-featured, screen-reader friendly Windows desktop application
 | **Language Runtime** | Python | `>= 3.14` |
 | **Dependency Manager** | `uv` | Astral UV (`uv.lock` managed) |
 | **GUI Framework** | wxPython | `4.3.1` |
-| **Media Engine** | `libmpv-2.dll` | Ctypes wrapper (`mpv_backend.py`) |
+| **Media Engine** | libmpv | Windows `libmpv-2.dll`; Linux system `libmpv2`; ctypes wrapper (`mpv_backend.py`) |
 | **JS Runtime Bridge** | Deno + YouTube.js (Innertube) | Stdio JSON-RPC bridge (`service.js`) |
 | **Downloader** | `yt-dlp` | Dynamic loading / auto-updating zip |
 | **Database** | SQLite 3 | Thread-safe connection pool with RLock |
-| **Settings Engine** | INI / ConfigParser | Windows `%APPDATA%\HexPlayer\settings.ini` |
+| **Settings Engine** | INI / ConfigParser | Platform and portable paths resolved by `src/paths.py` |
 | **Browser Integration**| Chromium Manifest V3 | Native Messaging Host + `hexplayer://` protocol |
 | **Screen Reader Speech**| Prism (ethindp/prism) | `prismatoid` abstraction library (NVDA, JAWS, OneCore, SAPI) |
 | **Internationalization**| GNU gettext / Babel | `2.18.0` (Arabic `ar`, English `en`) |
@@ -69,8 +78,13 @@ accessible_youtube_downloader_pro/
 │   └── check_translations.py          # CI script to verify messages.pot freshness
 │
 ├── packaging/                         # Installer Packaging Assets
-│   └── windows/
-│       └── inno.iss                   # Inno Setup Windows installer compiler script
+│   ├── windows/
+│   │   └── inno.iss                   # Inno Setup Windows installer compiler script
+│   └── linux/
+│       ├── install-deps.sh            # APT installer for Linux compile/runtime dependencies
+│       ├── control.in                 # Debian package control template (libc6 >= 2.39)
+│       ├── hexplayer.desktop          # Freedesktop application menu entry
+│       └── runtime_smoke.py           # Frozen Linux GTK/libmpv startup smoke check
 │
 ├── src/                               # Main Application Source Code
 │   ├── accessible_youtube_downloader_pro.py # Main entry point script
@@ -142,7 +156,7 @@ accessible_youtube_downloader_pro/
 │   │
 │   └── speech_client.py               # Prism Speech & Screen Reader Manager
 │
-└── tests/                             # Pytest Suite (137 Unit/Integration Tests)
+└── tests/                             # Pytest Suite (400+ Unit/Integration Tests)
     ├── conftest.py                    # Global fixtures (mocking Deno, MPV, wx, SQLite)
     ├── test_search_handler.py         # Search logic tests
     ├── test_downloader.py             # Download engine tests
@@ -202,7 +216,7 @@ graph TD
 
 ## 4. Data Persistence & Database Specifications
 
-All local persistent state is stored either in `%APPDATA%\HexPlayer\settings.ini` or `%APPDATA%\HexPlayer\aHexPlayer.db`.
+On Windows, settings and the database normally use `%APPDATA%\HexPlayer\settings.ini` and `%APPDATA%\HexPlayer\aHexPlayer.db`. On Linux, both live under `${XDG_DATA_HOME:-$HOME/.local/share}/HexPlayer`. Portable mode uses the application-adjacent `data` directory. Resolve these locations through `src/paths.py`, not hardcoded paths.
 
 ### A. SQLite Database Schema (`database.py`)
 
@@ -416,36 +430,133 @@ To provide relevant search results, trending feeds, and regional recommendations
 
 ## 11. Development Environment & Quality Assurance
 
-### Setup Instructions
-```powershell
-# Install UV dependency manager
-winget install astral-sh.uv
+### Windows source setup
 
-# Clone repo & sync environment
+Install uv, clone the repository, and install the Python version selected by `.python-version` and the locked dependencies:
+
+```powershell
+winget install astral-sh.uv
 git clone https://github.com/makhlwf/accessible_youtube_downloader_pro.git
 cd accessible_youtube_downloader_pro
-uv sync
+uv python install
+uv sync --locked
+uv run --no-sync python src\accessible_youtube_downloader_pro.py
 ```
 
-### Execution Commands
+### Linux release installation
+
+Check the [HexPlayer releases and assets](https://github.com/makhlwf/accessible_youtube_downloader_pro/releases). Linux assets are not available until a release containing them is published. If the chosen release has no Linux assets, use the source setup below instead of the Windows executable.
+
+For Ubuntu 24.04 amd64/x86_64, a published release contains `HexPlayer-VERSION-linux-amd64.deb`, `HexPlayer-VERSION-linux-x86_64.tar.gz`, and a matching `.sha256` file for each. Replace `VERSION` below with the downloaded release version and run commands in the download directory. Download the matching checksum beside the package and verify it before installation.
+
+The Debian package installs into `/opt/hexplayer`, adds desktop integration, and provides the `hexplayer` command. APT installs its declared runtime dependencies:
+
+```bash
+sha256sum --check HexPlayer-VERSION-linux-amd64.deb.sha256
+sudo apt install ./HexPlayer-VERSION-linux-amd64.deb
+hexplayer
+```
+
+Alternatively, install the system runtime dependencies and extract the archive into a user-writable directory. Keep the entire `HexPlayer` directory together, including `_internal`; the archive does not install system dependencies or a desktop launcher:
+
+```bash
+sudo apt update
+sudo apt install libstdc++6 libgtk-3-0t64 libmpv2 ffmpeg libnotify4 \
+    libsecret-1-0 libwebkit2gtk-4.1-0 libgl1 libglu1-mesa libsm6 libxtst6 \
+    libspeechd2 speech-dispatcher xdg-utils espeak-ng xclip wl-clipboard
+sha256sum --check HexPlayer-VERSION-linux-x86_64.tar.gz.sha256
+tar -xzf HexPlayer-VERSION-linux-x86_64.tar.gz
+./HexPlayer/HexPlayer
+```
+
+Launch as your normal desktop user, not with `sudo`. Enable Orca in your desktop accessibility settings and ensure Speech Dispatcher and desktop audio work before evaluating speech. X11 clipboard helpers and `wl-clipboard` are supplied for their respective sessions; test clipboard and focus behavior in the session you actually use.
+
+Startup dependency checks can offer to download Deno and yt-dlp and prepare JavaScript dependencies; allow network access and complete these prompts. Linux uses system libmpv, `ffmpeg`, and `ffprobe`, not Windows DLLs or `.exe` files. By default, settings, the database, logs, and downloaded tools live under `${XDG_DATA_HOME:-$HOME/.local/share}/HexPlayer`. A `portable.dat` marker beside the application selects a sibling `data` directory instead; that location must be writable.
+
+### Native Linux source and development setup
+
+Use a native Ubuntu 24.04 amd64 desktop or VM, not the Windows virtual environment or a cross-build. Install Git and curl, install uv using its installer, then open a new terminal if `uv` is not yet on `PATH`:
+
+```bash
+sudo apt update
+sudo apt install git curl
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+Clone the source and run the repository's dependency installer before syncing Python packages:
+
+```bash
+git clone https://github.com/makhlwf/accessible_youtube_downloader_pro.git
+cd accessible_youtube_downloader_pro
+sudo bash packaging/linux/install-deps.sh
+export UV_CONCURRENT_BUILDS=1
+uv python install
+uv sync --locked
+uv run --no-sync python src/accessible_youtube_downloader_pro.py
+```
+
+`packaging/linux/install-deps.sh` uses APT to install the C/C++ toolchain, GTK 3 and WebKitGTK 4.1 development headers, graphics/image/media libraries, libffi and libsecret headers, system libmpv and FFmpeg, Speech Dispatcher, clipboard helpers, D-Bus, and Xvfb. wxPython may compile from source for the selected Python version; installing only `libgtk-3-0t64` or Ubuntu's `python3-wxgtk4.0` does not satisfy this uv environment. Keep `UV_CONCURRENT_BUILDS=1` set to limit simultaneous package builds, and allow substantial time and memory for the GTK build. `uv python install` follows `.python-version`; Ubuntu's default Python is not a substitute for the project's Python 3.14+ requirement.
+
+### Tests and preflight
+
+From the repository root after syncing development dependencies, run these Linux commands, matching `.github/workflows/tests.yml`:
+
+```bash
+xvfb-run -a uv run --no-sync python -c "import wx, prism; app = wx.App(False); print(wx.version())"
+dbus-run-session -- xvfb-run -a uv run --no-sync pytest tests/
+uv run --no-sync ruff check .
+dbus-run-session -- xvfb-run -a uv run python scripts/agent_preflight.py
+```
+
+On Windows, run:
+
 ```powershell
-# Run application
-uv run python src\accessible_youtube_downloader_pro.py
-
-# Run test suite
-uv run pytest tests/
-
-# Run linter
-uv run ruff check .
+uv run --no-sync pytest tests/
+uv run python scripts/agent_preflight.py
 ```
+
+Preflight validates skills, runs Ruff, checks translation catalogs, and runs the full test suite. D-Bus and Xvfb provide an isolated session and virtual display for Linux automated checks; they are not the recommended way to run the interactive application. Test keyboard navigation, focus restoration, Orca announcements, Speech Dispatcher output, real audio/video playback, downloads, and browser handoff separately in a real desktop session. Record the desktop, X11 or Wayland session, screen reader, and audio setup with results.
 
 ---
 
 ## 12. Build, Bundling & Packaging Engine
 
-Standalone executable packaging is managed by `scripts/build.py`.
+Standalone executable packaging is managed by `scripts/build.py`. Builds are native to the host OS; Windows builds do not produce Linux packages.
 
-### Key Build Operations:
+### Native Ubuntu 24.04 amd64 build
+
+After the Linux system dependency installation above, run from the repository root:
+
+```bash
+export UV_CONCURRENT_BUILDS=1
+uv python install
+uv sync --locked --group build
+xvfb-run -a uv run --no-sync python scripts/build.py
+```
+
+**The build deletes the repository's existing `build/` and `dist/` directories before running PyInstaller. Save any artifacts you need elsewhere first.** The script verifies system libmpv, FFmpeg, FFprobe, and `dpkg-deb`, builds the main executable and native messaging host, validates the layout, then creates:
+
+- `dist/HexPlayer/HexPlayer` and `dist/HexPlayer/HexPlayerNativeHost`, with their shared `_internal` directory.
+- `dist/HexPlayer-VERSION-linux-x86_64.tar.gz`.
+- `dist/HexPlayer-VERSION-linux-amd64.deb`.
+- A matching `.sha256` file for each package.
+
+`VERSION` comes from `pyproject.toml`. Release CI uses `uv sync --locked --no-dev --group build`; local development keeps the dev group so tests and preflight remain available. CI runs on Ubuntu 24.04 x86_64, and the Debian package requires glibc 2.39 or newer. This is not a compatibility guarantee for other distributions or architectures.
+
+Check the frozen output and packages:
+
+```bash
+timeout 45s dbus-run-session -- xvfb-run -a dist/HexPlayer/HexPlayer --packaging-smoke-test
+desktop-file-validate packaging/linux/hexplayer.desktop
+dpkg-deb --info dist/*.deb
+(cd dist && sha256sum --check ./*.sha256)
+```
+
+The frozen smoke test checks Linux dependency imports, a GTK window opening and closing, and system libmpv initialization with null audio/video outputs. It does not run the full application workflow, play media, or verify screen-reader speech and keyboard usability. The build workflow additionally checks native-host message framing. Perform the real-desktop accessibility and playback checks described above before release; neither a passing smoke test nor unit tests replace them.
+
+`.github/workflows/build-artifacts.yml` produces native Windows and Linux artifacts. `.github/workflows/release.yml` publishes both platforms together only after their builds succeed; a local build does not make Linux downloads available on the release page.
+
+### Windows build operations:
 1. **DLL Verification:** Ensures `libmpv-2.dll` (extracted from `libmpv-2.dll.zip`), `ffmpeg.exe`, and `ffprobe.exe` are present in `src/`.
 2. **System DLL Inclusion:** Resolves system binary dependencies such as `vulkan-1.dll` from `System32` or system `PATH`.
 3. **PyInstaller Execution:** Compiles main app (`HexPlayer.exe`) and native messaging host (`HexPlayerNativeHost.exe`).
@@ -458,6 +569,6 @@ Standalone executable packaging is managed by `scripts/build.py`.
 ### Rules for AI Coding Agents:
 1. **Never mutate file paths blindly:** Always use `paths.py` functions (`settings_path`, `get_app_path()`).
 2. **Preserve `wx.CallAfter`:** Any background thread updating the UI must use `wx.CallAfter`.
-3. **Verify Lints & Tests before reporting completion:** Always run `uv run ruff check .` and `uv run pytest tests/`.
+3. **Verify before reporting completion:** Run `uv run python scripts/agent_preflight.py`; on headless Linux, wrap it with `dbus-run-session -- xvfb-run -a` as shown above.
 4. **Update `messages.pot` on UI text changes:** If user-visible strings are added or edited, run `check_translations.py`.
 5. **Enforce Screen Reader Accessibility:** Ensure new controls have proper keyboard hooks, tab stops, and speech announcements.

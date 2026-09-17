@@ -5,6 +5,47 @@ from unittest.mock import patch
 import cookies_manager
 
 
+def test_linux_browser_discovery_respects_xdg(tmp_path, monkeypatch):
+    monkeypatch.setattr(cookies_manager.sys, "platform", "linux")
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
+    chrome = tmp_path / "google-chrome"
+    chrome.mkdir()
+    directories = cookies_manager._get_browser_directories()
+    assert directories["chrome"] == [str(chrome)]
+    assert directories["edge"] == [str(tmp_path / "microsoft-edge")]
+    assert directories["brave"] == [str(tmp_path / "BraveSoftware" / "Brave-Browser")]
+    assert "User Data" not in str(directories)
+    assert any(
+        browser["id"] == "chrome" and browser["detected"]
+        for browser in cookies_manager.get_installed_browsers()
+    )
+
+
+def test_linux_browser_discovery_ignores_relative_xdg(tmp_path, monkeypatch):
+    monkeypatch.setattr(cookies_manager.sys, "platform", "linux")
+    monkeypatch.setenv("XDG_CONFIG_HOME", "relative")
+    monkeypatch.setattr(
+        cookies_manager.os.path, "expanduser", lambda value: str(tmp_path)
+    )
+    directories = cookies_manager._get_browser_directories()
+    assert directories["chrome"] == [str(tmp_path / ".config" / "google-chrome")]
+    assert str(tmp_path / ".mozilla" / "firefox") in directories["firefox"]
+
+
+def test_windows_browser_directories_preserved(tmp_path, monkeypatch):
+    monkeypatch.setattr(cookies_manager.sys, "platform", "win32")
+    monkeypatch.setenv("LOCALAPPDATA", str(tmp_path / "local"))
+    monkeypatch.setenv("APPDATA", str(tmp_path / "roaming"))
+    directories = cookies_manager._get_browser_directories()
+    assert directories["chrome"] == [
+        str(tmp_path / "local" / "Google" / "Chrome" / "User Data")
+    ]
+    assert (
+        str(tmp_path / "roaming" / "Mozilla" / "Firefox" / "Profiles")
+        in directories["firefox"]
+    )
+
+
 def test_supported_browsers_map():
     assert "firefox" in cookies_manager.SUPPORTED_BROWSERS_MAP
     assert "chrome" in cookies_manager.SUPPORTED_BROWSERS_MAP

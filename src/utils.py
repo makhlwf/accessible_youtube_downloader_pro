@@ -4,6 +4,7 @@ import json
 import logging
 import math
 import os
+import platform
 import re
 import socket
 import subprocess
@@ -44,9 +45,10 @@ class _WindowlessSubprocess:
         return getattr(self._module, name)
 
     def check_output(self, *args, **kwargs):
-        kwargs["creationflags"] = (
-            kwargs.get("creationflags", 0) | subprocess.CREATE_NO_WINDOW
-        )
+        if sys.platform == "win32":
+            kwargs["creationflags"] = (
+                kwargs.get("creationflags", 0) | subprocess.CREATE_NO_WINDOW
+            )
         return self._module.check_output(*args, **kwargs)
 
 
@@ -770,6 +772,7 @@ def get_ydl_instance(client=None, cookies_path=None):
     has_cookies = bool(cookies_path and os.path.exists(cookies_path))
     clients = get_configured_player_clients(client, has_cookies=has_cookies)
     opts = PLAYER_OPTS.copy()
+    opts["js_runtimes"] = {"deno": {"path": paths.get_deno_path()}}
     opts["extractor_args"] = {
         "youtube": {"player_client": clients, "js_variant": "main"}
     }
@@ -969,7 +972,7 @@ def _write_youtubei_runtime_config(version):
 
 def _deno_cache_command(config_path, lock_path, reload_package=False):
     command = [
-        paths.deno_path,
+        paths.get_deno_path(),
         "cache",
         "--config",
         config_path,
@@ -987,7 +990,7 @@ def _run_deno_cache(config_path, lock_path, reload_package=False):
     env["PATH"] = paths.main_path + os.pathsep + env.get("PATH", "")
     return subprocess.run(
         _deno_cache_command(config_path, lock_path, reload_package=reload_package),
-        creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+        creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0,
         env=env,
         cwd=paths.main_path,
         capture_output=True,
@@ -999,7 +1002,7 @@ def _run_deno_cache(config_path, lock_path, reload_package=False):
 
 
 def install_youtubei_version(version, parent=None, success_message=None):
-    if not os.path.exists(paths.deno_path):
+    if not os.path.exists(paths.get_deno_path()):
         show_error(
             _(
                 "لم يتم العثور على أداة deno.exe, وهي مطلوبة لتحديث مكتبة YouTube.js (Innertube)."
@@ -1123,29 +1126,47 @@ def update_yt_dlp():
             download_yt_dlp()
 
 
+def _deno_release_asset():
+    machine = platform.machine().lower()
+    arch = {
+        "amd64": "x86_64",
+        "x86_64": "x86_64",
+        "arm64": "aarch64",
+        "aarch64": "aarch64",
+    }.get(machine)
+    target = {"win32": "pc-windows-msvc", "linux": "unknown-linux-gnu"}.get(
+        sys.platform
+    )
+    if not arch or not target:
+        raise RuntimeError(f"Unsupported Deno platform: {sys.platform}/{machine}")
+    return f"deno-{arch}-{target}.zip"
+
+
 def download_deno(parent=None):
     from gui.update_dialog import UpdateDialog
 
-    url = "https://github.com/denoland/deno/releases/latest/download/deno-x86_64-pc-windows-msvc.zip"
+    url = f"https://github.com/denoland/deno/releases/latest/download/{_deno_release_asset()}"
+    install_dir = os.path.dirname(paths.deno_install_path)
+    os.makedirs(install_dir, exist_ok=True)
     UpdateDialog(
         parent or (wx.GetApp().GetTopWindow() if wx.GetApp() else None),
         url,
-        os.path.join(paths.main_path, "deno.zip"),
+        os.path.join(install_dir, "deno.zip"),
         _("جاري تنزيل دينو"),
         is_zip=True,
     )
 
 
 def get_deno_version():
-    if not os.path.exists(paths.deno_path):
+    if not os.path.exists(paths.get_deno_path()):
         return None
     try:
         result = subprocess.run(
-            [paths.deno_path, "--version"],
+            [paths.get_deno_path(), "--version"],
             capture_output=True,
             text=True,
             encoding="utf-8",
-            creationflags=subprocess.CREATE_NO_WINDOW,
+            creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0,
             check=False,
         )
         if result.returncode == 0:
@@ -1203,7 +1224,7 @@ def check_yt_dlp(parent=None):
 
 
 def check_deno(parent=None):
-    if not os.path.exists(paths.deno_path):
+    if not os.path.exists(paths.get_deno_path()):
         msg = wx.MessageBox(
             _(
                 "لم يتم العثور على أداة deno.exe, وهي مطلوبة لبعض وظائف اليوتيوب. هل تريد تنزيلها الآن؟"
@@ -1214,7 +1235,7 @@ def check_deno(parent=None):
         )
         if msg == wx.YES:
             download_deno()
-            return os.path.exists(paths.deno_path)
+            return os.path.exists(paths.get_deno_path())
         return False
     return True
 
@@ -1281,7 +1302,7 @@ def ensure_deno_installed(parent=None, feature_name=None, **kwargs):
     Checks if deno.exe is installed. If missing, prompts the user to download Deno.
     Returns True if Deno is available or installed, False otherwise.
     """
-    if not os.path.exists(paths.deno_path):
+    if not os.path.exists(paths.get_deno_path()):
         feature = feature_name or kwargs.get("feature_name_ar") or _("هذه الميزة")
         msg_text = _(
             "تنبيه: لم يتم تثبيت أداة Deno وهي مطلوبة لـ {}. هل تريد تنزيل وتثبيت Deno الآن؟"
@@ -1296,7 +1317,7 @@ def ensure_deno_installed(parent=None, feature_name=None, **kwargs):
         )
         if res == wx.YES:
             download_deno(dialog_parent)
-            return os.path.exists(paths.deno_path)
+            return os.path.exists(paths.get_deno_path())
         return False
     return True
 
@@ -1327,7 +1348,7 @@ def ensure_cookies_configured(parent=None, feature_name=None, **kwargs):
 
 def ensure_js_dependencies():
     """Silently ensure JavaScript dependencies are cached by Deno."""
-    if not os.path.exists(paths.deno_path):
+    if not os.path.exists(paths.get_deno_path()):
         return
 
     service_script = paths.get_js_runtime_service_script()
@@ -1346,13 +1367,15 @@ def ensure_js_dependencies():
                 env["PATH"] = paths.main_path + os.pathsep + env.get("PATH", "")
                 subprocess.run(
                     [
-                        paths.deno_path,
+                        paths.get_deno_path(),
                         "cache",
                         "--config",
                         config_path,
                         service_script,
                     ],
-                    creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+                    creationflags=subprocess.CREATE_NO_WINDOW
+                    if sys.platform == "win32"
+                    else 0,
                     env=env,
                     cwd=paths.main_path,
                     check=False,
@@ -2006,7 +2029,7 @@ def update_watch_history(
         config_path = os.path.join(bundled_path, "deno.json")
 
         command = [
-            paths.deno_path,
+            paths.get_deno_path(),
             "run",
             "--allow-read",
             "--allow-write",
@@ -2022,7 +2045,7 @@ def update_watch_history(
 
         subprocess.run(
             command,
-            creationflags=subprocess.CREATE_NO_WINDOW,
+            creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0,
             cwd=paths.main_path,
             env=env,
             capture_output=True,
@@ -2131,6 +2154,7 @@ def _get_video_like_info_with_yt_dlp(url, cookies_path=None):
         return info
 
     opts = PLAYER_OPTS.copy()
+    opts["js_runtimes"] = {"deno": {"path": paths.get_deno_path()}}
     opts["skip_download"] = True
     opts["extract_flat"] = False
     if cookies_path and os.path.exists(cookies_path):
@@ -2152,6 +2176,7 @@ def _get_video_chapters_with_yt_dlp(url, cookies_path=None):
         return []
 
     opts = PLAYER_OPTS.copy()
+    opts["js_runtimes"] = {"deno": {"path": paths.get_deno_path()}}
     opts["skip_download"] = True
     opts["extract_flat"] = False
     if cookies_path and os.path.exists(cookies_path):
@@ -2258,6 +2283,7 @@ def _get_comments_with_yt_dlp(url, parent_id=None, max_comments=200):
         return {"comments": [], "continuation": None}
 
     opts = PLAYER_OPTS.copy()
+    opts["js_runtimes"] = {"deno": {"path": paths.get_deno_path()}}
     opts["skip_download"] = True
     opts["getcomments"] = True
     opts["extract_flat"] = False
@@ -2592,6 +2618,56 @@ def sanitize_filename(filename):
     return re.sub(r'[<>:"/\\|?*]', "_", filename).strip()
 
 
+def _app_update_platform_target():
+    if sys.platform == "win32":
+        return "windows", "x86_64"
+    if sys.platform.startswith("linux"):
+        machine = platform.machine().lower()
+        arch = {
+            "amd64": "x86_64",
+            "x86_64": "x86_64",
+            "arm64": "aarch64",
+            "aarch64": "aarch64",
+        }.get(machine)
+        if arch:
+            return "linux", arch
+    return None, None
+
+
+RELEASES_PAGE_URL = (
+    "https://github.com/makhlwf/accessible_youtube_downloader_pro/releases"
+)
+
+
+def _linux_release_asset_url(url, arch):
+    if not isinstance(url, str):
+        return ""
+    suffixes = [f"-linux-{arch}.tar.gz"]
+    if arch == "x86_64":
+        suffixes.append("-linux-amd64.deb")
+    for suffix in suffixes:
+        if url.startswith("https://github.com/") and url.endswith(suffix):
+            return url
+    return ""
+
+
+def _select_app_update(info):
+    platform_key, arch = _app_update_platform_target()
+    if not platform_key:
+        return RELEASES_PAGE_URL, False
+    if platform_key == "windows":
+        url = info.get("url") if isinstance(info, dict) else None
+        return (url if isinstance(url, str) else ""), bool(url)
+    platforms = info.get("platforms") if isinstance(info, dict) else None
+    entry = platforms.get(platform_key) if isinstance(platforms, dict) else None
+    if isinstance(entry, dict):
+        entry = entry.get("url") or entry.get("browser_download_url")
+    if not isinstance(entry, str):
+        entry = None
+    url = _linux_release_asset_url(entry, arch)
+    return (url if url else RELEASES_PAGE_URL), bool(url)
+
+
 def check_for_updates(quiet=False):
     new_url = "https://raw.githubusercontent.com/makhlwf/accessible_youtube_downloader_pro/refs/heads/master/update.json"
     old_url = "https://raw.githubusercontent.com/makhlwf/accessible_youtube_downloader_pro/refs/heads/master/update_info.json"
@@ -2612,17 +2688,21 @@ def check_for_updates(quiet=False):
                     )
                 return
         if application.version != info["version"]:
+            url, in_app_download = _select_app_update(info)
 
             def show_update_dialog():
                 from gui.update_check_dialog import UpdateCheckDialog
 
                 new_version = info["version"]
                 whats_new = info.get("whats_new", _("لا توجد معلومات حول هذا التحديث"))
-                url = info["url"]
                 dlg = UpdateCheckDialog(
-                    wx.GetApp().GetTopWindow(), new_version, whats_new, url=url
+                    wx.GetApp().GetTopWindow(),
+                    new_version,
+                    whats_new,
+                    url=url,
+                    can_download=in_app_download,
                 )
-                if dlg.ShowModal() == wx.ID_OK:
+                if dlg.ShowModal() == wx.ID_OK and in_app_download:
                     from gui.update_dialog import UpdateDialog
 
                     UpdateDialog(
@@ -2666,7 +2746,48 @@ def show_error(message, exception=None, parent=None):
     )
 
 
+def _desktop_exec_argument(value):
+    value = str(value).replace("%", "%%")
+    for character in ("\\", '"', "`", "$"):
+        value = value.replace(character, "\\" + character)
+    value = value.replace("\\", "\\\\").replace("\n", "\\n").replace("\r", "\\r")
+    return f'"{value}"'
+
+
+def _set_linux_startup(enable):
+    config_home = os.environ.get("XDG_CONFIG_HOME", "")
+    if not os.path.isabs(config_home):
+        config_home = os.path.expanduser("~/.config")
+    autostart_dir = os.path.join(config_home, "autostart")
+    desktop_path = os.path.join(autostart_dir, "hexplayer.desktop")
+    if not enable:
+        try:
+            os.remove(desktop_path)
+        except FileNotFoundError:
+            pass
+        return
+    command = [sys.executable]
+    if not getattr(sys, "frozen", False):
+        command.append(
+            os.path.join(paths.get_app_path(), "accessible_youtube_downloader_pro.py")
+        )
+    command.append("--background")
+    exec_line = " ".join(_desktop_exec_argument(arg) for arg in command)
+    os.makedirs(autostart_dir, exist_ok=True)
+    with open(desktop_path, "w", encoding="utf-8", newline="\n") as desktop:
+        desktop.write(
+            "[Desktop Entry]\nType=Application\nName=HexPlayer\n"
+            f"Exec={exec_line}\nTerminal=false\n"
+        )
+
+
 def set_startup(enable: bool):
+    if sys.platform == "linux":
+        try:
+            _set_linux_startup(enable)
+        except OSError:
+            logger.exception("Failed to update XDG autostart entry")
+        return
     if sys.platform != "win32":
         return
     import winreg

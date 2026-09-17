@@ -1,5 +1,6 @@
 import logging
 import os
+import sys
 
 import paths
 import utils
@@ -18,6 +19,30 @@ SUPPORTED_BROWSERS_MAP = {
 
 
 def _get_browser_directories():
+    if sys.platform.startswith("linux"):
+        home = os.path.expanduser("~")
+        config_home = os.environ.get("XDG_CONFIG_HOME", "")
+        if not os.path.isabs(config_home):
+            config_home = os.path.join(home, ".config")
+        return {
+            "firefox": [
+                os.path.join(home, ".mozilla", "firefox"),
+                os.path.join(config_home, "mozilla", "firefox"),
+                os.path.join(home, "snap", "firefox", "common", ".mozilla", "firefox"),
+                os.path.join(
+                    home, ".var", "app", "org.mozilla.firefox", ".mozilla", "firefox"
+                ),
+            ],
+            "chrome": [os.path.join(config_home, "google-chrome")],
+            "edge": [os.path.join(config_home, "microsoft-edge")],
+            "brave": [os.path.join(config_home, "BraveSoftware", "Brave-Browser")],
+            "opera": [os.path.join(config_home, "opera")],
+            "vivaldi": [os.path.join(config_home, "vivaldi")],
+            "chromium": [
+                os.path.join(config_home, "chromium"),
+                os.path.join(home, "snap", "chromium", "common", "chromium"),
+            ],
+        }
     local_app_data = os.getenv("LOCALAPPDATA", "")
     app_data = os.getenv("APPDATA", "")
     return {

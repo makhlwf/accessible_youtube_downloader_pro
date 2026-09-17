@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import subprocess
+import sys
 import threading
 
 import paths
@@ -28,7 +29,7 @@ class DenoService:
             env["PATH"] = paths.main_path + os.pathsep + env.get("PATH", "")
 
             command = [
-                paths.deno_path,
+                paths.get_deno_path(),
                 "run",
                 "--allow-all",
                 "--config",
@@ -45,7 +46,9 @@ class DenoService:
                 stderr=subprocess.PIPE,
                 text=True,
                 encoding="utf-8",
-                creationflags=subprocess.CREATE_NO_WINDOW,
+                creationflags=subprocess.CREATE_NO_WINDOW
+                if sys.platform == "win32"
+                else 0,
                 cwd=paths.main_path,
                 env=env,
             )

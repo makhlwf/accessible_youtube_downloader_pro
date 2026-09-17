@@ -375,10 +375,8 @@ mock_newevent = MagicMock()
 mock_newevent.NewEvent.return_value = (MagicMock(), MagicMock())
 sys.modules["wx.lib.newevent"] = mock_newevent
 
-# Mock ctypes for non-Windows environments
 if not hasattr(ctypes, "windll"):
-    mock_ctypes = MagicMock()
-    sys.modules["ctypes"] = mock_ctypes
+    ctypes.windll = MagicMock(name="windll")
 
 
 # Mock other problematic modules if necessary
@@ -419,6 +417,12 @@ sys.modules["py_yt"] = mock_py_yt
 sys.modules["pyperclip"] = MagicMock()
 
 import pytest
+
+
+def pytest_configure(config):
+    config.addinivalue_line(
+        "markers", "integration: explicitly enabled live hardware or network tests"
+    )
 
 
 @pytest.fixture(autouse=True)

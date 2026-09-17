@@ -1,0 +1,82 @@
+name: Build Native Artifacts
+
+on:
+  workflow_call:
+    inputs:
+      source_sha:
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    timeout-minutes: 150
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            artifact: windows-x64
+          - os: ubuntu-24.04
+            artifact: linux-x86_64
+    runs-on: ${{ matrix.os }}
+    env:
+      UV_CONCURRENT_BUILDS: '1'
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.source_sha }}
+      - name: Install Linux compile and runtime dependencies
+        if: runner.os == 'Linux'
+        run: sudo bash packaging/linux/install-deps.sh
+      - uses: astral-sh/setup-uv@v10.1.0
+        with:
+          enable-cache: true
+          cache-dependency-glob: |
+            uv.lock
+            .python-version
+            packaging/linux/install-deps.sh
+      - run: uv python install
+      - run: uv sync --locked --no-dev --group build
+      - name: Build Windows application
+        if: runner.os == 'Windows'
+        run: uv run --no-sync python scripts/build.py
+      - name: Build Linux application and packages
+        if: runner.os == 'Linux'
+        run: xvfb-run -a uv run --no-sync python scripts/build.py
+      - name: Check frozen GTK startup and system libmpv
+        if: runner.os == 'Linux'
+        run: timeout 45s dbus-run-session -- xvfb-run -a dist/HexPlayer/HexPlayer --packaging-smoke-test
+      - name: Check Linux packages and native host
+        if: runner.os == 'Linux'
+        run: |
+          desktop-file-validate packaging/linux/hexplayer.desktop
+          dpkg-deb --info dist/*.deb
+          uv run --no-sync python -c "import json, struct, subprocess; data = json.dumps({'type': 'packaging_smoke_test'}).encode(); p = subprocess.run(['dist/HexPlayer/HexPlayerNativeHost'], input=struct.pack('<I', len(data)) + data, capture_output=True, timeout=30); assert p.returncode == 1, p.stderr; size = struct.unpack('<I', p.stdout[:4])[0]; assert size == len(p.stdout[4:]); assert json.loads(p.stdout[4:]) == {'ok': False, 'error': 'Unsupported message type'}"
+          cd dist
+          sha256sum --check ./*.sha256
+      - name: Install Inno Setup
+        if: runner.os == 'Windows'
+        run: choco install innosetup -y
+      - name: Compile Windows installer
+        if: runner.os == 'Windows'
+        run: iscc "packaging\windows\inno.iss"
+      - name: Upload Windows installer
+        if: runner.os == 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: HexPlayer/HexPlayer.exe
+          if-no-files-found: error
+      - name: Upload Linux packages
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: |
+            dist/*.tar.gz
+            dist/*.deb
+            dist/*.sha256
+          if-no-files-found: error

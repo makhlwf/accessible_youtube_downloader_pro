@@ -1,10 +1,97 @@
+import hashlib
 import io
 import json
+import os
 import sys
 import zipfile
 from unittest.mock import MagicMock, patch
 
+import pytest
+
+import pot_provider_service as provider
 from pot_provider_service import PotProviderService, pot_service
+
+
+@pytest.mark.parametrize(
+    ("system", "machine", "expected"),
+    [
+        ("linux", "x86_64", "bgutil-pot-linux-x86_64"),
+        ("linux", "aarch64", "bgutil-pot-linux-aarch64"),
+        ("linux", "riscv64", None),
+        ("win32", "AMD64", "bgutil-pot-windows-x86_64.exe"),
+    ],
+)
+def test_native_binary_asset(monkeypatch, system, machine, expected):
+    monkeypatch.setattr(provider.sys, "platform", system)
+    monkeypatch.setattr(provider.platform, "machine", lambda: machine)
+    assert provider._native_binary_asset() == expected
+
+
+@pytest.mark.parametrize("failure", [None, "header", "digest", "unknown", "chmod"])
+def test_linux_native_install_integrity_and_permissions(tmp_path, monkeypatch, failure):
+    from types import SimpleNamespace
+
+    monkeypatch.setattr(provider.sys, "platform", "linux")
+    monkeypatch.setattr(provider.platform, "machine", lambda: "x86_64")
+    binary = tmp_path / "bgutil-pot"
+    binary.write_bytes(b"old binary")
+    plugins = tmp_path / "plugins"
+    plugins.mkdir()
+    monkeypatch.setattr(provider.paths, "pot_provider_dir", str(tmp_path))
+    monkeypatch.setattr(provider.paths, "pot_provider_exe", str(binary))
+    monkeypatch.setattr(provider.paths, "pot_provider_plugins_dir", str(plugins))
+    monkeypatch.setattr(
+        provider.paths, "pot_provider_version_file", str(tmp_path / "version.json")
+    )
+    monkeypatch.setattr(provider, "config_get", lambda key: False)
+    data = b"MZinvalid" if failure == "header" else b"\x7fELFtest executable"
+    archive = io.BytesIO()
+    with zipfile.ZipFile(archive, "w") as output:
+        output.writestr("yt_dlp_plugins/example.py", "")
+    zip_data = archive.getvalue()
+    asset = "bgutil-pot-linux-x86_64"
+    hashes = {
+        "v-test": {
+            asset: "0" * 64
+            if failure == "digest"
+            else hashlib.sha256(data).hexdigest(),
+            "zip": hashlib.sha256(zip_data).hexdigest(),
+        }
+    }
+    monkeypatch.setattr(
+        provider, "PINNED_RELEASE_HASHES", {} if failure == "unknown" else hashes
+    )
+    assets = [
+        {
+            "name": name,
+            "size": len(content),
+            "browser_download_url": provider.EXPECTED_URL_PREFIX + "v-test/" + name,
+        }
+        for name, content in [(asset, data), (provider.DOWNLOAD_ZIP_NAME, zip_data)]
+    ]
+    response = MagicMock(status_code=200)
+    response.json.return_value = {"tag_name": "v-test", "assets": assets}
+    monkeypatch.setattr(provider.requests, "get", lambda *args, **kwargs: response)
+
+    def download(parent, url, destination, title, is_zip=False):
+        with open(destination, "wb") as output:
+            output.write(zip_data if url.endswith(".zip") else data)
+
+    monkeypatch.setitem(
+        sys.modules, "gui.update_dialog", SimpleNamespace(UpdateDialog=download)
+    )
+    chmod = MagicMock(side_effect=OSError("denied") if failure == "chmod" else None)
+    monkeypatch.setattr(provider.os, "chmod", chmod)
+    service = PotProviderService()
+    monkeypatch.setattr(service, "initialize", lambda: None)
+    assert service.download_and_install() is (failure is None)
+    assert binary.read_bytes() == (data if failure is None else b"old binary")
+    if failure in (None, "chmod"):
+        chmod.assert_called_once_with(
+            os.path.join(str(tmp_path), "bgutil-pot.exe.download"), 0o755
+        )
+    else:
+        chmod.assert_not_called()
 
 
 def test_pot_service_singleton():

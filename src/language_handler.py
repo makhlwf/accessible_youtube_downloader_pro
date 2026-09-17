@@ -2,6 +2,8 @@ import builtins
 import ctypes
 import gettext
 import locale
+import os
+import sys
 from collections import OrderedDict
 
 import wx
@@ -28,13 +30,25 @@ lang_id = wx.LANGUAGE_ARABIC
 
 
 def get_default_language():
-    windll = ctypes.windll.kernel32
-    lang_id = windll.GetUserDefaultUILanguage()
+    language = "en"
     try:
-        language = locale.windows_locale[lang_id].split("_")[0]
-        if language not in supported_languages.values():
-            language = "en"
+        if sys.platform == "win32":
+            windll = ctypes.windll.kernel32
+            lang_id = windll.GetUserDefaultUILanguage()
+            language = locale.windows_locale[lang_id].split("_")[0]
+        else:
+            lang_code = (
+                os.environ.get("LC_ALL")
+                or os.environ.get("LC_MESSAGES")
+                or os.environ.get("LANG")
+                or "en"
+            )
+            language = lang_code.split(".")[0].split("_")[0]
+            if language == "C":
+                language = "en"
     except Exception:
+        language = "en"
+    if language not in supported_languages.values():
         language = "en"
     return language
 

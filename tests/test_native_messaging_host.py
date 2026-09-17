@@ -146,6 +146,31 @@ def test_handle_message_save_cookies_success(monkeypatch, tmp_path):
     assert ipc_calls == [("cookies_updated", target_path)]
 
 
+def test_linux_frozen_gui_name(monkeypatch, tmp_path):
+    monkeypatch.setattr(host.sys, "platform", "linux")
+    monkeypatch.setattr(host.sys, "frozen", True, raising=False)
+    monkeypatch.setattr(host.sys, "executable", str(tmp_path / "HexPlayerNativeHost"))
+    (tmp_path / "HexPlayer").touch()
+    assert host.get_gui_launch_command("url") == [str(tmp_path / "HexPlayer"), "url"]
+
+
+def test_linux_source_gui_and_detached_process(monkeypatch):
+    from unittest.mock import Mock
+
+    monkeypatch.setattr(host.sys, "platform", "linux")
+    monkeypatch.setattr(host.sys, "frozen", False, raising=False)
+    command = host.get_gui_launch_command("url")
+    assert command[0] == host.sys.executable
+    assert command[1].endswith("accessible_youtube_downloader_pro.py")
+    assert command[2] == "url"
+    popen = Mock()
+    monkeypatch.setattr(host.subprocess, "Popen", popen)
+    host.start_gui_process(command)
+    assert popen.call_args.kwargs["start_new_session"] is True
+    assert "creationflags" not in popen.call_args.kwargs
+    assert popen.call_args.kwargs["stdout"] == host.subprocess.DEVNULL
+
+
 def test_handle_message_save_cookies_empty():
     response = host.handle_message({"type": "save_cookies", "cookies": []})
     assert response["ok"] is False

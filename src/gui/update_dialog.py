@@ -9,6 +9,7 @@ import requests
 import wx
 from wx.lib.newevent import NewEvent
 
+import speech_client
 import utils
 from language_handler import _
 from paths import update_path
@@ -34,7 +35,7 @@ class UpdateDialog(wx.Dialog):
         self.download = True
         self.CentreOnParent()
 
-        panel = wx.Panel(self)
+        panel = wx.Panel(self, style=wx.TAB_TRAVERSAL)
         self.status = wx.TextCtrl(
             panel,
             -1,
@@ -63,8 +64,13 @@ class UpdateDialog(wx.Dialog):
         self.Bind(wx.EVT_CLOSE, self.onClose)
         apply_theme(self)
         Thread(target=self.updateDownload, args=[url], daemon=True).start()
-        self.ShowModal()
-        self.Destroy()
+        focused = wx.Window.FindFocus()
+        try:
+            self.ShowModal()
+        finally:
+            self.Destroy()
+            if focused and focused.IsShown():
+                focused.SetFocus()
 
     def onOpenBrowser(self, event):
         if self.url:
@@ -130,13 +136,14 @@ class UpdateDialog(wx.Dialog):
             pass
 
     def errorAction(self, exception=None, download_path=None):
-        utils.show_error(
-            _("لا يمكن اكمال التنزيل في الوقت الحالي"),
-            exception,
-            parent=self,
-        )
         self.cleanupDownload(download_path)
-        wx.CallAfter(self.EndModal, wx.ID_ERROR)
+        wx.CallAfter(self._show_download_error, exception)
+
+    def _show_download_error(self, exception):
+        utils.show_error(
+            _("لا يمكن اكمال التنزيل في الوقت الحالي"), exception, parent=self
+        )
+        self.EndModal(wx.ID_ERROR)
 
     def onChanged(self, event):
         self.progress.SetValue(event.value)
@@ -148,8 +155,13 @@ class UpdateDialog(wx.Dialog):
                 import zipfile
 
                 try:
+                    extract_dir = os.path.dirname(event.path)
                     with zipfile.ZipFile(event.path, "r") as zip_ref:
-                        zip_ref.extractall(os.path.dirname(event.path))
+                        zip_ref.extractall(extract_dir)
+                    if sys.platform != "win32":
+                        binary = os.path.join(extract_dir, "deno")
+                        if os.path.isfile(binary):
+                            os.chmod(binary, 0o755)
                     os.remove(event.path)
                 except Exception as e:
                     utils.show_error(
@@ -162,6 +174,25 @@ class UpdateDialog(wx.Dialog):
 
             wx.MessageBox(_("اكتمل تنزيل الملف بنجاح"), _("نجاح"), parent=self)
             self.download = False
+            self.EndModal(wx.ID_OK)
+            return
+        if sys.platform != "win32":
+            self.download = False
+            message = _(
+                "Update downloaded to {path}. Automatic installation is not supported on this platform. "
+                "Install the update manually after closing HexPlayer. Open the download folder now?"
+            ).format(path=os.path.abspath(event.path))
+            self.status.SetValue(message)
+            speech_client.speak(message, interrupt=True)
+            if wx.MessageBox(
+                message,
+                _("Update downloaded"),
+                wx.YES_NO | wx.ICON_INFORMATION,
+                parent=self,
+            ) == wx.YES and not wx.LaunchDefaultApplication(
+                os.path.dirname(os.path.abspath(event.path))
+            ):
+                utils.show_error(_("Unable to open the download folder."), parent=self)
             self.EndModal(wx.ID_OK)
             return
         wx.MessageBox(
@@ -190,6 +221,8 @@ class UpdateDialog(wx.Dialog):
 
     @staticmethod
     def launchInstaller(path):
+        if sys.platform != "win32":
+            raise OSError("Automatic installation is only supported on Windows")
         if not os.path.isfile(path):
             raise FileNotFoundError(path)
         subprocess.Popen([path, "/SILENT"], cwd=os.path.dirname(path) or None)

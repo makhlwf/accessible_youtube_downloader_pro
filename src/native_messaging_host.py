@@ -50,7 +50,8 @@ def send_ipc_message(action, url=""):
 
 def get_gui_launch_command(url):
     if getattr(sys, "frozen", False):
-        app_path = os.path.join(os.path.dirname(sys.executable), GUI_EXE_NAME)
+        executable_name = "HexPlayer" if sys.platform == "linux" else GUI_EXE_NAME
+        app_path = os.path.join(os.path.dirname(sys.executable), executable_name)
         if os.path.exists(app_path):
             return [app_path, url]
         return [sys.executable, url]
@@ -71,6 +72,8 @@ def start_gui_process(command):
     }
     if sys.platform == "win32":
         kwargs["creationflags"] = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+    else:
+        kwargs["start_new_session"] = True
     return subprocess.Popen(command, **kwargs)
 
 

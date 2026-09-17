@@ -5,6 +5,7 @@ import threading
 import wx
 
 import cookies_manager
+import paths
 import utils
 import windows_url_association
 from language_handler import _, supported_languages
@@ -609,7 +610,7 @@ class SettingsDialog(wx.Dialog):
             name="browser_integration",
         )
         self.browserIntegration.SetValue(config_get("browser_integration"))
-        if sys.platform != "win32":
+        if sys.platform not in ("win32", "linux"):
             self.browserIntegration.Disable()
         self.potProvider = SettingsCheckBox(
             page,
@@ -761,7 +762,7 @@ class SettingsDialog(wx.Dialog):
     def onChange(self, event):
         new = wx.DirSelector(
             _("اختر مجلد التنزيل"),
-            os.path.join(os.getenv("userprofile"), "downloads"),
+            paths.get_default_download_dir(),
             parent=self,
         )
         if new != "":
@@ -787,7 +788,7 @@ class SettingsDialog(wx.Dialog):
         dlg = wx.FileDialog(
             self,
             message=_("اختر ملف الكوكيز"),
-            defaultDir=os.getcwd(),
+            defaultDir=paths.get_default_download_dir(),
             defaultFile="",
             wildcard=wildcard,
             style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST | wx.FD_CHANGE_DIR,
@@ -927,10 +928,10 @@ class SettingsDialog(wx.Dialog):
                 success = windows_url_association.register_browser_integration()
             else:
                 success = windows_url_association.unregister_browser_integration()
-            if not success and sys.platform == "win32":
+            if not success and sys.platform in ("win32", "linux"):
                 config_set("browser_integration", old_browser_integration)
                 wx.MessageBox(
-                    _("تعذر تحديث تكامل المتصفح في Windows."),
+                    _("Unable to update browser integration."),
                     _("خطأ"),
                     style=wx.ICON_ERROR,
                     parent=self,

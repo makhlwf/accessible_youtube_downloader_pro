@@ -70,6 +70,73 @@ def test_py_yt_subprocess_unchanged_outside_windows(monkeypatch):
     importer.assert_not_called()
 
 
+@pytest.mark.parametrize(
+    ("system", "machine", "asset"),
+    [
+        ("linux", "x86_64", "deno-x86_64-unknown-linux-gnu.zip"),
+        ("linux", "aarch64", "deno-aarch64-unknown-linux-gnu.zip"),
+        ("win32", "AMD64", "deno-x86_64-pc-windows-msvc.zip"),
+        ("win32", "ARM64", "deno-aarch64-pc-windows-msvc.zip"),
+    ],
+)
+def test_deno_release_platform(monkeypatch, system, machine, asset):
+    monkeypatch.setattr(utils.sys, "platform", system)
+    monkeypatch.setattr(utils.platform, "machine", lambda: machine)
+    assert utils._deno_release_asset() == asset
+
+
+def test_deno_release_rejects_unsupported_arch(monkeypatch):
+    monkeypatch.setattr(utils.sys, "platform", "linux")
+    monkeypatch.setattr(utils.platform, "machine", lambda: "riscv64")
+    with pytest.raises(RuntimeError, match="Unsupported Deno platform"):
+        utils._deno_release_asset()
+
+
+@pytest.mark.parametrize("system", ["linux", "win32"])
+def test_deno_version_uses_resolved_runtime_and_platform_flags(monkeypatch, system):
+    monkeypatch.setattr(utils.sys, "platform", system)
+    monkeypatch.setattr(
+        utils.paths, "get_deno_path", lambda: "/runtime/deno", raising=False
+    )
+    monkeypatch.setattr(utils.os.path, "exists", lambda path: True)
+    monkeypatch.setattr(subprocess, "CREATE_NO_WINDOW", 0x08000000, raising=False)
+    run = Mock(return_value=SimpleNamespace(returncode=0, stdout="deno 2.9.0\n"))
+    monkeypatch.setattr(subprocess, "run", run)
+    assert utils.get_deno_version() == "v2.9.0"
+    assert run.call_args.args[0] == ["/runtime/deno", "--version"]
+    assert run.call_args.kwargs["creationflags"] == (
+        0 if system == "linux" else 0x08000000
+    )
+    utils._run_deno_cache("config.json", "deno.lock")
+    assert run.call_args.args[0][0] == "/runtime/deno"
+    assert run.call_args.kwargs["creationflags"] == (
+        0 if system == "linux" else 0x08000000
+    )
+
+
+@pytest.mark.parametrize("frozen", [False, True])
+def test_linux_autostart_enable_disable(tmp_path, monkeypatch, frozen):
+    monkeypatch.setattr(utils.sys, "platform", "linux")
+    monkeypatch.setattr(utils.sys, "frozen", frozen, raising=False)
+    monkeypatch.setattr(utils.sys, "executable", "/opt/Hex Player/python")
+    monkeypatch.setattr(utils.paths, "get_app_path", lambda: "/opt/Hex Player")
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
+    entry = tmp_path / "autostart" / "hexplayer.desktop"
+    utils.set_startup(True)
+    content = entry.read_text(encoding="utf-8")
+    assert "Type=Application\n" in content
+    assert 'Exec="/opt/Hex Player/python"' in content
+    assert '"--background"' in content
+    assert ("accessible_youtube_downloader_pro.py" in content) is not frozen
+    utils.set_startup(False)
+    utils.set_startup(False)
+    assert not entry.exists()
+
+
+def test_desktop_exec_escapes_special_characters():
+    assert utils._desktop_exec_argument('/opt/a $b%"c') == '"/opt/a \\\\$b%%\\\\"c"'
+
+
 def test_time_formatting():
     assert time_formatting(0) == "0 ثانية"
     assert time_formatting(1) == "ثانية واحدة"

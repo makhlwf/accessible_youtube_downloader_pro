@@ -760,16 +760,7 @@ async def fetch_search_suggestions_async(
         language = config_get("lang") or "en"
 
     if region is None:
-        try:
-            import ctypes
-            import locale
-
-            windll = ctypes.windll.kernel32
-            lang_id = windll.GetUserDefaultUILanguage()
-            loc_str = locale.windows_locale.get(lang_id, "en_US")
-            region = loc_str.split("_")[1] if "_" in loc_str else "US"
-        except Exception:
-            region = "US"
+        region = utils.get_windows_region()
 
     try:
         data = await Suggestions.get(clean_query, language=language, region=region)

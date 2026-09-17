@@ -16,6 +16,18 @@ from download_handler.downloader import (
 )
 
 
+def test_base_options_use_resolved_deno_and_ffmpeg(monkeypatch, tmp_path):
+    ffmpeg_dir = tmp_path / "system-bin"
+    deno_path = str(tmp_path / "updated-runtime" / "deno")
+    monkeypatch.setattr(paths, "ffmpeg_dir", str(ffmpeg_dir))
+    monkeypatch.setattr(paths, "get_deno_path", lambda: deno_path, raising=False)
+    monkeypatch.setattr(downloader_module, "config_get", lambda key: "")
+    monkeypatch.setenv("PATH", "")
+    options = Downloader("url", str(tmp_path), "best", None, None)._base_options()
+    assert os.path.normpath(options["ffmpeg_location"]) == str(ffmpeg_dir)
+    assert options["js_runtimes"] == {"deno": {"path": deno_path}}
+
+
 def test_progress_hook_handles_missing_status():
     downloader = Downloader("url", ".", "best", None, None)
     downloader._progress_hook({})

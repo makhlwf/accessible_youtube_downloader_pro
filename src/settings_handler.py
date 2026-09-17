@@ -3,10 +3,10 @@ import os
 import threading
 
 from language_handler import get_default_language
-from paths import legacy_settings_paths, settings_path
+from paths import get_default_download_dir, legacy_settings_paths, settings_path
 
 defaults = {
-    "path": f"{os.getenv('USERPROFILE')}\\downloads\\HexPlayer",
+    "path": get_default_download_dir(),
     "defaultaudio": 0,
     "lang": get_default_language(),
     "autodetect": True,

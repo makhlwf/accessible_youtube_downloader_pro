@@ -6,6 +6,7 @@ import sys
 import threading
 import time
 import zipfile
+from ctypes.util import find_library
 from enum import IntEnum
 from pathlib import Path
 from typing import Any, ClassVar
@@ -171,8 +172,18 @@ def _load_mpv() -> ctypes.CDLL:
     if _mpv_lib is not None:
         return _mpv_lib
 
-    dll_path = next((path for path in _mpv_candidates() if path.exists()), None)
-    if dll_path is None:
+    dll_path = (
+        next((path for path in _mpv_candidates() if path.exists()), None)
+        if sys.platform == "win32"
+        else None
+    )
+    if sys.platform != "win32":
+        library_name = find_library("mpv") or "libmpv.so.2"
+        try:
+            lib = ctypes.CDLL(library_name)
+        except OSError as exc:
+            raise MPVError(f"Unable to load system libmpv: {library_name}") from exc
+    elif dll_path is None:
         dll_name = "libmpv-2.dll" if sys.platform == "win32" else "libmpv.so.2"
         try:
             lib = ctypes.CDLL(dll_name)

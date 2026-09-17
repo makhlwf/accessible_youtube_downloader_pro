@@ -1,8 +1,140 @@
 import json
+import os
+from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import Mock
 
 import pytest
 
 import windows_url_association as association
+
+
+@pytest.fixture
+def linux_integration(monkeypatch, tmp_path):
+    monkeypatch.setattr(association.sys, "platform", "linux")
+    monkeypatch.setattr(association.sys, "frozen", False, raising=False)
+    monkeypatch.setattr(association.paths, "settings_path", str(tmp_path / "settings"))
+    monkeypatch.setattr(
+        association.paths,
+        "get_config_root",
+        lambda: str(tmp_path / "config"),
+        raising=False,
+    )
+    monkeypatch.setattr(
+        association.paths,
+        "get_data_root",
+        lambda: str(tmp_path / "data"),
+        raising=False,
+    )
+    monkeypatch.setattr(
+        association.paths, "get_app_path", lambda: str(tmp_path / "app space")
+    )
+    monkeypatch.setattr(association, "_get_winreg", Mock(side_effect=AssertionError))
+    monkeypatch.setattr(
+        association.subprocess,
+        "run",
+        Mock(return_value=SimpleNamespace(stdout="hexplayer.desktop\n")),
+    )
+    return tmp_path
+
+
+def test_linux_native_manifests_and_launcher(linux_integration, monkeypatch):
+    chmod = Mock()
+    monkeypatch.setattr(association.os, "chmod", chmod)
+    monkeypatch.setattr(association.os, "access", lambda *_: True)
+    assert association.register_native_messaging_host()
+    launcher = Path(association.get_native_host_executable_path())
+    assert launcher.read_bytes().startswith(b"#!/bin/sh\nexec ")
+    assert b'"$@"\n' in launcher.read_bytes()
+    assert b"\r" not in launcher.read_bytes()
+    chmod.assert_called_once_with(str(launcher), 0o700)
+    manifests = association.get_linux_native_host_manifest_paths()
+    assert len(manifests) == 4
+    for path in manifests:
+        manifest = json.loads(Path(path).read_text(encoding="utf-8"))
+        assert Path(path).name == "com.hexplayer.link_helper.json"
+        assert manifest["path"] == str(launcher)
+        assert manifest["allowed_origins"] == [
+            f"chrome-extension://{association.EXTENSION_ID}/"
+        ]
+        assert str(linux_integration / "config") in path
+    assert association.is_native_messaging_host_registered()
+    Path(manifests[0]).write_text("{}", encoding="utf-8")
+    assert not association.is_native_messaging_host_registered()
+    assert association.unregister_native_messaging_host()
+    assert not launcher.exists()
+    assert all(not Path(path).exists() for path in manifests)
+    assert association.unregister_native_messaging_host()
+
+
+def test_linux_protocol_registration_and_cleanup(linux_integration):
+    assert association.register_hexplayer_protocol()
+    desktop = linux_integration / "data" / "applications" / "hexplayer.desktop"
+    content = desktop.read_text(encoding="utf-8")
+    assert "MimeType=x-scheme-handler/hexplayer;" in content
+    assert "accessible_youtube_downloader_pro.py" in content
+    assert " %u\n" in content
+    assert "%1" not in content
+    association.subprocess.run.assert_called_once_with(
+        ["xdg-mime", "default", "hexplayer.desktop", "x-scheme-handler/hexplayer"],
+        check=True,
+        capture_output=True,
+        timeout=10,
+    )
+    assert association.is_hexplayer_protocol_registered()
+    config = linux_integration / "config"
+    config.mkdir()
+    mimeapps = config / "mimeapps.list"
+    mimeapps.write_text(
+        "[Default Applications]\nx-scheme-handler/hexplayer=hexplayer.desktop;other.desktop;\ntext/plain=editor.desktop;\n",
+        encoding="utf-8",
+    )
+    assert association.unregister_hexplayer_protocol()
+    assert not desktop.exists()
+    assert "hexplayer.desktop" not in mimeapps.read_text(encoding="utf-8")
+    assert "other.desktop;" in mimeapps.read_text(encoding="utf-8")
+    assert "editor.desktop;" in mimeapps.read_text(encoding="utf-8")
+    assert association.unregister_hexplayer_protocol()
+
+
+def test_linux_missing_xdg_mime_returns_failure(linux_integration):
+    association.subprocess.run.side_effect = FileNotFoundError
+    assert not association.register_hexplayer_protocol()
+    assert not association.is_hexplayer_protocol_registered()
+
+
+def test_linux_frozen_names(linux_integration, monkeypatch):
+    monkeypatch.setattr(association.sys, "frozen", True, raising=False)
+    monkeypatch.setattr(
+        association.sys, "executable", str(linux_integration / "HexPlayer")
+    )
+    assert association.get_native_host_executable_path() == str(
+        linux_integration / "HexPlayerNativeHost"
+    )
+    assert "accessible_youtube_downloader_pro.py" not in association.get_open_command()
+    assert association.get_open_command().endswith(" %u")
+
+
+def test_desktop_command_escapes_reserved_characters():
+    assert association._desktop_quote('/a b/100%/$`"\\') == '"/a b/100%%/\\$\\`\\"\\\\"'
+    with pytest.raises(ValueError):
+        association._desktop_quote("/bad\npath")
+
+
+@pytest.mark.skipif(os.name == "nt", reason="Requires a POSIX shell")
+def test_linux_source_launcher_executes_with_arguments(linux_integration, monkeypatch):
+    import subprocess
+
+    app = linux_integration / "app space"
+    app.mkdir()
+    (app / "native_messaging_host.py").write_text(
+        "import sys\nprint(sys.argv[1])\n", encoding="utf-8"
+    )
+    association._write_linux_launcher()
+    result = subprocess.check_output(
+        [association._linux_launcher_path(), "browser argument"], text=True
+    )
+    assert result.strip() == "browser argument"
 
 
 class FakeKey:

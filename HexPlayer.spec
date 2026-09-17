@@ -52,6 +52,10 @@ system_binary_files = [
     "vulkan-1.dll",
 ]
 
+if sys.platform != "win32":
+    binary_files = []
+    system_binary_files = []
+
 binaries = []
 for item in binary_files:
     source_path = src_item_path(item)
@@ -69,7 +73,11 @@ try:
     prism_dir = os.path.dirname(prism.__file__)
     for root_path, _, filenames in os.walk(prism_dir):
         for filename in filenames:
-            if filename.endswith((".pyd", ".dll")):
+            if (
+                sys.platform == "win32" and filename.endswith((".pyd", ".dll"))
+            ) or (
+                sys.platform == "linux" and (filename.endswith(".so") or ".so." in filename)
+            ):
                 full_src = os.path.join(root_path, filename)
                 rel_dst = os.path.relpath(root_path, os.path.dirname(prism_dir))
                 binaries.append((full_src, rel_dst.replace("\\", "/")))
@@ -216,6 +224,11 @@ hiddenimports = [
     "_cffi_backend",
 ]
 
+if sys.platform == "linux":
+    hiddenimports += ["fcntl", "pwd", "grp", "termios", "pty", "tty"]
+    hiddenimports += collect_submodules("secretstorage")
+    hiddenimports += collect_submodules("jeepney")
+
 for sub in ["xml", "http", "email", "urllib", "html", "encodings", "logging", "ctypes"]:
     hiddenimports += collect_submodules(sub)
 
@@ -258,11 +271,15 @@ a_main = Analysis(
     hiddenimports=hiddenimports,
     hookspath=[],
     hooksconfig={},
-    runtime_hooks=[],
+    runtime_hooks=[os.path.join(ROOT, "packaging", "linux", "runtime_smoke.py")]
+    if sys.platform == "linux"
+    else [],
     excludes=[],
     noarchive=False,
     optimize=0,
 )
+if sys.platform == "linux":
+    a_main.exclude_system_libraries()
 pyz_main = PYZ(a_main.pure)
 
 exe_main = EXE(
@@ -289,7 +306,9 @@ a_host = Analysis(
     pathex=[SRC_DIR],
     binaries=[],
     datas=[],
-    hiddenimports=[],
+    hiddenimports=collect_submodules("secretstorage") + collect_submodules("jeepney")
+    if sys.platform == "linux"
+    else [],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
@@ -297,6 +316,8 @@ a_host = Analysis(
     noarchive=False,
     optimize=0,
 )
+if sys.platform == "linux":
+    a_host.exclude_system_libraries()
 pyz_host = PYZ(a_host.pure)
 
 exe_host = EXE(

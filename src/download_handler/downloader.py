@@ -241,7 +241,9 @@ class Downloader:
 
     def _base_options(self, use_cookies=True):
         abs_ffmpeg_dir = os.path.abspath(paths.ffmpeg_dir)
-        abs_ffmpeg_dir = os.path.normpath(abs_ffmpeg_dir).replace("\\", "/")
+        abs_ffmpeg_dir = os.path.normpath(abs_ffmpeg_dir)
+        if os.name == "nt":
+            abs_ffmpeg_dir = abs_ffmpeg_dir.replace("\\", "/")
 
         runtime_paths = (abs_ffmpeg_dir, os.path.abspath(paths.main_path))
         current_path = os.environ.get("PATH", "")
@@ -276,7 +278,7 @@ class Downloader:
                     "js_variant": "main",
                 }
             },
-            "js_runtimes": {"deno": {}},
+            "js_runtimes": {"deno": {"path": paths.get_deno_path()}},
             "quiet": False,
             "verbose": True,
             "no_warnings": False,
@@ -569,7 +571,7 @@ def start_media_download(
     dlg = DownloadProgress(parent, title or "")
 
     if path is None:
-        path = config_get("path")
+        path = config_get("path") or paths.get_default_download_dir()
 
     if folder and title:
         path = os.path.join(path, utils.sanitize_filename(title))

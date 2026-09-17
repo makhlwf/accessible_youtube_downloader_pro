@@ -1,8 +1,10 @@
 import os
 import subprocess
+import sys
 
 import wx
 
+import utils
 from language_handler import _
 from theme_handler import apply_theme
 
@@ -16,7 +18,7 @@ class DownloadCompleteDialog(wx.Dialog):
         )
         self.CentreOnParent()
 
-        panel = wx.Panel(self)
+        panel = wx.Panel(self, style=wx.TAB_TRAVERSAL)
         message = wx.StaticText(panel, -1, _("اكتمل التنزيل بنجاح."))
         close_button = wx.Button(panel, wx.ID_OK, _("موافق"))
         close_button.SetDefault()
@@ -45,17 +47,26 @@ class DownloadCompleteDialog(wx.Dialog):
         self.Bind(wx.EVT_CHAR_HOOK, self.on_hook)
         apply_theme(self)
 
-    def on_play(self, event):
-        os.startfile(self.file_path)
+    def _open_path(self, path):
+        if not wx.LaunchDefaultApplication(path):
+            utils.show_error(
+                _("Unable to open the downloaded file or folder."), parent=self
+            )
+            return
         self.EndModal(wx.ID_OK)
+
+    def on_play(self, event):
+        self._open_path(self.file_path)
 
     def on_show_file(self, event):
-        subprocess.Popen(["explorer", "/select,", self.file_path])
-        self.EndModal(wx.ID_OK)
+        if sys.platform == "win32":
+            subprocess.Popen(["explorer", "/select,", self.file_path])
+            self.EndModal(wx.ID_OK)
+        else:
+            self._open_path(os.path.dirname(os.path.abspath(self.file_path)))
 
     def on_open_folder(self, event):
-        os.startfile(self.folder_path)
-        self.EndModal(wx.ID_OK)
+        self._open_path(self.folder_path)
 
     def on_hook(self, event):
         if event.KeyCode == wx.WXK_ESCAPE:
@@ -65,6 +76,7 @@ class DownloadCompleteDialog(wx.Dialog):
 
 
 def show_download_complete(parent, file_path=None, folder_path=None):
+    focused = wx.Window.FindFocus()
     dialog = DownloadCompleteDialog(
         parent, file_path=file_path, folder_path=folder_path
     )
@@ -72,3 +84,5 @@ def show_download_complete(parent, file_path=None, folder_path=None):
         dialog.ShowModal()
     finally:
         dialog.Destroy()
+        if focused and focused.IsShown():
+            focused.SetFocus()

@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=HexPlayer
+Exec=hexplayer %u
+TryExec=hexplayer
+Terminal=false
+Categories=AudioVideo;Player;
+MimeType=x-scheme-handler/hexplayer;
+StartupNotify=true

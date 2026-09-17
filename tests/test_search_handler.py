@@ -13,6 +13,19 @@ from youtube_browser.search_handler import (
 
 
 @pytest.mark.asyncio
+async def test_suggestions_use_platform_region(monkeypatch):
+    from youtube_browser import search_handler
+
+    monkeypatch.setattr(search_handler.utils, "get_windows_region", lambda: "DE")
+    suggestions = AsyncMock(return_value={"result": ["test result"]})
+    monkeypatch.setattr(search_handler.Suggestions, "get", suggestions)
+    assert await fetch_search_suggestions_async("test", language="de") == [
+        "test result"
+    ]
+    suggestions.assert_awaited_once_with("test", language="de", region="DE")
+
+
+@pytest.mark.asyncio
 async def test_playlist_result_init_async():
     url = "https://youtube.com/playlist?list=123"
     playlist_data = {
