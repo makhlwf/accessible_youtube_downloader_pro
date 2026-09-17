@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-09-05 09:49+0200\n"
+"POT-Creation-Date: 2026-09-17 04:57+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -871,7 +871,7 @@ msgid "إلغاء"
 msgstr ""
 
 #: src/gui/auto_detect_dialog.py:12 src/gui/auto_detect_dialog.py:47
-#: src/gui/auto_detect_dialog.py:87 src/gui/search_dialog.py:61
+#: src/gui/auto_detect_dialog.py:87 src/gui/search_dialog.py:80
 #: src/youtube_browser/search_handler.py:187
 #: src/youtube_browser/search_handler.py:499
 #: src/youtube_browser/search_handler.py:680
@@ -1136,7 +1136,7 @@ msgid "نشر التعليق"
 msgstr ""
 
 #: src/gui/comments_dialog.py:196 src/gui/description.py:35
-#: src/gui/link_dlg.py:27 src/gui/search_dialog.py:77 src/gui/text_viewer.py:21
+#: src/gui/link_dlg.py:27 src/gui/search_dialog.py:96 src/gui/text_viewer.py:21
 msgid "إغلاق"
 msgstr ""
 
@@ -1651,56 +1651,80 @@ msgstr ""
 msgid "ك.ب/ث"
 msgstr ""
 
-#: src/gui/search_dialog.py:19
+#: src/gui/search_dialog.py:20
 msgid "بحث"
 msgstr ""
 
-#: src/gui/search_dialog.py:31
+#: src/gui/search_dialog.py:33
 msgid "ابحث في youtube: "
 msgstr ""
 
-#: src/gui/search_dialog.py:33
+#: src/gui/search_dialog.py:35
 msgid "ابحث في youtube"
 msgstr ""
 
-#: src/gui/search_dialog.py:47
+#: src/gui/search_dialog.py:49
 msgid "اقتراحات البحث"
 msgstr ""
 
-#: src/gui/search_dialog.py:52
+#: src/gui/search_dialog.py:53 src/gui/search_dialog.py:57
+msgid "Recent searches"
+msgstr ""
+
+#: src/gui/search_dialog.py:60 src/gui/search_dialog.py:174
+msgid "Clear search history"
+msgstr ""
+
+#: src/gui/search_dialog.py:71
 msgid "فلتر: "
 msgstr ""
 
-#: src/gui/search_dialog.py:57
+#: src/gui/search_dialog.py:76
 msgid "بلا فلتر"
 msgstr ""
 
-#: src/gui/search_dialog.py:58 src/youtube_browser/search_handler.py:746
+#: src/gui/search_dialog.py:77 src/youtube_browser/search_handler.py:746
 msgid "بث مباشر"
 msgstr ""
 
-#: src/gui/search_dialog.py:59
+#: src/gui/search_dialog.py:78
 msgid "تاريخ الرفع"
 msgstr ""
 
-#: src/gui/search_dialog.py:60
+#: src/gui/search_dialog.py:79
 msgid "عدد المشاهدات"
 msgstr ""
 
-#: src/gui/search_dialog.py:62
+#: src/gui/search_dialog.py:81
 msgid "قنوات"
 msgstr ""
 
-#: src/gui/search_dialog.py:66
+#: src/gui/search_dialog.py:85
 msgid "فلتر"
 msgstr ""
 
-#: src/gui/search_dialog.py:74
+#: src/gui/search_dialog.py:93
 msgid "ابحث"
 msgstr ""
 
-#: src/gui/search_dialog.py:178
+#: src/gui/search_dialog.py:173
+msgid "Clear all recent searches?"
+msgstr ""
+
+#: src/gui/search_dialog.py:186
+msgid "Search history cleared"
+msgstr ""
+
+#: src/gui/search_dialog.py:188
+msgid "Unable to clear search history"
+msgstr ""
+
+#: src/gui/search_dialog.py:258
 msgid "تم عرض اقتراحات البحث"
+msgstr ""
+
+#: src/gui/search_dialog.py:366
+msgid "Unable to save search history"
 msgstr ""
 
 #: src/gui/settings_dialog.py:29

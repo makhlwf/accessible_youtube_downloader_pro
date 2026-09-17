@@ -3,6 +3,7 @@ import threading
 
 import wx
 
+from database import SearchHistory
 from language_handler import _
 from settings_handler import config_get
 from speech_client import speak
@@ -17,6 +18,7 @@ SEARCH_SUGGESTIONS_DELAY_MS = 750
 class SearchDialog(wx.Dialog):
     def __init__(self, parent, value="", show_modal=True):
         wx.Dialog.__init__(self, parent=parent, title=_("بحث"))
+        self._calling_control = wx.Window.FindFocus()
         self._closing = False
         self._ignore_text_event = False
         self._request_counter = 0
@@ -47,6 +49,23 @@ class SearchDialog(wx.Dialog):
         self.suggestionsList.SetName(_("اقتراحات البحث"))
         self.suggestionsList.Hide()
         main_sizer.Add(self.suggestionsList, 0, wx.EXPAND | wx.ALL, 5)
+
+        self.historyLabel = wx.StaticText(self.panel, -1, _("Recent searches"))
+        self.historyList = wx.ListBox(
+            self.panel, -1, size=(-1, 120), style=wx.LB_SINGLE
+        )
+        self.historyList.SetName(_("Recent searches"))
+        self.historyList.Set(SearchHistory.get_recent() or [])
+        self.historyList.Enable(self.historyList.GetCount() > 0)
+        self.clearHistoryButton = wx.Button(self.panel, -1, _("Clear search history"))
+        self.clearHistoryButton.Enable(self.historyList.GetCount() > 0)
+        main_sizer.Add(self.historyLabel, 0, wx.ALL, 5)
+        main_sizer.Add(self.historyList, 0, wx.EXPAND | wx.ALL, 5)
+        main_sizer.Add(self.clearHistoryButton, 0, wx.ALL, 5)
+        self.historyList.Bind(wx.EVT_KEY_DOWN, self.onHistoryKeyDown)
+        self.historyList.Bind(wx.EVT_LISTBOX_DCLICK, self.onHistorySearch)
+        self.historyList.Bind(wx.EVT_SET_FOCUS, self.onHistorySetFocus)
+        self.clearHistoryButton.Bind(wx.EVT_BUTTON, self.onClearHistory)
 
         # Row 3: Filter label and choice box
         lbl1 = wx.StaticText(self.panel, -1, _("فلتر: "))
@@ -104,8 +123,69 @@ class SearchDialog(wx.Dialog):
         apply_theme(self)
         self.Fit()
         self.Centre()
+        self.searchField.SetFocus()
         if show_modal:
             self.ShowModal()
+            if self._calling_control and self._calling_control.IsShown():
+                self._calling_control.SetFocus()
+
+    def onHistorySetFocus(self, event):
+        if (
+            self.historyList.GetSelection() == wx.NOT_FOUND
+            and self.historyList.GetCount()
+        ):
+            self.historyList.SetSelection(0)
+        event.Skip()
+
+    def onHistoryKeyDown(self, event):
+        key = event.GetKeyCode()
+        if key == wx.WXK_RETURN:
+            self.onHistorySearch()
+        elif key in (wx.WXK_RIGHT, wx.WXK_SPACE):
+            self._recall_history()
+        elif key == wx.WXK_UP and self.historyList.GetSelection() == 0:
+            self.searchField.SetFocus()
+        else:
+            event.Skip()
+
+    def _recall_history(self):
+        index = self.historyList.GetSelection()
+        if index == wx.NOT_FOUND:
+            return False
+        self._request_counter += 1
+        self.debounceTimer.Stop()
+        self._ignore_text_event = True
+        self.searchField.SetValue(self.historyList.GetString(index))
+        self._ignore_text_event = False
+        self._hide_suggestions()
+        self.searchButton.Enable(True)
+        self.searchField.SetFocus()
+        self.searchField.SetInsertionPointEnd()
+        return True
+
+    def onHistorySearch(self, event=None):
+        if self._recall_history():
+            self.onSearch()
+
+    def onClearHistory(self, event=None):
+        if (
+            wx.MessageBox(
+                _("Clear all recent searches?"),
+                _("Clear search history"),
+                wx.YES_NO | wx.NO_DEFAULT | wx.ICON_QUESTION,
+                parent=self,
+            )
+            != wx.YES
+        ):
+            return
+        if SearchHistory.clear():
+            self.searchField.SetFocus()
+            self.historyList.Clear()
+            self.historyList.Enable(False)
+            self.clearHistoryButton.Enable(False)
+            speak(_("Search history cleared"), interrupt=True)
+        else:
+            speak(_("Unable to clear search history"), interrupt=True)
 
     def onTextChange(self, event):
         if self._ignore_text_event or self._closing:
@@ -201,6 +281,10 @@ class SearchDialog(wx.Dialog):
             self.suggestionsList.SetFocus()
             self.suggestionsList.SetSelection(0)
             return
+        elif key == wx.WXK_DOWN and self.historyList.GetCount() > 0:
+            self.historyList.SetSelection(0)
+            self.historyList.SetFocus()
+            return
         elif key == wx.WXK_RETURN:
             if self.searchButton.IsEnabled():
                 self.onSearch(None)
@@ -275,6 +359,11 @@ class SearchDialog(wx.Dialog):
         event.Skip()
 
     def onSearch(self, event=None):
+        val = self.searchField.Value.strip()
+        if self._closing or not val:
+            return
+        if not SearchHistory.add(val):
+            speak(_("Unable to save search history"), interrupt=True)
         self._closing = True
         if hasattr(self, "debounceTimer") and self.debounceTimer.IsRunning():
             self.debounceTimer.Stop()

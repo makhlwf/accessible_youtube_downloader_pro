@@ -41,6 +41,12 @@ class TestSearchDialog(unittest.TestCase):
         cls.app = wx.App.Get() or wx.App()
 
     def setUp(self):
+        self.history_patch = patch("gui.search_dialog.SearchHistory")
+        self.history = self.history_patch.start()
+        self.addCleanup(self.history_patch.stop)
+        self.history.get_recent.return_value = []
+        self.history.add.return_value = True
+        self.history.clear.return_value = True
         self.dialog = SearchDialog(None, value="", show_modal=False)
 
     def tearDown(self):
@@ -50,6 +56,90 @@ class TestSearchDialog(unittest.TestCase):
             except Exception:
                 pass
         wx.Yield()
+
+    def test_history_loaded_and_named(self):
+        self.dialog.Destroy()
+        self.history.get_recent.return_value = ["latest", "older"]
+        self.dialog = SearchDialog(None, show_modal=False)
+        assert self.dialog.historyList.GetName() == _("Recent searches")
+        assert self.dialog.historyList.GetString(0) == "latest"
+        assert self.dialog.clearHistoryButton.IsEnabled()
+        self.dialog.onSearchFieldKeyDown(MockKeyEvent(wx.WXK_DOWN))
+        assert self.dialog.historyList.GetSelection() == 0
+        assert self.dialog.FindFocus() == self.dialog.historyList
+
+    def test_history_empty_disables_controls(self):
+        assert not self.dialog.historyList.IsEnabled()
+        assert not self.dialog.clearHistoryButton.IsEnabled()
+
+    def test_history_enter_submits_and_saves(self):
+        self.dialog.historyList.Set(["saved search"])
+        self.dialog.historyList.SetSelection(0)
+        self.dialog.onHistoryKeyDown(MockKeyEvent(wx.WXK_RETURN))
+        assert self.dialog.query == "saved search"
+        self.history.add.assert_called_once_with("saved search")
+
+    def test_history_refine_stops_stale_suggestions(self):
+        self.dialog.historyList.Set(["saved search"])
+        self.dialog.historyList.SetSelection(0)
+        self.dialog._request_counter = 1
+        self.dialog.debounceTimer.StartOnce(750)
+        self.dialog.onHistoryKeyDown(MockKeyEvent(wx.WXK_SPACE))
+        assert self.dialog.searchField.Value == "saved search"
+        assert self.dialog.FindFocus() == self.dialog.searchField
+        assert not self.dialog.debounceTimer.IsRunning()
+        assert not self.dialog._closing
+        self.dialog._on_suggestions_loaded("saved search", ["stale"], 1)
+        assert not self.dialog.suggestionsList.IsShown()
+        self.history.add.assert_not_called()
+
+    @patch("gui.search_dialog.speak")
+    @patch("gui.search_dialog.wx.MessageBox", return_value=wx.YES)
+    def test_clear_history(self, message_box, speak):
+        self.dialog.historyList.Set(["saved"])
+        self.dialog.onClearHistory()
+        self.history.clear.assert_called_once()
+        assert self.dialog.historyList.GetCount() == 0
+        assert not self.dialog.clearHistoryButton.IsEnabled()
+        assert self.dialog.FindFocus() == self.dialog.searchField
+        speak.assert_called_once_with(_("Search history cleared"), interrupt=True)
+
+    @patch("gui.search_dialog.wx.MessageBox", return_value=wx.NO)
+    def test_clear_history_cancelled(self, message_box):
+        self.dialog.historyList.Set(["saved"])
+        self.dialog.onClearHistory()
+        self.history.clear.assert_not_called()
+        assert self.dialog.historyList.GetCount() == 1
+
+    @patch("gui.search_dialog.speak")
+    @patch("gui.search_dialog.wx.MessageBox", return_value=wx.YES)
+    def test_clear_history_failure(self, message_box, speak):
+        self.dialog.historyList.Set(["saved"])
+        self.history.clear.return_value = None
+        self.dialog.onClearHistory()
+        assert self.dialog.historyList.GetCount() == 1
+        speak.assert_called_once_with(
+            _("Unable to clear search history"), interrupt=True
+        )
+
+    def test_empty_search_and_cancel_do_not_save(self):
+        self.dialog.onSearch()
+        assert not self.dialog._closing
+        self.dialog.searchField.SetValue("not submitted")
+        self.dialog.onClose()
+        self.history.add.assert_not_called()
+        assert self.dialog.query is None
+
+    @patch("gui.search_dialog.speak")
+    def test_save_failure_still_searches(self, speak):
+        self.history.add.return_value = None
+        self.dialog.searchField.SetValue("  query  ")
+        self.dialog.onSearch()
+        assert self.dialog.query == "query"
+        self.history.add.assert_called_once_with("query")
+        speak.assert_called_once_with(
+            _("Unable to save search history"), interrupt=True
+        )
 
     def test_initial_structure_and_accessibility(self):
         assert hasattr(self.dialog, "searchField")
