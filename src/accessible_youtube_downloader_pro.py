@@ -47,6 +47,8 @@ from youtube_browser.browser import YoutubeBrowser
 from youtube_browser.scraper import Scraper
 from youtube_browser.search_handler import SimpleResult
 
+utils.configure_py_yt_subprocess()
+
 
 def is_debug_invocation(argv=None):
     if argv is None:

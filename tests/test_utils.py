@@ -1,3 +1,9 @@
+import subprocess
+from types import SimpleNamespace
+from unittest.mock import Mock
+
+import pytest
+
 import utils
 from utils import (
     extract_launch_youtube_url,
@@ -9,6 +15,59 @@ from utils import (
     time_to_seconds,
     youtube_regexp,
 )
+
+
+def test_py_yt_subprocess_hides_console_and_preserves_options(monkeypatch):
+    check_output = Mock(return_value=b"output")
+    original = SimpleNamespace(
+        check_output=check_output,
+        PIPE=subprocess.PIPE,
+        CalledProcessError=subprocess.CalledProcessError,
+    )
+    module = SimpleNamespace(subprocess=original)
+    importer = Mock(return_value=module)
+    monkeypatch.setattr(utils.sys, "platform", "win32")
+    monkeypatch.setattr(subprocess, "CREATE_NO_WINDOW", 0x08000000, raising=False)
+    monkeypatch.setattr(utils.importlib, "import_module", importer)
+    global_check_output = subprocess.check_output
+
+    utils.configure_py_yt_subprocess()
+    wrapper = module.subprocess
+    utils.configure_py_yt_subprocess()
+
+    assert module.subprocess is wrapper
+    assert subprocess.check_output is global_check_output
+    assert wrapper.PIPE is original.PIPE
+    assert wrapper.CalledProcessError is original.CalledProcessError
+    command = ("node.exe", "script.js", "argument")
+    assert wrapper.check_output(command, stderr=wrapper.PIPE) == b"output"
+    check_output.assert_called_with(
+        command, stderr=subprocess.PIPE, creationflags=0x08000000
+    )
+    wrapper.check_output(command, creationflags=0x200, timeout=3)
+    check_output.assert_called_with(command, creationflags=0x08000200, timeout=3)
+    importer.assert_called_with("py_yt.botGuard.bot_guard")
+
+
+def test_py_yt_subprocess_preserves_errors(monkeypatch):
+    error = subprocess.CalledProcessError(1, ["node.exe"], stderr=b"failure")
+    original = SimpleNamespace(check_output=Mock(side_effect=error))
+    monkeypatch.setattr(subprocess, "CREATE_NO_WINDOW", 0x08000000, raising=False)
+
+    with pytest.raises(subprocess.CalledProcessError) as exc:
+        utils._WindowlessSubprocess(original).check_output(["node.exe"])
+
+    assert exc.value is error
+
+
+def test_py_yt_subprocess_unchanged_outside_windows(monkeypatch):
+    importer = Mock()
+    monkeypatch.setattr(utils.sys, "platform", "linux")
+    monkeypatch.setattr(utils.importlib, "import_module", importer)
+
+    utils.configure_py_yt_subprocess()
+
+    importer.assert_not_called()
 
 
 def test_time_formatting():

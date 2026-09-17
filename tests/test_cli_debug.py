@@ -5,6 +5,18 @@ import accessible_youtube_downloader_pro as app_main
 from accessible_youtube_downloader_pro import get_launch_url, is_debug_invocation
 
 
+def test_py_yt_console_suppression_installed_at_startup():
+    import subprocess
+
+    from py_yt.botGuard import bot_guard
+
+    if app_main.sys.platform == "win32":
+        assert isinstance(bot_guard.subprocess, app_main.utils._WindowlessSubprocess)
+        assert bot_guard.subprocess._module is subprocess
+    else:
+        assert bot_guard.subprocess is subprocess
+
+
 def test_is_debug_invocation_flags():
     assert is_debug_invocation(["HexPlayer.exe", "-d"]) is True
     assert is_debug_invocation(["HexPlayer.exe", "--debug"]) is True
