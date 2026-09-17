@@ -84,6 +84,15 @@ def prepare_tables():
     con.execute(history_query)
     con.execute(
         """
+        CREATE TABLE IF NOT EXISTS search_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            query TEXT NOT NULL,
+            query_key TEXT NOT NULL UNIQUE
+        )
+        """
+    )
+    con.execute(
+        """
         CREATE INDEX IF NOT EXISTS idx_watch_history_last_played
         ON watch_history (last_played DESC)
         """
@@ -183,6 +192,49 @@ class Continue:
     def remove_continue(cls, url):
         con.execute("DELETE FROM continue WHERE url = ?", (url,))
         con.commit()
+
+
+class SearchHistory:
+    @classmethod
+    @is_valid
+    def add(cls, query):
+        query = query.strip()
+        if not query:
+            return False
+        with con:
+            con.execute(
+                """
+                INSERT INTO search_history (query, query_key)
+                VALUES (?, ?)
+                ON CONFLICT(query_key) DO UPDATE SET
+                    id = excluded.id,
+                    query = excluded.query
+                """,
+                (query, query.casefold()),
+            )
+            con.execute(
+                """
+                DELETE FROM search_history WHERE id NOT IN (
+                    SELECT id FROM search_history ORDER BY id DESC LIMIT 50
+                )
+                """
+            )
+        return True
+
+    @classmethod
+    @is_valid
+    def get_recent(cls):
+        rows = con.execute(
+            "SELECT query FROM search_history ORDER BY id DESC LIMIT 50"
+        ).fetchall()
+        return [row["query"] for row in rows]
+
+    @classmethod
+    @is_valid
+    def clear(cls):
+        with con:
+            con.execute("DELETE FROM search_history")
+        return True
 
 
 class WatchHistory:

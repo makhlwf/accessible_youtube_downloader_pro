@@ -8,10 +8,8 @@ import database
 
 @pytest.fixture
 def test_db():
-    # Setup an in-memory database for testing
     conn = sqlite3.connect(":memory:")
     conn.row_factory = sqlite3.Row
-    # Replace the connection in the database module
     with patch("database.con", conn):
         database.prepare_tables()
         yield conn
@@ -95,3 +93,59 @@ def test_watch_history_add_update_and_page(test_db):
         assert page[0]["author"] == "First Channel"
         assert page[0]["watched_seconds"] == 10
         assert page[0]["url"] == url
+
+
+def test_search_history_persistence_and_unicode(tmp_path):
+    path = tmp_path / "history.db"
+    for attempt in range(2):
+        conn = sqlite3.connect(path)
+        conn.row_factory = sqlite3.Row
+        try:
+            with patch("database.con", conn):
+                database.prepare_tables()
+                if attempt == 0:
+                    database.SearchHistory.add("موسيقى")
+                    database.SearchHistory.add("Straße")
+                    database.SearchHistory.add("STRASSE")
+                    database.SearchHistory.add("it's a query")
+                assert database.SearchHistory.get_recent() == [
+                    "it's a query",
+                    "STRASSE",
+                    "موسيقى",
+                ]
+        finally:
+            conn.close()
+
+
+def test_search_history_clear(test_db):
+    database.SearchHistory.add("query")
+    assert database.SearchHistory.clear() is True
+    assert database.SearchHistory.get_recent() == []
+
+
+def test_search_history_unavailable():
+    with patch("database.con", None):
+        assert database.SearchHistory.get_recent() is None
+        assert database.SearchHistory.add("query") is None
+        assert database.SearchHistory.clear() is None
+
+
+def test_search_history_add(test_db):
+    assert database.SearchHistory.add("  cats  ") is True
+    database.SearchHistory.add("dogs")
+    database.SearchHistory.add("CATS")
+    assert database.SearchHistory.get_recent() == ["CATS", "dogs"]
+    assert database.SearchHistory.add(" \t\n") is False
+    assert database.SearchHistory.get_recent() == ["CATS", "dogs"]
+
+
+def test_search_history_limit_and_recency(test_db):
+    for index in range(55):
+        assert database.SearchHistory.add(f"query {index}") is True
+    assert database.SearchHistory.get_recent() == [
+        f"query {index}" for index in range(54, 4, -1)
+    ]
+    database.SearchHistory.add("query 5")
+    assert database.SearchHistory.get_recent() == ["query 5"] + [
+        f"query {index}" for index in range(54, 5, -1)
+    ]
