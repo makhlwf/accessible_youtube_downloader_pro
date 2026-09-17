@@ -1,4 +1,5 @@
 # -*- mode: python ; coding: utf-8 -*-
+import glob
 import os
 import sys
 from PyInstaller.utils.hooks import collect_submodules, collect_all
@@ -280,6 +281,12 @@ a_main = Analysis(
 )
 if sys.platform == "linux":
     a_main.exclude_system_libraries()
+    # wxPython links libjpeg.so.8, which modern distros (e.g. Fedora) do
+    # not provide, so it must be bundled explicitly.
+    for _libjpeg in glob.glob("/usr/lib*/libjpeg.so.8*") + glob.glob(
+        "/lib*/libjpeg.so.8*"
+    ):
+        a_main.binaries.append((_libjpeg, _libjpeg, "BINARY"))
 pyz_main = PYZ(a_main.pure)
 
 exe_main = EXE(
@@ -318,6 +325,10 @@ a_host = Analysis(
 )
 if sys.platform == "linux":
     a_host.exclude_system_libraries()
+    for _libjpeg in glob.glob("/usr/lib*/libjpeg.so.8*") + glob.glob(
+        "/lib*/libjpeg.so.8*"
+    ):
+        a_host.binaries.append((_libjpeg, _libjpeg, "BINARY"))
 pyz_host = PYZ(a_host.pure)
 
 exe_host = EXE(
