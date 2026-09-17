@@ -30,11 +30,11 @@ def linux_integration(monkeypatch, tmp_path):
         association.paths, "get_app_path", lambda: str(tmp_path / "app space")
     )
     monkeypatch.setattr(association, "_get_winreg", Mock(side_effect=AssertionError))
-    monkeypatch.setattr(
-        association.subprocess,
-        "run",
-        Mock(return_value=SimpleNamespace(stdout="hexplayer.desktop\n")),
+    local_subprocess = SimpleNamespace(**vars(association.subprocess))
+    local_subprocess.run = Mock(
+        return_value=SimpleNamespace(stdout="hexplayer.desktop\n")
     )
+    monkeypatch.setattr(association, "subprocess", local_subprocess)
     return tmp_path
 
 
