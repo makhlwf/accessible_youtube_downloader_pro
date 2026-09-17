@@ -32,31 +32,52 @@ jobs:
         if: runner.os == 'Linux'
         run: sudo bash packaging/linux/install-deps.sh
       - uses: astral-sh/setup-uv@v10.1.0
+        id: setup-uv
         with:
           enable-cache: true
+          save-cache: false
+          cache-local-path: ${{ runner.temp }}/setup-uv-cache
           cache-dependency-glob: |
             uv.lock
             .python-version
             packaging/linux/install-deps.sh
       - run: uv python install
       - run: uv sync --locked --no-dev --group build
+      - name: Save compiled dependency cache before build and validation
+        if: steps.setup-uv.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ runner.temp }}/setup-uv-cache
+          key: ${{ steps.setup-uv.outputs.cache-key }}
       - name: Build Windows application
         if: runner.os == 'Windows'
         run: uv run --no-sync python scripts/build.py
       - name: Build Linux application and packages
         if: runner.os == 'Linux'
         run: xvfb-run -a uv run --no-sync python scripts/build.py
-      - name: Check frozen GTK startup and system libmpv
-        if: runner.os == 'Linux'
-        run: timeout 45s dbus-run-session -- xvfb-run -a dist/HexPlayer/HexPlayer --packaging-smoke-test
-      - name: Check Linux packages and native host
+      - name: Check Linux package metadata and checksums
         if: runner.os == 'Linux'
         run: |
+          set -euo pipefail
           desktop-file-validate packaging/linux/hexplayer.desktop
           dpkg-deb --info dist/*.deb
-          uv run --no-sync python -c "import json, struct, subprocess; data = json.dumps({'type': 'packaging_smoke_test'}).encode(); p = subprocess.run(['dist/HexPlayer/HexPlayerNativeHost'], input=struct.pack('<I', len(data)) + data, capture_output=True, timeout=30); assert p.returncode == 1, p.stderr; size = struct.unpack('<I', p.stdout[:4])[0]; assert size == len(p.stdout[4:]); assert json.loads(p.stdout[4:]) == {'ok': False, 'error': 'Unsupported message type'}"
-          cd dist
-          sha256sum --check ./*.sha256
+          (cd dist && sha256sum --check ./*.sha256)
+      - name: Install Ubuntu deb through apt
+        if: runner.os == 'Linux'
+        timeout-minutes: 10
+        run: |
+          set -euo pipefail
+          sudo apt-get install -y --no-install-recommends ./dist/*.deb
+          test "$(dpkg-query -W -f='${Status}' hexplayer)" = 'install ok installed'
+          desktop-file-validate /usr/share/applications/hexplayer.desktop
+      - name: Smoke installed Ubuntu executable and native host as normal user
+        if: runner.os == 'Linux'
+        timeout-minutes: 3
+        run: python3 packaging/linux/validate_package.py --installed
+      - name: Smoke Ubuntu tarball from path with spaces as normal user
+        if: runner.os == 'Linux'
+        timeout-minutes: 3
+        run: python3 packaging/linux/validate_package.py --tarball dist/*.tar.gz
       - name: Install Inno Setup
         if: runner.os == 'Windows'
         run: choco install innosetup -y
@@ -80,3 +101,30 @@ jobs:
             dist/*.deb
             dist/*.sha256
           if-no-files-found: error
+
+  fedora-smoke:
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.source_sha }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: linux-x86_64
+          path: artifacts/linux
+      - name: Verify downloaded Linux package checksums
+        working-directory: artifacts/linux
+        run: sha256sum --check ./*.sha256
+      - name: Smoke tarball and native host in clean Fedora 43 runtime
+        timeout-minutes: 17
+        run: |
+          set -euo pipefail
+          trap 'docker rm -f hexplayer-fedora-smoke >/dev/null 2>&1 || true' EXIT
+          timeout --kill-after=15s 900s docker run --rm --name hexplayer-fedora-smoke \
+            --platform linux/amd64 \
+            --mount "type=bind,source=$GITHUB_WORKSPACE/artifacts/linux,target=/artifacts,readonly" \
+            --mount "type=bind,source=$GITHUB_WORKSPACE/packaging/linux,target=/validation,readonly" \
+            registry.fedoraproject.org/fedora:43 \
+            bash /validation/validate_fedora.sh
