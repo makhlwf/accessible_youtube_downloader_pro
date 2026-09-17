@@ -248,6 +248,8 @@ def test_check_for_updates_linux_without_platforms_metadata_uses_releases_fallba
 
 
 def test_check_for_updates_uses_update_dialog_title_keyword(monkeypatch):
+    monkeypatch.setattr(utils.sys, "platform", "win32")
+
     class Response:
         status_code = 200
 

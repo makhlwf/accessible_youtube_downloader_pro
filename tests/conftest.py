@@ -1,5 +1,4 @@
 import builtins
-import ctypes
 import os
 import sys
 from unittest.mock import MagicMock
@@ -375,9 +374,6 @@ mock_newevent = MagicMock()
 mock_newevent.NewEvent.return_value = (MagicMock(), MagicMock())
 sys.modules["wx.lib.newevent"] = mock_newevent
 
-if not hasattr(ctypes, "windll"):
-    ctypes.windll = MagicMock(name="windll")
-
 
 # Mock other problematic modules if necessary
 class MockType(type):
@@ -430,6 +426,26 @@ def reset_gettext():
     builtins._ = lambda x: x
     yield
     builtins._ = lambda x: x
+
+
+@pytest.fixture(autouse=True)
+def mock_speech_backend(monkeypatch, request):
+    if (
+        "live_speech_backend" in request.fixturenames
+        and os.environ.get("HEXPLAYER_TEST_LIVE_SPEECH") == "1"
+    ):
+        return None
+
+    import speech_client
+
+    backend = MagicMock(name="speech_backend", speaking=False)
+    prism = MagicMock(name="prism")
+    prism.Context.return_value.acquire_best.return_value = backend
+    monkeypatch.setattr(speech_client, "prism", prism)
+    monkeypatch.setattr(speech_client, "_context", None)
+    monkeypatch.setattr(speech_client, "_backend", backend)
+    monkeypatch.setattr(speech_client, "_initialized", True)
+    return backend
 
 
 @pytest.fixture(autouse=True)

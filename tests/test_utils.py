@@ -1,4 +1,7 @@
+import ctypes
+import os
 import subprocess
+from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import Mock
 
@@ -347,16 +350,24 @@ def test_get_windows_region():
     assert region.isalpha()
 
 
-def test_get_windows_region_mocked(monkeypatch):
-    class FakeBuf:
-        value = "de"
-
-    monkeypatch.setattr(utils.os, "name", "nt")
+def test_get_windows_region_mocked(monkeypatch, tmp_path):
+    host_name = os.name
+    local_os = SimpleNamespace(**vars(os))
+    local_os.name = "nt"
+    get_geo_name = Mock(side_effect=lambda buf, size: setattr(buf, "value", "DE") or 2)
+    monkeypatch.setattr(utils, "os", local_os)
     monkeypatch.setattr(
-        "ctypes.windll.kernel32.GetUserDefaultGeoName",
-        lambda buf, size: setattr(buf, "value", "DE") or 2,
+        ctypes,
+        "windll",
+        SimpleNamespace(kernel32=SimpleNamespace(GetUserDefaultGeoName=get_geo_name)),
+        raising=False,
     )
+
+    assert os.name == host_name
+    assert Path(str(tmp_path)) == tmp_path
     assert utils.get_windows_region() == "DE"
+    get_geo_name.assert_called_once()
+    assert get_geo_name.call_args.args[1] == 10
 
 
 def test_update_watch_history_uses_deno_service_when_cookies_present(
