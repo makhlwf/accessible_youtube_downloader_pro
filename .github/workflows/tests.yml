@@ -2,18 +2,39 @@ name: Run Unit Tests
 
 on: [push, pull_request]
 
+permissions:
+  contents: read
+
 jobs:
   test:
-    runs-on: windows-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-24.04]
+    runs-on: ${{ matrix.os }}
+    env:
+      UV_CONCURRENT_BUILDS: '1'
     steps:
-    - uses: actions/checkout@v7
-    - name: Install uv
-      uses: astral-sh/setup-uv@v10.1.0
-      with:
-        enable-cache: true
-    - name: Set up Python
-      run: uv python install
-    - name: Install dependencies
-      run: uv sync --locked
-    - name: Run tests
-      run: uv run pytest tests/
+      - uses: actions/checkout@v7
+      - name: Install Linux compile and runtime dependencies
+        if: runner.os == 'Linux'
+        run: sudo bash packaging/linux/install-deps.sh
+      - uses: astral-sh/setup-uv@v10.1.0
+        with:
+          enable-cache: true
+          cache-dependency-glob: |
+            uv.lock
+            .python-version
+            packaging/linux/install-deps.sh
+      - run: uv python install
+      - run: uv sync --locked
+      - name: Run Windows tests
+        if: runner.os == 'Windows'
+        run: uv run --no-sync pytest tests/
+      - name: Check real GTK and Prism imports
+        if: runner.os == 'Linux'
+        run: xvfb-run -a uv run --no-sync python -c "import wx, prism; app = wx.App(False); print(wx.version())"
+      - name: Run Linux tests
+        if: runner.os == 'Linux'
+        run: dbus-run-session -- xvfb-run -a uv run --no-sync pytest tests/

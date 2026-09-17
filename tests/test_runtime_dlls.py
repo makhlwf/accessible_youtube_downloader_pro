@@ -1,7 +1,45 @@
 import os
 import sys
+from unittest.mock import MagicMock
+
+import pytest
 
 import runtime_dlls
+from media_player import mpv_backend
+
+
+@pytest.mark.parametrize("library", ["libmpv.so.2", "libmpv.so.1", None])
+def test_linux_mpv_uses_system_library_without_dll_extraction(monkeypatch, library):
+    monkeypatch.setattr(sys, "platform", "linux")
+    monkeypatch.setattr(mpv_backend, "_mpv_lib", None)
+    discover = MagicMock(return_value=library)
+    load = MagicMock(return_value=MagicMock())
+    extract = MagicMock(side_effect=AssertionError("Windows extraction on Linux"))
+    configure = MagicMock(side_effect=AssertionError("DLL search on Linux"))
+    monkeypatch.setattr(mpv_backend, "find_library", discover)
+    monkeypatch.setattr(mpv_backend.ctypes, "CDLL", load)
+    monkeypatch.setattr(mpv_backend, "_mpv_candidates", extract)
+    monkeypatch.setattr(mpv_backend, "configure_dll_search_path", configure)
+    assert mpv_backend._load_mpv() is load.return_value
+    discover.assert_called_once_with("mpv")
+    load.assert_called_once_with(library or "libmpv.so.2")
+    extract.assert_not_called()
+    configure.assert_not_called()
+
+
+def test_windows_mpv_keeps_bundled_dll_loading(tmp_path, monkeypatch):
+    dll = tmp_path / "libmpv-2.dll"
+    dll.write_bytes(b"MZ")
+    monkeypatch.setattr(sys, "platform", "win32")
+    monkeypatch.setattr(mpv_backend, "_mpv_lib", None)
+    monkeypatch.setattr(mpv_backend, "_mpv_candidates", lambda: [dll])
+    configure = MagicMock()
+    load = MagicMock(return_value=MagicMock())
+    monkeypatch.setattr(mpv_backend.ctypes, "CDLL", load)
+    monkeypatch.setattr(mpv_backend, "configure_dll_search_path", configure)
+    mpv_backend._load_mpv()
+    configure.assert_called_once_with([dll.parent])
+    load.assert_called_once_with(str(dll))
 
 
 def test_runtime_roots_include_frozen_locations(tmp_path, monkeypatch):

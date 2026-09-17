@@ -2,70 +2,13 @@ name: Beta Release
 
 on:
   workflow_dispatch:
-    branches:
-      - '**'
+
+permissions:
+  contents: write
 
 jobs:
   beta-release:
-    name: Build and Release Beta
-    runs-on: windows-latest
-    permissions:
-      contents: write
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v7
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v10.1.0
-        with:
-          enable-cache: true
-
-      - name: Set up Python
-        run: uv python install
-
-      - name: Install dependencies
-        run: uv sync --locked --no-dev --group build
-
-      - name: Build Application
-        run: uv run --no-dev --group build python scripts/build.py
-
-      - name: Install Inno Setup
-        run: choco install innosetup -y
-
-      - name: Compile Installer
-        run: iscc "packaging\windows\inno.iss"
-
-      - name: Delete existing beta release
-        shell: pwsh
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          # Try to delete the release and tag 'beta'. Ignore errors if it doesn't exist.
-          gh release delete beta --cleanup-tag -y 2>$null || Write-Host "No existing beta release to delete."
-          exit 0
-
-      - name: Create Beta Release
-        shell: pwsh
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          COMMIT_MSG: ${{ github.event.head_commit.message }}
-        run: |
-          $commitTitle = $env:COMMIT_MSG.Split("`n")[0]
-          
-          # Use a temp file for notes to safely handle special chars
-          $env:COMMIT_MSG | Set-Content release_notes.txt
-          
-          # packaging/windows/inno.iss writes to HexPlayer/HexPlayer.exe.
-          $installerPath = "HexPlayer\HexPlayer.exe"
-          
-          if (-not (Test-Path $installerPath)) {
-            Write-Error "Installer not found at $installerPath"
-            exit 1
-          }
-
-          gh release create beta $installerPath `
-            --title "Beta: $commitTitle" `
-            --notes-file release_notes.txt `
-            --prerelease `
-            --target "${{ github.sha }}"
+    uses: ./.github/workflows/release.yml
+    secrets: inherit
+    with:
+      release_type: beta

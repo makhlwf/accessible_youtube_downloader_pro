@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="HexPlayer is an accessible Windows app for searching, browsing, playing, and downloading YouTube content with a keyboard-first interface.">
+    <meta name="description" content="HexPlayer is a keyboard-first YouTube client for Windows and Linux. Learn about Ubuntu 24.04 x86_64 packages and running from source.">
     <meta name="theme-color" content="#f7f4ec">
-    <title>HexPlayer - Accessible YouTube Client for Windows</title>
+    <title>HexPlayer - Accessible YouTube Client for Windows and Linux</title>
     <style>
         :root {
             color-scheme: light;
@@ -1048,7 +1048,8 @@
             </a>
             <ul class="nav-links">
                 <li><a href="#features">Features</a></li>
-                <li><a href="#download">Download</a></li>
+                <li><a href="#download">Windows download</a></li>
+                <li><a href="#linux">Linux setup</a></li>
                 <li><a href="#shortcuts">Shortcuts</a></li>
                 <li><a href="#privacy">Privacy</a></li>
             </ul>
@@ -1059,9 +1060,9 @@
         <section class="hero" aria-labelledby="hero-title">
             <div class="hero-grid">
                 <div>
-                    <p class="eyebrow">Accessible YouTube for Windows</p>
+                    <p class="eyebrow">YouTube for Windows and Linux</p>
                     <h1 id="hero-title">HexPlayer</h1>
-                    <p class="lead">Search, browse, play, and download YouTube content in a fast Windows app built around keyboard access and screen-reader clarity.</p>
+                    <p class="lead">Search, browse, play, and download YouTube content in a desktop app built around keyboard access and screen-reader clarity. Windows installers and native Ubuntu 24.04 setup are described below.</p>
                     <div class="hero-actions" aria-label="Primary actions">
                         <a id="hero-download" class="button" href="https://github.com/makhlwf/accessible_youtube_downloader_pro/releases/download/v3.0.0/HexPlayer.exe" aria-label="Download HexPlayer stable version 3.0.0 for Windows">
                             Download Stable <span id="hero-version">v3.0.0</span>
@@ -1150,7 +1151,7 @@
         <section id="features" aria-labelledby="features-title">
             <p class="section-kicker">What It Does</p>
             <h2 id="features-title">Built for the way keyboard users actually move</h2>
-            <p class="section-intro">HexPlayer is the continuation of Accessible YouTube Downloader Pro. It keeps YouTube search, playback, downloads, history, favorites, and browser handoff inside one Windows-native workflow.</p>
+            <p class="section-intro">HexPlayer is the continuation of Accessible YouTube Downloader Pro. It keeps YouTube search, playback, downloads, history, favorites, and browser handoff inside one native desktop workflow.</p>
 
             <div class="feature-grid">
                 <article class="feature-card">
@@ -1220,7 +1221,7 @@
                 <div>
                     <p class="section-kicker">Download</p>
                     <h2 id="download-title">Install HexPlayer for Windows</h2>
-                    <p class="section-intro">Use the stable build for normal installation. Windows 10 or Windows 11 on a modern 64-bit system is recommended.</p>
+                    <p class="section-intro">Use the stable build for normal installation. Windows 10 or Windows 11 on a modern 64-bit system is recommended. Linux setup is covered in its own section below.</p>
                 </div>
                 <div class="download-panel">
                     <h3>Latest stable release</h3>
@@ -1240,6 +1241,20 @@
                     </div>
                 </div>
             </div>
+        </section>
+
+        <section id="linux" aria-labelledby="linux-title">
+            <h2 id="linux-title">Linux installation and supported systems</h2>
+            <p>Ubuntu 24.04 amd64, also called x86_64, is the only Linux release target. Linux packages are built natively against glibc 2.39, not as universal Linux binaries. Older glibc systems and other distributions are not supported package targets. macOS is unsupported, and no Linux ARM package is provided or promised. Windows 10 and 11 x64 users can use the Windows download links above.</p>
+            <h3>Get Linux packages</h3>
+            <p>Linux assets are not available until a release containing them is published. Check the <a href="https://github.com/makhlwf/accessible_youtube_downloader_pro/releases">HexPlayer releases for Linux packages and checksums</a>. Look for <code>HexPlayer-VERSION-linux-amd64.deb</code> or <code>HexPlayer-VERSION-linux-x86_64.tar.gz</code>, plus its matching <code>.sha256</code> file. If they are absent, use the source setup below; the Windows executable cannot be used as a native Linux package.</p>
+            <h3>Install and run on Ubuntu 24.04</h3>
+            <p>Replace <code>VERSION</code> with the downloaded release version. From the download directory, verify the checksum with <code>sha256sum --check HexPlayer-VERSION-linux-amd64.deb.sha256</code>, then install with <code>sudo apt install ./HexPlayer-VERSION-linux-amd64.deb</code>. APT installs the declared runtime dependencies. Start HexPlayer from the desktop application menu or run <code>hexplayer</code> as your normal desktop user.</p>
+            <p>For the archive, install the system runtime dependencies first, verify its matching checksum, extract with <code>tar -xzf HexPlayer-VERSION-linux-x86_64.tar.gz</code>, then run <code>./HexPlayer/HexPlayer</code>. Keep the whole extracted directory together. The archive does not install dependencies or a desktop launcher. Follow the <a href="DEVELOPMENT.md#linux-release-installation">Linux package and archive installation instructions</a> for the dependency commands.</p>
+            <p>A graphical desktop, system libmpv and FFmpeg, desktop audio, and Speech Dispatcher are required for the intended workflow. Enable Orca in your desktop accessibility settings for screen-reader use. Complete startup prompts for Deno, yt-dlp, and JavaScript dependencies with network access. Frozen startup smoke checks are not full accessibility or real audio/video playback verification.</p>
+            <h3>Run Linux from source</h3>
+            <p>If no Linux release assets are published yet, follow the <a href="DEVELOPMENT.md#native-linux-source-and-development-setup">Ubuntu source setup and run commands</a>. Install the repository's GTK and system dependencies, install uv and the selected Python version, set <code>UV_CONCURRENT_BUILDS=1</code>, and run <code>uv sync --locked</code>. Launch with <code>uv run --no-sync python src/accessible_youtube_downloader_pro.py</code> from the repository root. wxPython may need a lengthy source compilation.</p>
+            <p>Contributors can use the <a href="CONTRIBUTING.md#native-linux-build">native Linux build instructions</a> and <a href="CONTRIBUTING.md#quality-assurance--pre-commit-checklist">Linux tests and preflight checklist</a>.</p>
         </section>
 
         <section id="shortcuts" aria-labelledby="shortcuts-title">

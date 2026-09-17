@@ -517,7 +517,8 @@ class HomeScreen(wx.Frame):
             except Exception:
                 pass
         try:
-            os.startfile(paths.log_path)
+            if not wx.LaunchDefaultApplication(paths.log_path):
+                utils.show_error(_("Unable to open the log file."), parent=self)
         except Exception as e:
             logger.error(f"Failed to open log file: {e}")
 
@@ -776,10 +777,10 @@ class HomeScreen(wx.Frame):
         if not os.path.isdir(extension_path):
             utils.show_error(_("تعذر العثور على مجلد إضافة المتصفح"), parent=self)
             return
-        if sys.platform == "win32":
-            os.startfile(extension_path)
-        else:
-            subprocess.call(["xdg-open", extension_path])
+        if not wx.LaunchDefaultApplication(extension_path):
+            utils.show_error(
+                _("Unable to open the browser extension folder."), parent=self
+            )
 
     def onPlay(self, event):
         linkDlg = LinkDlg(self)
@@ -924,10 +925,8 @@ class HomeScreen(wx.Frame):
         path = settings_handler.config_get("path")
         if not os.path.exists(path):
             os.makedirs(path, exist_ok=True)
-        if sys.platform == "win32":
-            os.startfile(path)
-        else:
-            subprocess.call(["xdg-open", path])
+        if not wx.LaunchDefaultApplication(path):
+            utils.show_error(_("Unable to open the download folder."), parent=self)
 
     def onHook(self, event):
         if event.KeyCode == wx.WXK_F1:

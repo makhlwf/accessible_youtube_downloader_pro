@@ -1,0 +1,12 @@
+Package: hexplayer
+Version: @VERSION@
+Architecture: @ARCH@
+Maintainer: makhlwf
+Section: video
+Priority: optional
+Installed-Size: @INSTALLED_SIZE@
+Depends: libc6 (>= 2.39), libstdc++6, libgtk-3-0t64, libmpv2, ffmpeg, libnotify4, libsecret-1-0, libwebkit2gtk-4.1-0, libgl1, libglu1-mesa, libsm6, libxtst6, libspeechd2, speech-dispatcher, xdg-utils
+Recommends: espeak-ng, xclip, wl-clipboard
+Description: Accessible YouTube browser, player, and downloader
+ Native Linux desktop client with a Chromium native messaging host.
+ Requires a graphical desktop and system libmpv and FFmpeg.

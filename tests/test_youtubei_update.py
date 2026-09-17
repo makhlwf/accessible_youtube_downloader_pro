@@ -2,8 +2,52 @@ import json
 from types import SimpleNamespace
 from unittest.mock import Mock
 
+import pytest
+
 import paths
 import utils
+
+
+@pytest.mark.parametrize("system", ["linux", "win32"])
+def test_deno_service_platform_runtime(monkeypatch, system):
+    import deno_service
+
+    monkeypatch.setattr(deno_service.sys, "platform", system)
+    monkeypatch.setattr(paths, "get_deno_path", lambda: "/runtime/deno", raising=False)
+    monkeypatch.setattr(
+        deno_service.subprocess, "CREATE_NO_WINDOW", 0x08000000, raising=False
+    )
+    process = Mock()
+    popen = Mock(return_value=process)
+    monkeypatch.setattr(deno_service.subprocess, "Popen", popen)
+    monkeypatch.setattr(deno_service.threading, "Thread", Mock())
+    service = deno_service.DenoService()
+    service._ensure_process()
+    assert popen.call_args.args[0][0] == "/runtime/deno"
+    assert popen.call_args.kwargs["creationflags"] == (
+        0 if system == "linux" else 0x08000000
+    )
+    service.stop()
+
+
+def test_deno_download_uses_writable_install_directory(tmp_path, monkeypatch):
+    import sys
+
+    install_dir = tmp_path / "runtime"
+    monkeypatch.setattr(utils.sys, "platform", "linux")
+    monkeypatch.setattr(utils.platform, "machine", lambda: "aarch64")
+    monkeypatch.setattr(
+        paths, "deno_install_path", str(install_dir / "deno"), raising=False
+    )
+    dialog = Mock()
+    monkeypatch.setitem(
+        sys.modules, "gui.update_dialog", SimpleNamespace(UpdateDialog=dialog)
+    )
+    utils.download_deno(parent=object())
+    assert install_dir.is_dir()
+    assert dialog.call_args.args[1].endswith("/deno-aarch64-unknown-linux-gnu.zip")
+    assert dialog.call_args.args[2] == str(install_dir / "deno.zip")
+    assert dialog.call_args.kwargs["is_zip"] is True
 
 
 def test_get_youtubei_version_prefers_lock_resolution(tmp_path, monkeypatch):
@@ -75,7 +119,7 @@ def test_install_youtubei_version_writes_runtime_config_and_refreshes_cache(
     deno_path.write_text("", encoding="utf-8")
 
     monkeypatch.setattr(paths, "js_runtime_path", str(runtime_dir))
-    monkeypatch.setattr(paths, "deno_path", str(deno_path))
+    monkeypatch.setattr(paths, "get_deno_path", lambda: str(deno_path), raising=False)
     monkeypatch.setattr(paths, "main_path", str(tmp_path))
     monkeypatch.setattr(
         paths, "get_js_runtime_service_script", lambda: str(service_script)

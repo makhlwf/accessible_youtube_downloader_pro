@@ -3,19 +3,26 @@ import shutil
 
 import pytest
 
-import paths
-import utils
-from pot_provider_service import pot_service
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.skipif(
+        os.environ.get("HEXPLAYER_TEST_LIVE_POT") != "1",
+        reason="Set HEXPLAYER_TEST_LIVE_POT=1 to run the live network/POT test",
+    ),
+]
 
 
 def _find_test_binaries():
+    import paths
+
+    binary_name = os.path.basename(paths.pot_provider_exe)
     # Check explicit environment variable
     env_dir = os.environ.get("POT_TEST_DIR")
-    if env_dir and os.path.isfile(os.path.join(env_dir, "bgutil-pot.exe")):
+    if env_dir and os.path.isfile(os.path.join(env_dir, binary_name)):
         plugin_path = os.path.join(env_dir, "plugin", "yt_dlp_plugins")
         if not os.path.isdir(plugin_path):
             plugin_path = os.path.join(env_dir, "yt_dlp_plugins")
-        return os.path.join(env_dir, "bgutil-pot.exe"), plugin_path
+        return os.path.join(env_dir, binary_name), plugin_path
 
     # Check installed in appdata
     if os.path.isfile(paths.pot_provider_exe) and os.path.isdir(
@@ -28,27 +35,34 @@ def _find_test_binaries():
     return None, None
 
 
-SRC_EXE, SRC_PLUGINS = _find_test_binaries()
-
-
-@pytest.mark.skipif(
-    SRC_EXE is None or not os.path.exists(SRC_EXE),
-    reason="bgutil-pot binary not found via POT_TEST_DIR or AppData",
-)
 def test_e2e_pot_provider_lifecycle_and_live_ytdlp(tmp_path, monkeypatch):
+    import paths
+    import utils
+    from pot_provider_service import PotProviderService
+
+    src_exe, src_plugins = _find_test_binaries()
+    if not src_exe or not os.path.isfile(src_exe):
+        pytest.skip("Native bgutil-pot binary not found via POT_TEST_DIR or app data")
+    if not src_plugins or not os.path.isdir(src_plugins):
+        pytest.skip("yt_dlp_plugins not found alongside the POT binary")
+    if os.name != "nt" and not os.access(src_exe, os.X_OK):
+        pytest.skip("Native bgutil-pot binary is not executable")
+
+    pot_service = PotProviderService()
+    monkeypatch.setattr(utils, "pot_service", pot_service)
+    monkeypatch.syspath_prepend(str(tmp_path))
     # Isolate test binary and plugins under tmp_path so user AppData is not modified
     test_dir = tmp_path / "pot_provider"
-    test_exe = test_dir / "bgutil-pot.exe"
+    test_exe = test_dir / os.path.basename(src_exe)
     test_plugins = test_dir / "plugins"
     test_vfile = test_dir / "version.json"
 
     test_dir.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(SRC_EXE, str(test_exe))
+    shutil.copy2(src_exe, str(test_exe))
 
     plugins_target = test_plugins / "yt_dlp_plugins"
-    if SRC_PLUGINS and os.path.exists(SRC_PLUGINS):
-        test_plugins.mkdir(parents=True, exist_ok=True)
-        shutil.copytree(SRC_PLUGINS, str(plugins_target), dirs_exist_ok=True)
+    test_plugins.mkdir(parents=True, exist_ok=True)
+    shutil.copytree(src_plugins, str(plugins_target), dirs_exist_ok=True)
 
     monkeypatch.setattr(paths, "pot_provider_dir", str(test_dir))
     monkeypatch.setattr(paths, "pot_provider_exe", str(test_exe))

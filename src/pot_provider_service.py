@@ -3,6 +3,7 @@ import hashlib
 import json
 import logging
 import os
+import platform
 import shutil
 import subprocess
 import sys
@@ -27,9 +28,26 @@ EXPECTED_URL_PREFIX = (
 PINNED_RELEASE_HASHES = {
     "v0.8.1": {
         "exe": "25d6b05c79176aa792454c3d1727922ca47e56cf11cb1e866615d751819b14a0",
+        "bgutil-pot-linux-x86_64": "e7c264a574fa2705b6e5dc62283a8a4e80130f27b9d7e9df44e6b09aa6151a87",
+        "bgutil-pot-linux-aarch64": "4f4a1f681dba45e695e1c14d314517da180a1fd374afd09d634fd80ef6d0284b",
         "zip": "99fd83b98fa93b193d6a3b69dc74410d76e7a2b889868c54d16121cac9060344",
     }
 }
+
+
+def _native_binary_asset():
+    if sys.platform == "win32":
+        return DOWNLOAD_EXE_NAME
+    if sys.platform == "linux":
+        arch = {
+            "x86_64": "x86_64",
+            "amd64": "x86_64",
+            "aarch64": "aarch64",
+            "arm64": "aarch64",
+        }.get(platform.machine().lower())
+        if arch:
+            return f"bgutil-pot-linux-{arch}"
+    return None
 
 
 def _sha256_file(file_path, chunk_size=1024 * 1024):
@@ -139,7 +157,9 @@ class PotProviderService:
                 ]
 
                 try:
-                    creationflags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+                    creationflags = (
+                        subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0
+                    )
                     self.process = subprocess.Popen(
                         cmd,
                         stdout=subprocess.PIPE,
@@ -229,7 +249,9 @@ class PotProviderService:
                     capture_output=True,
                     text=True,
                     encoding="utf-8",
-                    creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+                    creationflags=(
+                        subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0
+                    ),
                     timeout=5,
                     check=False,
                 )
@@ -272,12 +294,16 @@ class PotProviderService:
             logger.error(f"Failed to fetch POT release info: {e}")
             return False
 
+        binary_asset = _native_binary_asset()
+        if binary_asset is None:
+            logger.error("Unsupported native binary platform")
+            return False
         exe_url = None
         zip_url = None
         exe_size = None
         zip_size = None
         for asset in assets:
-            if asset.get("name") == DOWNLOAD_EXE_NAME:
+            if asset.get("name") == binary_asset:
                 exe_url = asset.get("browser_download_url")
                 exe_size = asset.get("size")
             elif asset.get("name") == DOWNLOAD_ZIP_NAME:
@@ -334,12 +360,11 @@ class PotProviderService:
             return False
 
         try:
+            expected_header = b"MZ" if sys.platform == "win32" else b"\x7fELF"
             with open(tmp_exe, "rb") as f:
-                header = f.read(2)
-            if header != b"MZ":
-                logger.error(
-                    f"Invalid executable format for {tmp_exe}: missing PE header"
-                )
+                header = f.read(len(expected_header))
+            if header != expected_header:
+                logger.error(f"Invalid native executable format for {tmp_exe}")
                 try:
                     os.remove(tmp_exe)
                 except OSError:
@@ -354,6 +379,15 @@ class PotProviderService:
             return False
 
         pinned_hashes = PINNED_RELEASE_HASHES.get(tag_name)
+        if sys.platform != "win32":
+            if not pinned_hashes or binary_asset not in pinned_hashes:
+                logger.error("No trusted digest for native binary asset")
+                try:
+                    os.remove(tmp_exe)
+                except OSError:
+                    pass
+                return False
+            pinned_hashes = {**pinned_hashes, "exe": pinned_hashes[binary_asset]}
         if pinned_hashes and "exe" in pinned_hashes:
             try:
                 actual_exe_hash = _sha256_file(tmp_exe)
@@ -489,6 +523,8 @@ class PotProviderService:
 
         swap_success = False
         try:
+            if sys.platform == "linux":
+                os.chmod(tmp_exe, 0o755)
             if os.path.exists(paths.pot_provider_exe):
                 os.replace(paths.pot_provider_exe, backup_exe)
             os.replace(tmp_exe, paths.pot_provider_exe)

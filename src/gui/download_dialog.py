@@ -1,8 +1,7 @@
-import os
-
 import pyperclip
 import wx
 
+import paths
 import utils
 from download_handler.downloader import start_media_download
 from language_handler import _
@@ -16,7 +15,7 @@ class DownloadDialog(wx.Frame):
         self.path = config_get("path")
         self.Centre()
         self.downloading = False
-        self.panel = wx.Panel(self)
+        self.panel = wx.Panel(self, style=wx.TAB_TRAVERSAL)
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer1 = wx.BoxSizer(wx.HORIZONTAL)
         sizer2 = wx.BoxSizer(wx.HORIZONTAL)
@@ -79,7 +78,7 @@ class DownloadDialog(wx.Frame):
     def onChangePath(self, event):
         path = wx.DirSelector(
             _("اختر مجلد التنزيل"),
-            os.path.join(os.getenv("userprofile"), "downloads"),
+            paths.get_default_download_dir(),
             parent=self,
         )  # folder select dialog
         if path == "":

@@ -28,16 +28,24 @@
 </p>
 
 <p align="center">
-  <b>HexPlayer</b> is an accessible Windows application for searching, browsing, watching, and downloading YouTube content with a keyboard-first interface.
+  <b>HexPlayer</b> is an accessible Windows and Linux application for searching, browsing, watching, and downloading YouTube content with a keyboard-first interface.
 </p>
 
 ---
 
 ## Overview
 
-HexPlayer is the current continuation of Accessible YouTube Downloader Pro. It is designed for blind and visually impaired Windows users who want a screen-reader friendly way to use YouTube without relying on the YouTube web interface. HexPlayer works with all Windows screen readers (NVDA, JAWS, Narrator, System Access, etc.) and Windows speech engines via [Prism](https://github.com/ethindp/prism).
+HexPlayer is the current continuation of Accessible YouTube Downloader Pro. It is designed for blind and visually impaired Windows and Linux users who want a screen-reader friendly way to use YouTube without relying on the YouTube web interface. On Windows, HexPlayer works with screen readers (NVDA, JAWS, Narrator, System Access, etc.) and Windows speech engines via [Prism](https://github.com/ethindp/prism).
 
-The current application version is **4.8.0**. The app is intended for modern 64-bit Windows systems, especially Windows 10 and Windows 11.
+The current application version is **4.8.0**.
+
+### Supported systems
+
+- **Windows:** Intended for modern 64-bit Windows systems, especially Windows 10 and Windows 11. Older Windows releases and 32-bit systems may not work reliably with the current Python runtime and external tools.
+- **Linux:** The reference platform is **Ubuntu 24.04, x86_64 (amd64), with glibc 2.39 or newer**, in a graphical desktop session. This is not a promise of compatibility with all Linux distributions; matching glibc alone is not sufficient without the required system libraries.
+- **Other platforms:** No macOS packages are provided, and no ARM release support is promised.
+
+Linux speech announcements use Prism with Speech Dispatcher. Orca is the screen reader for desktop navigation; install and enable it separately if needed. Automated checks do not establish screen-reader usability: focus, labels, keyboard navigation, and announcements still require manual Orca validation in a real Linux desktop session.
 
 ---
 
@@ -55,7 +63,7 @@ The current application version is **4.8.0**. The app is intended for modern 64-
 - **Clipboard detection:** Detect supported YouTube links at startup or continuously when background monitoring is enabled.
 - **Browser integration:** Use the included Chromium-compatible extension to send supported YouTube links to HexPlayer through Native Messaging, export YouTube cookies with 1 click, or use the `hexplayer://` fallback protocol.
 - **External tools management:** Check and update `yt-dlp`, Deno, and the YouTube.js/Innertube library from the app.
-- **Universal Screen Reader Support:** Powered by [Prism](https://github.com/ethindp/prism), speech announcements automatically work with all active Windows screen readers (NVDA, JAWS, Narrator, System Access, etc.) and TTS engines.
+- **Screen reader support:** Powered by [Prism](https://github.com/ethindp/prism), with Windows screen reader/TTS support and Linux Speech Dispatcher announcements. Linux Orca usability still needs manual desktop validation.
 - **Localization and themes:** Arabic and English interfaces, automatic language detection, and system, light, dark, and high contrast dark themes.
 
 ---
@@ -102,13 +110,13 @@ The full English and Arabic guides are available inside the app with `F1` and in
 
 ## Installation
 
-### From GitHub Releases
+### Windows: From GitHub Releases
 
 1. Download the latest installer from the [Releases page](https://github.com/makhlwf/accessible_youtube_downloader_pro/releases).
 2. Run `HexPlayer.exe`.
 3. Follow the installer prompts. The installer can optionally download required external components.
 
-### Using WinGet
+### Windows: Using WinGet
 
 Run the following command in Command Prompt or PowerShell:
 
@@ -116,7 +124,7 @@ Run the following command in Command Prompt or PowerShell:
 winget install HexPlayer
 ```
 
-### Silent Installation
+### Windows: Silent Installation
 
 The installer supports command-line arguments for automated deployments:
 
@@ -134,6 +142,39 @@ HexPlayer.exe /SILENT /NORESTART /DOWNLOADCOMPONENTS=1
 
 ---
 
+## Linux Installation
+
+Linux assets may not be present in the latest published release yet. Check the [Releases page](https://github.com/makhlwf/accessible_youtube_downloader_pro/releases); until a new release publishes Linux assets, use the source instructions below. Do not use the Windows installer on Linux.
+
+### Recommended: Debian package on Ubuntu 24.04
+
+Download the `linux-amd64.deb` asset and its matching `.sha256` file from the same release. In the download directory, replace `VERSION` below with the actual filename's version. Verify the checksum before installing; stop if verification fails.
+
+```bash
+sha256sum -c HexPlayer-VERSION-linux-amd64.deb.sha256
+sudo apt install ./HexPlayer-VERSION-linux-amd64.deb
+hexplayer
+```
+
+APT installs the package's system dependencies. Start HexPlayer from your application menu or with `hexplayer` as your normal desktop user, never with `sudo`.
+
+### Tarball alternative
+
+Download the `linux-x86_64.tar.gz` asset and its matching `.sha256` file from the same release. The tarball is not a dependency-free portable build. On the reference Ubuntu system, install the runtime dependencies listed in `packaging/linux/control.in`:
+
+```bash
+sudo apt update
+sudo apt install libc6 libstdc++6 libgtk-3-0t64 libmpv2 ffmpeg libnotify4 libsecret-1-0 libwebkit2gtk-4.1-0 libgl1 libglu1-mesa libsm6 libxtst6 libspeechd2 speech-dispatcher xdg-utils
+sudo apt install espeak-ng xclip wl-clipboard
+sha256sum -c HexPlayer-VERSION-linux-x86_64.tar.gz.sha256
+tar -xzf HexPlayer-VERSION-linux-x86_64.tar.gz
+./HexPlayer/HexPlayer
+```
+
+The second install command provides recommended speech and clipboard helpers. Verify the checksum successfully before extracting. Extract into a user-writable directory and launch without `sudo`; system FFmpeg and libmpv remain required.
+
+---
+
 ## Browser Extension
 
 HexPlayer includes a Chromium-compatible helper extension in `src/browser_extension`.
@@ -148,9 +189,13 @@ To use it:
 
 The extension can open supported YouTube links in HexPlayer from a context menu or toolbar button. Its options page includes diagnostics and a test link.
 
+On Linux, safe browser integration registers a per-user desktop handler for `hexplayer://` and Native Messaging manifests for standard Chrome, Chromium, Edge, and Brave configuration paths. Sandboxed Snap/Flatpak browsers and custom profile paths may need additional setup and are not covered by automatic registration. See the [browser extension instructions](src/browser_extension/README.md) for paths and troubleshooting.
+
 ---
 
 ## Running From Source
+
+### Windows
 
 1. Clone the repository:
 
@@ -177,7 +222,26 @@ The extension can open supported YouTube links in HexPlayer from a context menu 
    uv run python src\accessible_youtube_downloader_pro.py
    ```
 
-HexPlayer may prompt to download `yt-dlp` or Deno when a feature needs them and they are missing. The External Tools menu can also check for YouTube.js/Innertube updates and refresh its Deno cache when YouTube interaction features need repair.
+### Linux: Ubuntu 24.04 reference setup
+
+Install Git (`sudo apt install git`) if needed, then clone the repository. Install uv using the [uv installation instructions](https://docs.astral.sh/uv/getting-started/installation/); reopen your terminal if required so `uv` is on PATH.
+
+```bash
+git clone https://github.com/makhlwf/accessible_youtube_downloader_pro.git
+cd accessible_youtube_downloader_pro
+sudo bash packaging/linux/install-deps.sh
+uv python install 3.14.7
+UV_CONCURRENT_BUILDS=1 uv sync --locked
+uv run python src/accessible_youtube_downloader_pro.py
+```
+
+The dependency script uses APT to install Ubuntu build and runtime libraries. Python 3.14.7 is pinned in `.python-version`; wxPython may build from source, so synchronization can take time and memory. Run uv and HexPlayer as your normal user, not with `sudo`.
+
+### First launch and user data
+
+An Internet connection is needed for missing runtime downloads on first launch or when a feature first needs them, including `yt-dlp`, Deno, and YouTube.js dependencies. On Linux, managed Deno is installed per-user under `$XDG_DATA_HOME/HexPlayer/js_runtime` (default `~/.local/share/HexPlayer/js_runtime`); FFmpeg and libmpv come from system packages, not Windows binaries. The External Tools menu can check for updates and refresh the Deno cache.
+
+Linux settings, database, logs, downloaded tools, and the refreshed browser extension normally live in `$XDG_DATA_HOME/HexPlayer` (default `~/.local/share/HexPlayer`). Browser manifests and autostart entries use `$XDG_CONFIG_HOME` (default `~/.config`); the protocol desktop entry uses `$XDG_DATA_HOME/applications`. A `portable.dat` marker switches app data to the application's `data` directory. Downloads default to `HexPlayer` inside the XDG Downloads directory, or `~/Downloads` if none is configured.
 
 To run the unit tests:
 

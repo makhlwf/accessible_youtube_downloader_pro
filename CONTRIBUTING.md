@@ -33,7 +33,7 @@ Before creating a bug report, please search existing [GitHub Issues](https://git
 
 When filing a bug report, please include:
 - **Application version:** (e.g. `3.6.0` or git commit hash)
-- **Environment details:** Windows version and active screen reader or speech engine (e.g. Windows 11 64-bit, NVDA / JAWS / Narrator / System Access / OneCore / SAPI)
+- **Environment details:** OS version, architecture, installation method, and active screen reader or speech engine. On Linux, include the desktop, X11 or Wayland session, Orca and Speech Dispatcher versions, and audio setup.
 - **Steps to reproduce:** Clear, step-by-step instructions to reproduce the issue
 - **Expected vs. Actual behavior:** Clear description of what should happen vs. what actually occurred
 - **Error output or traceback:** Any relevant log output or stack traces
@@ -52,7 +52,13 @@ We welcome code contributions, documentation improvements, translation updates, 
 
 For a deep technical breakdown of the architecture, SQLite schemas, Deno/YouTube.js RPC protocol, MPV player Ctypes wrapper, native messaging host, and packaging machinery, see the **[DEVELOPMENT.md](DEVELOPMENT.md)** guide.
 
-### Development Quickstart
+### Supported platforms
+
+Windows 10/11 x64 and native Linux are the application targets. **Ubuntu 24.04 amd64/x86_64 is the only Linux release target**, built natively against glibc 2.39. Other distributions are not validated package targets, macOS is unsupported, and no Linux ARM package is provided or promised.
+
+For end-user packages, see [Linux release installation](DEVELOPMENT.md#linux-release-installation). Linux `.deb`, `.tar.gz`, and matching `.sha256` assets are unavailable until a release containing them is published; use the source setup below if they are absent.
+
+### Windows development quickstart
 
 1. **Fork & Clone the repository:**
    ```powershell
@@ -67,13 +73,53 @@ For a deep technical breakdown of the architecture, SQLite schemas, Deno/YouTube
 
 3. **Sync locked dependencies:**
    ```powershell
-   uv sync
+   uv python install
+   uv sync --locked
    ```
 
 4. **Launch the application from source:**
    ```powershell
    uv run python src\accessible_youtube_downloader_pro.py
    ```
+
+### Native Linux development quickstart
+
+Use Ubuntu 24.04 amd64/x86_64 with a graphical desktop. Install Git, curl, and uv, then reopen your terminal if needed to put uv on `PATH`:
+
+```bash
+sudo apt update
+sudo apt install git curl
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+Clone your fork or the upstream repository and run:
+
+```bash
+git clone https://github.com/makhlwf/accessible_youtube_downloader_pro.git
+cd accessible_youtube_downloader_pro
+sudo bash packaging/linux/install-deps.sh
+export UV_CONCURRENT_BUILDS=1
+uv python install
+uv sync --locked
+uv run --no-sync python src/accessible_youtube_downloader_pro.py
+```
+
+The dependency script installs the GTK 3/WebKitGTK development headers, C/C++ compiler and supporting libraries needed to compile wxPython from source, plus libmpv, FFmpeg, Speech Dispatcher, clipboard tools, D-Bus, and Xvfb. A runtime-only GTK installation is insufficient. Allow time and memory for compilation; `UV_CONCURRENT_BUILDS=1` limits concurrent package builds. Use the Python selected by `.python-version`, not Ubuntu's default Python, and do not reuse a Windows virtual environment.
+
+Run the application as your normal desktop user. Enable Orca and check Speech Dispatcher and desktop audio for interactive accessibility testing. Complete the application's startup prompts for Deno, yt-dlp, and JavaScript dependencies; these require network access. See [Linux setup and runtime details](DEVELOPMENT.md#native-linux-source-and-development-setup).
+
+### Native Linux build
+
+After installing the system dependencies, run from the repository root:
+
+```bash
+export UV_CONCURRENT_BUILDS=1
+uv python install
+uv sync --locked --group build
+xvfb-run -a uv run --no-sync python scripts/build.py
+```
+
+**The build deletes existing `build/` and `dist/` directories.** It creates `dist/HexPlayer/` containing the frozen application and native host, a versioned amd64 `.deb`, an x86_64 `.tar.gz`, and matching `.sha256` checksum files. Build on native Ubuntu 24.04 amd64 for release compatibility; Windows cannot cross-build these packages. See [Linux packaging and smoke checks](DEVELOPMENT.md#native-ubuntu-2404-amd64-build).
 
 ---
 
@@ -105,7 +151,22 @@ When writing code for HexPlayer, adhere strictly to these principles:
 
 ## Quality Assurance & Pre-Commit Checklist
 
-Before submitting a Pull Request, verify that your changes pass all automated checks:
+Before submitting a Pull Request, run the mandatory preflight, which validates skills, lint, translations, and tests. On Windows:
+
+```powershell
+uv run python scripts/agent_preflight.py
+```
+
+On Linux, after `uv sync --locked`, use the CI test command and run preflight inside D-Bus and a virtual display:
+
+```bash
+dbus-run-session -- xvfb-run -a uv run --no-sync pytest tests/
+dbus-run-session -- xvfb-run -a uv run python scripts/agent_preflight.py
+```
+
+Headless checks do not verify actual speech or playback. The frozen `--packaging-smoke-test` only checks dependency imports, GTK startup, and libmpv initialization with null audio/video outputs. Separately test keyboard navigation, focus, Orca announcements, Speech Dispatcher, actual audio/video playback, downloads, and browser integration in a real desktop session; report what was and was not tested.
+
+The individual Windows checks are:
 
 1. **Linting:**
    ```powershell

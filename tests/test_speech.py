@@ -1,15 +1,69 @@
 """Tests for speech and screen reader client integration via Prism."""
 
+import os
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 import speech_client
 
 
-def test_speech_client_get_backend():
+@pytest.fixture
+def isolated_backend(monkeypatch):
+    monkeypatch.setattr(speech_client, "_context", None)
+    monkeypatch.setattr(speech_client, "_backend", None)
+    monkeypatch.setattr(speech_client, "_initialized", False)
+
+
+def test_speech_client_get_backend(monkeypatch, isolated_backend):
+    prism = MagicMock()
+    backend = prism.Context.return_value.acquire_best.return_value
+    monkeypatch.setattr(speech_client, "prism", prism)
+
+    assert speech_client.get_backend() is backend
+    assert speech_client.get_backend() is backend
+    prism.Context.assert_called_once_with()
+    prism.Context.return_value.acquire_best.assert_called_once_with()
+
+
+def test_speech_client_without_prism(monkeypatch, isolated_backend):
+    monkeypatch.setattr(speech_client, "prism", None)
+
+    assert speech_client.get_backend() is None
+    assert speech_client._initialized is True
+
+
+def test_speech_client_without_audio_backend(monkeypatch, isolated_backend):
+    prism = MagicMock()
+    prism.Context.return_value.acquire_best.return_value = None
+    monkeypatch.setattr(speech_client, "prism", prism)
+
+    assert speech_client.get_backend() is None
+    speech_client.speak("No audio device")
+    speech_client.stop()
+    assert speech_client.is_speaking() is False
+    prism.Context.return_value.acquire_best.assert_called_once_with()
+
+
+def test_speech_client_backend_initialization_failure(monkeypatch, isolated_backend):
+    prism = MagicMock()
+    prism.Context.side_effect = RuntimeError("No speech service")
+    monkeypatch.setattr(speech_client, "prism", prism)
+
+    assert speech_client.get_backend() is None
+    assert speech_client.get_backend() is None
+    prism.Context.assert_called_once_with()
+
+
+@pytest.mark.integration
+@pytest.mark.skipif(
+    os.environ.get("HEXPLAYER_TEST_LIVE_SPEECH") != "1",
+    reason="Set HEXPLAYER_TEST_LIVE_SPEECH=1 with a working speech backend",
+)
+def test_speech_client_live_backend(isolated_backend):
     backend = speech_client.get_backend()
-    # On Windows test runners, Prism should successfully acquire a backend (e.g. OneCore/SAPI).
     assert backend is not None
-    assert hasattr(backend, "speak")
+    assert callable(backend.speak)
 
 
 def test_prism_import_and_native_components():

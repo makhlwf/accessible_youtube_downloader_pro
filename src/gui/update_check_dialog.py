@@ -6,11 +6,14 @@ from theme_handler import apply_theme
 
 
 class UpdateCheckDialog(wx.Dialog):
-    def __init__(self, parent, new_version, whats_new, url=""):
+    def __init__(self, parent, new_version, whats_new, url="", can_download=None):
         super().__init__(parent, title=_("تحديث جديد متوفر"))
         self.new_version = new_version
         self.whats_new = whats_new
         self.url = url
+        if can_download is None:
+            can_download = bool(url)
+        self.can_download = can_download
         self.InitUI()
         self.Center()
         apply_theme(self)
@@ -44,6 +47,7 @@ class UpdateCheckDialog(wx.Dialog):
         hbox = wx.BoxSizer(wx.HORIZONTAL)
         self.download_btn = wx.Button(panel, label=_("تنزيل"), id=wx.ID_OK)
         self.download_btn.SetDefault()
+        self.download_btn.Enable(self.can_download)
         self.open_browser_btn = wx.Button(
             panel, label=_("فتح المتصفح لتنزيل التحديث الجديد")
         )
@@ -59,8 +63,13 @@ class UpdateCheckDialog(wx.Dialog):
         vbox.Fit(self)
 
     def onOpenBrowser(self, event):
-        if self.url:
+        target = (
+            self.url
+            or getattr(application, "releases_page_url", "")
+            or application.github_url
+        )
+        if target:
             import webbrowser
 
-            webbrowser.open(self.url)
+            webbrowser.open(target)
         self.EndModal(wx.ID_CANCEL)

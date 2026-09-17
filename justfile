@@ -1,18 +1,34 @@
-# use PowerShell instead of sh:
-set shell := ["powershell.exe", "-c"]
+set windows-shell := ["powershell.exe", "-NoProfile", "-Command"]
 
-#using uv run to run the app
 run:
-  uv run src\accessible_youtube_downloader_pro.py
+  uv run python src/accessible_youtube_downloader_pro.py
 
-# run all agent & developer preflight quality gates
 preflight:
   uv run python scripts/agent_preflight.py
 
-# validate that all skills in .agents/skills/ match the latest agentskills.io format
 verify-skills:
   uv run python scripts/verify_skills.py
 
-# using BuildNPackage.bat to run the build .py and iscc inno.iss fcommand, i should let just do it but this is something for later, at least it does the job now.
-package:
-  ./BuildNPackage.bat
+lint:
+  uv run --only-dev ruff check .
+  uv run --only-dev ruff format --check .
+
+test:
+  uv run pytest tests/
+
+translations:
+  uv run --only-dev python scripts/check_translations.py
+
+build:
+  uv run --locked --no-dev --group build python scripts/build.py
+
+[windows]
+package: build
+  iscc packaging/windows/inno.iss
+
+[linux]
+package: build
+
+[linux]
+linux-deps:
+  sudo bash packaging/linux/install-deps.sh
