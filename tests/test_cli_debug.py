@@ -1,4 +1,5 @@
 import logging
+from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import accessible_youtube_downloader_pro as app_main
@@ -66,7 +67,11 @@ def test_enable_console_output_attaches_to_parent(monkeypatch):
 
     monkeypatch.setattr(app_main.sys, "platform", "win32")
     with (
-        patch("ctypes.windll.kernel32", mock_kernel32, create=True),
+        patch.object(
+            app_main,
+            "ctypes",
+            SimpleNamespace(windll=SimpleNamespace(kernel32=mock_kernel32)),
+        ),
         patch("builtins.open", MagicMock()),
     ):
         result = app_main.enable_console_output()
@@ -82,7 +87,11 @@ def test_enable_console_output_allocates_when_attach_fails(monkeypatch):
 
     monkeypatch.setattr(app_main.sys, "platform", "win32")
     with (
-        patch("ctypes.windll.kernel32", mock_kernel32, create=True),
+        patch.object(
+            app_main,
+            "ctypes",
+            SimpleNamespace(windll=SimpleNamespace(kernel32=mock_kernel32)),
+        ),
         patch("builtins.open", MagicMock()),
     ):
         result = app_main.enable_console_output()

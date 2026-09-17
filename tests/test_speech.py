@@ -15,6 +15,30 @@ def isolated_backend(monkeypatch):
     monkeypatch.setattr(speech_client, "_initialized", False)
 
 
+@pytest.fixture
+def live_speech_backend(isolated_backend):
+    return speech_client.get_backend()
+
+
+def test_default_backend_is_mocked(mock_speech_backend):
+    assert speech_client.get_backend() is mock_speech_backend
+    speech_client.speak("Unit test announcement", interrupt=True)
+    mock_speech_backend.speak.assert_called_once_with(
+        "Unit test announcement", interrupt=True
+    )
+    speech_client.stop()
+    mock_speech_backend.stop.assert_called_once_with()
+    assert speech_client.is_speaking() is False
+    speech_client.prism.Context.assert_not_called()
+
+
+def test_reset_keeps_backend_initialization_mocked(mock_speech_backend):
+    speech_client.reset()
+    assert speech_client.get_backend() is mock_speech_backend
+    speech_client.prism.Context.assert_called_once_with()
+    speech_client.prism.Context.return_value.acquire_best.assert_called_once_with()
+
+
 def test_speech_client_get_backend(monkeypatch, isolated_backend):
     prism = MagicMock()
     backend = prism.Context.return_value.acquire_best.return_value
@@ -60,10 +84,10 @@ def test_speech_client_backend_initialization_failure(monkeypatch, isolated_back
     os.environ.get("HEXPLAYER_TEST_LIVE_SPEECH") != "1",
     reason="Set HEXPLAYER_TEST_LIVE_SPEECH=1 with a working speech backend",
 )
-def test_speech_client_live_backend(isolated_backend):
-    backend = speech_client.get_backend()
-    assert backend is not None
-    assert callable(backend.speak)
+def test_speech_client_live_backend(live_speech_backend):
+    assert live_speech_backend is not None
+    assert callable(live_speech_backend.speak)
+    assert not isinstance(live_speech_backend, MagicMock)
 
 
 def test_prism_import_and_native_components():

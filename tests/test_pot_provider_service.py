@@ -338,6 +338,7 @@ def test_service_get_installed_version(tmp_path, monkeypatch):
 
 
 def test_service_download_and_install(tmp_path, monkeypatch):
+    monkeypatch.setattr(provider.sys, "platform", "win32")
     pdir = tmp_path / "pot_provider"
     pexe = pdir / "bgutil-pot.exe"
     pplugins = pdir / "plugins"
@@ -592,6 +593,7 @@ def test_service_download_and_install_hash_io_error_fails(tmp_path, monkeypatch)
 
 
 def test_service_download_and_install_nested_zip_structure(tmp_path, monkeypatch):
+    monkeypatch.setattr(provider.sys, "platform", "win32")
     pdir = tmp_path / "pot_provider"
     pexe = pdir / "bgutil-pot.exe"
     pplugins = pdir / "plugins"

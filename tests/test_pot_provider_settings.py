@@ -7,7 +7,7 @@ from settings_handler import defaults
 def test_pot_provider_paths():
     assert paths.pot_provider_dir.endswith("pot_provider")
     assert paths.pot_provider_exe == os.path.join(
-        paths.pot_provider_dir, "bgutil-pot.exe"
+        paths.pot_provider_dir, "bgutil-pot.exe" if os.name == "nt" else "bgutil-pot"
     )
     assert paths.pot_provider_plugins_dir == os.path.join(
         paths.pot_provider_dir, "plugins"
