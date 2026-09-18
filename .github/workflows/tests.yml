@@ -50,7 +50,7 @@ jobs:
         run: uv sync --locked
       - name: Save native build cache before smoke tests
         if: steps.uv.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v6
         with:
           path: ${{ env.UV_CACHE_DIR }}
           key: ${{ steps.uv.outputs.cache-key }}

@@ -45,7 +45,7 @@ jobs:
       - run: uv sync --locked --no-dev --group build
       - name: Save compiled dependency cache before build and validation
         if: steps.setup-uv.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v6
         with:
           path: ${{ runner.temp }}/setup-uv-cache
           key: ${{ steps.setup-uv.outputs.cache-key }}
