@@ -191,7 +191,7 @@ def test_rpm_spec_package_rpm_helper(tmp_path, monkeypatch):
     monkeypatch.setattr(build_mod, "DIST_DIR", dist_dir)
     monkeypatch.setattr(build_mod, "BUILD_DIR", build_dir)
 
-    staging = build_dir / "deb"
+    staging = build_dir / "staging"
     app_dir = staging / "opt" / "hexplayer"
     app_dir.mkdir(parents=True)
     (app_dir / "HexPlayer").write_text("binary", encoding="utf-8")

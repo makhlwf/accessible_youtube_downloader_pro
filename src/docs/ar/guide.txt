@@ -14,9 +14,9 @@
 
 يوصى باستخدام HexPlayer على أنظمة ويندوز الحديثة 64 بت، وخصوصا Windows 10 و Windows 11. قد لا يعمل البرنامج جيدا على إصدارات ويندوز القديمة أو أنظمة 32 بت لأن إصدارات Python و yt-dlp و Deno و MPV والمكونات المرتبطة بها لم تعد تستهدف تلك البيئات بشكل موثوق.
 
-بيئة لينكس المرجعية
+بيئة لينكس
 
-يستهدف دعم لينكس Ubuntu 24.04 بمعمارية x86_64 (amd64)، مع glibc 2.39 أو أحدث وجلسة سطح مكتب رسومية. لا يعني ذلك ضمان التوافق مع جميع التوزيعات؛ يجب أيضا توفر مكتبات النظام المطلوبة. لا توجد حزم لنظام macOS، ولا يوجد وعد بإصدارات لمعمارية ARM.
+يدعم البرنامج بشكل أصيل كلاً من Fedora 43+ بمعمارية x86_64 عبر حزم RPM، و Ubuntu 24.04+ بمعمارية amd64 عبر حزم DEB، مع glibc 2.39 أو أحدث وجلسة سطح مكتب رسومية. كلتا التوزيعتين تم التحقق منهما واختبارهما آلياً في بيئات CI وتكامل الحزم. تتوفر أيضاً ملفات tar.gz للأجهزة المتوافقة مع معمارية x86_64. لا توجد حزم لنظام macOS، ولا يوجد وعد بإصدارات لمعمارية ARM.
 
 تستخدم إعلانات النطق على لينكس Prism مع Speech Dispatcher. أما Orca فهو قارئ الشاشة للتنقل في سطح المكتب؛ ثبته وفعله بشكل منفصل عند الحاجة. لا تثبت الاختبارات الآلية سهولة الوصول على سطح المكتب: ما زال التركيز وتسميات العناصر والتنقل بلوحة المفاتيح والنطق بحاجة إلى تحقق يدوي باستخدام Orca في جلسة لينكس فعلية.
 
@@ -24,9 +24,31 @@
 
 تحقق من ملفات لينكس في صفحة الإصدارات:
 https://github.com/makhlwf/accessible_youtube_downloader_pro/releases
-قد لا تتضمن أحدث نسخة منشورة ملفات لينكس بعد. إلى أن ينشر إصدار جديد هذه الملفات، استخدم خطوات التشغيل من المصدر أدناه بدلا من مثبت ويندوز.
+نفذ الأوامر من مجلد التنزيل، واستبدل VERSION برقم الإصدار الفعلي (مثل 4.8.0). تحقق دائماً من البصمة قبل التثبيت.
 
-يوصى بحزمة .deb على Ubuntu 24.04. نزل ملف linux-amd64.deb وملف .sha256 المطابق له من الإصدار نفسه. نفذ الأوامر من مجلد التنزيل، واستبدل VERSION برقم الإصدار الموجود في أسماء الملفات الفعلية. تحقق من البصمة أولا وتوقف إذا فشل التحقق:
+مثبت لينكس الموحد بأمر واحد (install.sh)
+
+يتضمن البرنامج سكربت تثبيت آلي يتعرف على التوزيعة (Fedora أو Ubuntu/Debian)، ويثبت الاعتماديات أو الحزم المنزلة، ويضبط تكامل المتصفح وبروتوكول hexplayer:
+
+bash packaging/linux/install.sh
+# أو لتثبيت حزمة محددة:
+bash packaging/linux/install.sh --package ./HexPlayer-VERSION-1.x86_64.rpm
+# للتحقق من جاهزية خدمات قارئ الشاشة Orca والنطق:
+bash packaging/linux/install.sh --check-accessibility
+
+حزمة RPM الأصلية على Fedora / RHEL / CentOS / Rocky / AlmaLinux
+
+نزل ملف HexPlayer-VERSION-1.x86_64.rpm وملف .sha256 المطابق له:
+
+sha256sum -c HexPlayer-VERSION-1.x86_64.rpm.sha256
+sudo dnf install ./HexPlayer-VERSION-1.x86_64.rpm
+hexplayer
+
+يثبت DNF كافة اعتماديات النظام المطلوبة تلقائياً.
+
+حزمة Debian الأصلية على Ubuntu 24.04+ / Debian 12+ / Mint / Pop!_OS
+
+نزل ملف linux-amd64.deb وملف .sha256 المطابق له من الإصدار نفسه:
 
 sha256sum -c HexPlayer-VERSION-linux-amd64.deb.sha256
 sudo apt install ./HexPlayer-VERSION-linux-amd64.deb
@@ -34,20 +56,27 @@ hexplayer
 
 يثبت APT اعتماديات النظام المطلوبة. شغل البرنامج من قائمة التطبيقات أو بأمر hexplayer كمستخدم سطح المكتب العادي، وليس باستخدام sudo.
 
-يمكن بدلا من ذلك تنزيل ملف linux-x86_64.tar.gz وملف .sha256 المطابق له. ما زال الأرشيف يحتاج إلى حزم التشغيل المذكورة في packaging/linux/control.in. على Ubuntu 24.04:
+تثبيت الأرشيف tarball على توزيعات لينكس x86_64 الأخرى
 
+نزل ملف linux-x86_64.tar.gz وملف .sha256 المطابق له. ثبت حزم التشغيل المطلوبة لتوزيعتك:
+
+على Fedora:
+sudo dnf install gtk3 mpv-libs ffmpeg-free libnotify libsecret webkit2gtk4.1 mesa-libGL mesa-libGLU libSM libXtst speech-dispatcher speech-dispatcher-espeak-ng xdg-utils xclip wl-clipboard
+
+على Ubuntu:
 sudo apt update
-sudo apt install libc6 libstdc++6 libgtk-3-0t64 libmpv2 ffmpeg libnotify4 libsecret-1-0 libwebkit2gtk-4.1-0 libgl1 libglu1-mesa libsm6 libxtst6 libspeechd2 speech-dispatcher xdg-utils
-sudo apt install espeak-ng xclip wl-clipboard
+sudo apt install libc6 libstdc++6 libgtk-3-0t64 libmpv2 ffmpeg libnotify4 libsecret-1-0 libwebkit2gtk-4.1-0 libgl1 libglu1-mesa libsm6 libxtst6 libspeechd2 speech-dispatcher xdg-utils espeak-ng xclip wl-clipboard
+
+فك الضغط والتشغيل:
 sha256sum -c HexPlayer-VERSION-linux-x86_64.tar.gz.sha256
 tar -xzf HexPlayer-VERSION-linux-x86_64.tar.gz
 ./HexPlayer/HexPlayer
 
-يضيف أمر التثبيت الثاني أدوات النطق والحافظة الموصى بها. لا تفك الأرشيف إلا بعد نجاح التحقق من البصمة، واختر مجلدا يملك المستخدم صلاحية الكتابة فيه. شغل البرنامج دون sudo. الأرشيف ليس مستقلا عن الاعتماديات: تأتي FFmpeg و libmpv من حزم النظام.
+لا تفك الأرشيف إلا بعد نجاح التحقق من البصمة، واختر مجلدا يملك المستخدم صلاحية الكتابة فيه. شغل البرنامج دون sudo. الأرشيف ليس مستقلا عن الاعتماديات: تأتي FFmpeg و libmpv من حزم النظام.
 
 التشغيل من المصدر على لينكس
 
-ثبت Git عند الحاجة باستخدام sudo apt install git. ثبت uv باتباع التعليمات على:
+ثبت Git و curl عند الحاجة (`sudo dnf install git curl` على Fedora أو `sudo apt install git curl` على Ubuntu). ثبت uv باتباع التعليمات على:
 https://docs.astral.sh/uv/getting-started/installation/
 أعد فتح الطرفية عند الحاجة ليصبح uv متاحا في PATH. ثم نفذ:
 
@@ -58,7 +87,7 @@ uv python install 3.14.7
 UV_CONCURRENT_BUILDS=1 uv sync --locked
 uv run python src/accessible_youtube_downloader_pro.py
 
-يستخدم سكربت الاعتماديات APT لتثبيت مكتبات البناء والتشغيل على Ubuntu. إصدار Python المثبت في .python-version هو 3.14.7؛ وقد يبنى wxPython من المصدر، مما يحتاج إلى وقت وذاكرة. شغل uv والبرنامج كمستخدم عادي، دون sudo.
+يتعرف سكربت الاعتماديات تلقائياً على التوزيعة (Fedora أو Ubuntu/Debian) ويثبت مكتبات البناء والتشغيل عبر DNF أو APT. إصدار Python المثبت في .python-version هو 3.14.7؛ وقد يبنى wxPython من المصدر، مما يحتاج إلى وقت وذاكرة. شغل uv والبرنامج كمستخدم عادي، دون sudo.
 
 التشغيل الأول ومواقع البيانات على لينكس
 

@@ -204,7 +204,7 @@ def package_linux():
     archive_path = DIST_DIR / f"HexPlayer-{version}-linux-x86_64.tar.gz"
     with tarfile.open(archive_path, "w:gz") as archive:
         archive.add(PACKAGE_DIR, arcname=APP_NAME)
-    staging = BUILD_DIR / "deb"
+    staging = BUILD_DIR / "staging"
     app_dir = staging / "opt" / "hexplayer"
     shutil.copytree(PACKAGE_DIR, app_dir, symlinks=True)
     bin_dir = staging / "usr" / "bin"

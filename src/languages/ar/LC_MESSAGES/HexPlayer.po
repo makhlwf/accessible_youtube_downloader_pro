@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-09-20 15:49+0200\n"
+"POT-Creation-Date: 2026-09-20 20:22+0200\n"
 "PO-Revision-Date: 2026-05-10 15:31+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ar\n"
@@ -193,7 +193,7 @@ msgstr "عرض إصدار YouTube.js (Innertube)"
 #: src/accessible_youtube_downloader_pro.py:619 src/gui/comments_dialog.py:127
 #: src/gui/comments_dialog.py:349 src/gui/comments_dialog.py:565
 #: src/gui/settings_dialog.py:910 src/gui/settings_dialog.py:954
-#: src/utils.py:2743
+#: src/utils.py:2923
 msgid "خطأ"
 msgstr "خطأ"
 
@@ -290,11 +290,11 @@ msgstr "جاري إلغاء التنزيل..."
 
 #: src/accessible_youtube_downloader_pro.py:907
 msgid "تعذر استخراج رابط تشغيل الفيديو."
-msgstr ""
+msgstr "تعذر استخراج رابط تشغيل الفيديو."
 
-#: src/accessible_youtube_downloader_pro.py:931 src/gui/update_dialog.py:195
+#: src/accessible_youtube_downloader_pro.py:931 src/gui/update_dialog.py:207
 msgid "Unable to open the download folder."
-msgstr ""
+msgstr "تعذر فتح مجلد التنزيل."
 
 #: src/accessible_youtube_downloader_pro.py:971
 msgid "دليل استخدام برنامج HexPlayer"
@@ -497,7 +497,7 @@ msgid "أنت تستخدم بالفعل أحدث إصدار من مكتبة YouT
 msgstr "أنت تستخدم بالفعل أحدث إصدار من مكتبة YouTube.js (Innertube) ({})"
 
 #: src/utils.py:1057 src/utils.py:1113 src/utils.py:1195 src/utils.py:1262
-#: src/utils.py:2721
+#: src/utils.py:2901
 msgid "لا يوجد تحديث"
 msgstr "لا يوجد تحديث"
 
@@ -839,7 +839,7 @@ msgstr "مباشر"
 msgid "المدة: {}"
 msgstr "المدة: {}"
 
-#: src/utils.py:2686 src/utils.py:2729
+#: src/utils.py:2866 src/utils.py:2909
 msgid ""
 "حدث خطأ ما أثناء الاتصال بخدمة العثور على التحديثات. تأكد من وجود اتصال "
 "مستقر بالإنترنت ثم عاود المحاولة"
@@ -847,19 +847,19 @@ msgstr ""
 "حدث خطأ ما أثناء الاتصال بخدمة العثور على التحديثات. تأكد من وجود اتصال "
 "مستقر بالإنترنت ثم عاود المحاولة"
 
-#: src/utils.py:2697
+#: src/utils.py:2877
 msgid "لا توجد معلومات حول هذا التحديث"
 msgstr "لا توجد معلومات حول هذا التحديث"
 
-#: src/utils.py:2711
+#: src/utils.py:2891
 msgid "جاري تنزيل التحديث"
 msgstr "جاري تنزيل التحديث"
 
-#: src/utils.py:2720
+#: src/utils.py:2900
 msgid "أنت تعمل الآن على آخر تحديث متوفر من التطبيق"
 msgstr "أنت تعمل الآن على آخر تحديث متوفر من التطبيق"
 
-#: src/utils.py:2858
+#: src/utils.py:3038
 msgid "مشاهدة Shorts"
 msgstr ""
 
@@ -2113,7 +2113,7 @@ msgid ""
 msgstr ""
 
 #: src/gui/settings_dialog.py:885 src/gui/update_dialog.py:175
-#: src/gui/update_dialog.py:202
+#: src/gui/update_dialog.py:214
 msgid "نجاح"
 msgstr "نجاح"
 
@@ -2240,27 +2240,38 @@ msgstr "حدث خطأ أثناء استخراج الملف"
 msgid "اكتمل تنزيل الملف بنجاح"
 msgstr "اكتمل تنزيل الملف بنجاح"
 
-#: src/gui/update_dialog.py:182
+#: src/gui/update_dialog.py:191
+#, python-brace-format
+msgid ""
+"Update downloaded to {path}. To install, close HexPlayer and run: "
+"{command}. Open the download folder now?"
+msgstr ""
+"تم تنزيل التحديث إلى {path}. لتثبيته، أغلق HexPlayer ثم نفّذ: "
+"{command}. هل تريد فتح مجلد التنزيل الآن؟"
+
+#: src/gui/update_dialog.py:196
 #, python-brace-format
 msgid ""
 "Update downloaded to {path}. Automatic installation is not supported on "
 "this platform. Install the update manually after closing HexPlayer. Open "
 "the download folder now?"
 msgstr ""
+"تم تنزيل التحديث إلى {path}. التثبيت التلقائي غير مدعوم على هذه المنصة. "
+"يرجى تثبيت التحديث يدويًا بعد إغلاق HexPlayer. هل تريد فتح مجلد التنزيل الآن؟"
 
-#: src/gui/update_dialog.py:189
+#: src/gui/update_dialog.py:203
 msgid "Update downloaded"
-msgstr ""
+msgstr "تم تنزيل التحديث"
 
-#: src/gui/update_dialog.py:200
+#: src/gui/update_dialog.py:212
 msgid "اكتمل تنزيل التحديث بنجاح. يرجى الضغط على موافق للشروع في عملية التثبيت"
 msgstr "اكتمل تنزيل التحديث بنجاح. يرجى الضغط على موافق للشروع في عملية التثبيت"
 
-#: src/gui/update_dialog.py:206
+#: src/gui/update_dialog.py:218
 msgid "جاري تثبيت التحديث"
 msgstr "جاري تثبيت التحديث"
 
-#: src/gui/update_dialog.py:212
+#: src/gui/update_dialog.py:224
 msgid ""
 "حدث خطأ ما عند محاولة فتح ملف التثبيت. فضلًا أعد محاولة التحديث مجددًا, "
 "أو تواصل مع المطور للإبلاغ بالمشكلة"

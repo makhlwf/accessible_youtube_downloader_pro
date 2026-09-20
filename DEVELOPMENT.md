@@ -29,7 +29,7 @@ HexPlayer is a screen-reader friendly desktop application for searching, browsin
 ### Supported operating systems
 
 - **Windows:** Windows 10 and 11, x64 installer.
-- **Linux:** Ubuntu 24.04 amd64 (also called x86_64) is the only Linux release target. Packages are built natively on Ubuntu 24.04 against glibc 2.39; they are not universal Linux binaries and are not intended for older glibc systems. Other distributions are unverified source-development environments, not supported package targets.
+- **Linux:** Fedora 43+ (x86_64) via native RPM packages and Ubuntu 24.04+ (amd64 / x86_64) via native DEB packages are supported release targets. Packages are built natively against glibc 2.39+; both distributions are verified in automated CI and container smoke tests. Portable tarballs are also provided for other compatible x86_64 distributions.
 - **macOS:** Unsupported. There is no macOS build or installer.
 - **ARM:** No Linux ARM package is provided or promised. Linux release packaging requires native amd64/x86_64.
 
@@ -447,7 +447,32 @@ uv run --no-sync python src\accessible_youtube_downloader_pro.py
 
 Check the [HexPlayer releases and assets](https://github.com/makhlwf/accessible_youtube_downloader_pro/releases). Linux assets are not available until a release containing them is published. If the chosen release has no Linux assets, use the source setup below instead of the Windows executable.
 
-For Ubuntu 24.04 amd64/x86_64, a published release contains `HexPlayer-VERSION-linux-amd64.deb`, `HexPlayer-VERSION-linux-x86_64.tar.gz`, and a matching `.sha256` file for each. Replace `VERSION` below with the downloaded release version and run commands in the download directory. Download the matching checksum beside the package and verify it before installation.
+Published releases provide native packages for Fedora (`HexPlayer-VERSION-1.x86_64.rpm`), Ubuntu/Debian (`HexPlayer-VERSION-linux-amd64.deb`), generic x86_64 archives (`HexPlayer-VERSION-linux-x86_64.tar.gz`), and a matching `.sha256` checksum file for each. Replace `VERSION` below with the downloaded release version (e.g. `4.8.0`) and run commands in the download directory. Verify the checksum before installation.
+
+#### Quick Start: Unified Linux Installer (`install.sh`)
+
+```bash
+# Auto-detect distribution and install prebuilt package (.rpm or .deb) found in current directory
+bash packaging/linux/install.sh
+
+# Or install a specific package:
+bash packaging/linux/install.sh --package ./HexPlayer-VERSION-1.x86_64.rpm
+
+# Verify screen reader (Orca), AT-SPI2, and Speech Dispatcher readiness:
+bash packaging/linux/install.sh --check-accessibility
+```
+
+#### Native RPM Package on Fedora / RHEL / CentOS / Rocky / AlmaLinux
+
+The RPM package installs into `/opt/hexplayer`, symlinks binaries into `/usr/bin`, registers desktop menu entries, and configures URL protocol handling. DNF resolves system dependencies:
+
+```bash
+sha256sum --check HexPlayer-VERSION-1.x86_64.rpm.sha256
+sudo dnf install ./HexPlayer-VERSION-1.x86_64.rpm
+hexplayer
+```
+
+#### Native Debian Package on Ubuntu 24.04+ / Debian 12+ / Mint / Pop!_OS
 
 The Debian package installs into `/opt/hexplayer`, adds desktop integration, and provides the `hexplayer` command. APT installs its declared runtime dependencies:
 
@@ -457,13 +482,20 @@ sudo apt install ./HexPlayer-VERSION-linux-amd64.deb
 hexplayer
 ```
 
-Alternatively, install the system runtime dependencies and extract the archive into a user-writable directory. Keep the entire `HexPlayer` directory together, including `_internal`; the archive does not install system dependencies or a desktop launcher:
+#### Tarball Extraction on Other Distributions
+
+Alternatively, install your distribution's runtime dependencies and extract the archive into a user-writable directory. Keep the entire `HexPlayer` directory together, including `_internal`:
 
 ```bash
+# On Fedora:
+sudo dnf install gtk3 mpv-libs ffmpeg-free libnotify libsecret webkit2gtk4.1 mesa-libGL mesa-libGLU libSM libXtst speech-dispatcher speech-dispatcher-espeak-ng xdg-utils xclip wl-clipboard
+
+# On Ubuntu:
 sudo apt update
 sudo apt install libstdc++6 libgtk-3-0t64 libmpv2 ffmpeg libnotify4 \
     libsecret-1-0 libwebkit2gtk-4.1-0 libgl1 libglu1-mesa libsm6 libxtst6 \
     libspeechd2 speech-dispatcher xdg-utils espeak-ng xclip wl-clipboard
+
 sha256sum --check HexPlayer-VERSION-linux-x86_64.tar.gz.sha256
 tar -xzf HexPlayer-VERSION-linux-x86_64.tar.gz
 ./HexPlayer/HexPlayer
@@ -475,11 +507,14 @@ Startup dependency checks can offer to download Deno and yt-dlp and prepare Java
 
 ### Native Linux source and development setup
 
-Use a native Ubuntu 24.04 amd64 desktop or VM, not the Windows virtual environment or a cross-build. Install Git and curl, install uv using its installer, then open a new terminal if `uv` is not yet on `PATH`:
+Use a native Fedora 43+ or Ubuntu 24.04+ amd64 desktop or VM, not the Windows virtual environment or a cross-build. Install Git and curl, install uv using its installer, then open a new terminal if `uv` is not yet on `PATH`:
 
 ```bash
-sudo apt update
-sudo apt install git curl
+# On Fedora:
+sudo dnf install git curl
+# On Ubuntu:
+sudo apt update && sudo apt install git curl
+
 curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
@@ -495,7 +530,7 @@ uv sync --locked
 uv run --no-sync python src/accessible_youtube_downloader_pro.py
 ```
 
-`packaging/linux/install-deps.sh` uses APT to install the C/C++ toolchain, GTK 3 and WebKitGTK 4.1 development headers, graphics/image/media libraries, libffi and libsecret headers, system libmpv and FFmpeg, Speech Dispatcher, clipboard helpers, D-Bus, and Xvfb. wxPython may compile from source for the selected Python version; installing only `libgtk-3-0t64` or Ubuntu's `python3-wxgtk4.0` does not satisfy this uv environment. Keep `UV_CONCURRENT_BUILDS=1` set to limit simultaneous package builds, and allow substantial time and memory for the GTK build. `uv python install` follows `.python-version`; Ubuntu's default Python is not a substitute for the project's Python 3.14+ requirement.
+`packaging/linux/install-deps.sh` automatically detects whether the host is Fedora/RHEL or Ubuntu/Debian. It installs the C/C++ toolchain (`gcc`, `gcc-c++` or `build-essential`), GTK 3 and WebKitGTK 4.1 development headers, graphics/image/media libraries, libffi and libsecret headers, system libmpv and FFmpeg, Speech Dispatcher, packaging tools (`rpm-build` and `dpkg-deb`), clipboard helpers, D-Bus, and Xvfb. wxPython may compile from source for the selected Python version. Keep `UV_CONCURRENT_BUILDS=1` set to limit simultaneous package builds, and allow substantial time and memory for the GTK build. `uv python install` follows `.python-version`.
 
 ### Tests and preflight
 
@@ -523,7 +558,7 @@ Preflight validates skills, runs Ruff, checks translation catalogs, and runs the
 
 Standalone executable packaging is managed by `scripts/build.py`. Builds are native to the host OS; Windows builds do not produce Linux packages.
 
-### Native Ubuntu 24.04 amd64 build
+### Native Linux packaging (RPM, DEB, and Tarball)
 
 After the Linux system dependency installation above, run from the repository root:
 
@@ -534,27 +569,29 @@ uv sync --locked --group build
 xvfb-run -a uv run --no-sync python scripts/build.py
 ```
 
-**The build deletes the repository's existing `build/` and `dist/` directories before running PyInstaller. Save any artifacts you need elsewhere first.** The script verifies system libmpv, FFmpeg, FFprobe, and `dpkg-deb`, builds the main executable and native messaging host, validates the layout, then creates:
+**The build deletes the repository's existing `build/` and `dist/` directories before running PyInstaller. Save any artifacts you need elsewhere first.** The script verifies system libmpv, FFmpeg, FFprobe, builds the main executable and native messaging host, validates the layout, and generates:
 
 - `dist/HexPlayer/HexPlayer` and `dist/HexPlayer/HexPlayerNativeHost`, with their shared `_internal` directory.
 - `dist/HexPlayer-VERSION-linux-x86_64.tar.gz`.
-- `dist/HexPlayer-VERSION-linux-amd64.deb`.
-- A matching `.sha256` file for each package.
+- `dist/HexPlayer-VERSION-linux-amd64.deb` (if `dpkg-deb` is available).
+- `dist/HexPlayer-VERSION-1.x86_64.rpm` (if `rpmbuild` is available).
+- A matching `.sha256` file for each built artifact.
 
-`VERSION` comes from `pyproject.toml`. Release CI uses `uv sync --locked --no-dev --group build`; local development keeps the dev group so tests and preflight remain available. CI runs on Ubuntu 24.04 x86_64, and the Debian package requires glibc 2.39 or newer. This is not a compatibility guarantee for other distributions or architectures.
+`VERSION` comes from `pyproject.toml`. Release CI uses `uv sync --locked --no-dev --group build`; local development keeps the dev group so tests and preflight remain available.
 
 Check the frozen output and packages:
 
 ```bash
 timeout 45s dbus-run-session -- xvfb-run -a dist/HexPlayer/HexPlayer --packaging-smoke-test
 desktop-file-validate packaging/linux/hexplayer.desktop
-dpkg-deb --info dist/*.deb
+test -f dist/*.deb && dpkg-deb --info dist/*.deb
+test -f dist/*.rpm && rpm -qip dist/*.rpm
 (cd dist && sha256sum --check ./*.sha256)
 ```
 
 The frozen smoke test checks Linux dependency imports, a GTK window opening and closing, and system libmpv initialization with null audio/video outputs. It does not run the full application workflow, play media, or verify screen-reader speech and keyboard usability. The build workflow additionally checks native-host message framing. Perform the real-desktop accessibility and playback checks described above before release; neither a passing smoke test nor unit tests replace them.
 
-`.github/workflows/build-artifacts.yml` produces native Windows and Linux artifacts. `.github/workflows/release.yml` publishes both platforms together only after their builds succeed; a local build does not make Linux downloads available on the release page.
+`.github/workflows/build-artifacts.yml` produces native Windows and Linux artifacts and tests RPM installation in a Fedora container (`fedora-smoke`). `.github/workflows/release.yml` publishes Windows and Linux platforms together only after their builds and smoke validations succeed.
 
 ### Windows build operations:
 1. **DLL Verification:** Ensures `libmpv-2.dll` (extracted from `libmpv-2.dll.zip`), `ffmpeg.exe`, and `ffprobe.exe` are present in `src/`.
