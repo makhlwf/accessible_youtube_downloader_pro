@@ -92,13 +92,33 @@ class TestWelcomeDialog(unittest.TestCase):
 
             self.dialog._on_finish(None)
 
+            mock_set.assert_any_call("lang", "ar")
             mock_set.assert_any_call("defaultaudio", 1)
             mock_set.assert_any_call("autodetect", False)
             mock_set.assert_any_call("welcome_completed", True)
             self.assertTrue(mock_save.called)
             self.dialog.EndModal.assert_called_with(wx.ID_OK)
 
+    def test_step1_language_selection_english(self):
+        self.dialog.EndModal = MagicMock()
+        with (
+            patch("gui.welcome_dialog.settings_handler.config_set") as mock_set,
+            patch("gui.welcome_dialog.settings_handler.save_settings"),
+        ):
+            self.dialog.choice_lang.SetSelection(1)
+            self.dialog._on_finish(None)
+            mock_set.assert_any_call("lang", "en")
+
+    def test_step1_language_choices(self):
+        self.assertEqual(
+            list(self.dialog.choice_lang.GetStrings()), ["العربية", "English"]
+        )
+        self.assertEqual(self.dialog.step1_panel.lang_codes, ["ar", "en"])
+
     def test_step2_component_readiness_and_download(self):
+        self.assertIsInstance(self.dialog.lbl_ytdlp_status.GetParent(), wx.StaticBox)
+        self.assertIsInstance(self.dialog.btn_download_ytdlp.GetParent(), wx.StaticBox)
+
         with patch(
             "gui.welcome_dialog.utils.get_yt_dlp_version", return_value="2026.01.01"
         ):

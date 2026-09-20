@@ -29,6 +29,26 @@ codes = {
 lang_id = wx.LANGUAGE_ARABIC
 
 
+def normalize_language_code(lang):
+    """Normalize language name or code to a valid 2-letter ISO code."""
+    if not lang:
+        return "en"
+    text = str(lang).strip()
+    if text in supported_languages.values():
+        return text
+    if text in supported_languages:
+        return supported_languages[text]
+    lower = text.casefold()
+    if lower in ("ar", "arabic") or "عرب" in text:
+        return "ar"
+    if lower in ("en", "english"):
+        return "en"
+    prefix = lower.split("_")[0].split("-")[0]
+    if len(prefix) == 2 and prefix.isalpha():
+        return prefix
+    return "en"
+
+
 def get_default_language():
     language = "en"
     try:
@@ -61,9 +81,8 @@ def init_translation(domain):
 
     localedir = os.path.join(get_bundled_data_path(), "languages")
     try:
-        tr = gettext.translation(
-            domain, localedir=localedir, languages=[config_get("lang")]
-        )
+        lang_code = normalize_language_code(config_get("lang"))
+        tr = gettext.translation(domain, localedir=localedir, languages=[lang_code])
     except Exception:
         tr = gettext.translation(domain, fallback=True)
     tr.install()

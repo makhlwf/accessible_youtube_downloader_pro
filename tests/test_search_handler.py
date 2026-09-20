@@ -421,3 +421,31 @@ def test_fetch_search_suggestions_sync():
         mock_get.return_value = {"result": ["python basics"]}
         res = fetch_search_suggestions("python", language="en", region="US")
         assert res == ["python basics"]
+
+
+def test_search_initialization_normalizes_language_and_region():
+    with (
+        patch("youtube_browser.search_handler.config_get", return_value="English"),
+        patch(
+            "youtube_browser.search_handler.utils.get_windows_region",
+            return_value=None,
+        ),
+        patch("youtube_browser.search_handler.VideosSearch") as mock_videos_search,
+    ):
+        Search("test query", filter=0)
+        mock_videos_search.assert_called_once_with(
+            "test query", limit=20, language="en", region="US"
+        )
+
+
+@pytest.mark.asyncio
+async def test_fetch_search_suggestions_normalizes_unrecognized_language():
+    with patch(
+        "youtube_browser.search_handler.Suggestions.get", new_callable=AsyncMock
+    ) as mock_get:
+        mock_get.return_value = {"result": ["suggestion 1"]}
+        res = await fetch_search_suggestions_async(
+            "test", language="English", region="invalid_region"
+        )
+        assert res == ["suggestion 1"]
+        mock_get.assert_awaited_once_with("test", language="en", region="US")

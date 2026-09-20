@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: HexPlayer 2.0.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-20 20:22+0200\n"
+"POT-Creation-Date: 2026-09-21 00:37+0200\n"
 "PO-Revision-Date: 2026-04-09 08:38+0200\n"
 "Last-Translator: makhlwf <altrhwnyashrf1@gmail.com>\n"
 "Language: en\n"
@@ -519,7 +519,7 @@ msgstr ""
 #: src/youtube_browser/search_handler.py:112
 #: src/youtube_browser/search_handler.py:212
 #: src/youtube_browser/search_handler.py:447
-#: src/youtube_browser/search_handler.py:620
+#: src/youtube_browser/search_handler.py:622
 msgid "غير معروف"
 msgstr "Unknown"
 
@@ -931,7 +931,7 @@ msgstr "Cancel"
 #: src/gui/auto_detect_dialog.py:87 src/gui/search_dialog.py:80
 #: src/youtube_browser/search_handler.py:187
 #: src/youtube_browser/search_handler.py:499
-#: src/youtube_browser/search_handler.py:680
+#: src/youtube_browser/search_handler.py:682
 msgid "قائمة تشغيل"
 msgstr "Playlist"
 
@@ -943,7 +943,7 @@ msgstr "Playlist"
 #: src/youtube_browser/search_handler.py:371
 #: src/youtube_browser/search_handler.py:405
 #: src/youtube_browser/search_handler.py:506
-#: src/youtube_browser/search_handler.py:686
+#: src/youtube_browser/search_handler.py:688
 msgid "قناة"
 msgstr "Channel"
 
@@ -1748,7 +1748,7 @@ msgstr "Filter: "
 msgid "بلا فلتر"
 msgstr "No Filter"
 
-#: src/gui/search_dialog.py:77 src/youtube_browser/search_handler.py:746
+#: src/gui/search_dialog.py:77 src/youtube_browser/search_handler.py:748
 msgid "بث مباشر"
 msgstr "Live Stream"
 
@@ -2286,27 +2286,27 @@ msgstr "Interface Language:"
 msgid "Interface Language"
 msgstr "Interface Language"
 
-#: src/gui/welcome_dialog.py:94
+#: src/gui/welcome_dialog.py:96
 msgid "Audio Mode (Fast, screen reader optimized, background listening)"
 msgstr "Audio Mode (Fast, screen reader optimized, background listening)"
 
-#: src/gui/welcome_dialog.py:95
+#: src/gui/welcome_dialog.py:97
 msgid "Video Mode (Displays video player window)"
 msgstr "Video Mode (Displays video player window)"
 
-#: src/gui/welcome_dialog.py:100 src/gui/welcome_dialog.py:105
+#: src/gui/welcome_dialog.py:102 src/gui/welcome_dialog.py:107
 msgid "Preferred Playback Mode"
 msgstr "Preferred Playback Mode"
 
-#: src/gui/welcome_dialog.py:116 src/gui/welcome_dialog.py:120
+#: src/gui/welcome_dialog.py:118 src/gui/welcome_dialog.py:122
 msgid "Automatically detect YouTube links copied to clipboard"
 msgstr "Automatically detect YouTube links copied to clipboard"
 
-#: src/gui/welcome_dialog.py:139 src/gui/welcome_dialog.py:141
+#: src/gui/welcome_dialog.py:141 src/gui/welcome_dialog.py:143
 msgid "Step 2 of 4: Component Readiness"
 msgstr "Step 2 of 4: Component Readiness"
 
-#: src/gui/welcome_dialog.py:145
+#: src/gui/welcome_dialog.py:147
 msgid ""
 "HexPlayer includes bundled media codecs (libmpv) for instant playback. To"
 " download videos and extract high quality audio, the yt-dlp download "
@@ -2316,36 +2316,36 @@ msgstr ""
 " download videos and extract high quality audio, the yt-dlp download "
 "engine is used."
 
-#: src/gui/welcome_dialog.py:154
+#: src/gui/welcome_dialog.py:156
 msgid "Download Engine Status"
 msgstr "Download Engine Status"
 
-#: src/gui/welcome_dialog.py:158
+#: src/gui/welcome_dialog.py:160
 msgid "Checking download engine..."
 msgstr "Checking download engine..."
 
-#: src/gui/welcome_dialog.py:164 src/gui/welcome_dialog.py:167
+#: src/gui/welcome_dialog.py:166 src/gui/welcome_dialog.py:169
 msgid "Download or Update Download Engine"
 msgstr "Download or Update Download Engine"
 
-#: src/gui/welcome_dialog.py:180
+#: src/gui/welcome_dialog.py:182
 #, python-brace-format
 msgid "Download Engine (yt-dlp): Ready (Version: {version})"
 msgstr "Download Engine (yt-dlp): Ready (Version: {version})"
 
-#: src/gui/welcome_dialog.py:186
+#: src/gui/welcome_dialog.py:188
 msgid "Download Engine (yt-dlp): Not installed or update recommended"
 msgstr "Download Engine (yt-dlp): Not installed or update recommended"
 
-#: src/gui/welcome_dialog.py:196
+#: src/gui/welcome_dialog.py:198
 msgid "Starting download of the download engine in the background..."
 msgstr "Starting download of the download engine in the background..."
 
-#: src/gui/welcome_dialog.py:219 src/gui/welcome_dialog.py:223
+#: src/gui/welcome_dialog.py:221 src/gui/welcome_dialog.py:225
 msgid "Step 3 of 4: Keyboard Shortcuts & Quick Workflows"
 msgstr "Step 3 of 4: Keyboard Shortcuts & Quick Workflows"
 
-#: src/gui/welcome_dialog.py:228
+#: src/gui/welcome_dialog.py:230
 msgid ""
 "Use Arrow keys to explore essential shortcuts. You can use these keys "
 "anywhere in the main window."
@@ -2353,79 +2353,79 @@ msgstr ""
 "Use Arrow keys to explore essential shortcuts. You can use these keys "
 "anywhere in the main window."
 
-#: src/gui/welcome_dialog.py:242
+#: src/gui/welcome_dialog.py:244
 msgid "Keyboard Shortcuts Cheat Sheet"
 msgstr "Keyboard Shortcuts Cheat Sheet"
 
-#: src/gui/welcome_dialog.py:244
+#: src/gui/welcome_dialog.py:246
 msgid "Shortcut"
 msgstr "Shortcut"
 
-#: src/gui/welcome_dialog.py:245
+#: src/gui/welcome_dialog.py:247
 msgid "Action"
 msgstr "Action"
 
-#: src/gui/welcome_dialog.py:248
+#: src/gui/welcome_dialog.py:250
 msgid "Focus Search Box"
 msgstr "Focus Search Box"
 
-#: src/gui/welcome_dialog.py:249
+#: src/gui/welcome_dialog.py:251
 msgid "Move between Search, Results list, and Controls"
 msgstr "Move between Search, Results list, and Controls"
 
-#: src/gui/welcome_dialog.py:250
+#: src/gui/welcome_dialog.py:252
 msgid "Play selected video or playlist"
 msgstr "Play selected video or playlist"
 
-#: src/gui/welcome_dialog.py:251
+#: src/gui/welcome_dialog.py:253
 msgid "Play / Pause media"
 msgstr "Play / Pause media"
 
-#: src/gui/welcome_dialog.py:252
+#: src/gui/welcome_dialog.py:254
 msgid "Seek 5 seconds backward / forward"
 msgstr "Seek 5 seconds backward / forward"
 
-#: src/gui/welcome_dialog.py:253
+#: src/gui/welcome_dialog.py:255
 msgid "Volume increase / decrease"
 msgstr "Volume increase / decrease"
 
-#: src/gui/welcome_dialog.py:254
+#: src/gui/welcome_dialog.py:256
 msgid "Decrease / Increase playback speed"
 msgstr "Decrease / Increase playback speed"
 
-#: src/gui/welcome_dialog.py:255
+#: src/gui/welcome_dialog.py:257
 msgid "Mute / Unmute audio"
 msgstr "Mute / Unmute audio"
 
-#: src/gui/welcome_dialog.py:256
+#: src/gui/welcome_dialog.py:258
 msgid "Download selected media"
 msgstr "Download selected media"
 
-#: src/gui/welcome_dialog.py:257
+#: src/gui/welcome_dialog.py:259
 msgid "Open History"
 msgstr "Open History"
 
-#: src/gui/welcome_dialog.py:258
+#: src/gui/welcome_dialog.py:260
 msgid "Open Bookmarks / Favorites"
 msgstr "Open Bookmarks / Favorites"
 
-#: src/gui/welcome_dialog.py:267 src/gui/welcome_dialog.py:268
+#: src/gui/welcome_dialog.py:269 src/gui/welcome_dialog.py:270
 msgid "Open Full Shortcuts Guide"
 msgstr "Open Full Shortcuts Guide"
 
-#: src/gui/welcome_dialog.py:277 src/gui/welcome_dialog.py:335
+#: src/gui/welcome_dialog.py:279 src/gui/welcome_dialog.py:337
 msgid "HexPlayer Documentation"
 msgstr "HexPlayer Documentation"
 
-#: src/gui/welcome_dialog.py:280
+#: src/gui/welcome_dialog.py:282
 msgid "Full documentation opened."
 msgstr "Full documentation opened."
 
-#: src/gui/welcome_dialog.py:294 src/gui/welcome_dialog.py:296
+#: src/gui/welcome_dialog.py:296 src/gui/welcome_dialog.py:298
 msgid "Step 4 of 4: You are Ready to Go!"
 msgstr "Step 4 of 4: You are Ready to Go!"
 
-#: src/gui/welcome_dialog.py:300
+#: src/gui/welcome_dialog.py:302
 msgid ""
 "Setup is complete! You can access all settings and features at any time "
 "from the main window menu bar. Press F1 anytime for the complete User "
@@ -2435,80 +2435,80 @@ msgstr ""
 "from the main window menu bar. Press F1 anytime for the complete User "
 "Guide."
 
-#: src/gui/welcome_dialog.py:309 src/gui/welcome_dialog.py:312
+#: src/gui/welcome_dialog.py:311 src/gui/welcome_dialog.py:314
 msgid "Show this welcome screen on startup"
 msgstr "Show this welcome screen on startup"
 
-#: src/gui/welcome_dialog.py:317 src/gui/welcome_dialog.py:318
+#: src/gui/welcome_dialog.py:319 src/gui/welcome_dialog.py:320
 msgid "Open User Documentation (F1)"
 msgstr "Open User Documentation (F1)"
 
-#: src/gui/welcome_dialog.py:324 src/gui/welcome_dialog.py:326
+#: src/gui/welcome_dialog.py:326 src/gui/welcome_dialog.py:328
 msgid "Finish and Launch HexPlayer"
 msgstr "Finish and Launch HexPlayer"
 
-#: src/gui/welcome_dialog.py:338
+#: src/gui/welcome_dialog.py:340
 msgid "User Guide not found."
 msgstr "User Guide not found."
 
-#: src/gui/welcome_dialog.py:348
+#: src/gui/welcome_dialog.py:350
 msgid "HexPlayer Welcome & Setup Guide"
 msgstr "HexPlayer Welcome & Setup Guide"
 
-#: src/gui/welcome_dialog.py:356
+#: src/gui/welcome_dialog.py:358
 msgid "Initial Configuration"
 msgstr "Initial Configuration"
 
-#: src/gui/welcome_dialog.py:357
+#: src/gui/welcome_dialog.py:359
 msgid "Component Readiness"
 msgstr "Component Readiness"
 
-#: src/gui/welcome_dialog.py:358
+#: src/gui/welcome_dialog.py:360
 msgid "Keyboard Shortcuts & Quick Workflows"
 msgstr "Keyboard Shortcuts & Quick Workflows"
 
-#: src/gui/welcome_dialog.py:359
+#: src/gui/welcome_dialog.py:361
 msgid "You are Ready to Go!"
 msgstr "You are Ready to Go!"
 
-#: src/gui/welcome_dialog.py:395
+#: src/gui/welcome_dialog.py:397
 msgid "< Back"
 msgstr "< Back"
 
-#: src/gui/welcome_dialog.py:396
+#: src/gui/welcome_dialog.py:398
 msgid "Back to previous step"
 msgstr "Back to previous step"
 
-#: src/gui/welcome_dialog.py:400 src/gui/welcome_dialog.py:479
+#: src/gui/welcome_dialog.py:402 src/gui/welcome_dialog.py:481
 msgid "Next >"
 msgstr "Next >"
 
-#: src/gui/welcome_dialog.py:401 src/gui/welcome_dialog.py:480
+#: src/gui/welcome_dialog.py:403 src/gui/welcome_dialog.py:482
 msgid "Next step"
 msgstr "Next step"
 
-#: src/gui/welcome_dialog.py:407
+#: src/gui/welcome_dialog.py:409
 msgid "Skip / Close"
 msgstr "Skip / Close"
 
-#: src/gui/welcome_dialog.py:408
+#: src/gui/welcome_dialog.py:410
 msgid "Skip and close guide"
 msgstr "Skip and close guide"
 
-#: src/gui/welcome_dialog.py:476
+#: src/gui/welcome_dialog.py:478
 msgid "Finish"
 msgstr "Finish"
 
-#: src/gui/welcome_dialog.py:477
+#: src/gui/welcome_dialog.py:479
 msgid "Finish and save"
 msgstr "Finish and save"
 
-#: src/gui/welcome_dialog.py:485
+#: src/gui/welcome_dialog.py:487
 #, fuzzy, python-brace-format
 msgid "Step {current} of {total}: {title}"
 msgstr "Step {step} of {total}: {title}"
 
-#: src/gui/welcome_dialog.py:529
+#: src/gui/welcome_dialog.py:531
 msgid "Welcome tour completed."
 msgstr "Welcome tour completed."
 
@@ -2694,8 +2694,8 @@ msgstr "Skipped SponsorBlock segment"
 #: src/youtube_browser/search_handler.py:253
 #: src/youtube_browser/search_handler.py:492
 #: src/youtube_browser/search_handler.py:500
-#: src/youtube_browser/search_handler.py:674
-#: src/youtube_browser/search_handler.py:681
+#: src/youtube_browser/search_handler.py:676
+#: src/youtube_browser/search_handler.py:683
 msgid "بواسطة"
 msgstr "by"
 
@@ -2980,14 +2980,14 @@ msgid "الوصف: {}"
 msgstr "Description: {}"
 
 #: src/youtube_browser/search_handler.py:501
-#: src/youtube_browser/search_handler.py:682
-#: src/youtube_browser/search_handler.py:688
+#: src/youtube_browser/search_handler.py:684
+#: src/youtube_browser/search_handler.py:690
 #, python-brace-format
 msgid "تحتوي على {} من الفيديوهات"
 msgstr "Contains {} videos"
 
 #: src/youtube_browser/search_handler.py:552
-#: src/youtube_browser/search_handler.py:744
+#: src/youtube_browser/search_handler.py:746
 #, python-brace-format
 msgid "عدد المشاهدات {}"
 msgstr "{} views"
