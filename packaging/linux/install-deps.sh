@@ -1,11 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [ "$(uname -s)" != Linux ]; then
-    printf '%s\n' 'This dependency installer requires Linux.' >&2
-    exit 1
-fi
-
 RUNTIME_ONLY=0
 DETECT_DISTRO=0
 
@@ -75,6 +70,11 @@ if [ "$FAMILY" = "unknown" ]; then
     exit 1
 fi
 
+if [ "$(uname -s)" != Linux ]; then
+    printf '%s\n' 'This dependency installer requires Linux.' >&2
+    exit 1
+fi
+
 if [ "$FAMILY" = "fedora" ]; then
     if [ "$RUNTIME_ONLY" -eq 1 ]; then
         dnf install -y --setopt=install_weak_deps=False \
@@ -99,7 +99,7 @@ elif [ "$FAMILY" = "debian" ]; then
     apt-get update
     if [ "$RUNTIME_ONLY" -eq 1 ]; then
         apt-get install -y --no-install-recommends \
-            libc6 libstdc++6 libgtk-3-0t64 libmpv2 ffmpeg libnotify4 libsecret-1-0 \
+            libc6 libstdc++6 libgtk-3-0 libmpv2 ffmpeg libnotify4 libsecret-1-0 \
             libwebkit2gtk-4.1-0 libgl1 libglu1-mesa libsm6 libxtst6 libspeechd2 \
             speech-dispatcher at-spi2-core xdg-utils espeak-ng xclip wl-clipboard
     else

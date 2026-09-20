@@ -156,8 +156,13 @@ def test_detect_distro_script_content():
     # Verify --runtime-only option
     assert "--runtime-only" in content
 
-    # Verify Ubuntu package list includes rpm for cross-packaging RPMs
+    # Verify Ubuntu package list includes rpm for cross-packaging RPMs and standard libgtk-3-0
     assert "rpm" in content
+    assert "libgtk-3-0" in content
+    assert "libgtk-3-0t64" not in content
+
+    # Verify --detect-distro is processed before uname check so it can run cross-platform
+    assert content.index("--detect-distro") < content.index("uname -s")
 
     # Verify Fedora packages
     assert "mpv-libs" in content
