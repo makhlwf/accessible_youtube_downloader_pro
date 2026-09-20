@@ -1,5 +1,19 @@
 {
-  "version": "4.8.0",
-  "url": "https://github.com/makhlwf/accessible_youtube_downloader_pro/releases/download/v4.8.0/HexPlayer.exe",
-  "whats_new": "hot fix (cookies): resolve playback failure with authenticated cookies via yt-dlp client cascade "
+  "version": "5.0.0",
+  "url": "https://github.com/makhlwf/accessible_youtube_downloader_pro/releases/download/v5.0.0/HexPlayer.exe",
+  "whats_new": "Full experimental Linux support (Ubuntu .deb, Fedora .rpm, universal installer), accessible 4-step Welcome Wizard, recent search history, authenticated cookies playback fix, and performance improvements.",
+  "platforms": {
+    "windows": {
+      "url": "https://github.com/makhlwf/accessible_youtube_downloader_pro/releases/download/v5.0.0/HexPlayer.exe"
+    },
+    "linux": {
+      "url": "https://github.com/makhlwf/accessible_youtube_downloader_pro/releases/download/v5.0.0/HexPlayer-5.0.0-linux-x86_64.tar.gz"
+    },
+    "deb": {
+      "url": "https://github.com/makhlwf/accessible_youtube_downloader_pro/releases/download/v5.0.0/HexPlayer-5.0.0-linux-amd64.deb"
+    },
+    "rpm": {
+      "url": "https://github.com/makhlwf/accessible_youtube_downloader_pro/releases/download/v5.0.0/HexPlayer-5.0.0-1.x86_64.rpm"
+    }
+  }
 }
