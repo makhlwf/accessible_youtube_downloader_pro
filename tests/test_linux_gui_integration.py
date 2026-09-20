@@ -178,6 +178,19 @@ def test_detect_distro_script_content():
     assert "wl-clipboard" in content
 
 
+def _find_bash() -> str | None:
+    cmd = shutil.which("bash")
+    if cmd:
+        return cmd
+    for candidate in [
+        r"C:\Program Files\Git\bin\bash.exe",
+        r"C:\Program Files\Git\usr\bin\bash.exe",
+    ]:
+        if os.path.exists(candidate):
+            return candidate
+    return None
+
+
 def test_detect_distro_os_release_parsing(tmp_path):
     samples = [
         ("ID=fedora\nVERSION_ID=43\n", "fedora"),
@@ -199,7 +212,8 @@ def test_detect_distro_os_release_parsing(tmp_path):
     script_path = (
         Path(__file__).resolve().parents[1] / "packaging" / "linux" / "install-deps.sh"
     )
-    if shutil.which("bash"):
+    bash_bin = _find_bash()
+    if bash_bin:
         for content, expected in samples:
             if expected == "unknown":
                 continue
@@ -208,7 +222,7 @@ def test_detect_distro_os_release_parsing(tmp_path):
             env = os.environ.copy()
             env["OS_RELEASE_FILE"] = str(fake_os_release)
             proc = subprocess.run(
-                ["bash", str(script_path), "--detect-distro"],
+                [bash_bin, str(script_path), "--detect-distro"],
                 capture_output=True,
                 text=True,
                 env=env,
@@ -216,3 +230,218 @@ def test_detect_distro_os_release_parsing(tmp_path):
             )
             assert proc.returncode == 0
             assert proc.stdout.strip() == expected
+
+
+def test_installer_script_files_exist_and_delegate():
+    repo_root = Path(__file__).resolve().parents[1]
+    root_install = repo_root / "install.sh"
+    pkg_install = repo_root / "packaging" / "linux" / "install.sh"
+
+    assert root_install.is_file(), "Root install.sh must exist"
+    assert pkg_install.is_file(), "packaging/linux/install.sh must exist"
+
+    root_text = root_install.read_text(encoding="utf-8")
+    assert "#!/usr/bin/env bash" in root_text
+    assert "packaging/linux/install.sh" in root_text
+
+    pkg_text = pkg_install.read_text(encoding="utf-8")
+    assert "#!/usr/bin/env bash" in pkg_text
+    assert "--help" in pkg_text
+    assert "--check-accessibility" in pkg_text
+    assert "--source" in pkg_text
+    assert "--package" in pkg_text
+    assert "--dry-run" in pkg_text
+
+
+def test_installer_cli_help_flag():
+    bash_bin = _find_bash()
+    if not bash_bin:
+        return
+    repo_root = Path(__file__).resolve().parents[1]
+    pkg_install = repo_root / "packaging" / "linux" / "install.sh"
+    root_install = repo_root / "install.sh"
+
+    for script in (pkg_install, root_install):
+        proc = subprocess.run(
+            [bash_bin, str(script), "--help"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        assert proc.returncode == 0
+        assert "HexPlayer" in proc.stdout
+        assert "--help" in proc.stdout
+        assert "--check-accessibility" in proc.stdout
+        assert "--source" in proc.stdout
+        assert "--package" in proc.stdout
+
+
+def test_installer_cli_unknown_argument():
+    bash_bin = _find_bash()
+    if not bash_bin:
+        return
+    repo_root = Path(__file__).resolve().parents[1]
+    pkg_install = repo_root / "packaging" / "linux" / "install.sh"
+
+    proc = subprocess.run(
+        [bash_bin, str(pkg_install), "--unsupported-option"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert proc.returncode != 0
+    assert "Unknown argument" in proc.stderr or "Unknown argument" in proc.stdout
+
+
+def test_installer_fedora_package_detection_dry_run(tmp_path):
+    bash_bin = _find_bash()
+    if not bash_bin:
+        return
+    repo_root = Path(__file__).resolve().parents[1]
+    pkg_install = repo_root / "packaging" / "linux" / "install.sh"
+
+    fake_os_release = tmp_path / "os-release"
+    fake_os_release.write_text("ID=fedora\nVERSION_ID=43\n", encoding="utf-8")
+
+    dummy_rpm = tmp_path / "HexPlayer-1.0.0-1.x86_64.rpm"
+    dummy_rpm.write_text("dummy rpm content", encoding="utf-8")
+
+    env = os.environ.copy()
+    env["OS_RELEASE_FILE"] = str(fake_os_release)
+
+    proc = subprocess.run(
+        [bash_bin, str(pkg_install), "--package", str(dummy_rpm), "--dry-run"],
+        capture_output=True,
+        text=True,
+        env=env,
+        check=False,
+    )
+    assert proc.returncode == 0
+    assert "dnf install -y" in proc.stdout
+    assert str(dummy_rpm).replace("\\", "/") in proc.stdout.replace("\\", "/")
+
+
+def test_installer_debian_package_detection_dry_run(tmp_path):
+    bash_bin = _find_bash()
+    if not bash_bin:
+        return
+    repo_root = Path(__file__).resolve().parents[1]
+    pkg_install = repo_root / "packaging" / "linux" / "install.sh"
+
+    fake_os_release = tmp_path / "os-release"
+    fake_os_release.write_text(
+        "ID=ubuntu\nID_LIKE=debian\nVERSION_ID=24.04\n", encoding="utf-8"
+    )
+
+    dummy_deb = tmp_path / "HexPlayer-1.0.0_amd64.deb"
+    dummy_deb.write_text("dummy deb content", encoding="utf-8")
+
+    env = os.environ.copy()
+    env["OS_RELEASE_FILE"] = str(fake_os_release)
+
+    proc = subprocess.run(
+        [bash_bin, str(pkg_install), "--package", str(dummy_deb), "--dry-run"],
+        capture_output=True,
+        text=True,
+        env=env,
+        check=False,
+    )
+    assert proc.returncode == 0
+    assert "apt-get install -y --no-install-recommends" in proc.stdout
+    assert str(dummy_deb).replace("\\", "/") in proc.stdout.replace("\\", "/")
+
+
+def test_installer_source_mode_dry_run(tmp_path):
+    bash_bin = _find_bash()
+    if not bash_bin:
+        return
+    repo_root = Path(__file__).resolve().parents[1]
+    pkg_install = repo_root / "packaging" / "linux" / "install.sh"
+
+    fake_os_release = tmp_path / "os-release"
+    fake_os_release.write_text("ID=fedora\nVERSION_ID=43\n", encoding="utf-8")
+
+    env = os.environ.copy()
+    env["OS_RELEASE_FILE"] = str(fake_os_release)
+
+    proc = subprocess.run(
+        [bash_bin, str(pkg_install), "--source", "--dry-run"],
+        capture_output=True,
+        text=True,
+        env=env,
+        check=False,
+    )
+    assert proc.returncode == 0
+    assert "install-deps.sh" in proc.stdout
+
+
+def test_installer_check_accessibility_flag():
+    bash_bin = _find_bash()
+    if not bash_bin:
+        return
+    repo_root = Path(__file__).resolve().parents[1]
+    pkg_install = repo_root / "packaging" / "linux" / "install.sh"
+
+    proc = subprocess.run(
+        [bash_bin, str(pkg_install), "--check-accessibility"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert proc.returncode == 0
+    assert "Speech Dispatcher" in proc.stdout
+    assert "AT-SPI2" in proc.stdout
+
+
+def test_installer_auto_finds_dist_packages(tmp_path):
+    bash_bin = _find_bash()
+    if not bash_bin:
+        return
+    repo_root = Path(__file__).resolve().parents[1]
+    pkg_install = repo_root / "packaging" / "linux" / "install.sh"
+
+    # Test Fedora finding rpm in dist/
+    fake_os_fedora = tmp_path / "os-release-fedora"
+    fake_os_fedora.write_text("ID=fedora\nVERSION_ID=43\n", encoding="utf-8")
+
+    dist_dir = tmp_path / "dist"
+    dist_dir.mkdir(parents=True, exist_ok=True)
+    rpm_file = dist_dir / "HexPlayer-1.0.0-1.x86_64.rpm"
+    rpm_file.write_text("dummy rpm", encoding="utf-8")
+
+    env_fedora = os.environ.copy()
+    env_fedora["OS_RELEASE_FILE"] = str(fake_os_fedora)
+
+    proc_fedora = subprocess.run(
+        [bash_bin, str(pkg_install), "--dry-run"],
+        capture_output=True,
+        text=True,
+        cwd=str(tmp_path),
+        env=env_fedora,
+        check=False,
+    )
+    assert proc_fedora.returncode == 0
+    assert "dnf install -y" in proc_fedora.stdout
+    assert "HexPlayer-1.0.0-1.x86_64.rpm" in proc_fedora.stdout
+
+    # Test Ubuntu finding deb in dist/
+    rpm_file.unlink()
+    fake_os_ubuntu = tmp_path / "os-release-ubuntu"
+    fake_os_ubuntu.write_text("ID=ubuntu\nID_LIKE=debian\n", encoding="utf-8")
+    deb_file = dist_dir / "HexPlayer-1.0.0_amd64.deb"
+    deb_file.write_text("dummy deb", encoding="utf-8")
+
+    env_ubuntu = os.environ.copy()
+    env_ubuntu["OS_RELEASE_FILE"] = str(fake_os_ubuntu)
+
+    proc_ubuntu = subprocess.run(
+        [bash_bin, str(pkg_install), "--dry-run"],
+        capture_output=True,
+        text=True,
+        cwd=str(tmp_path),
+        env=env_ubuntu,
+        check=False,
+    )
+    assert proc_ubuntu.returncode == 0
+    assert "apt-get install -y --no-install-recommends" in proc_ubuntu.stdout
+    assert "HexPlayer-1.0.0_amd64.deb" in proc_ubuntu.stdout
