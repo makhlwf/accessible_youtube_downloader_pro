@@ -1,3 +1,7 @@
+import os
+import shutil
+import subprocess
+from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import Mock
 
@@ -102,3 +106,108 @@ def test_linux_integration_failure_rolls_back_preference(monkeypatch):
     dialog.onOk(None)
     assert values["browser_integration"] is False
     assert "browser integration" in message.call_args_list[0].args[0]
+
+
+def parse_os_release_distro(os_release_content: str) -> str:
+    """Parse /etc/os-release content and determine the distribution family."""
+    values = {}
+    for line in os_release_content.splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, val = line.split("=", 1)
+        values[key.strip()] = val.strip().strip("\"'")
+
+    target_id = values.get("ID", "")
+    target_like = values.get("ID_LIKE", "")
+    combined = f" {target_id} {target_like} "
+    for fedora_distro in ("fedora", "rhel", "centos", "rocky", "almalinux"):
+        if f" {fedora_distro} " in combined:
+            return "fedora"
+    for debian_distro in ("ubuntu", "debian", "linuxmint", "pop"):
+        if f" {debian_distro} " in combined:
+            return "debian"
+    return "unknown"
+
+
+def test_detect_distro_script_content():
+    script_path = (
+        Path(__file__).resolve().parents[1] / "packaging" / "linux" / "install-deps.sh"
+    )
+    assert script_path.is_file(), f"{script_path} not found"
+    content = script_path.read_text(encoding="utf-8")
+
+    # Verify os-release detection
+    assert "os-release" in content
+    assert "ID" in content
+    assert "ID_LIKE" in content
+
+    # Verify supported distributions
+    assert "fedora" in content
+    assert "rhel" in content
+    assert "centos" in content
+    assert "ubuntu" in content
+    assert "debian" in content
+
+    # Verify package managers used
+    assert "dnf" in content
+    assert "apt-get" in content
+
+    # Verify --runtime-only option
+    assert "--runtime-only" in content
+
+    # Verify Ubuntu package list includes rpm for cross-packaging RPMs
+    assert "rpm" in content
+
+    # Verify Fedora packages
+    assert "mpv-libs" in content
+    assert "ffmpeg-free" in content
+    assert "speech-dispatcher" in content
+    assert "speech-dispatcher-libs" in content
+    assert "speech-dispatcher-devel" in content
+    assert "speech-dispatcher-espeak-ng" in content
+    assert "at-spi2-core" in content
+    assert "rpm-build" in content
+    assert "xdg-utils" in content
+    assert "xclip" in content
+    assert "wl-clipboard" in content
+
+
+def test_detect_distro_os_release_parsing(tmp_path):
+    samples = [
+        ("ID=fedora\nVERSION_ID=43\n", "fedora"),
+        ('ID="rhel"\nID_LIKE="fedora"\nVERSION_ID="9.4"\n', "fedora"),
+        ('ID="centos"\nID_LIKE="rhel fedora"\n', "fedora"),
+        ('ID="rocky"\nID_LIKE="rhel centos fedora"\n', "fedora"),
+        ('ID="almalinux"\nID_LIKE="rhel centos fedora"\n', "fedora"),
+        ("ID=ubuntu\nID_LIKE=debian\nVERSION_ID=24.04\n", "debian"),
+        ("ID=debian\nVERSION_ID=12\n", "debian"),
+        ('ID="linuxmint"\nID_LIKE="ubuntu debian"\n', "debian"),
+        ('ID="pop"\nID_LIKE="ubuntu debian"\n', "debian"),
+        ("ID=arch\n", "unknown"),
+    ]
+
+    for content, expected in samples:
+        assert parse_os_release_distro(content) == expected
+
+    # If bash is available, also test running install-deps.sh with mock os-release
+    script_path = (
+        Path(__file__).resolve().parents[1] / "packaging" / "linux" / "install-deps.sh"
+    )
+    if shutil.which("bash"):
+        for content, expected in samples:
+            if expected == "unknown":
+                continue
+            fake_os_release = tmp_path / "os-release"
+            fake_os_release.write_text(content, encoding="utf-8")
+            env = os.environ.copy()
+            env["OS_RELEASE_FILE"] = str(fake_os_release)
+            proc = subprocess.run(
+                ["bash", str(script_path), "--detect-distro"],
+                capture_output=True,
+                text=True,
+                env=env,
+                check=False,
+            )
+            assert proc.returncode == 0
+            assert proc.stdout.strip() == expected
