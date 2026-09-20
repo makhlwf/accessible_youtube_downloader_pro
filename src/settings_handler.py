@@ -45,6 +45,7 @@ defaults = {
     "pot_provider_enabled": True,
     "pot_provider_port": 4416,
     "search_suggestions": True,
+    "welcome_completed": False,
 }
 
 _cache = {}

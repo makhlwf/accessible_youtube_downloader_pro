@@ -821,7 +821,7 @@ def get_quality_description(height):
     )
 
 
-def download_yt_dlp():
+def download_yt_dlp(parent=None):
     from gui.update_dialog import UpdateDialog
 
     url = "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp"
@@ -835,7 +835,7 @@ def download_yt_dlp():
         pass
 
     UpdateDialog(
-        wx.GetApp().GetTopWindow(),
+        parent or (wx.GetApp().GetTopWindow() if wx.GetApp() else None),
         url,
         download_path,
         _("جاري تنزيل واي تي دي إل بي"),

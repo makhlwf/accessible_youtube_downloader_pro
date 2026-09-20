@@ -398,6 +398,7 @@ class HomeScreen(wx.Frame):
 
         # About Menu
         aboutMenu = wx.Menu()
+        self.welcomeTourItem = aboutMenu.Append(-1, _("شاشة الترحيب وجولة الميزات..."))
         self.guideItem = aboutMenu.Append(-1, _("دليل المستخدم...\tf1"))
         self.checkUpdatesItem = aboutMenu.Append(-1, _("البحث عن التحديثات"))
         self.privacyPolicyItem = aboutMenu.Append(-1, _("سياسة الخصوصية"))
@@ -469,6 +470,7 @@ class HomeScreen(wx.Frame):
         )
         self.Bind(wx.EVT_MENU, self.on_open_log_file, self.openLogFileItem)
 
+        self.Bind(wx.EVT_MENU, self.onWelcomeTour, self.welcomeTourItem)
         self.Bind(wx.EVT_MENU, self.onGuide, self.guideItem)
         self.Bind(wx.EVT_MENU, self.onCheckForUpdates, self.checkUpdatesItem)
         self.Bind(wx.EVT_MENU, self.onPrivacyPolicy, self.privacyPolicyItem)
@@ -936,10 +938,27 @@ class HomeScreen(wx.Frame):
 
     def onShow(self, event):
         if not self.checked:
-            self.startup_dependency_checks()
+            if not settings_handler.config_get("welcome_completed"):
+                wx.CallAfter(self.show_welcome_screen)
+            else:
+                self.startup_dependency_checks()
             self.checked = True
         self.instruction.SetFocus()
         event.Skip()
+
+    def show_welcome_screen(self):
+        from gui.welcome_dialog import WelcomeDialog
+
+        dlg = WelcomeDialog(self)
+        try:
+            dlg.ShowModal()
+        finally:
+            dlg.Destroy()
+            if hasattr(self, "instruction") and self.instruction:
+                self.instruction.SetFocus()
+
+    def onWelcomeTour(self, event=None):
+        self.show_welcome_screen()
 
     def startup_dependency_checks(self):
         if utils.check_yt_dlp(self) and utils.check_deno(self):

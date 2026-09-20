@@ -300,7 +300,26 @@ class SettingsDialog(wx.Dialog):
             self.searchSuggestions,
         ):
             sizer.Add(checkbox, 0, wx.EXPAND | wx.ALL, 5)
+
+        self.welcomeTourBtn = wx.Button(
+            page, -1, _("فتح شاشة الترحيب واستكشاف الميزات..."), name="welcome_tour"
+        )
+        _set_accessible_name(
+            self.welcomeTourBtn, _("فتح شاشة الترحيب واستكشاف الميزات")
+        )
+        self.welcomeTourBtn.Bind(wx.EVT_BUTTON, self.on_open_welcome_tour)
+        sizer.Add(self.welcomeTourBtn, 0, wx.ALL, 8)
+
         page.SetSizer(sizer)
+
+    def on_open_welcome_tour(self, event):
+        from gui.welcome_dialog import WelcomeDialog
+
+        dlg = WelcomeDialog(self)
+        try:
+            dlg.ShowModal()
+        finally:
+            dlg.Destroy()
 
     def _build_download_page(self):
         page, sizer = self._new_page(_("التنزيل"))
