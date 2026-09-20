@@ -1,6 +1,9 @@
 import argparse
+import ctypes
+import ctypes.util
 import json
 import os
+import shutil
 import struct
 import subprocess
 import sys
@@ -87,6 +90,44 @@ def check_application(executable, host, directory):
     print(f"Packaged executable and offline native host protocol passed: {executable}")
 
 
+def check_accessibility():
+    """Verify accessibility infrastructure availability (Speech Dispatcher & AT-SPI2)."""
+    # 1. Speech Dispatcher check
+    speechd_lib = ctypes.util.find_library("speechd")
+    spd_bin = shutil.which("spd-say") or shutil.which("speech-dispatcher")
+    if not speechd_lib and not spd_bin:
+        print(
+            "Notice: Neither libspeechd nor speech-dispatcher binary found",
+            file=sys.stderr,
+        )
+    else:
+        info = []
+        if speechd_lib:
+            info.append(f"lib={speechd_lib}")
+        if spd_bin:
+            info.append(f"bin={spd_bin}")
+        print(f"Speech Dispatcher accessibility component verified: {', '.join(info)}")
+
+    # 2. AT-SPI2 Accessibility bus launcher check
+    atspi_paths = [
+        "at-spi-bus-launcher",
+        "/usr/libexec/at-spi-bus-launcher",
+        "/usr/lib/at-spi2-core/at-spi-bus-launcher",
+        "/usr/lib/at-spi2/at-spi-bus-launcher",
+    ]
+    found_atspi = None
+    for p in atspi_paths:
+        if shutil.which(p) or Path(p).is_file():
+            found_atspi = p
+            break
+    if found_atspi:
+        print(f"AT-SPI2 accessibility component verified: {found_atspi}")
+    else:
+        print(
+            "Notice: AT-SPI2 bus launcher not found in standard paths", file=sys.stderr
+        )
+
+
 def main():
     parser = argparse.ArgumentParser()
     group = parser.add_mutually_exclusive_group(required=True)
@@ -100,6 +141,41 @@ def main():
         if args.installed:
             executable = Path("/usr/bin/hexplayer")
             host = Path("/usr/bin/hexplayer-native-host")
+            desktop = Path("/usr/share/applications/hexplayer.desktop")
+            if not desktop.is_file():
+                raise RuntimeError(f"Missing installed desktop file: {desktop}")
+            desktop_validator = shutil.which("desktop-file-validate")
+            if desktop_validator:
+                res = subprocess.run(
+                    [desktop_validator, str(desktop)],
+                    capture_output=True,
+                    text=True,
+                    check=False,
+                )
+                if res.returncode != 0:
+                    raise RuntimeError(f"Desktop file validation failed: {res.stderr}")
+                print(f"Installed desktop file validated: {desktop}")
+            opt_dir = Path("/opt/hexplayer")
+            if not opt_dir.is_dir():
+                raise RuntimeError(f"Missing installed directory: {opt_dir}")
+            if shutil.which("rpm"):
+                res = subprocess.run(
+                    ["rpm", "-q", "hexplayer"],
+                    capture_output=True,
+                    text=True,
+                    check=False,
+                )
+                if res.returncode == 0:
+                    print(f"RPM package verified: {res.stdout.strip()}")
+            elif shutil.which("dpkg-query"):
+                res = subprocess.run(
+                    ["dpkg-query", "-W", "-f=${Status}", "hexplayer"],
+                    capture_output=True,
+                    text=True,
+                    check=False,
+                )
+                if res.returncode == 0 and "installed" in res.stdout:
+                    print(f"Debian package verified: {res.stdout.strip()}")
         else:
             extracted = directory / "tar extraction with spaces"
             extracted.mkdir()
@@ -107,6 +183,7 @@ def main():
                 archive.extractall(extracted, filter="data")
             executable = extracted / "HexPlayer" / "HexPlayer"
             host = executable.with_name("HexPlayerNativeHost")
+        check_accessibility()
         check_application(executable, host, directory)
 
 

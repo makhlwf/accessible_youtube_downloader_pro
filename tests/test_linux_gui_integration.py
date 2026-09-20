@@ -445,3 +445,72 @@ def test_installer_auto_finds_dist_packages(tmp_path):
     assert proc_ubuntu.returncode == 0
     assert "apt-get install -y --no-install-recommends" in proc_ubuntu.stdout
     assert "HexPlayer-1.0.0_amd64.deb" in proc_ubuntu.stdout
+
+
+def test_build_artifacts_workflow_rpm_integrity():
+    repo_root = Path(__file__).resolve().parents[1]
+    workflow_path = repo_root / ".github" / "workflows" / "build-artifacts.yml"
+    assert workflow_path.is_file(), "build-artifacts.yml must exist"
+
+    content = workflow_path.read_text(encoding="utf-8")
+    assert "rpm -qip dist/*.rpm" in content
+    assert "dist/*.rpm" in content
+    assert "(cd dist && sha256sum --check ./*.sha256)" in content
+    assert "fedora-smoke:" in content
+    assert "validate_fedora.sh" in content
+
+
+def test_release_workflow_rpm_integrity():
+    repo_root = Path(__file__).resolve().parents[1]
+    release_path = repo_root / ".github" / "workflows" / "release.yml"
+    assert release_path.is_file(), "release.yml must exist"
+
+    content = release_path.read_text(encoding="utf-8")
+    assert 'test -s "artifacts/linux/HexPlayer-$VERSION-1.x86_64.rpm"' in content
+    assert "HexPlayer-$env:VERSION-1.x86_64.rpm" in content
+    assert "rpm = @{url=$rpmUrl}" in content
+
+
+def test_validate_fedora_script_rpm_and_a11y_integrity():
+    repo_root = Path(__file__).resolve().parents[1]
+    script_path = repo_root / "packaging" / "linux" / "validate_fedora.sh"
+    assert script_path.is_file(), "validate_fedora.sh must exist"
+
+    content = script_path.read_text(encoding="utf-8")
+    for req in (
+        "speech-dispatcher",
+        "speech-dispatcher-libs",
+        "speech-dispatcher-espeak-ng",
+        "at-spi2-core",
+        "desktop-file-utils",
+    ):
+        assert req in content, f"{req} must be in validate_fedora.sh packages"
+
+    assert "dnf install -y" in content
+    assert "rpm -q hexplayer" in content
+    assert "desktop-file-validate /usr/share/applications/hexplayer.desktop" in content
+    assert "validate_package.py --installed" in content
+    assert "validate_package.py --tarball" in content
+
+
+def test_validate_package_script_installed_and_a11y_components(capsys):
+    import importlib.util
+
+    repo_root = Path(__file__).resolve().parents[1]
+    script_path = repo_root / "packaging" / "linux" / "validate_package.py"
+    assert script_path.is_file(), "validate_package.py must exist"
+
+    spec = importlib.util.spec_from_file_location("validate_package", script_path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+
+    assert hasattr(module, "check_accessibility")
+    # check_accessibility should execute safely without crashing
+    module.check_accessibility()
+
+    content = script_path.read_text(encoding="utf-8")
+    assert "desktop-file-validate" in content
+    assert "rpm" in content
+    assert "dpkg-query" in content
+    assert "/usr/bin/hexplayer" in content
+    assert "/usr/bin/hexplayer-native-host" in content

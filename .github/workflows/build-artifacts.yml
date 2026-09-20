@@ -61,6 +61,7 @@ jobs:
           set -euo pipefail
           desktop-file-validate packaging/linux/hexplayer.desktop
           dpkg-deb --info dist/*.deb
+          rpm -qip dist/*.rpm
           (cd dist && sha256sum --check ./*.sha256)
       - name: Install Ubuntu deb through apt
         if: runner.os == 'Linux'
@@ -99,6 +100,7 @@ jobs:
           path: |
             dist/*.tar.gz
             dist/*.deb
+            dist/*.rpm
             dist/*.sha256
           if-no-files-found: error
 
@@ -117,7 +119,7 @@ jobs:
       - name: Verify downloaded Linux package checksums
         working-directory: artifacts/linux
         run: sha256sum --check ./*.sha256
-      - name: Smoke tarball and native host in clean Fedora 43 runtime
+      - name: Smoke RPM, tarball and native host in clean Fedora 43 runtime
         timeout-minutes: 17
         run: |
           set -euo pipefail
