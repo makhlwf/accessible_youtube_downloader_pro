@@ -3,6 +3,7 @@ import platform
 import shutil
 import subprocess
 import sys
+import tomllib
 from pathlib import Path
 from textwrap import dedent
 
@@ -331,8 +332,11 @@ def test_rpm_spec_package_linux_flow(tmp_path, monkeypatch):
 
     monkeypatch.setattr(shutil, "which", which_fedora)
 
+    with open(root / "pyproject.toml", "rb") as f:
+        version = tomllib.load(f)["project"]["version"]
+
     # Mock package_rpm to return an rpm artifact
-    fake_rpm_path = dist_dir / "HexPlayer-4.8.0-1.x86_64.rpm"
+    fake_rpm_path = dist_dir / f"HexPlayer-{version}-1.x86_64.rpm"
 
     def mock_package_rpm(version, architecture, staging, assets):
         fake_rpm_path.write_bytes(b"\xed\xab\xee\xdbRPMCONTENTS")
@@ -345,18 +349,18 @@ def test_rpm_spec_package_linux_flow(tmp_path, monkeypatch):
 
     # Check generated files
     assert fake_rpm_path.is_file()
-    rpm_sha = dist_dir / "HexPlayer-4.8.0-1.x86_64.rpm.sha256"
+    rpm_sha = dist_dir / f"HexPlayer-{version}-1.x86_64.rpm.sha256"
     assert rpm_sha.is_file()
     sha_content = rpm_sha.read_text(encoding="utf-8")
-    assert "HexPlayer-4.8.0-1.x86_64.rpm" in sha_content
+    assert f"HexPlayer-{version}-1.x86_64.rpm" in sha_content
 
     # Check tarball
-    tarball = dist_dir / "HexPlayer-4.8.0-linux-x86_64.tar.gz"
+    tarball = dist_dir / f"HexPlayer-{version}-linux-x86_64.tar.gz"
     assert tarball.is_file()
-    assert (dist_dir / "HexPlayer-4.8.0-linux-x86_64.tar.gz.sha256").is_file()
+    assert (dist_dir / f"HexPlayer-{version}-linux-x86_64.tar.gz.sha256").is_file()
 
     # deb should not have been generated on Fedora without dpkg-deb
-    assert not (dist_dir / "HexPlayer-4.8.0-linux-amd64.deb").exists()
+    assert not (dist_dir / f"HexPlayer-{version}-linux-amd64.deb").exists()
 
 
 def test_rpm_spec_package_linux_flow_ubuntu(tmp_path, monkeypatch):
@@ -394,7 +398,10 @@ def test_rpm_spec_package_linux_flow_ubuntu(tmp_path, monkeypatch):
 
     monkeypatch.setattr(subprocess, "run", fake_run)
 
-    fake_rpm_path = dist_dir / "HexPlayer-4.8.0-1.x86_64.rpm"
+    with open(root / "pyproject.toml", "rb") as f:
+        version = tomllib.load(f)["project"]["version"]
+
+    fake_rpm_path = dist_dir / f"HexPlayer-{version}-1.x86_64.rpm"
 
     def mock_package_rpm(version, architecture, staging, assets):
         fake_rpm_path.write_bytes(b"\xed\xab\xee\xdbRPMCONTENTS")
@@ -406,9 +413,9 @@ def test_rpm_spec_package_linux_flow_ubuntu(tmp_path, monkeypatch):
     build_mod.package_linux()
 
     # All three artifacts should be produced with their .sha256 files
-    tarball = dist_dir / "HexPlayer-4.8.0-linux-x86_64.tar.gz"
-    deb = dist_dir / "HexPlayer-4.8.0-linux-amd64.deb"
-    rpm = dist_dir / "HexPlayer-4.8.0-1.x86_64.rpm"
+    tarball = dist_dir / f"HexPlayer-{version}-linux-x86_64.tar.gz"
+    deb = dist_dir / f"HexPlayer-{version}-linux-amd64.deb"
+    rpm = dist_dir / f"HexPlayer-{version}-1.x86_64.rpm"
 
     assert tarball.is_file()
     assert deb.is_file()
