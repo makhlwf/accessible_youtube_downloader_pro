@@ -36,8 +36,10 @@ import pytest
 from unittest.mock import MagicMock, patch
 import wx
 
+
 def test_welcome_dialog_step_navigation():
     from gui.welcome_dialog import WelcomeDialog
+
     with patch("gui.welcome_dialog.speech_client") as mock_speech:
         dlg = WelcomeDialog(parent=None)
         assert dlg.current_step == 0
@@ -109,8 +111,11 @@ git commit -m "feat(gui): refactor welcome dialog to 4-step configuration first 
 # tests/test_welcome_dialog.py
 def test_step1_settings_persistence():
     from gui.welcome_dialog import WelcomeDialog
-    with patch("gui.welcome_dialog.settings_handler") as mock_settings, \
-         patch("gui.welcome_dialog.speech_client"):
+
+    with (
+        patch("gui.welcome_dialog.settings_handler") as mock_settings,
+        patch("gui.welcome_dialog.speech_client"),
+    ):
         settings_instance = MagicMock()
         mock_settings.get_instance.return_value = settings_instance
         settings_instance.get_setting.side_effect = lambda k, default=None: {
@@ -122,7 +127,7 @@ def test_step1_settings_persistence():
         dlg = WelcomeDialog(parent=None)
         dlg.EndModal = MagicMock()
         dlg.choice_lang.SetSelection(0)
-        dlg.radio_mode.SetSelection(1) # Video
+        dlg.radio_mode.SetSelection(1)  # Video
         dlg.chk_clipboard.SetValue(False)
 
         dlg._on_finish(None)
@@ -130,26 +135,38 @@ def test_step1_settings_persistence():
         settings_instance.set_setting.assert_any_call("auto_detect_clipboard", False)
         settings_instance.set_setting.assert_any_call("welcome_completed", True)
 
+
 def test_step2_component_readiness_and_download():
     from gui.welcome_dialog import WelcomeDialog
-    with patch("gui.welcome_dialog.utils.download_yt_dlp") as mock_dl, \
-         patch("gui.welcome_dialog.speech_client"):
+
+    with (
+        patch("gui.welcome_dialog.utils.download_yt_dlp") as mock_dl,
+        patch("gui.welcome_dialog.speech_client"),
+    ):
         dlg = WelcomeDialog(parent=None)
         dlg._show_step(1)
-        dlg.btn_download_ytdlp.Command(wx.CommandEvent(wx.wxEVT_BUTTON, dlg.btn_download_ytdlp.GetId()))
+        dlg.btn_download_ytdlp.Command(
+            wx.CommandEvent(wx.wxEVT_BUTTON, dlg.btn_download_ytdlp.GetId())
+        )
         mock_dl.assert_called_once_with(parent=dlg)
+
 
 def test_step3_shortcuts_cheat_sheet_populated():
     from gui.welcome_dialog import WelcomeDialog
+
     with patch("gui.welcome_dialog.speech_client"):
         dlg = WelcomeDialog(parent=None)
         dlg._show_step(2)
         assert dlg.list_shortcuts.GetItemCount() > 5
 
+
 def test_step4_startup_toggle_controls_welcome_completed():
     from gui.welcome_dialog import WelcomeDialog
-    with patch("gui.welcome_dialog.settings_handler") as mock_settings, \
-         patch("gui.welcome_dialog.speech_client"):
+
+    with (
+        patch("gui.welcome_dialog.settings_handler") as mock_settings,
+        patch("gui.welcome_dialog.speech_client"),
+    ):
         settings_instance = MagicMock()
         mock_settings.get_instance.return_value = settings_instance
         dlg = WelcomeDialog(parent=None)
