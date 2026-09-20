@@ -487,3 +487,139 @@ def test_inno_setup_run_section_launches_on_silent_install():
     # Verify that postinstall and nowait flags are present
     assert "nowait" in run_section
     assert "postinstall" in run_section
+
+
+def test_select_app_update_fedora_rpm(monkeypatch):
+    monkeypatch.setattr(utils.sys, "platform", "linux")
+    monkeypatch.setattr(utils.platform, "machine", lambda: "x86_64")
+    monkeypatch.setenv("HEXPLAYER_DISTRO_OVERRIDE", "fedora")
+
+    info = {
+        "version": "9.9.9",
+        "platforms": {
+            "linux": [
+                "https://github.com/o/r/releases/download/v9.9.9/HexPlayer-9.9.9-linux-x86_64.tar.gz",
+                "https://github.com/o/r/releases/download/v9.9.9/HexPlayer-9.9.9-1.x86_64.rpm",
+                "https://github.com/o/r/releases/download/v9.9.9/HexPlayer-9.9.9-linux-amd64.deb",
+            ]
+        },
+    }
+    url, can_download = utils._select_app_update(info)
+    assert (
+        url
+        == "https://github.com/o/r/releases/download/v9.9.9/HexPlayer-9.9.9-1.x86_64.rpm"
+    )
+    assert can_download is True
+
+
+def test_select_app_update_fedora_fallback_tar(monkeypatch):
+    monkeypatch.setattr(utils.sys, "platform", "linux")
+    monkeypatch.setattr(utils.platform, "machine", lambda: "x86_64")
+    monkeypatch.setenv("HEXPLAYER_DISTRO_OVERRIDE", "fedora")
+
+    info = {
+        "version": "9.9.9",
+        "platforms": {
+            "linux": {
+                "url": "https://github.com/o/r/releases/download/v9.9.9/HexPlayer-9.9.9-linux-x86_64.tar.gz"
+            }
+        },
+    }
+    url, can_download = utils._select_app_update(info)
+    assert (
+        url
+        == "https://github.com/o/r/releases/download/v9.9.9/HexPlayer-9.9.9-linux-x86_64.tar.gz"
+    )
+    assert can_download is True
+
+
+def test_select_app_update_fedora_rejects_deb(monkeypatch):
+    monkeypatch.setattr(utils.sys, "platform", "linux")
+    monkeypatch.setattr(utils.platform, "machine", lambda: "x86_64")
+    monkeypatch.setenv("HEXPLAYER_DISTRO_OVERRIDE", "fedora")
+
+    info = {
+        "version": "9.9.9",
+        "platforms": {
+            "linux": {
+                "url": "https://github.com/o/r/releases/download/v9.9.9/HexPlayer-9.9.9-linux-amd64.deb"
+            }
+        },
+    }
+    url, can_download = utils._select_app_update(info)
+    assert url == utils.RELEASES_PAGE_URL
+    assert can_download is False
+
+
+def test_linux_update_rpm_shows_dnf_command(monkeypatch, tmp_path):
+    monkeypatch.setattr(update_dialog.sys, "platform", "linux")
+    rpm_file = tmp_path / "HexPlayer-4.8.0-1.x86_64.rpm"
+    rpm_file.write_bytes(b"rpm package")
+    dialog = object.__new__(UpdateDialog)
+    dialog.dest = None
+    dialog.download = True
+    dialog.status = Mock()
+    dialog.EndModal = Mock()
+    launch = Mock()
+    exit_process = Mock()
+    opened = Mock(return_value=True)
+    speech = Mock()
+    message_box = Mock(return_value=update_dialog.wx.YES)
+
+    monkeypatch.setattr(UpdateDialog, "launchInstaller", staticmethod(launch))
+    monkeypatch.setattr(update_dialog.sys, "exit", exit_process)
+    monkeypatch.setattr(update_dialog.wx, "MessageBox", message_box)
+    monkeypatch.setattr(
+        update_dialog.wx, "LaunchDefaultApplication", opened, raising=False
+    )
+    monkeypatch.setattr(update_dialog.speech_client, "speak", speech)
+
+    dialog.onFinished(SimpleNamespace(path=str(rpm_file)))
+
+    launch.assert_not_called()
+    exit_process.assert_not_called()
+    assert not dialog.download
+    expected_command = f'sudo dnf install "{rpm_file}"'
+    status_text = dialog.status.SetValue.call_args.args[0]
+    speech_text = speech.call_args.args[0]
+    assert expected_command in status_text
+    assert expected_command in speech_text
+    assert speech.call_args.kwargs["interrupt"] is True
+    dialog.EndModal.assert_called_once_with(update_dialog.wx.ID_OK)
+
+
+def test_linux_update_deb_shows_apt_command(monkeypatch, tmp_path):
+    monkeypatch.setattr(update_dialog.sys, "platform", "linux")
+    deb_file = tmp_path / "HexPlayer-4.8.0-linux-amd64.deb"
+    deb_file.write_bytes(b"deb package")
+    dialog = object.__new__(UpdateDialog)
+    dialog.dest = None
+    dialog.download = True
+    dialog.status = Mock()
+    dialog.EndModal = Mock()
+    launch = Mock()
+    exit_process = Mock()
+    opened = Mock(return_value=True)
+    speech = Mock()
+    message_box = Mock(return_value=update_dialog.wx.YES)
+
+    monkeypatch.setattr(UpdateDialog, "launchInstaller", staticmethod(launch))
+    monkeypatch.setattr(update_dialog.sys, "exit", exit_process)
+    monkeypatch.setattr(update_dialog.wx, "MessageBox", message_box)
+    monkeypatch.setattr(
+        update_dialog.wx, "LaunchDefaultApplication", opened, raising=False
+    )
+    monkeypatch.setattr(update_dialog.speech_client, "speak", speech)
+
+    dialog.onFinished(SimpleNamespace(path=str(deb_file)))
+
+    launch.assert_not_called()
+    exit_process.assert_not_called()
+    assert not dialog.download
+    expected_command = f'sudo apt install "{deb_file}"'
+    status_text = dialog.status.SetValue.call_args.args[0]
+    speech_text = speech.call_args.args[0]
+    assert expected_command in status_text
+    assert expected_command in speech_text
+    assert speech.call_args.kwargs["interrupt"] is True
+    dialog.EndModal.assert_called_once_with(update_dialog.wx.ID_OK)
