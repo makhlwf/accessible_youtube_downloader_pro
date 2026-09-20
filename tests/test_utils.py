@@ -434,3 +434,82 @@ def test_info_cache_bounded_lru_and_expiration():
     cache.clear()
     assert len(cache.cache) == 0
     assert cache.get("k1") is None
+
+
+def test_detect_linux_distro_family_fedora_override(monkeypatch):
+    monkeypatch.setenv("HEXPLAYER_DISTRO_OVERRIDE", "fedora")
+    assert utils._detect_linux_distro_family() == "fedora"
+    monkeypatch.setenv("HEXPLAYER_DISTRO_OVERRIDE", "RHEL")
+    assert utils._detect_linux_distro_family() == "fedora"
+    monkeypatch.setenv("HEXPLAYER_DISTRO_OVERRIDE", "rpm")
+    assert utils._detect_linux_distro_family() == "fedora"
+
+
+def test_detect_linux_distro_family_debian_override(monkeypatch):
+    monkeypatch.setenv("HEXPLAYER_DISTRO_OVERRIDE", "debian")
+    assert utils._detect_linux_distro_family() == "debian"
+    monkeypatch.setenv("HEXPLAYER_DISTRO_OVERRIDE", "Ubuntu")
+    assert utils._detect_linux_distro_family() == "debian"
+    monkeypatch.setenv("HEXPLAYER_DISTRO_OVERRIDE", "deb")
+    assert utils._detect_linux_distro_family() == "debian"
+
+
+def test_detect_linux_distro_family_os_release_file(monkeypatch, tmp_path):
+    monkeypatch.delenv("HEXPLAYER_DISTRO_OVERRIDE", raising=False)
+    fedora_os_release = tmp_path / "os-release-fedora"
+    fedora_os_release.write_text(
+        'NAME="Fedora Linux"\nID=fedora\nVERSION_ID=43\n', encoding="utf-8"
+    )
+    monkeypatch.setenv("OS_RELEASE_FILE", str(fedora_os_release))
+    assert utils._detect_linux_distro_family() == "fedora"
+
+    ubuntu_os_release = tmp_path / "os-release-ubuntu"
+    ubuntu_os_release.write_text(
+        'NAME="Ubuntu"\nID=ubuntu\nID_LIKE="debian"\n', encoding="utf-8"
+    )
+    monkeypatch.setenv("OS_RELEASE_FILE", str(ubuntu_os_release))
+    assert utils._detect_linux_distro_family() == "debian"
+
+    centos_os_release = tmp_path / "os-release-centos"
+    centos_os_release.write_text(
+        'NAME="CentOS Stream"\nID="centos"\nID_LIKE="rhel fedora"\n',
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("OS_RELEASE_FILE", str(centos_os_release))
+    assert utils._detect_linux_distro_family() == "fedora"
+
+    arch_os_release = tmp_path / "os-release-arch"
+    arch_os_release.write_text('NAME="Arch Linux"\nID=arch\n', encoding="utf-8")
+    monkeypatch.setenv("OS_RELEASE_FILE", str(arch_os_release))
+    assert utils._detect_linux_distro_family() == "unknown"
+
+
+def test_detect_linux_distro_family_freedesktop(monkeypatch):
+    monkeypatch.delenv("HEXPLAYER_DISTRO_OVERRIDE", raising=False)
+    monkeypatch.delenv("OS_RELEASE_FILE", raising=False)
+    monkeypatch.setattr(
+        utils.platform,
+        "freedesktop_os_release",
+        lambda: {"ID": "fedora", "ID_LIKE": "rhel"},
+        raising=False,
+    )
+    assert utils._detect_linux_distro_family() == "fedora"
+
+    monkeypatch.setattr(
+        utils.platform,
+        "freedesktop_os_release",
+        lambda: {"ID": "debian"},
+        raising=False,
+    )
+    assert utils._detect_linux_distro_family() == "debian"
+
+
+def test_linux_release_asset_url_rpm():
+    rpm_url = "https://github.com/makhlwf/accessible_youtube_downloader_pro/releases/download/v4.8.0/HexPlayer-4.8.0-1.x86_64.rpm"
+    assert utils._linux_release_asset_url(rpm_url, "x86_64") == rpm_url
+    assert utils._linux_release_asset_url(rpm_url, "x86_64", distro="fedora") == rpm_url
+    assert utils._linux_release_asset_url(rpm_url, "x86_64", distro="debian") == ""
+    assert utils._linux_release_asset_url(rpm_url, "aarch64") == ""
+
+    rpm_linux_arch = "https://github.com/makhlwf/accessible_youtube_downloader_pro/releases/download/v4.8.0/HexPlayer-4.8.0-linux-x86_64.rpm"
+    assert utils._linux_release_asset_url(rpm_linux_arch, "x86_64") == rpm_linux_arch

@@ -178,10 +178,24 @@ class UpdateDialog(wx.Dialog):
             return
         if sys.platform != "win32":
             self.download = False
-            message = _(
-                "Update downloaded to {path}. Automatic installation is not supported on this platform. "
-                "Install the update manually after closing HexPlayer. Open the download folder now?"
-            ).format(path=os.path.abspath(event.path))
+            path = os.path.abspath(event.path)
+            if path.endswith(".rpm"):
+                cmd = f'sudo dnf install "{path}"'
+                message = _(
+                    "Update downloaded to {path}. To install, close HexPlayer and run: {command}. "
+                    "Open the download folder now?"
+                ).format(path=path, command=cmd)
+            elif path.endswith(".deb"):
+                cmd = f'sudo apt install "{path}"'
+                message = _(
+                    "Update downloaded to {path}. To install, close HexPlayer and run: {command}. "
+                    "Open the download folder now?"
+                ).format(path=path, command=cmd)
+            else:
+                message = _(
+                    "Update downloaded to {path}. Automatic installation is not supported on this platform. "
+                    "Install the update manually after closing HexPlayer. Open the download folder now?"
+                ).format(path=path)
             self.status.SetValue(message)
             speech_client.speak(message, interrupt=True)
             if wx.MessageBox(
@@ -189,9 +203,7 @@ class UpdateDialog(wx.Dialog):
                 _("Update downloaded"),
                 wx.YES_NO | wx.ICON_INFORMATION,
                 parent=self,
-            ) == wx.YES and not wx.LaunchDefaultApplication(
-                os.path.dirname(os.path.abspath(event.path))
-            ):
+            ) == wx.YES and not wx.LaunchDefaultApplication(os.path.dirname(path)):
                 utils.show_error(_("Unable to open the download folder."), parent=self)
             self.EndModal(wx.ID_OK)
             return
