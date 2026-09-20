@@ -1,0 +1,38 @@
+Name: hexplayer
+Version: @VERSION@
+Release: 1%{?dist}
+Summary: Accessible YouTube browser, player, and downloader
+License: MIT
+URL: https://github.com/makhlwf/accessible_youtube_downloader_pro
+
+# Disable automatic dependency and debug package generation for prebuilt PyInstaller binaries
+AutoReqProv: no
+%define debug_package %{nil}
+%define _build_id_links none
+%global __os_install_post %{nil}
+%define __spec_install_pre %{nil}
+
+Requires: gtk3, mpv-libs, ffmpeg-free, speech-dispatcher, speech-dispatcher-libs, speech-dispatcher-espeak-ng, at-spi2-core, libnotify, libsecret, webkit2gtk4.1, mesa-libGLU, libSM, libXtst, xdg-utils, xclip, wl-clipboard
+
+%description
+Accessible YouTube browser, player, and downloader.
+Native Linux desktop client with a Chromium native messaging host.
+Requires a graphical desktop, system libmpv, and FFmpeg.
+
+%prep
+
+%build
+
+%install
+
+%post
+update-desktop-database > /dev/null 2>&1 || :
+
+%postun
+update-desktop-database > /dev/null 2>&1 || :
+
+%files
+/opt/hexplayer
+/usr/bin/hexplayer
+/usr/bin/hexplayer-native-host
+/usr/share/applications/hexplayer.desktop
