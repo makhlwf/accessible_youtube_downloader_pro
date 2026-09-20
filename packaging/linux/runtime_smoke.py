@@ -130,7 +130,15 @@ if sys.platform == "linux" and "--packaging-smoke-test" in sys.argv:
         frame.Show()
         wx.CallLater(250, frame.Close)
         app.MainLoop()
-        print("HexPlayer packaging smoke passed: GTK, Prism import, offline audio EOF")
+        print(
+            "HexPlayer packaging smoke passed: GTK, Prism import, offline audio EOF",
+            flush=True,
+        )
     finally:
-        mpv.mpv_terminate_destroy(handle)
+        try:
+            mpv.mpv_terminate_destroy(handle)
+        except Exception:
+            pass
+        sys.stdout.flush()
+        sys.stderr.flush()
     os._exit(0)
