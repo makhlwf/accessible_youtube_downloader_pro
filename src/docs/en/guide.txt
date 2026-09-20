@@ -14,17 +14,39 @@ Supported environment
 
 HexPlayer is intended for modern 64-bit Windows systems, especially Windows 10 and Windows 11. Older Windows releases and 32-bit systems may not work well because the current Python runtime, yt-dlp, Deno, MPV, and related components no longer target those environments reliably.
 
-Linux reference environment
+Linux environment
 
-Linux support targets Ubuntu 24.04 on x86_64 (amd64), with glibc 2.39 or newer and a graphical desktop session. This does not guarantee compatibility with all distributions; the required system libraries must also be available. There are no macOS packages, and no ARM release support is promised.
+Linux support natively targets Fedora 43+ on x86_64 via RPM packages and Ubuntu 24.04+ on amd64/x86_64 via DEB packages, with glibc 2.39 or newer and a graphical desktop session. Both distributions are verified in automated CI and container smoke tests. Generic tarballs are also available for other compatible x86_64 Linux systems. There are no macOS packages, and no ARM release support is promised.
 
 Linux speech announcements use Prism with Speech Dispatcher. Orca provides screen-reader navigation; install and enable it separately if needed. Automated tests do not establish desktop accessibility: focus, control labels, keyboard navigation, and speech still require manual validation with Orca on a real Linux desktop.
 
 Installation on Linux
 
-Check https://github.com/makhlwf/accessible_youtube_downloader_pro/releases for Linux assets. They may not be in the latest published release yet. Until a new release publishes them, use the source setup below rather than the Windows installer.
+Check https://github.com/makhlwf/accessible_youtube_downloader_pro/releases for Linux assets. In the download directory, replace VERSION in these commands with the version in the actual downloaded filenames (e.g. 4.8.0). Always verify the checksum before installation.
 
-The .deb package is recommended on Ubuntu 24.04. Download the linux-amd64.deb asset and its matching .sha256 file from the same release. In the download directory, replace VERSION in these commands with the version in the actual downloaded filenames. Verify the checksum first and stop if it fails:
+Single-command unified installer (install.sh)
+
+HexPlayer includes an automated Linux installer script that detects your distribution, installs required packages or source dependencies, and configures URL protocol and browser extension integration:
+
+bash packaging/linux/install.sh
+# Or install a specific package:
+bash packaging/linux/install.sh --package ./HexPlayer-VERSION-1.x86_64.rpm
+# Verify screen reader (Orca) and Speech Dispatcher readiness:
+bash packaging/linux/install.sh --check-accessibility
+
+Native RPM package on Fedora / RHEL / CentOS / Rocky / AlmaLinux
+
+Download the HexPlayer-VERSION-1.x86_64.rpm asset and its matching .sha256 file:
+
+sha256sum -c HexPlayer-VERSION-1.x86_64.rpm.sha256
+sudo dnf install ./HexPlayer-VERSION-1.x86_64.rpm
+hexplayer
+
+DNF resolves all required system dependencies automatically.
+
+Native Debian package on Ubuntu 24.04+ / Debian 12+ / Mint / Pop!_OS
+
+Download the linux-amd64.deb asset and its matching .sha256 file from the same release:
 
 sha256sum -c HexPlayer-VERSION-linux-amd64.deb.sha256
 sudo apt install ./HexPlayer-VERSION-linux-amd64.deb
@@ -32,20 +54,27 @@ hexplayer
 
 APT installs the required system dependencies. Launch from the application menu or with hexplayer as your normal desktop user, never with sudo.
 
-Alternatively, download the linux-x86_64.tar.gz asset and its matching .sha256 file. The tarball still requires the runtime packages listed in packaging/linux/control.in. On Ubuntu 24.04:
+Tarball on other x86_64 Linux distributions
 
+Download the linux-x86_64.tar.gz asset and its matching .sha256 file. Install the runtime packages for your distribution:
+
+On Fedora:
+sudo dnf install gtk3 mpv-libs ffmpeg-free libnotify libsecret webkit2gtk4.1 mesa-libGL mesa-libGLU libSM libXtst speech-dispatcher speech-dispatcher-espeak-ng xdg-utils xclip wl-clipboard
+
+On Ubuntu:
 sudo apt update
-sudo apt install libc6 libstdc++6 libgtk-3-0t64 libmpv2 ffmpeg libnotify4 libsecret-1-0 libwebkit2gtk-4.1-0 libgl1 libglu1-mesa libsm6 libxtst6 libspeechd2 speech-dispatcher xdg-utils
-sudo apt install espeak-ng xclip wl-clipboard
+sudo apt install libc6 libstdc++6 libgtk-3-0t64 libmpv2 ffmpeg libnotify4 libsecret-1-0 libwebkit2gtk-4.1-0 libgl1 libglu1-mesa libsm6 libxtst6 libspeechd2 speech-dispatcher xdg-utils espeak-ng xclip wl-clipboard
+
+Extract and run:
 sha256sum -c HexPlayer-VERSION-linux-x86_64.tar.gz.sha256
 tar -xzf HexPlayer-VERSION-linux-x86_64.tar.gz
 ./HexPlayer/HexPlayer
 
-The second install command adds recommended speech and clipboard helpers. Only extract after successful checksum verification, into a user-writable directory. Launch without sudo. The tarball is not dependency-free: FFmpeg and libmpv are system packages.
+Only extract after successful checksum verification, into a user-writable directory. Launch without sudo. The tarball is not dependency-free: FFmpeg and libmpv are system packages.
 
 Running from source on Linux
 
-Install Git if needed with sudo apt install git. Install uv following https://docs.astral.sh/uv/getting-started/installation/ and reopen the terminal if needed so uv is on PATH. Then run:
+Install Git and curl (`sudo dnf install git curl` on Fedora or `sudo apt install git curl` on Ubuntu). Install uv following https://docs.astral.sh/uv/getting-started/installation/ and reopen the terminal if needed so uv is on PATH. Then run:
 
 git clone https://github.com/makhlwf/accessible_youtube_downloader_pro.git
 cd accessible_youtube_downloader_pro
@@ -54,7 +83,7 @@ uv python install 3.14.7
 UV_CONCURRENT_BUILDS=1 uv sync --locked
 uv run python src/accessible_youtube_downloader_pro.py
 
-The dependency script uses APT for Ubuntu build and runtime libraries. Python 3.14.7 is pinned in .python-version; wxPython may build from source, requiring time and memory. Run uv and the app as your normal user, not with sudo.
+The dependency script automatically detects your distribution (Fedora or Ubuntu/Debian) and installs build and runtime libraries via DNF or APT. Python 3.14.7 is pinned in .python-version; wxPython may build from source, requiring time and memory. Run uv and the app as your normal user, not with sudo.
 
 First launch and Linux data locations
 

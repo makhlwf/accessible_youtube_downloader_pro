@@ -42,7 +42,7 @@ The current application version is **4.8.0**.
 ### Supported systems
 
 - **Windows:** Intended for modern 64-bit Windows systems, especially Windows 10 and Windows 11. Older Windows releases and 32-bit systems may not work reliably with the current Python runtime and external tools.
-- **Linux:** The reference platform is **Ubuntu 24.04, x86_64 (amd64), with glibc 2.39 or newer**, in a graphical desktop session. This is not a promise of compatibility with all Linux distributions; matching glibc alone is not sufficient without the required system libraries.
+- **Linux:** Native support for **Fedora 43+ (x86_64)** via RPM packages and **Ubuntu 24.04+ (amd64)** via DEB packages, with glibc 2.39 or newer, in a graphical desktop session. Both distributions are fully natively supported and verified in automated CI and container smoke tests. Portable tarballs are also provided for other compatible x86_64 Linux distributions.
 - **Other platforms:** No macOS packages are provided, and no ARM release support is promised.
 
 Linux speech announcements use Prism with Speech Dispatcher. Orca is the screen reader for desktop navigation; install and enable it separately if needed. Automated checks do not establish screen-reader usability: focus, labels, keyboard navigation, and announcements still require manual Orca validation in a real Linux desktop session.
@@ -146,11 +146,38 @@ HexPlayer.exe /SILENT /NORESTART /DOWNLOADCOMPONENTS=1
 
 Open the [Releases page](https://github.com/makhlwf/accessible_youtube_downloader_pro/releases), choose a stable release or the **beta** pre-release, and expand its **Assets** list. Beta builds are for testing and can change independently of stable releases. Choose a release that lists the Linux asset you need; if your chosen release does not include it, select another release with that asset or use [the source setup](#running-from-source). Do not use the Windows installer on Linux.
 
-The Linux release workflow builds on **Ubuntu 24.04 x86_64** and produces `HexPlayer-VERSION-linux-amd64.deb`, `HexPlayer-VERSION-linux-x86_64.tar.gz`, and matching `.sha256` files. The `.deb` targets Ubuntu 24.04 amd64; the tarball is the option to try on other **x86_64, glibc 2.39 or newer** distributions. Neither matching architecture nor a sufficiently new glibc guarantees compatibility: Ubuntu-built shared libraries can require different SONAMEs (versioned shared-library names) or ABIs from those supplied by another distribution. The workflow does not produce a native RPM.
+HexPlayer provides native packages for **Fedora / RHEL** (`.rpm`), **Ubuntu / Debian** (`.deb`), and generic `.tar.gz` archives for x86_64 distributions with glibc 2.39 or newer. Each asset is accompanied by a `.sha256` checksum file. In all commands below, replace `VERSION` with the version in the downloaded filename (e.g. `4.8.0`).
 
-### Recommended: Debian package on Ubuntu 24.04
+### Quick Start: Unified Linux Installer (`install.sh`)
 
-Download the `linux-amd64.deb` asset and its matching `.sha256` file from the same release. In all commands below, replace `VERSION` with the version in the downloaded filename, including for beta assets; do not substitute the tag name `beta`. Run the checksum command in the download directory with both files present. Stop if verification fails.
+HexPlayer includes an automated installer script that detects your distribution, installs required packages or sets up from source, and registers the URL scheme and browser extension integration:
+
+```bash
+# Auto-detect distribution and install prebuilt package (.rpm or .deb) found in current directory
+bash packaging/linux/install.sh
+
+# Or install a specific downloaded package:
+bash packaging/linux/install.sh --package ./HexPlayer-VERSION-1.x86_64.rpm
+
+# Verify screen reader (Orca), AT-SPI2, and Speech Dispatcher readiness:
+bash packaging/linux/install.sh --check-accessibility
+```
+
+### Native RPM Package: Fedora, RHEL, CentOS, Rocky, AlmaLinux
+
+Download the `HexPlayer-VERSION-1.x86_64.rpm` asset and its matching `.sha256` file from the release. Run the checksum verification in the download directory and install via DNF:
+
+```bash
+sha256sum -c HexPlayer-VERSION-1.x86_64.rpm.sha256
+sudo dnf install ./HexPlayer-VERSION-1.x86_64.rpm
+hexplayer
+```
+
+DNF automatically resolves and installs all required system dependencies (GTK 3, libmpv, FFmpeg, Speech Dispatcher, Secret Storage, WebKitGTK). Start HexPlayer from your application menu or with `hexplayer` as your normal desktop user, never with `sudo`.
+
+### Native Debian Package: Ubuntu 24.04+, Debian 12+, Linux Mint, Pop!_OS
+
+Download the `HexPlayer-VERSION-linux-amd64.deb` asset and its matching `.sha256` file from the same release:
 
 ```bash
 sha256sum -c HexPlayer-VERSION-linux-amd64.deb.sha256
@@ -158,15 +185,21 @@ sudo apt install ./HexPlayer-VERSION-linux-amd64.deb
 hexplayer
 ```
 
-APT installs the package's system dependencies. Start HexPlayer from your application menu or with `hexplayer` as your normal desktop user, never with `sudo`.
+APT installs the package and its declared runtime dependencies. Start HexPlayer from your application menu or with `hexplayer` as your normal desktop user, never with `sudo`.
 
-### Tarball: Ubuntu, Fedora, and other distributions
+### Tarball: Generic x86_64 Linux Distributions
 
-Download the `linux-x86_64.tar.gz` asset and its matching `.sha256` file from the same release. The tarball is not a dependency-free portable build. Install your distribution's runtime packages first, then follow the shared extraction steps below.
+Download the `linux-x86_64.tar.gz` asset and its matching `.sha256` file from the same release. The tarball is not a dependency-free portable build. Install your distribution's runtime packages first, then extract and run.
+
+#### Fedora runtime packages
+
+```bash
+sudo dnf install gtk3 mpv-libs ffmpeg-free libnotify libsecret webkit2gtk4.1 mesa-libGL mesa-libGLU libSM libXtst speech-dispatcher speech-dispatcher-espeak-ng xdg-utils xclip wl-clipboard
+```
+
+Fedora is fully natively supported and verified in CI using native RPM and container validation tests. Note that Fedora's default `ffmpeg-free` package provides basic codecs; if your workflow requires proprietary codecs (such as certain H.264/AAC media), consider enabling RPM Fusion multimedia packages.
 
 #### Ubuntu 24.04 runtime packages
-
-These dependencies match `packaging/linux/control.in`:
 
 ```bash
 sudo apt update
@@ -174,23 +207,9 @@ sudo apt install libc6 libstdc++6 libgtk-3-0t64 libmpv2 ffmpeg libnotify4 libsec
 sudo apt install espeak-ng xclip wl-clipboard
 ```
 
-The second install command provides recommended speech and clipboard helpers.
-
-#### Fedora 43/44 runtime packages
-
-For conventional DNF-managed Fedora 43/44 x86_64 installations, the following package names are listed for both releases in the official Fedora package index:
-
-```bash
-sudo dnf install gtk3 mpv-libs ffmpeg-free libnotify libsecret webkit2gtk4.1 mesa-libGL mesa-libGLU libSM libXtst speech-dispatcher speech-dispatcher-espeak-ng xdg-utils xclip wl-clipboard
-```
-
-Package references: [GTK 3](https://packages.fedoraproject.org/pkgs/gtk3/gtk3/), [libmpv](https://packages.fedoraproject.org/pkgs/mpv/mpv-libs/), [FFmpeg](https://packages.fedoraproject.org/pkgs/ffmpeg/ffmpeg-free/), [notifications](https://packages.fedoraproject.org/pkgs/libnotify/libnotify/), [secret storage](https://packages.fedoraproject.org/pkgs/libsecret/libsecret/), [WebKitGTK 4.1](https://packages.fedoraproject.org/pkgs/webkitgtk/webkit2gtk4.1/), [OpenGL](https://packages.fedoraproject.org/pkgs/mesa/mesa-libGL/), [GLU](https://packages.fedoraproject.org/pkgs/mesa-libGLU/mesa-libGLU/), [X11 session management](https://packages.fedoraproject.org/pkgs/libSM/libSM/), [XTest](https://packages.fedoraproject.org/pkgs/libXtst/libXtst/), [Speech Dispatcher](https://packages.fedoraproject.org/pkgs/speech-dispatcher/speech-dispatcher/), [eSpeak NG speech module](https://packages.fedoraproject.org/pkgs/speech-dispatcher/speech-dispatcher-espeak-ng/), [desktop utilities](https://packages.fedoraproject.org/pkgs/xdg-utils/xdg-utils/), [X11 clipboard](https://packages.fedoraproject.org/pkgs/xclip/xclip/), and [Wayland clipboard](https://packages.fedoraproject.org/pkgs/wl-clipboard/wl-clipboard/).
-
-Fedora's `ffmpeg-free` has limited codec support; some playback or conversion formats may be unavailable with the distribution's FFmpeg/libmpv stack. Follow Fedora's multimedia guidance for your release if additional codecs are needed. Package availability is not a tested HexPlayer compatibility claim: Fedora is not covered by the native CI, and the Ubuntu-built tarball may still fail because of shared-library differences. Do not install the `.deb` or run the APT-based `packaging/linux/install-deps.sh` on Fedora. If the tarball is incompatible, use the source setup with Fedora libraries instead.
-
 #### Other Linux distributions
 
-Use your distribution's package manager to install equivalents of the runtime libraries above, including GTK 3, WebKitGTK 4.1 (GTK 3/libsoup 3), libmpv, FFmpeg/ffprobe, libnotify, libsecret, OpenGL/GLU, X11 SM/XTest, and Speech Dispatcher with a speech engine. Install desktop and clipboard helpers appropriate to your session. Package names differ; the Ubuntu APT script is not a generic Linux installer. A musl-based distribution or a system with glibc older than 2.39 is not a target for this tarball.
+Use your distribution's package manager to install equivalents of the runtime libraries above, including GTK 3, WebKitGTK 4.1 (GTK 3/libsoup 3), libmpv, FFmpeg/ffprobe, libnotify, libsecret, OpenGL/GLU, X11 SM/XTest, and Speech Dispatcher with a speech engine. Install desktop and clipboard helpers appropriate to your session. A musl-based distribution or a system with glibc older than 2.39 is not a target for this tarball.
 
 #### Verify, extract, and launch
 
@@ -263,9 +282,9 @@ On Linux, safe browser integration registers a per-user desktop handler for `hex
    uv run python src\accessible_youtube_downloader_pro.py
    ```
 
-### Linux: Ubuntu 24.04 reference setup
+### Linux: Native Fedora & Ubuntu source setup
 
-Install Git (`sudo apt install git`) if needed, then clone the repository. Install uv using the [uv installation instructions](https://docs.astral.sh/uv/getting-started/installation/); reopen your terminal if required so `uv` is on PATH.
+Install Git and curl if needed (`sudo dnf install git curl` on Fedora or `sudo apt install git curl` on Ubuntu). Install uv using the [uv installation instructions](https://docs.astral.sh/uv/getting-started/installation/); reopen your terminal if required so `uv` is on PATH.
 
 ```bash
 git clone https://github.com/makhlwf/accessible_youtube_downloader_pro.git
@@ -276,23 +295,7 @@ UV_CONCURRENT_BUILDS=1 uv sync --locked
 uv run python src/accessible_youtube_downloader_pro.py
 ```
 
-The dependency script uses APT to install Ubuntu build and runtime libraries. Python 3.14.7 is pinned in `.python-version`; wxPython may build from source, so synchronization can take time and memory. Run uv and HexPlayer as your normal user, not with `sudo`.
-
-### Linux: Fedora and other distributions from source
-
-Install the runtime dependencies for your distribution as described above, plus Git, a C/C++ compiler toolchain, Make, `pkg-config`, and development headers/libraries for GTK 3, WebKitGTK 4.1 (GTK 3/libsoup 3), OpenGL, GLU, JPEG, PNG, TIFF, Expat, libnotify, SDL2, X11 SM/XTest, GStreamer 1.0 and its base plugins, libsecret, and libffi. Python extension builds need headers matching the Python interpreter used by uv. These requirements follow `packaging/linux/install-deps.sh`; development package names must be resolved using your own distribution's package manager, not by running that APT script on Fedora.
-
-Install uv using the [uv installation instructions](https://docs.astral.sh/uv/getting-started/installation/), then run as your normal desktop user:
-
-```bash
-git clone https://github.com/makhlwf/accessible_youtube_downloader_pro.git
-cd accessible_youtube_downloader_pro
-uv python install 3.14.7
-UV_CONCURRENT_BUILDS=1 uv sync --locked
-uv run --no-sync python src/accessible_youtube_downloader_pro.py
-```
-
-wxPython may compile locally and require substantial time and memory. If synchronization reports a missing header or `pkg-config` module, install the corresponding development package for your distribution and retry. This source route uses local libraries rather than the Ubuntu-frozen bundle, but is not a guarantee of compatibility on every distribution. It does not create an RPM; the repository's Linux packaging script targets Ubuntu and requires Debian packaging tools such as `dpkg-deb`.
+`packaging/linux/install-deps.sh` automatically detects your distribution (Fedora/RHEL or Ubuntu/Debian) and installs the required build and runtime dependencies using DNF or APT. Python 3.14.7 is pinned in `.python-version`; wxPython may build from source, so synchronization can take time and memory. Run uv and HexPlayer as your normal user, not with `sudo`.
 
 ### First launch and user data
 
@@ -309,9 +312,9 @@ uv sync --locked --no-install-package wxpython
 uv run --no-sync pytest tests/ -v -o faulthandler_timeout=60
 ```
 
-These are mocked unit and platform import tests, not native GUI validation. The separate Ubuntu 24.04 native job installs the APT dependencies, runs a full `uv sync --locked` with serialized builds and a native dependency cache, then runs `packaging/linux/runtime_smoke.py --packaging-smoke-test` under D-Bus and Xvfb. The smoke script opens and closes a real wx/GTK frame, imports Prism and Linux dependencies, and checks generated offline audio playback through system libmpv to end-of-file with null audio/video outputs. It does not test YouTube streaming, audible output, Prism/Speech Dispatcher announcements, or Orca usability.
+These are mocked unit and platform import tests, not native GUI validation. The Ubuntu 24.04 native job installs dependencies, runs a full `uv sync --locked` with serialized builds and a native dependency cache, then runs `packaging/linux/runtime_smoke.py --packaging-smoke-test` under D-Bus and Xvfb. The smoke script opens and closes a real wx/GTK frame, imports Prism and Linux dependencies, and checks generated offline audio playback through system libmpv to end-of-file with null audio/video outputs. It does not test YouTube streaming, audible output, Prism/Speech Dispatcher announcements, or Orca usability.
 
-The release build workflow additionally checks package metadata and SHA-256 checksums, installs the `.deb` through APT, validates desktop files, and exercises frozen startup and native-host message framing as a normal user for both the installed package and a tarball extracted to a path containing spaces. Lint/format CI runs Ruff on Windows and Ubuntu. There is no Fedora native CI job. Screen-reader behavior and keyboard navigation still need manual testing in a real desktop session.
+The release build workflow additionally checks package metadata and SHA-256 checksums, installs the `.deb` through APT, runs a dedicated Fedora container job (`fedora-smoke`) validating native `.rpm` installation, Speech Dispatcher and AT-SPI2 availability, validates desktop files, and exercises frozen startup and native-host message framing as a normal user for both installed packages and tarball archives. Lint/format CI runs Ruff on Windows and Ubuntu. Screen-reader behavior and keyboard navigation still need manual testing in a real desktop session.
 
 To run the full repository preflight (skills, Ruff lint, translation catalogs, and tests):
 

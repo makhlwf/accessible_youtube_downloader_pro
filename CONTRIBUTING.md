@@ -54,9 +54,9 @@ For a deep technical breakdown of the architecture, SQLite schemas, Deno/YouTube
 
 ### Supported platforms
 
-Windows 10/11 x64 and native Linux are the application targets. **Ubuntu 24.04 amd64/x86_64 is the only Linux release target**, built natively against glibc 2.39. Other distributions are not validated package targets, macOS is unsupported, and no Linux ARM package is provided or promised.
+Windows 10/11 x64 and native Linux are the application targets. **Fedora 43+ (x86_64) and Ubuntu 24.04+ (amd64/x86_64) are natively supported Linux release targets**, built against glibc 2.39+. Both distributions are verified in automated CI and container smoke tests.
 
-For end-user packages, see [Linux release installation](DEVELOPMENT.md#linux-release-installation). Linux `.deb`, `.tar.gz`, and matching `.sha256` assets are unavailable until a release containing them is published; use the source setup below if they are absent.
+For end-user packages, see [Linux release installation](DEVELOPMENT.md#linux-release-installation). Linux `.rpm`, `.deb`, `.tar.gz`, and matching `.sha256` assets are available on the releases page.
 
 ### Windows development quickstart
 
@@ -84,11 +84,14 @@ For end-user packages, see [Linux release installation](DEVELOPMENT.md#linux-rel
 
 ### Native Linux development quickstart
 
-Use Ubuntu 24.04 amd64/x86_64 with a graphical desktop. Install Git, curl, and uv, then reopen your terminal if needed to put uv on `PATH`:
+Use Fedora 43+ or Ubuntu 24.04+ amd64/x86_64 with a graphical desktop. Install Git, curl, and uv, then reopen your terminal if needed to put uv on `PATH`:
 
 ```bash
-sudo apt update
-sudo apt install git curl
+# On Fedora:
+sudo dnf install git curl
+# On Ubuntu:
+sudo apt update && sudo apt install git curl
+
 curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
@@ -104,11 +107,11 @@ uv sync --locked
 uv run --no-sync python src/accessible_youtube_downloader_pro.py
 ```
 
-The dependency script installs the GTK 3/WebKitGTK development headers, C/C++ compiler and supporting libraries needed to compile wxPython from source, plus libmpv, FFmpeg, Speech Dispatcher, clipboard tools, D-Bus, and Xvfb. A runtime-only GTK installation is insufficient. Allow time and memory for compilation; `UV_CONCURRENT_BUILDS=1` limits concurrent package builds. Use the Python selected by `.python-version`, not Ubuntu's default Python, and do not reuse a Windows virtual environment.
+The dependency script (`packaging/linux/install-deps.sh`) automatically detects whether you are on Fedora (DNF) or Ubuntu/Debian (APT). It installs the C/C++ compiler toolchain, GTK 3/WebKitGTK development headers, image/media libraries, libmpv, FFmpeg, Speech Dispatcher, packaging tools (`rpm-build` and `dpkg-deb`), clipboard tools, D-Bus, and Xvfb. Allow time and memory for compilation; `UV_CONCURRENT_BUILDS=1` limits concurrent package builds.
 
 Run the application as your normal desktop user. Enable Orca and check Speech Dispatcher and desktop audio for interactive accessibility testing. Complete the application's startup prompts for Deno, yt-dlp, and JavaScript dependencies; these require network access. See [Linux setup and runtime details](DEVELOPMENT.md#native-linux-source-and-development-setup).
 
-### Native Linux build
+### Native Linux build (RPM, DEB & Tarball)
 
 After installing the system dependencies, run from the repository root:
 
@@ -119,7 +122,7 @@ uv sync --locked --group build
 xvfb-run -a uv run --no-sync python scripts/build.py
 ```
 
-**The build deletes existing `build/` and `dist/` directories.** It creates `dist/HexPlayer/` containing the frozen application and native host, a versioned amd64 `.deb`, an x86_64 `.tar.gz`, and matching `.sha256` checksum files. Build on native Ubuntu 24.04 amd64 for release compatibility; Windows cannot cross-build these packages. See [Linux packaging and smoke checks](DEVELOPMENT.md#native-ubuntu-2404-amd64-build).
+**The build deletes existing `build/` and `dist/` directories.** It creates `dist/HexPlayer/` containing the frozen application and native host, a versioned x86_64 `.rpm` (if `rpmbuild` is present), an amd64 `.deb` (if `dpkg-deb` is present), an x86_64 `.tar.gz`, and matching `.sha256` checksum files. See [Linux packaging and smoke checks](DEVELOPMENT.md#native-linux-packaging-rpm-deb-and-tarball).
 
 ---
 

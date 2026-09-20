@@ -158,6 +158,7 @@ def main():
             opt_dir = Path("/opt/hexplayer")
             if not opt_dir.is_dir():
                 raise RuntimeError(f"Missing installed directory: {opt_dir}")
+            package_verified = False
             if shutil.which("rpm"):
                 res = subprocess.run(
                     ["rpm", "-q", "hexplayer"],
@@ -167,7 +168,8 @@ def main():
                 )
                 if res.returncode == 0:
                     print(f"RPM package verified: {res.stdout.strip()}")
-            elif shutil.which("dpkg-query"):
+                    package_verified = True
+            if not package_verified and shutil.which("dpkg-query"):
                 res = subprocess.run(
                     ["dpkg-query", "-W", "-f=${Status}", "hexplayer"],
                     capture_output=True,
@@ -176,6 +178,11 @@ def main():
                 )
                 if res.returncode == 0 and "installed" in res.stdout:
                     print(f"Debian package verified: {res.stdout.strip()}")
+                    package_verified = True
+            if not package_verified:
+                print(
+                    "Package database query checked: no active RPM or Debian package registration found"
+                )
         else:
             extracted = directory / "tar extraction with spaces"
             extracted.mkdir()

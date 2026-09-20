@@ -311,7 +311,7 @@ else
             exit 1
         fi
         if command -v uv >/dev/null 2>&1; then
-            uv sync
+            (cd "$REPO_DIR" && uv sync)
         elif command -v pip3 >/dev/null 2>&1; then
             pip3 install -e "$REPO_DIR" || true
         fi
@@ -330,9 +330,9 @@ else
         fi
         if [ "$do_register" -eq 1 ]; then
             if command -v uv >/dev/null 2>&1; then
-                uv run python -c "import sys; sys.path.insert(0, 'src'); from windows_url_association import register_browser_integration; register_browser_integration()" 2>/dev/null || true
+                (cd "$REPO_DIR" && uv run python -c "import sys; sys.path.insert(0, 'src'); from windows_url_association import register_browser_integration; register_browser_integration()") 2>/dev/null || true
             elif command -v python3 >/dev/null 2>&1; then
-                python3 -c "import sys; sys.path.insert(0, 'src'); from windows_url_association import register_browser_integration; register_browser_integration()" 2>/dev/null || true
+                (cd "$REPO_DIR" && python3 -c "import sys; sys.path.insert(0, 'src'); from windows_url_association import register_browser_integration; register_browser_integration()") 2>/dev/null || true
             fi
         fi
     fi

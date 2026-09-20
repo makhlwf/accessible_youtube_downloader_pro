@@ -181,12 +181,12 @@ class UpdateDialog(wx.Dialog):
             path = os.path.abspath(event.path)
             if path.endswith(".rpm"):
                 cmd = f'sudo dnf install "{path}"'
-                message = _(
-                    "Update downloaded to {path}. To install, close HexPlayer and run: {command}. "
-                    "Open the download folder now?"
-                ).format(path=path, command=cmd)
             elif path.endswith(".deb"):
                 cmd = f'sudo apt install "{path}"'
+            else:
+                cmd = None
+
+            if cmd:
                 message = _(
                     "Update downloaded to {path}. To install, close HexPlayer and run: {command}. "
                     "Open the download folder now?"
