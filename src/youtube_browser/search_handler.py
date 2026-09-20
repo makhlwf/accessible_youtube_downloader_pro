@@ -12,7 +12,7 @@ from py_yt import (
 )
 
 import utils
-from language_handler import _
+from language_handler import _, normalize_language_code
 from settings_handler import config_get
 from utils import format_duration, time_to_seconds
 
@@ -561,8 +561,10 @@ class Search:
         self.count = 0
         self.new_videos = 0
 
-        lang = config_get("lang") or "ar"
+        lang = normalize_language_code(config_get("lang") or "ar")
         region = utils.get_windows_region()
+        if not region or not isinstance(region, str) or len(region) != 2:
+            region = "US"
 
         if self.filter == 0:  # Videos
             self.search = VideosSearch(
@@ -758,9 +760,12 @@ async def fetch_search_suggestions_async(
 
     if language is None:
         language = config_get("lang") or "en"
+    language = normalize_language_code(language)
 
     if region is None:
         region = utils.get_windows_region()
+    if not region or not isinstance(region, str) or len(region) != 2:
+        region = "US"
 
     try:
         data = await Suggestions.get(clean_query, language=language, region=region)

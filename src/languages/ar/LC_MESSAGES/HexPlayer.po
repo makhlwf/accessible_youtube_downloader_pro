@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-09-20 20:22+0200\n"
+"POT-Creation-Date: 2026-09-21 00:37+0200\n"
 "PO-Revision-Date: 2026-05-10 15:31+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ar\n"
@@ -520,7 +520,7 @@ msgstr ""
 #: src/youtube_browser/search_handler.py:112
 #: src/youtube_browser/search_handler.py:212
 #: src/youtube_browser/search_handler.py:447
-#: src/youtube_browser/search_handler.py:620
+#: src/youtube_browser/search_handler.py:622
 msgid "غير معروف"
 msgstr "غير معروف"
 
@@ -938,7 +938,7 @@ msgstr "إلغاء"
 #: src/gui/auto_detect_dialog.py:87 src/gui/search_dialog.py:80
 #: src/youtube_browser/search_handler.py:187
 #: src/youtube_browser/search_handler.py:499
-#: src/youtube_browser/search_handler.py:680
+#: src/youtube_browser/search_handler.py:682
 msgid "قائمة تشغيل"
 msgstr "قائمة تشغيل"
 
@@ -950,7 +950,7 @@ msgstr "قائمة تشغيل"
 #: src/youtube_browser/search_handler.py:371
 #: src/youtube_browser/search_handler.py:405
 #: src/youtube_browser/search_handler.py:506
-#: src/youtube_browser/search_handler.py:686
+#: src/youtube_browser/search_handler.py:688
 msgid "قناة"
 msgstr "قناة"
 
@@ -1768,7 +1768,7 @@ msgstr "فلتر: "
 msgid "بلا فلتر"
 msgstr "بلا فلتر"
 
-#: src/gui/search_dialog.py:77 src/youtube_browser/search_handler.py:746
+#: src/gui/search_dialog.py:77 src/youtube_browser/search_handler.py:748
 msgid "بث مباشر"
 msgstr "بث مباشر"
 
@@ -2246,8 +2246,8 @@ msgid ""
 "Update downloaded to {path}. To install, close HexPlayer and run: "
 "{command}. Open the download folder now?"
 msgstr ""
-"تم تنزيل التحديث إلى {path}. لتثبيته، أغلق HexPlayer ثم نفّذ: "
-"{command}. هل تريد فتح مجلد التنزيل الآن؟"
+"تم تنزيل التحديث إلى {path}. لتثبيته، أغلق HexPlayer ثم نفّذ: {command}. "
+"هل تريد فتح مجلد التنزيل الآن؟"
 
 #: src/gui/update_dialog.py:196
 #, python-brace-format
@@ -2257,7 +2257,8 @@ msgid ""
 "the download folder now?"
 msgstr ""
 "تم تنزيل التحديث إلى {path}. التثبيت التلقائي غير مدعوم على هذه المنصة. "
-"يرجى تثبيت التحديث يدويًا بعد إغلاق HexPlayer. هل تريد فتح مجلد التنزيل الآن؟"
+"يرجى تثبيت التحديث يدويًا بعد إغلاق HexPlayer. هل تريد فتح مجلد التنزيل "
+"الآن؟"
 
 #: src/gui/update_dialog.py:203
 msgid "Update downloaded"
@@ -2300,27 +2301,27 @@ msgstr "لغة الواجهة:"
 msgid "Interface Language"
 msgstr "لغة الواجهة"
 
-#: src/gui/welcome_dialog.py:94
+#: src/gui/welcome_dialog.py:96
 msgid "Audio Mode (Fast, screen reader optimized, background listening)"
 msgstr "وضع الصوت (سريع، متوافق مع قارئات الشاشة، تشغيل في الخلفية)"
 
-#: src/gui/welcome_dialog.py:95
+#: src/gui/welcome_dialog.py:97
 msgid "Video Mode (Displays video player window)"
 msgstr "وضع الفيديو (يعرض نافذة مشغل الفيديو)"
 
-#: src/gui/welcome_dialog.py:100 src/gui/welcome_dialog.py:105
+#: src/gui/welcome_dialog.py:102 src/gui/welcome_dialog.py:107
 msgid "Preferred Playback Mode"
 msgstr "وضع التشغيل المفضل"
 
-#: src/gui/welcome_dialog.py:116 src/gui/welcome_dialog.py:120
+#: src/gui/welcome_dialog.py:118 src/gui/welcome_dialog.py:122
 msgid "Automatically detect YouTube links copied to clipboard"
 msgstr "التعرف التلقائي على روابط يوتيوب المنسوخة إلى الحافظة"
 
-#: src/gui/welcome_dialog.py:139 src/gui/welcome_dialog.py:141
+#: src/gui/welcome_dialog.py:141 src/gui/welcome_dialog.py:143
 msgid "Step 2 of 4: Component Readiness"
 msgstr "الخطوة 2 من 4: جاهزية المكونات"
 
-#: src/gui/welcome_dialog.py:145
+#: src/gui/welcome_dialog.py:147
 msgid ""
 "HexPlayer includes bundled media codecs (libmpv) for instant playback. To"
 " download videos and extract high quality audio, the yt-dlp download "
@@ -2329,36 +2330,36 @@ msgstr ""
 "يتضمن HexPlayer حزم تشغيل الوسائط المدمجة (libmpv) للتشغيل الفوري. "
 "ولتنزيل المقاطع واستخراج الصوت بجودة عالية، يُستخدم محرك التنزيل yt-dlp."
 
-#: src/gui/welcome_dialog.py:154
+#: src/gui/welcome_dialog.py:156
 msgid "Download Engine Status"
 msgstr "حالة محرك التنزيل"
 
-#: src/gui/welcome_dialog.py:158
+#: src/gui/welcome_dialog.py:160
 msgid "Checking download engine..."
 msgstr "جارٍ فحص محرك التنزيل..."
 
-#: src/gui/welcome_dialog.py:164 src/gui/welcome_dialog.py:167
+#: src/gui/welcome_dialog.py:166 src/gui/welcome_dialog.py:169
 msgid "Download or Update Download Engine"
 msgstr "تنزيل محرك التنزيل أو تحديثه"
 
-#: src/gui/welcome_dialog.py:180
+#: src/gui/welcome_dialog.py:182
 #, python-brace-format
 msgid "Download Engine (yt-dlp): Ready (Version: {version})"
 msgstr "محرك التنزيل (yt-dlp): جاهز (الإصدار: {version})"
 
-#: src/gui/welcome_dialog.py:186
+#: src/gui/welcome_dialog.py:188
 msgid "Download Engine (yt-dlp): Not installed or update recommended"
 msgstr "محرك التنزيل (yt-dlp): غير مثبت أو يوصى بالتحديث"
 
-#: src/gui/welcome_dialog.py:196
+#: src/gui/welcome_dialog.py:198
 msgid "Starting download of the download engine in the background..."
 msgstr "بدء تنزيل محرك التنزيل في الخلفية..."
 
-#: src/gui/welcome_dialog.py:219 src/gui/welcome_dialog.py:223
+#: src/gui/welcome_dialog.py:221 src/gui/welcome_dialog.py:225
 msgid "Step 3 of 4: Keyboard Shortcuts & Quick Workflows"
 msgstr "الخطوة 3 من 4: اختصارات لوحة المفاتيح وسير العمل السريع"
 
-#: src/gui/welcome_dialog.py:228
+#: src/gui/welcome_dialog.py:230
 msgid ""
 "Use Arrow keys to explore essential shortcuts. You can use these keys "
 "anywhere in the main window."
@@ -2366,79 +2367,79 @@ msgstr ""
 "استخدم مفاتيح الأسهم لاستكشاف الاختصارات الأساسية. يمكنك استخدام هذه "
 "المفاتيح في أي مكان بالنافذة الرئيسية."
 
-#: src/gui/welcome_dialog.py:242
+#: src/gui/welcome_dialog.py:244
 msgid "Keyboard Shortcuts Cheat Sheet"
 msgstr "ورقة مرجعية لاختصارات لوحة المفاتيح"
 
-#: src/gui/welcome_dialog.py:244
+#: src/gui/welcome_dialog.py:246
 msgid "Shortcut"
 msgstr "الاختصار"
 
-#: src/gui/welcome_dialog.py:245
+#: src/gui/welcome_dialog.py:247
 msgid "Action"
 msgstr "الإجراء"
 
-#: src/gui/welcome_dialog.py:248
+#: src/gui/welcome_dialog.py:250
 msgid "Focus Search Box"
 msgstr "التركيز على مربع البحث"
 
-#: src/gui/welcome_dialog.py:249
+#: src/gui/welcome_dialog.py:251
 msgid "Move between Search, Results list, and Controls"
 msgstr "التنقل بين البحث وقائمة النتائج وأزرار التحكم"
 
-#: src/gui/welcome_dialog.py:250
+#: src/gui/welcome_dialog.py:252
 msgid "Play selected video or playlist"
 msgstr "تشغيل المقطع أو قائمة التشغيل المحددة"
 
-#: src/gui/welcome_dialog.py:251
+#: src/gui/welcome_dialog.py:253
 msgid "Play / Pause media"
 msgstr "تشغيل / إيقاف مؤقت للوسائط"
 
-#: src/gui/welcome_dialog.py:252
+#: src/gui/welcome_dialog.py:254
 msgid "Seek 5 seconds backward / forward"
 msgstr "تقديم / ترجيع 5 ثوانٍ"
 
-#: src/gui/welcome_dialog.py:253
+#: src/gui/welcome_dialog.py:255
 msgid "Volume increase / decrease"
 msgstr "رفع / خفض مستوى الصوت"
 
-#: src/gui/welcome_dialog.py:254
+#: src/gui/welcome_dialog.py:256
 msgid "Decrease / Increase playback speed"
 msgstr "تقليل / زيادة سرعة التشغيل"
 
-#: src/gui/welcome_dialog.py:255
+#: src/gui/welcome_dialog.py:257
 msgid "Mute / Unmute audio"
 msgstr "كتم / إلغاء كتم الصوت"
 
-#: src/gui/welcome_dialog.py:256
+#: src/gui/welcome_dialog.py:258
 msgid "Download selected media"
 msgstr "تنزيل الوسائط المحددة"
 
-#: src/gui/welcome_dialog.py:257
+#: src/gui/welcome_dialog.py:259
 msgid "Open History"
 msgstr "فتح سجل المشاهدة"
 
-#: src/gui/welcome_dialog.py:258
+#: src/gui/welcome_dialog.py:260
 msgid "Open Bookmarks / Favorites"
 msgstr "فتح المفضلة"
 
-#: src/gui/welcome_dialog.py:267 src/gui/welcome_dialog.py:268
+#: src/gui/welcome_dialog.py:269 src/gui/welcome_dialog.py:270
 msgid "Open Full Shortcuts Guide"
 msgstr "فتح دليل الاختصارات الكامل"
 
-#: src/gui/welcome_dialog.py:277 src/gui/welcome_dialog.py:335
+#: src/gui/welcome_dialog.py:279 src/gui/welcome_dialog.py:337
 msgid "HexPlayer Documentation"
 msgstr "دليل استخدام HexPlayer"
 
-#: src/gui/welcome_dialog.py:280
+#: src/gui/welcome_dialog.py:282
 msgid "Full documentation opened."
 msgstr "تم فتح الدليل الكامل."
 
-#: src/gui/welcome_dialog.py:294 src/gui/welcome_dialog.py:296
+#: src/gui/welcome_dialog.py:296 src/gui/welcome_dialog.py:298
 msgid "Step 4 of 4: You are Ready to Go!"
 msgstr "الخطوة 4 من 4: أنت جاهز للبدء!"
 
-#: src/gui/welcome_dialog.py:300
+#: src/gui/welcome_dialog.py:302
 msgid ""
 "Setup is complete! You can access all settings and features at any time "
 "from the main window menu bar. Press F1 anytime for the complete User "
@@ -2447,80 +2448,80 @@ msgstr ""
 "اكتمل الإعداد! يمكنك الوصول إلى جميع الإعدادات والميزات في أي وقت من شريط"
 " القوائم بالنافذة الرئيسية. اضغط F1 في أي وقت للحصول على الدليل الكامل."
 
-#: src/gui/welcome_dialog.py:309 src/gui/welcome_dialog.py:312
+#: src/gui/welcome_dialog.py:311 src/gui/welcome_dialog.py:314
 msgid "Show this welcome screen on startup"
 msgstr "إظهار شاشة الترحيب هذه عند بدء التشغيل"
 
-#: src/gui/welcome_dialog.py:317 src/gui/welcome_dialog.py:318
+#: src/gui/welcome_dialog.py:319 src/gui/welcome_dialog.py:320
 msgid "Open User Documentation (F1)"
 msgstr "فتح دليل الاستخدام (F1)"
 
-#: src/gui/welcome_dialog.py:324 src/gui/welcome_dialog.py:326
+#: src/gui/welcome_dialog.py:326 src/gui/welcome_dialog.py:328
 msgid "Finish and Launch HexPlayer"
 msgstr "إنهاء وبدء استخدام HexPlayer"
 
-#: src/gui/welcome_dialog.py:338
+#: src/gui/welcome_dialog.py:340
 msgid "User Guide not found."
 msgstr "لم يتم العثور على دليل الاستخدام."
 
-#: src/gui/welcome_dialog.py:348
+#: src/gui/welcome_dialog.py:350
 msgid "HexPlayer Welcome & Setup Guide"
 msgstr "دليل الترحيب والإعداد لبرنامج HexPlayer"
 
-#: src/gui/welcome_dialog.py:356
+#: src/gui/welcome_dialog.py:358
 msgid "Initial Configuration"
 msgstr "الإعدادات الأولية"
 
-#: src/gui/welcome_dialog.py:357
+#: src/gui/welcome_dialog.py:359
 msgid "Component Readiness"
 msgstr "جاهزية المكونات"
 
-#: src/gui/welcome_dialog.py:358
+#: src/gui/welcome_dialog.py:360
 msgid "Keyboard Shortcuts & Quick Workflows"
 msgstr "اختصارات لوحة المفاتيح وسير العمل السريع"
 
-#: src/gui/welcome_dialog.py:359
+#: src/gui/welcome_dialog.py:361
 msgid "You are Ready to Go!"
 msgstr "أنت جاهز للبدء!"
 
-#: src/gui/welcome_dialog.py:395
+#: src/gui/welcome_dialog.py:397
 msgid "< Back"
 msgstr "< السابق"
 
-#: src/gui/welcome_dialog.py:396
+#: src/gui/welcome_dialog.py:398
 msgid "Back to previous step"
 msgstr "الرجوع إلى الخطوة السابقة"
 
-#: src/gui/welcome_dialog.py:400 src/gui/welcome_dialog.py:479
+#: src/gui/welcome_dialog.py:402 src/gui/welcome_dialog.py:481
 msgid "Next >"
 msgstr "التالي >"
 
-#: src/gui/welcome_dialog.py:401 src/gui/welcome_dialog.py:480
+#: src/gui/welcome_dialog.py:403 src/gui/welcome_dialog.py:482
 msgid "Next step"
 msgstr "الخطوة التالية"
 
-#: src/gui/welcome_dialog.py:407
+#: src/gui/welcome_dialog.py:409
 msgid "Skip / Close"
 msgstr "تخطي / إغلاق"
 
-#: src/gui/welcome_dialog.py:408
+#: src/gui/welcome_dialog.py:410
 msgid "Skip and close guide"
 msgstr "تخطي وإغلاق الدليل"
 
-#: src/gui/welcome_dialog.py:476
+#: src/gui/welcome_dialog.py:478
 msgid "Finish"
 msgstr "إنهاء"
 
-#: src/gui/welcome_dialog.py:477
+#: src/gui/welcome_dialog.py:479
 msgid "Finish and save"
 msgstr "إنهاء وحفظ"
 
-#: src/gui/welcome_dialog.py:485
+#: src/gui/welcome_dialog.py:487
 #, python-brace-format
 msgid "Step {current} of {total}: {title}"
 msgstr "الخطوة {current} من {total}: {title}"
 
-#: src/gui/welcome_dialog.py:529
+#: src/gui/welcome_dialog.py:531
 msgid "Welcome tour completed."
 msgstr "اكتملت جولة الترحيب."
 
@@ -2704,8 +2705,8 @@ msgstr ""
 #: src/youtube_browser/search_handler.py:253
 #: src/youtube_browser/search_handler.py:492
 #: src/youtube_browser/search_handler.py:500
-#: src/youtube_browser/search_handler.py:674
-#: src/youtube_browser/search_handler.py:681
+#: src/youtube_browser/search_handler.py:676
+#: src/youtube_browser/search_handler.py:683
 msgid "بواسطة"
 msgstr "بواسطة"
 
@@ -2989,14 +2990,14 @@ msgid "الوصف: {}"
 msgstr "الوصف: {}"
 
 #: src/youtube_browser/search_handler.py:501
-#: src/youtube_browser/search_handler.py:682
-#: src/youtube_browser/search_handler.py:688
+#: src/youtube_browser/search_handler.py:684
+#: src/youtube_browser/search_handler.py:690
 #, python-brace-format
 msgid "تحتوي على {} من الفيديوهات"
 msgstr "تحتوي على {} من الفيديوهات"
 
 #: src/youtube_browser/search_handler.py:552
-#: src/youtube_browser/search_handler.py:744
+#: src/youtube_browser/search_handler.py:746
 #, python-brace-format
 msgid "عدد المشاهدات {}"
 msgstr "عدد المشاهدات {}"

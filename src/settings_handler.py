@@ -2,7 +2,7 @@ import configparser
 import os
 import threading
 
-from language_handler import get_default_language
+from language_handler import get_default_language, normalize_language_code
 from paths import get_default_download_dir, legacy_settings_paths, settings_path
 
 defaults = {
@@ -134,6 +134,8 @@ def _load_cache():
     for key, value in defaults.items():
         if key not in _cache:
             _cache[key] = value
+    if "lang" in _cache:
+        _cache["lang"] = normalize_language_code(_cache["lang"])
     _sync_config_from_cache()
 
 
@@ -155,6 +157,17 @@ def config_get(key):
     if not _cache:
         _load_cache()
     key = _canonical_key(key)
+    if key == "lang":
+        if key in _cache:
+            raw = _cache[key]
+            normalized = normalize_language_code(raw)
+            if normalized != raw:
+                _cache[key] = normalized
+                config_set(key, normalized)
+            return normalized
+        val = normalize_language_code(defaults.get(key))
+        config_set(key, val)
+        return val
     if key in _cache:
         return _cache[key]
     # Fallback to defaults if key not found
@@ -179,6 +192,8 @@ def save_settings():
 def config_set(key, value):
     global _save_timer
     key = _canonical_key(key)
+    if key == "lang":
+        value = normalize_language_code(value)
     _cache[key] = value
     with _lock:
         if "settings" not in _config:

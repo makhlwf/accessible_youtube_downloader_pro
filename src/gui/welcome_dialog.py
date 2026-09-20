@@ -8,7 +8,7 @@ import speech_client
 import utils
 from gui.custom_controls import CustomLabel
 from gui.text_viewer import Viewer
-from language_handler import _, supported_languages
+from language_handler import _, normalize_language_code, supported_languages
 
 logger = logging.getLogger(__name__)
 
@@ -76,12 +76,14 @@ class Step1ConfigPanel(wx.Panel):
         _set_accessible_name(self.lang_label, _("Interface Language"))
         lang_box.Add(self.lang_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
 
-        self.lang_codes = list(supported_languages.keys())
-        self.lang_names = list(supported_languages.values())
+        self.lang_names = list(supported_languages.keys())
+        self.lang_codes = list(supported_languages.values())
         self.choice_lang = wx.Choice(self, -1, choices=self.lang_names)
         _set_accessible_name(self.choice_lang, _("Interface Language"))
 
-        current_lang = settings_handler.config_get("lang") or "en"
+        current_lang = normalize_language_code(
+            settings_handler.config_get("lang") or "en"
+        )
         if current_lang in self.lang_codes:
             self.choice_lang.SetSelection(self.lang_codes.index(current_lang))
         elif len(self.lang_names) > 0:
@@ -155,13 +157,13 @@ class Step2ComponentsPanel(wx.Panel):
         box_sizer = wx.StaticBoxSizer(status_box, wx.VERTICAL)
 
         self.lbl_ytdlp_status = wx.StaticText(
-            self, -1, _("Checking download engine...")
+            status_box, -1, _("Checking download engine...")
         )
         _set_bold_title(self.lbl_ytdlp_status, 1)
         box_sizer.Add(self.lbl_ytdlp_status, 0, wx.ALL, 8)
 
         self.btn_download_ytdlp = wx.Button(
-            self, -1, _("Download or Update Download Engine")
+            status_box, -1, _("Download or Update Download Engine")
         )
         _set_accessible_name(
             self.btn_download_ytdlp, _("Download or Update Download Engine")
@@ -508,7 +510,7 @@ class WelcomeDialog(wx.Dialog):
         # 1. Language
         sel = self.choice_lang.GetSelection()
         if 0 <= sel < len(self.step1_panel.lang_codes):
-            lang_code = self.step1_panel.lang_codes[sel]
+            lang_code = normalize_language_code(self.step1_panel.lang_codes[sel])
             settings_handler.config_set("lang", lang_code)
 
         # 2. Playback mode (0 = Audio, 1 = Video)

@@ -524,3 +524,17 @@ def test_settings_dialog_defaultformat_choices_fixed():
     dialog = settings_dialog.SettingsDialog(wx.Frame(None))
     assert dialog.formats.Selection == 0
     dialog.Destroy()
+
+
+def test_language_normalization_in_settings():
+    settings_handler.config_set("lang", "English")
+    assert settings_handler.config_get("lang") == "en"
+
+    settings_handler.config_set("lang", "العربية")
+    assert settings_handler.config_get("lang") == "ar"
+
+    settings_handler.config_set("lang", "en_US")
+    assert settings_handler.config_get("lang") == "en"
+
+    settings_handler.config_set("lang", "ar_EG")
+    assert settings_handler.config_get("lang") == "ar"
