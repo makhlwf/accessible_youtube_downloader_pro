@@ -6,6 +6,9 @@
 # C extensions
 *.so
 
+# Superpowers agent scratch
+.superpowers/
+
 # Distribution / packaging
 .Python
 build/
