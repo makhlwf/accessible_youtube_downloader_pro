@@ -28,9 +28,11 @@ def ensure_mpv_runtime():
         if not library:
             raise RuntimeError("Install system libmpv (Ubuntu 24.04: libmpv2).")
         ctypes.CDLL(library)
-        for command in ("ffmpeg", "ffprobe", "dpkg-deb"):
+        for command in ("ffmpeg", "ffprobe", "rpmbuild"):
             if not shutil.which(command):
                 raise RuntimeError(f"Required Linux build command not found: {command}")
+        if shutil.which("dpkg") and not shutil.which("dpkg-deb"):
+            raise RuntimeError("Required Linux build command not found: dpkg-deb")
         return
     mpv_dll = SRC_DIR / "libmpv-2.dll"
     mpv_archive = SRC_DIR / "libmpv-2.dll.zip"
@@ -130,17 +132,74 @@ def validate_package_layout():
         )
 
 
+def package_rpm(version, architecture, staging, assets):
+    rpm_topdir = BUILD_DIR / "rpmbuild"
+    rpms_dir = rpm_topdir / "RPMS"
+    if rpms_dir.exists():
+        shutil.rmtree(rpms_dir)
+    for subdir in ("BUILD", "RPMS", "SOURCES", "SPECS", "SRPMS"):
+        (rpm_topdir / subdir).mkdir(parents=True, exist_ok=True)
+
+    spec_template = (assets / "hexplayer.spec.in").read_text(encoding="utf-8")
+    spec_content = spec_template.replace("@VERSION@", version)
+    spec_path = rpm_topdir / "SPECS" / "hexplayer.spec"
+    spec_path.write_text(spec_content, encoding="utf-8")
+
+    buildroot = rpm_topdir / "BUILDROOT" / f"hexplayer-{version}-1.{architecture}"
+    if buildroot.exists():
+        shutil.rmtree(buildroot)
+    buildroot.mkdir(parents=True)
+
+    for item in ("opt", "usr"):
+        src_dir = staging / item
+        if src_dir.exists():
+            shutil.copytree(src_dir, buildroot / item, symlinks=True)
+
+    command = [
+        "rpmbuild",
+        "-bb",
+        "--define",
+        f"_topdir {rpm_topdir}",
+        "--define",
+        f"_rpmdir {rpms_dir}",
+        "--buildroot",
+        str(buildroot),
+        "--target",
+        architecture,
+        str(spec_path),
+    ]
+    subprocess.run(command, check=True)
+
+    generated_rpms = list(rpms_dir.rglob("*.rpm"))
+    if not generated_rpms:
+        raise RuntimeError("rpmbuild completed but no .rpm file was found.")
+
+    rpm_path = DIST_DIR / f"HexPlayer-{version}-1.{architecture}.rpm"
+    shutil.copy2(generated_rpms[0], rpm_path)
+    return rpm_path
+
+
 def package_linux():
     assets = ROOT / "packaging" / "linux"
     with (ROOT / "pyproject.toml").open("rb") as stream:
         version = tomllib.load(stream)["project"]["version"]
-    architecture = subprocess.check_output(
-        ["dpkg", "--print-architecture"], text=True
-    ).strip()
-    if architecture != "amd64" or platform.machine() != "x86_64":
+    if platform.machine() != "x86_64":
         raise RuntimeError(
-            "Linux release packaging currently supports native amd64 only."
+            "Linux release packaging currently supports native amd64 / x86_64 only."
         )
+    dpkg_cmd = shutil.which("dpkg")
+    if dpkg_cmd:
+        deb_arch = subprocess.check_output(
+            [dpkg_cmd, "--print-architecture"], text=True
+        ).strip()
+        if deb_arch != "amd64":
+            raise RuntimeError(
+                "Linux release packaging currently supports native amd64 only."
+            )
+    else:
+        deb_arch = "amd64"
+    architecture = "x86_64"
+
     shutil.copy2(ROOT / "LICENSE", PACKAGE_DIR / "LICENSE")
     archive_path = DIST_DIR / f"HexPlayer-{version}-linux-x86_64.tar.gz"
     with tarfile.open(archive_path, "w:gz") as archive:
@@ -155,21 +214,33 @@ def package_linux():
     desktop_dir = staging / "usr" / "share" / "applications"
     desktop_dir.mkdir(parents=True)
     shutil.copy2(assets / "hexplayer.desktop", desktop_dir / "hexplayer.desktop")
-    metadata_dir = staging / "DEBIAN"
-    metadata_dir.mkdir()
-    control = (assets / "control.in").read_text(encoding="utf-8")
-    installed_size = sum(
-        path.stat().st_size for path in app_dir.rglob("*") if path.is_file()
-    )
-    control = control.replace("@VERSION@", version).replace("@ARCH@", architecture)
-    control = control.replace("@INSTALLED_SIZE@", str((installed_size + 1023) // 1024))
-    (metadata_dir / "control").write_text(control, encoding="utf-8")
-    deb_path = DIST_DIR / f"HexPlayer-{version}-linux-amd64.deb"
-    subprocess.run(
-        ["dpkg-deb", "--root-owner-group", "--build", str(staging), str(deb_path)],
-        check=True,
-    )
-    for artifact in (archive_path, deb_path):
+
+    built_artifacts = [archive_path]
+
+    if shutil.which("dpkg-deb"):
+        metadata_dir = staging / "DEBIAN"
+        metadata_dir.mkdir()
+        control = (assets / "control.in").read_text(encoding="utf-8")
+        installed_size = sum(
+            path.stat().st_size for path in app_dir.rglob("*") if path.is_file()
+        )
+        control = control.replace("@VERSION@", version).replace("@ARCH@", deb_arch)
+        control = control.replace(
+            "@INSTALLED_SIZE@", str((installed_size + 1023) // 1024)
+        )
+        (metadata_dir / "control").write_text(control, encoding="utf-8")
+        deb_path = DIST_DIR / f"HexPlayer-{version}-linux-amd64.deb"
+        subprocess.run(
+            ["dpkg-deb", "--root-owner-group", "--build", str(staging), str(deb_path)],
+            check=True,
+        )
+        built_artifacts.append(deb_path)
+
+    if shutil.which("rpmbuild"):
+        rpm_path = package_rpm(version, architecture, staging, assets)
+        built_artifacts.append(rpm_path)
+
+    for artifact in built_artifacts:
         with artifact.open("rb") as stream:
             digest = hashlib.file_digest(stream, "sha256").hexdigest()
         artifact.with_name(artifact.name + ".sha256").write_text(
