@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: HexPlayer 2.0.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-17 04:57+0200\n"
+"POT-Creation-Date: 2026-09-20 15:43+0200\n"
 "PO-Revision-Date: 2026-04-09 08:38+0200\n"
 "Last-Translator: makhlwf <altrhwnyashrf1@gmail.com>\n"
 "Language: en\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
-#: src/accessible_youtube_downloader_pro.py:305
+#: src/accessible_youtube_downloader_pro.py:307
 msgid ""
 "اضغط على مفتاح القوائم alt للوصول إلى خيارات البرنامج, أو تنقل بزر التاب "
 "للوصول سريعًا إلى أهم الخيارات المتاحة."
@@ -25,189 +25,197 @@ msgstr ""
 "Press the Alt menu key to access program options, or use the Tab key to "
 "quickly navigate through the main options."
 
-#: src/accessible_youtube_downloader_pro.py:310
-#: src/accessible_youtube_downloader_pro.py:354
+#: src/accessible_youtube_downloader_pro.py:312
+#: src/accessible_youtube_downloader_pro.py:356
 msgid "البحث في يوتيوب\tctrl+f"
 msgstr "Search in YouTube\tctrl+f"
 
-#: src/accessible_youtube_downloader_pro.py:312
-#: src/accessible_youtube_downloader_pro.py:355
+#: src/accessible_youtube_downloader_pro.py:314
+#: src/accessible_youtube_downloader_pro.py:357
 msgid "التنزيل من خلال رابط\tctrl+d"
 msgstr "Download from link\tctrl+d"
 
-#: src/accessible_youtube_downloader_pro.py:315
-#: src/accessible_youtube_downloader_pro.py:357
+#: src/accessible_youtube_downloader_pro.py:317
+#: src/accessible_youtube_downloader_pro.py:359
 msgid "تشغيل فيديو يوتيوب من خلال الرابط\tctrl+y"
 msgstr "Play YouTube video from link\tctrl+y"
 
-#: src/accessible_youtube_downloader_pro.py:318
-#: src/accessible_youtube_downloader_pro.py:359
+#: src/accessible_youtube_downloader_pro.py:320
+#: src/accessible_youtube_downloader_pro.py:361
 msgid "مشاهدة Shorts\tctrl+shift+s"
 msgstr "Watch Shorts\tctrl+shift+s"
 
-#: src/accessible_youtube_downloader_pro.py:321
-#: src/accessible_youtube_downloader_pro.py:360
+#: src/accessible_youtube_downloader_pro.py:323
+#: src/accessible_youtube_downloader_pro.py:362
 msgid "الفيديوهات المفضلة\tctrl+shift+f"
 msgstr "Favorite videos\tctrl+shift+f"
 
-#: src/accessible_youtube_downloader_pro.py:323
-#: src/accessible_youtube_downloader_pro.py:361
+#: src/accessible_youtube_downloader_pro.py:325
+#: src/accessible_youtube_downloader_pro.py:363
 msgid "سجل المشاهدة\tctrl+h"
 msgstr "Watch History\tctrl+h"
 
-#: src/accessible_youtube_downloader_pro.py:329
+#: src/accessible_youtube_downloader_pro.py:331
 msgid "تحميل المزيد من الفيديوهات المقترحة"
 msgstr "Load more suggested videos"
 
-#: src/accessible_youtube_downloader_pro.py:362
+#: src/accessible_youtube_downloader_pro.py:364
 msgid "فتح مجلد التنزيل\tctrl+p"
 msgstr "Open download folder\tctrl+p"
 
-#: src/accessible_youtube_downloader_pro.py:363
+#: src/accessible_youtube_downloader_pro.py:365
 #: src/media_player/media_gui.py:257 src/youtube_browser/browser.py:99
 msgid "الإعدادات...\talt+s"
 msgstr "Settings...\talt+s"
 
-#: src/accessible_youtube_downloader_pro.py:364
+#: src/accessible_youtube_downloader_pro.py:366
 msgid "خروج\tctrl+w"
 msgstr "Exit\tctrl+w"
 
-#: src/accessible_youtube_downloader_pro.py:366
+#: src/accessible_youtube_downloader_pro.py:368
 msgid "القائمة الرئيسية"
 msgstr "Main Menu"
 
-#: src/accessible_youtube_downloader_pro.py:370
+#: src/accessible_youtube_downloader_pro.py:372
 msgid "عرض إصدار واي تي دي إل بي"
 msgstr "View YT-DLP version"
 
-#: src/accessible_youtube_downloader_pro.py:372
+#: src/accessible_youtube_downloader_pro.py:374
 msgid "التحقق من وجود تحديث لـ واي تي دي إل بي"
 msgstr "Check for YT-DLP update"
 
-#: src/accessible_youtube_downloader_pro.py:374
+#: src/accessible_youtube_downloader_pro.py:376
 msgid "عرض إصدار دينو"
 msgstr "View Deno version"
 
-#: src/accessible_youtube_downloader_pro.py:375
+#: src/accessible_youtube_downloader_pro.py:377
 msgid "التحقق من وجود تحديث لـ دينو"
 msgstr "Check for Deno update"
 
-#: src/accessible_youtube_downloader_pro.py:377
+#: src/accessible_youtube_downloader_pro.py:379
 msgid "عرض إصدار YouTube.js (Innertube)"
 msgstr "View YouTube.js (Innertube) version"
 
-#: src/accessible_youtube_downloader_pro.py:380
+#: src/accessible_youtube_downloader_pro.py:382
 msgid "التحقق من وجود تحديث لـ YouTube.js (Innertube)"
 msgstr "Check for YouTube.js (Innertube) update"
 
-#: src/accessible_youtube_downloader_pro.py:383
+#: src/accessible_youtube_downloader_pro.py:385
 msgid "تحديث ذاكرة YouTube.js (Innertube) المؤقتة"
 msgstr "Refresh YouTube.js (Innertube) cache"
 
-#: src/accessible_youtube_downloader_pro.py:385
+#: src/accessible_youtube_downloader_pro.py:387
 msgid "عرض إصدار مولد رموز POT"
 msgstr "View POT Provider version"
 
-#: src/accessible_youtube_downloader_pro.py:387
+#: src/accessible_youtube_downloader_pro.py:389
 msgid "التحقق من وجود تحديث لـ مولد رموز POT"
 msgstr "Check for POT Provider update"
 
-#: src/accessible_youtube_downloader_pro.py:390
+#: src/accessible_youtube_downloader_pro.py:392
 msgid "فتح مجلد إضافة المتصفح"
-msgstr "Open browser extension folder"
+msgstr "Open Browser Extension Folder"
 
-#: src/accessible_youtube_downloader_pro.py:393
+#: src/accessible_youtube_downloader_pro.py:395
 msgid "فتح ملف السجلات (hexplayer.log)"
 msgstr "Open log file (hexplayer.log)"
 
-#: src/accessible_youtube_downloader_pro.py:395
+#: src/accessible_youtube_downloader_pro.py:397
 msgid "قائمة الأدوات الخارجية"
 msgstr "External tools list"
 
-#: src/accessible_youtube_downloader_pro.py:399
+#: src/accessible_youtube_downloader_pro.py:401
+msgid "شاشة الترحيب وجولة الميزات..."
+msgstr "Welcome Screen & Feature Tour..."
+
+#: src/accessible_youtube_downloader_pro.py:402
 msgid "دليل المستخدم...\tf1"
 msgstr "User Guide...\tf1"
 
-#: src/accessible_youtube_downloader_pro.py:400
+#: src/accessible_youtube_downloader_pro.py:403
 msgid "البحث عن التحديثات"
 msgstr "Check for updates"
 
-#: src/accessible_youtube_downloader_pro.py:401
-#: src/accessible_youtube_downloader_pro.py:964
+#: src/accessible_youtube_downloader_pro.py:404
+#: src/accessible_youtube_downloader_pro.py:984
 msgid "سياسة الخصوصية"
 msgstr "Privacy Policy"
 
-#: src/accessible_youtube_downloader_pro.py:402
+#: src/accessible_youtube_downloader_pro.py:405
 msgid "عن البرنامج..."
 msgstr "About..."
 
-#: src/accessible_youtube_downloader_pro.py:405
+#: src/accessible_youtube_downloader_pro.py:408
 msgid "البريد الالكتروني..."
 msgstr "Email..."
 
-#: src/accessible_youtube_downloader_pro.py:406
+#: src/accessible_youtube_downloader_pro.py:409
 msgid "تلجرام..."
 msgstr "Telegram..."
 
-#: src/accessible_youtube_downloader_pro.py:407
+#: src/accessible_youtube_downloader_pro.py:410
 msgid "تواصل معي"
 msgstr "Contact me"
 
-#: src/accessible_youtube_downloader_pro.py:409
-#: src/accessible_youtube_downloader_pro.py:979
+#: src/accessible_youtube_downloader_pro.py:412
+#: src/accessible_youtube_downloader_pro.py:999
 #: src/youtube_browser/search_handler.py:42
 msgid "حول"
 msgstr "About"
 
-#: src/accessible_youtube_downloader_pro.py:593
+#: src/accessible_youtube_downloader_pro.py:523
+msgid "Unable to open the log file."
+msgstr "Unable to open the log file."
+
+#: src/accessible_youtube_downloader_pro.py:598
 msgid "لم يتم العثور على مكتبة واي تي دي إل بي أو تعذر الحصول على إصدارها"
 msgstr "YT-DLP library not found or version could not be retrieved"
 
-#: src/accessible_youtube_downloader_pro.py:597
+#: src/accessible_youtube_downloader_pro.py:602
 msgid "إصدار واي تي دي إل بي"
 msgstr "YT-DLP version"
 
-#: src/accessible_youtube_downloader_pro.py:603
+#: src/accessible_youtube_downloader_pro.py:608
 msgid "لم يتم العثور على أداة دينو أو تعذر الحصول على إصدارها"
 msgstr "Deno tool not found or version could not be retrieved"
 
-#: src/accessible_youtube_downloader_pro.py:607
+#: src/accessible_youtube_downloader_pro.py:612
 msgid "إصدار دينو"
 msgstr "Deno version"
 
-#: src/accessible_youtube_downloader_pro.py:613
+#: src/accessible_youtube_downloader_pro.py:618
 msgid "تعذر جلب إصدار YouTube.js (Innertube)"
 msgstr "Could not retrieve YouTube.js (Innertube) version"
 
-#: src/accessible_youtube_downloader_pro.py:614 src/gui/comments_dialog.py:127
+#: src/accessible_youtube_downloader_pro.py:619 src/gui/comments_dialog.py:127
 #: src/gui/comments_dialog.py:349 src/gui/comments_dialog.py:565
-#: src/gui/settings_dialog.py:890 src/gui/settings_dialog.py:934
-#: src/utils.py:2640
+#: src/gui/settings_dialog.py:908 src/gui/settings_dialog.py:952
+#: src/utils.py:2743
 msgid "خطأ"
 msgstr "Error"
 
-#: src/accessible_youtube_downloader_pro.py:618
+#: src/accessible_youtube_downloader_pro.py:623
 msgid "إصدار YouTube.js (Innertube)"
 msgstr "YouTube.js (Innertube) version"
 
-#: src/accessible_youtube_downloader_pro.py:624
+#: src/accessible_youtube_downloader_pro.py:629
 msgid "أداة مولد رموز POT غير مثبتة حالياً."
 msgstr "POT Provider tool is not currently installed."
 
-#: src/accessible_youtube_downloader_pro.py:625
-#: src/accessible_youtube_downloader_pro.py:635
+#: src/accessible_youtube_downloader_pro.py:630
+#: src/accessible_youtube_downloader_pro.py:640
 msgid "معلومات الإصدار"
 msgstr "Version Information"
 
-#: src/accessible_youtube_downloader_pro.py:630
+#: src/accessible_youtube_downloader_pro.py:635
 msgid "قيد التشغيل"
 msgstr "Running"
 
-#: src/accessible_youtube_downloader_pro.py:630
+#: src/accessible_youtube_downloader_pro.py:635
 msgid "متوقف"
 msgstr "Stopped"
 
-#: src/accessible_youtube_downloader_pro.py:632
+#: src/accessible_youtube_downloader_pro.py:637
 #, python-brace-format
 msgid ""
 "إصدار مولد رموز POT: {}\n"
@@ -216,20 +224,20 @@ msgstr ""
 "POT Provider version: {}\n"
 "Local server status: {}"
 
-#: src/accessible_youtube_downloader_pro.py:641
+#: src/accessible_youtube_downloader_pro.py:646
 #: src/media_player/media_gui.py:837
 msgid "جاري تحميل الاقتراحات... يرجى الانتظار"
 msgstr "Loading suggestions... Please wait"
 
-#: src/accessible_youtube_downloader_pro.py:662
-#: src/accessible_youtube_downloader_pro.py:1060 src/gui/history.py:105
-#: src/gui/settings_dialog.py:778 src/gui/settings_dialog.py:975
-#: src/utils.py:1171 src/utils.py:1188 src/utils.py:1245 src/utils.py:1266
-#: src/utils.py:1293
+#: src/accessible_youtube_downloader_pro.py:667
+#: src/accessible_youtube_downloader_pro.py:1080 src/gui/history.py:105
+#: src/gui/settings_dialog.py:796 src/gui/settings_dialog.py:993
+#: src/utils.py:1215 src/utils.py:1232 src/utils.py:1289 src/utils.py:1310
+#: src/utils.py:1337
 msgid "تنبيه"
 msgstr "Warning"
 
-#: src/accessible_youtube_downloader_pro.py:687
+#: src/accessible_youtube_downloader_pro.py:692
 msgid ""
 "لا توجد اقتراحات متاحة حاليًا في حسابك (قد يكون سجل المشاهدة متوقفًا في "
 "إعدادات YouTube)."
@@ -237,8 +245,8 @@ msgstr ""
 "No recommendations currently available in your account (watch history "
 "might be paused in YouTube settings)."
 
-#: src/accessible_youtube_downloader_pro.py:724
-#: src/accessible_youtube_downloader_pro.py:792
+#: src/accessible_youtube_downloader_pro.py:729
+#: src/accessible_youtube_downloader_pro.py:797
 #: src/gui/auto_detect_dialog.py:97 src/gui/channel_dialog.py:380
 #: src/gui/channel_dialog.py:403 src/gui/favorites.py:113
 #: src/gui/favorites.py:130 src/gui/history.py:165
@@ -247,75 +255,83 @@ msgstr ""
 msgid "جاري التشغيل"
 msgstr "Playing"
 
-#: src/accessible_youtube_downloader_pro.py:727
-#: src/accessible_youtube_downloader_pro.py:795 src/gui/channel_dialog.py:383
+#: src/accessible_youtube_downloader_pro.py:732
+#: src/accessible_youtube_downloader_pro.py:800 src/gui/channel_dialog.py:383
 #: src/gui/channel_dialog.py:406 src/gui/history.py:172
 msgid "لا يمكن تشغيل الرابط"
 msgstr "Cannot play the link"
 
-#: src/accessible_youtube_downloader_pro.py:775
+#: src/accessible_youtube_downloader_pro.py:780
 msgid "تعذر العثور على مجلد إضافة المتصفح"
 msgstr "Couldn't find the browser extension folder."
 
-#: src/accessible_youtube_downloader_pro.py:869
+#: src/accessible_youtube_downloader_pro.py:784
+msgid "Unable to open the browser extension folder."
+msgstr "Unable to open the browser extension folder."
+
+#: src/accessible_youtube_downloader_pro.py:874
 msgid "يجب تحديد ملف الكوكيز من الإعدادات لاستخدام ميزة Shorts."
 msgstr "You must set a cookies file in settings to use the Shorts feature."
 
-#: src/accessible_youtube_downloader_pro.py:876
+#: src/accessible_youtube_downloader_pro.py:881
 msgid "جاري تحميل فيديوهات Shorts المقترحة..."
 msgstr "Loading suggested Shorts videos..."
 
-#: src/accessible_youtube_downloader_pro.py:883
+#: src/accessible_youtube_downloader_pro.py:888
 msgid "تعذر تحميل فيديوهات Shorts. يرجى التحقق من ملف الكوكيز والاتصال بالإنترنت."
 msgstr ""
 "Failed to load Shorts videos. Please check your cookies file and internet"
 " connection."
 
-#: src/accessible_youtube_downloader_pro.py:895
+#: src/accessible_youtube_downloader_pro.py:900
 msgid "جاري جلب رابط التشغيل..."
 msgstr "Fetching playable stream URL..."
 
-#: src/accessible_youtube_downloader_pro.py:902
+#: src/accessible_youtube_downloader_pro.py:907
 msgid "تعذر استخراج رابط تشغيل الفيديو."
 msgstr "Failed to extract playable stream URL."
 
-#: src/accessible_youtube_downloader_pro.py:951
+#: src/accessible_youtube_downloader_pro.py:931 src/gui/update_dialog.py:195
+msgid "Unable to open the download folder."
+msgstr "Unable to open the download folder."
+
+#: src/accessible_youtube_downloader_pro.py:971
 msgid "دليل استخدام برنامج HexPlayer"
 msgstr "HexPlayer User Guide"
 
-#: src/accessible_youtube_downloader_pro.py:966
+#: src/accessible_youtube_downloader_pro.py:986
 msgid "تعذر العثور على ملف سياسة الخصوصية"
 msgstr "Couldn't find the Privacy Policy file."
 
-#: src/accessible_youtube_downloader_pro.py:970
+#: src/accessible_youtube_downloader_pro.py:990
 msgid "جاري البحث عن التحديثات. يرجى الانتظار"
 msgstr "Checking for updates. Please wait..."
 
-#: src/accessible_youtube_downloader_pro.py:975
+#: src/accessible_youtube_downloader_pro.py:995
 msgid "اسم البرنامج"
 msgstr "Software Name"
 
-#: src/accessible_youtube_downloader_pro.py:976
+#: src/accessible_youtube_downloader_pro.py:996
 msgid "الإصدار"
 msgstr "Version"
 
-#: src/accessible_youtube_downloader_pro.py:977
+#: src/accessible_youtube_downloader_pro.py:997
 msgid "طُوِر بواسطة"
 msgstr "Developed by"
 
-#: src/accessible_youtube_downloader_pro.py:978 src/gui/description.py:21
+#: src/accessible_youtube_downloader_pro.py:998 src/gui/description.py:21
 msgid "الوصف: "
 msgstr "Description: "
 
-#: src/accessible_youtube_downloader_pro.py:1059
+#: src/accessible_youtube_downloader_pro.py:1079
 msgid "البرنامج قيد التشغيل بالفعل."
 msgstr "The program is already running."
 
-#: src/pot_provider_service.py:319
+#: src/pot_provider_service.py:345
 msgid "جاري تنزيل أداة مولد رموز POT"
 msgstr "Downloading POT Provider tool..."
 
-#: src/pot_provider_service.py:383
+#: src/pot_provider_service.py:417
 msgid "جاري تنزيل ملحق واي تي دي إل بي لـ POT"
 msgstr "Downloading yt-dlp plugin for POT..."
 
@@ -355,101 +371,101 @@ msgstr "Filler and off-topic jokes"
 msgid "مقاطع غير موسيقية في الأغاني"
 msgstr "Non-music sections in songs"
 
-#: src/media_player/media_gui.py:519 src/utils.py:205
+#: src/media_player/media_gui.py:519 src/utils.py:230
 msgid "فصل بدون عنوان"
 msgstr "Untitled chapter"
 
-#: src/utils.py:262
+#: src/utils.py:287
 #, python-brace-format
 msgid "{} - تلقائي"
 msgstr "{} - automatic"
 
-#: src/utils.py:681
+#: src/utils.py:706
 msgid "الافتراضي المفضل لـ yt-dlp"
 msgstr "yt-dlp default (preferred)"
 
-#: src/utils.py:682
+#: src/utils.py:707
 msgid "أندرويد (Android)"
 msgstr "Android"
 
-#: src/utils.py:683
+#: src/utils.py:708
 msgid "الويب (Web)"
 msgstr "Web"
 
-#: src/utils.py:684
+#: src/utils.py:709
 msgid "ويب الجوال (Mobile Web)"
 msgstr "Mobile Web (mweb)"
 
-#: src/utils.py:685
+#: src/utils.py:710
 msgid "آي أو إس (iOS)"
 msgstr "iOS"
 
-#: src/utils.py:686
+#: src/utils.py:711
 msgid "التلفزيون الذكي (Smart TV)"
 msgstr "Smart TV (tv)"
 
-#: src/utils.py:687
+#: src/utils.py:712
 msgid "تلفزيون مضمن (TV Embedded)"
 msgstr "TV Embedded"
 
-#: src/utils.py:688
+#: src/utils.py:713
 msgid "أندرويد الواقع الافتراضي (Android VR)"
 msgstr "Android VR"
 
-#: src/utils.py:689
+#: src/utils.py:714
 msgid "استوديو الويب (Web Creator)"
 msgstr "Web Creator"
 
-#: src/utils.py:690
+#: src/utils.py:715
 msgid "سفاري الويب (Web Safari)"
 msgstr "Web Safari"
 
-#: src/utils.py:781
+#: src/utils.py:807
 msgid "144ب (جودة منخفضة جدًا)"
 msgstr "144p (Very Low Quality)"
 
-#: src/utils.py:782
+#: src/utils.py:808
 msgid "240ب (جودة منخفضة)"
 msgstr "240p (Low Quality)"
 
-#: src/utils.py:783
+#: src/utils.py:809
 msgid "360ب (جودة متوسطة)"
 msgstr "360p (Medium Quality)"
 
-#: src/utils.py:784
+#: src/utils.py:810
 msgid "480ب (جودة متوسطة)"
 msgstr "480p (Medium Quality)"
 
-#: src/utils.py:785
+#: src/utils.py:811
 msgid "720ب (جودة عالية عالية الدقة)"
 msgstr "720p (High Quality HD)"
 
-#: src/utils.py:786
+#: src/utils.py:812
 msgid "1080ب (جودة عالية جدًا عالية الدقة الكاملة)"
 msgstr "1080p (Very High Quality Full HD)"
 
-#: src/utils.py:787
+#: src/utils.py:813
 msgid "1440ب (جودة فائقة 2 كي)"
 msgstr "1440p (Super Quality 2K)"
 
-#: src/utils.py:788
+#: src/utils.py:814
 msgid "2160ب (جودة فائقة 4 كي)"
 msgstr "2160p (Super Quality 4K)"
 
-#: src/utils.py:794
+#: src/utils.py:820
 #, python-brace-format
 msgid "{}ب (جودة غير معروفة)"
 msgstr "{}p (Unknown Quality)"
 
-#: src/utils.py:815
+#: src/utils.py:841
 msgid "جاري تنزيل واي تي دي إل بي"
 msgstr "Downloading YT-DLP..."
 
-#: src/utils.py:826
+#: src/utils.py:852
 msgid "ملف واي تي دي إل بي الذي تم تنزيله غير صالح"
 msgstr "The downloaded YT-DLP file is invalid"
 
-#: src/utils.py:982
+#: src/utils.py:1008
 msgid ""
 "لم يتم العثور على أداة deno.exe, وهي مطلوبة لتحديث مكتبة YouTube.js "
 "(Innertube)."
@@ -457,34 +473,34 @@ msgstr ""
 "Deno.exe was not found. It is required to update the YouTube.js "
 "(Innertube) library."
 
-#: src/utils.py:995 src/utils.py:1012
+#: src/utils.py:1021 src/utils.py:1038
 msgid "تعذر تحديث مكتبة YouTube.js (Innertube)"
 msgstr "Could not update the YouTube.js (Innertube) library"
 
-#: src/utils.py:1004
+#: src/utils.py:1030
 #, python-brace-format
 msgid "تم تحديث مكتبة YouTube.js (Innertube) إلى الإصدار {}"
 msgstr "Updated the YouTube.js (Innertube) library to version {}"
 
-#: src/utils.py:1007
+#: src/utils.py:1033
 msgid "اكتمل التحديث"
 msgstr "Update completed"
 
-#: src/utils.py:1021
+#: src/utils.py:1047
 msgid "تعذر الحصول على معلومات تحديث مكتبة YouTube.js (Innertube) من npm"
 msgstr "Could not get YouTube.js (Innertube) update information from npm"
 
-#: src/utils.py:1029
+#: src/utils.py:1055
 #, python-brace-format
 msgid "أنت تستخدم بالفعل أحدث إصدار من مكتبة YouTube.js (Innertube) ({})"
 msgstr "You are already using the latest YouTube.js (Innertube) version ({})"
 
-#: src/utils.py:1031 src/utils.py:1087 src/utils.py:1151 src/utils.py:1218
-#: src/utils.py:2618
+#: src/utils.py:1057 src/utils.py:1113 src/utils.py:1195 src/utils.py:1262
+#: src/utils.py:2721
 msgid "لا يوجد تحديث"
 msgstr "No update available"
 
-#: src/utils.py:1038
+#: src/utils.py:1064
 #, python-brace-format
 msgid ""
 "هناك إصدار جديد متوفر من مكتبة YouTube.js (Innertube)\n"
@@ -498,8 +514,8 @@ msgstr ""
 "Do you want to update now?"
 
 #: src/gui/comments_dialog.py:13 src/gui/comments_dialog.py:47
-#: src/utils.py:1039 src/utils.py:1094 src/utils.py:1158 src/utils.py:1226
-#: src/utils.py:2181 src/utils.py:2543
+#: src/utils.py:1065 src/utils.py:1120 src/utils.py:1202 src/utils.py:1270
+#: src/utils.py:2229 src/utils.py:2592
 #: src/youtube_browser/search_handler.py:112
 #: src/youtube_browser/search_handler.py:212
 #: src/youtube_browser/search_handler.py:447
@@ -507,28 +523,28 @@ msgstr ""
 msgid "غير معروف"
 msgstr "Unknown"
 
-#: src/utils.py:1040 src/utils.py:1095 src/utils.py:1159 src/utils.py:1227
+#: src/utils.py:1066 src/utils.py:1121 src/utils.py:1203 src/utils.py:1271
 msgid "تحديث متوفر"
 msgstr "Update available"
 
-#: src/utils.py:1053
+#: src/utils.py:1079
 msgid "تعذر تحديد إصدار مكتبة YouTube.js (Innertube) الحالي"
 msgstr "Could not determine the current YouTube.js (Innertube) version"
 
-#: src/utils.py:1060
+#: src/utils.py:1086
 msgid "تم تحديث ذاكرة مكتبة YouTube.js (Innertube) المؤقتة"
 msgstr "Refreshed the YouTube.js (Innertube) cache"
 
-#: src/utils.py:1080 src/utils.py:1144 src/utils.py:1210
+#: src/utils.py:1106 src/utils.py:1188 src/utils.py:1254
 msgid "تعذر الحصول على معلومات التحديث من غيت هاب"
 msgstr "Could not get update information from GitHub"
 
-#: src/utils.py:1086
+#: src/utils.py:1112
 #, python-brace-format
 msgid "أنت تستخدم بالفعل أحدث إصدار من واي تي دي إل بي ({})"
 msgstr "You are using the latest version of YT-DLP ({})"
 
-#: src/utils.py:1093
+#: src/utils.py:1119
 #, python-brace-format
 msgid ""
 "هناك إصدار جديد متوفر من واي تي دي إل بي\n"
@@ -541,16 +557,16 @@ msgstr ""
 "Last version: {}\n"
 "Do you want to update now?"
 
-#: src/utils.py:1111
+#: src/utils.py:1155
 msgid "جاري تنزيل دينو"
 msgstr "Downloading Deno..."
 
-#: src/utils.py:1150
+#: src/utils.py:1194
 #, python-brace-format
 msgid "أنت تستخدم بالفعل أحدث إصدار من دينو ({})"
 msgstr "You are using the latest version of Deno ({})"
 
-#: src/utils.py:1157
+#: src/utils.py:1201
 #, python-brace-format
 msgid ""
 "هناك إصدار جديد متوفر من دينو\n"
@@ -563,11 +579,11 @@ msgstr ""
 "Last version: {}\n"
 "Do you want to update now?"
 
-#: src/utils.py:1170
+#: src/utils.py:1214
 msgid "لم يتم العثور على مكتبة واي تي دي إل بي, هل تريد تنزيلها الآن؟"
 msgstr "YT-DLP library was not found. Would you like to download it now?"
 
-#: src/utils.py:1186
+#: src/utils.py:1230
 msgid ""
 "لم يتم العثور على أداة deno.exe, وهي مطلوبة لبعض وظائف اليوتيوب. هل تريد "
 "تنزيلها الآن؟"
@@ -575,12 +591,12 @@ msgstr ""
 "Deno.exe was not found. It is required for some YouTube functions. Would "
 "you like to download it now?"
 
-#: src/utils.py:1217
+#: src/utils.py:1261
 #, python-brace-format
 msgid "أنت تستخدم بالفعل أحدث إصدار من مولد رموز POT ({})"
 msgstr "You are already using the latest version of POT Provider ({})"
 
-#: src/utils.py:1225
+#: src/utils.py:1269
 #, python-brace-format
 msgid ""
 "هناك إصدار جديد متوفر من مولد رموز POT\n"
@@ -593,7 +609,7 @@ msgstr ""
 "Latest version: {}\n"
 "Do you want to update now?"
 
-#: src/utils.py:1243
+#: src/utils.py:1287
 msgid ""
 "لم يتم العثور على أداة مولد رموز POT (bgutil-pot)، وهي تساعد في حل قيود "
 "يوتيوب وتحسين التنزيل. هل تريد تنزيلها الآن؟"
@@ -601,11 +617,11 @@ msgstr ""
 "POT Provider tool (bgutil-pot) was not found. It helps resolve YouTube "
 "restrictions and improves downloading. Do you want to download it now?"
 
-#: src/utils.py:1262 src/utils.py:1289
+#: src/utils.py:1306 src/utils.py:1333
 msgid "هذه الميزة"
 msgstr "this feature"
 
-#: src/utils.py:1264
+#: src/utils.py:1308
 #, python-brace-format
 msgid ""
 "تنبيه: لم يتم تثبيت أداة Deno وهي مطلوبة لـ {}. هل تريد تنزيل وتثبيت Deno"
@@ -614,7 +630,7 @@ msgstr ""
 "Notice: Deno tool is not installed and is required for {}. Would you like"
 " to download and install Deno now?"
 
-#: src/utils.py:1291
+#: src/utils.py:1335
 #, python-brace-format
 msgid ""
 "تنبيه: لم يتم تحديد ملف الكوكيز الخاص بيوتيوب أو أن الملف غير موجود. "
@@ -625,23 +641,23 @@ msgstr ""
 "({}) requires YouTube cookies. Please set a valid cookies file in "
 "Application Settings."
 
-#: src/utils.py:1850
+#: src/utils.py:1896
 msgid "عرض الخلاصة الرئيسية"
 msgstr "viewing home feed"
 
-#: src/utils.py:1855
+#: src/utils.py:1901
 msgid "لم يتم تثبيت Deno."
 msgstr "Deno is not installed."
 
-#: src/utils.py:1862
+#: src/utils.py:1908
 msgid "لم يتم ضبط ملف الكوكيز."
 msgstr "Cookies file is not set."
 
-#: src/utils.py:1886
+#: src/utils.py:1932
 msgid "سجل المشاهدة أونلاين"
 msgstr "online watch history"
 
-#: src/utils.py:1891
+#: src/utils.py:1937
 msgid ""
 "عذراً، يتطلب عرض سجل يوتيوب أونلاين وجود Deno وملف كوكيز. يتم عرض السجل "
 "المحلي حالياً."
@@ -649,172 +665,172 @@ msgstr ""
 "Notice: Viewing YouTube online history requires Deno and Cookies. Showing"
 " local history instead."
 
-#: src/utils.py:2018
+#: src/utils.py:2064
 msgid "إبداء الإعجاب بالمرئيات"
 msgstr "liking videos"
 
-#: src/utils.py:2023
+#: src/utils.py:2069
 msgid "لم يتم تثبيت أداة Deno المطلوبة للإعجاب بالمرئيات."
 msgstr "Deno tool required to like videos is not installed."
 
-#: src/utils.py:2029
+#: src/utils.py:2075
 msgid "لم يتم ضبط ملف الكوكيز الخاص بيوتيوب."
 msgstr "YouTube cookies file is not configured."
 
-#: src/utils.py:2036
+#: src/utils.py:2082
 msgid "رابط الفيديو غير صالح."
 msgstr "Invalid video URL."
 
-#: src/utils.py:2055
+#: src/utils.py:2101
 #, python-brace-format
 msgid "تعذر تحديث تقييم المرئي: {}"
 msgstr "Failed to update video rating: {}"
 
-#: src/utils.py:2056
+#: src/utils.py:2102
 msgid "خطأ غير معروف"
 msgstr "Unknown error"
 
-#: src/utils.py:2063
+#: src/utils.py:2109
 #, python-brace-format
 msgid "فشل الاتصال أثناء تحديث التقييم: {}"
 msgstr "Connection failed while updating rating: {}"
 
-#: src/gui/comments_dialog.py:316 src/utils.py:2333
+#: src/gui/comments_dialog.py:316 src/utils.py:2382
 msgid "يرجى كتابة تعليق قبل النشر"
 msgstr "Please write a comment before posting"
 
-#: src/utils.py:2335
+#: src/utils.py:2384
 msgid "تحتاج إلى ضبط ملف كوكيز صالح قبل نشر التعليقات"
 msgstr "You need to configure a valid cookies file before posting comments"
 
-#: src/utils.py:2337
+#: src/utils.py:2386
 msgid "ملف الكوكيز لا يحتوي على جلسة يوتيوب مسجلة الدخول"
 msgstr "The cookies file does not contain a logged-in YouTube session"
 
-#: src/gui/comments_dialog.py:345 src/utils.py:2338
+#: src/gui/comments_dialog.py:345 src/utils.py:2387
 msgid "تعذر نشر التعليق"
 msgstr "Failed to post comment"
 
-#: src/utils.py:2345
+#: src/utils.py:2394
 msgid "نشر التعليقات"
 msgstr "posting comments"
 
-#: src/utils.py:2349
+#: src/utils.py:2398
 msgid "لم يتم تثبيت أداة Deno المطلوبة لنشر التعليقات."
 msgstr "Deno tool required for posting comments is not installed."
 
-#: src/utils.py:2354
+#: src/utils.py:2403
 msgid "تحتاج إلى ضبط ملف كوكيز صالح لنشر التعليقات."
 msgstr "You need to configure a valid cookies file to post comments."
 
-#: src/utils.py:2368
+#: src/utils.py:2417
 msgid "رابط الفيديو غير صالح"
 msgstr "Invalid video URL"
 
-#: src/utils.py:2398
+#: src/utils.py:2447
 msgid "التفاعل مع التعليقات"
 msgstr "comment interactions"
 
-#: src/utils.py:2402
+#: src/utils.py:2451
 msgid "لم يتم تثبيت أداة Deno المطلوبة للتفاعل مع التعليقات."
 msgstr "Deno tool required for comment interactions is not installed."
 
-#: src/utils.py:2407
+#: src/utils.py:2456
 msgid "تحتاج إلى ضبط ملف كوكيز صالح لاستخدام هذه الميزة"
 msgstr "You need to configure a valid cookies file to use this feature"
 
-#: src/utils.py:2413 src/utils.py:2456
+#: src/utils.py:2462 src/utils.py:2505
 msgid "معرف التعليق غير موجود"
 msgstr "Comment ID is missing"
 
-#: src/utils.py:2441
+#: src/utils.py:2490
 msgid "الرد على التعليقات"
 msgstr "replying to comments"
 
-#: src/utils.py:2445
+#: src/utils.py:2494
 msgid "لم يتم تثبيت أداة Deno المطلوبة للرد على التعليقات."
 msgstr "Deno tool required for replying to comments is not installed."
 
-#: src/utils.py:2450
+#: src/utils.py:2499
 msgid "تحتاج إلى ضبط ملف كوكيز صالح للرد على التعليقات."
 msgstr "You need to configure a valid cookies file to reply to comments."
 
-#: src/gui/comments_dialog.py:92 src/utils.py:2463
+#: src/gui/comments_dialog.py:92 src/utils.py:2512
 msgid "يرجى كتابة رد قبل النشر"
 msgstr "Please write a reply before posting"
 
-#: src/utils.py:2501
+#: src/utils.py:2550
 msgid "ساعة واحدة"
 msgstr "1 hour"
 
-#: src/utils.py:2503
+#: src/utils.py:2552
 msgid "ساعتان"
 msgstr "2 hours"
 
-#: src/utils.py:2505
+#: src/utils.py:2554
 #, python-brace-format
 msgid "{} ساعات"
 msgstr "{} hours"
 
-#: src/utils.py:2507
+#: src/utils.py:2556
 #, python-brace-format
 msgid "{} ساعة"
 msgstr "{} hours"
 
-#: src/utils.py:2511
+#: src/utils.py:2560
 msgid "دقيقة واحدة"
 msgstr "1 minute"
 
-#: src/utils.py:2513
+#: src/utils.py:2562
 msgid "دقيقتان"
 msgstr "2 minutes"
 
-#: src/utils.py:2515
+#: src/utils.py:2564
 #, python-brace-format
 msgid "{} دقائق"
 msgstr "{} minutes"
 
-#: src/utils.py:2517
+#: src/utils.py:2566
 #, python-brace-format
 msgid "{} دقيقة"
 msgstr "{} minutes"
 
-#: src/utils.py:2521
+#: src/utils.py:2570
 msgid "ثانية واحدة"
 msgstr "1 second"
 
-#: src/utils.py:2523
+#: src/utils.py:2572
 msgid "ثانيتين"
 msgstr "2 seconds"
 
-#: src/utils.py:2525
+#: src/utils.py:2574
 #, python-brace-format
 msgid "{} ثواني"
 msgstr "{} seconds"
 
-#: src/utils.py:2527
+#: src/utils.py:2576
 #, python-brace-format
 msgid "{} ثانية"
 msgstr "{} seconds"
 
-#: src/utils.py:2530
+#: src/utils.py:2579
 msgid "0 ثانية"
 msgstr "0 seconds"
 
-#: src/utils.py:2532
+#: src/utils.py:2581
 msgid " و"
 msgstr " and"
 
-#: src/utils.py:2537
+#: src/utils.py:2586
 msgid "مباشر"
 msgstr "Live"
 
-#: src/media_player/media_gui.py:1725 src/utils.py:2544
+#: src/media_player/media_gui.py:1725 src/utils.py:2593
 #, python-brace-format
 msgid "المدة: {}"
 msgstr "Duration: {}"
 
-#: src/utils.py:2587 src/utils.py:2626
+#: src/utils.py:2686 src/utils.py:2729
 msgid ""
 "حدث خطأ ما أثناء الاتصال بخدمة العثور على التحديثات. تأكد من وجود اتصال "
 "مستقر بالإنترنت ثم عاود المحاولة"
@@ -822,92 +838,92 @@ msgstr ""
 "An error occurred while connecting to the update service. Please ensure "
 "you have a stable internet connection and try again."
 
-#: src/utils.py:2597
+#: src/utils.py:2697
 msgid "لا توجد معلومات حول هذا التحديث"
 msgstr "No information available about this update"
 
-#: src/utils.py:2608
+#: src/utils.py:2711
 msgid "جاري تنزيل التحديث"
 msgstr "Downloading update"
 
-#: src/utils.py:2617
+#: src/utils.py:2720
 msgid "أنت تعمل الآن على آخر تحديث متوفر من التطبيق"
 msgstr "You are using the latest version of the application."
 
-#: src/utils.py:2714
+#: src/utils.py:2858
 msgid "مشاهدة Shorts"
-msgstr ""
+msgstr "مشاهدة Shorts"
 
-#: src/download_handler/downloader.py:424
+#: src/download_handler/downloader.py:426
 msgid "لم يتم العثور على مكتبة yt-dlp."
 msgstr "yt-dlp library was not found."
 
-#: src/download_handler/downloader.py:439
+#: src/download_handler/downloader.py:441
 msgid "تعذر الكتابة على القرص (تم رفض الوصول أو القرص ممتلئ)."
 msgstr "Permission denied or disk full. Could not write to disk."
 
-#: src/download_handler/downloader.py:456
+#: src/download_handler/downloader.py:458
 msgid "تعذر الاتصال بالشبكة أو انتهت مهلة الإرسال. يرجى التحقق من اتصال الإنترنت."
 msgstr ""
 "Network timeout or connection dropped. Please check your internet "
 "connection."
 
-#: src/download_handler/downloader.py:459
+#: src/download_handler/downloader.py:461
 #, python-brace-format
 msgid "حدث خطأ أثناء التنزيل: {}"
 msgstr "Download error occurred: {}"
 
-#: src/download_handler/downloader.py:460
+#: src/download_handler/downloader.py:462
 msgid "حدث خطأ أثناء التنزيل. يرجى التحقق من الرابط أو اتصالك بالإنترنت."
 msgstr "Download error occurred. Please check the link or internet connection."
 
-#: src/download_handler/downloader.py:498 src/gui/download_progress.py:22
+#: src/download_handler/downloader.py:500 src/gui/download_progress.py:22
 #, python-brace-format
 msgid "نسبة التنزيل: {}%"
 msgstr "Download Progress: {}%"
 
-#: src/download_handler/downloader.py:500
+#: src/download_handler/downloader.py:502
 #, python-brace-format
 msgid "حجم الملف الإجمالي: {}"
 msgstr "Total file size: {}"
 
-#: src/download_handler/downloader.py:502 src/gui/download_progress.py:23
+#: src/download_handler/downloader.py:504 src/gui/download_progress.py:23
 msgid "حجم الملف الإجمالي: غير معروف"
 msgstr "Total file size: Unknown"
 
-#: src/download_handler/downloader.py:505
+#: src/download_handler/downloader.py:507
 #, python-brace-format
 msgid "مقدار الحجم الذي تم تنزيله: {}"
 msgstr "Downloaded amount: {}"
 
-#: src/download_handler/downloader.py:508 src/gui/download_progress.py:24
+#: src/download_handler/downloader.py:510 src/gui/download_progress.py:24
 msgid "مقدار الحجم الذي تم تنزيله: غير معروف"
 msgstr "Downloaded amount: Unknown"
 
-#: src/download_handler/downloader.py:510
+#: src/download_handler/downloader.py:512
 #, python-brace-format
 msgid "سرعة التنزيل: {}"
 msgstr "Download speed: {}"
 
-#: src/download_handler/downloader.py:512 src/gui/download_progress.py:26
+#: src/download_handler/downloader.py:514 src/gui/download_progress.py:26
 msgid "سرعة التنزيل: غير معروفة"
 msgstr "Download speed: Unknown"
 
-#: src/download_handler/downloader.py:514
+#: src/download_handler/downloader.py:516
 #, python-brace-format
 msgid "الوقت المتبقي: {}"
 msgstr "Time remaining: {}"
 
-#: src/download_handler/downloader.py:516 src/gui/download_progress.py:25
+#: src/download_handler/downloader.py:518 src/gui/download_progress.py:25
 msgid "الوقت المتبقي: غير معروف"
 msgstr "Time remaining: Unknown"
 
-#: src/download_handler/downloader.py:545
+#: src/download_handler/downloader.py:547
 msgid "تم إلغاء التنزيل"
 msgstr "Download cancelled"
 
-#: src/download_handler/downloader.py:545 src/gui/auto_detect_dialog.py:52
-#: src/gui/comments_dialog.py:67 src/gui/update_check_dialog.py:50
+#: src/download_handler/downloader.py:547 src/gui/auto_detect_dialog.py:52
+#: src/gui/comments_dialog.py:67 src/gui/update_check_dialog.py:54
 msgid "إلغاء"
 msgstr "Cancel"
 
@@ -933,7 +949,7 @@ msgstr "Channel"
 
 #: src/gui/auto_detect_dialog.py:16 src/gui/auto_detect_dialog.py:49
 #: src/gui/channel_dialog.py:151 src/gui/channel_dialog.py:471
-#: src/gui/download_dialog.py:26 src/gui/favorites.py:150
+#: src/gui/download_dialog.py:25 src/gui/favorites.py:150
 #: src/gui/favorites.py:299 src/gui/history.py:216 src/gui/history.py:276
 #: src/gui/playlist_dialog.py:135 src/gui/playlist_dialog.py:356
 #: src/media_player/media_gui.py:214 src/media_player/media_gui.py:1175
@@ -956,11 +972,11 @@ msgstr ""
 "action:"
 
 #: src/gui/auto_detect_dialog.py:44 src/gui/channel_dialog.py:52
-#: src/gui/channel_dialog.py:161 src/gui/download_dialog.py:15
-#: src/gui/download_dialog.py:36 src/gui/favorites.py:29
+#: src/gui/channel_dialog.py:161 src/gui/download_dialog.py:14
+#: src/gui/download_dialog.py:35 src/gui/favorites.py:29
 #: src/gui/favorites.py:160 src/gui/history.py:33 src/gui/history.py:226
 #: src/gui/playlist_dialog.py:32 src/gui/playlist_dialog.py:145
-#: src/gui/update_check_dialog.py:45 src/media_player/media_gui.py:223
+#: src/gui/update_check_dialog.py:48 src/media_player/media_gui.py:223
 #: src/media_player/media_gui.py:1184 src/youtube_browser/browser.py:63
 #: src/youtube_browser/browser.py:135
 msgid "تنزيل"
@@ -1002,7 +1018,7 @@ msgid "التشغيل كمقطع صوتي"
 msgstr "Play as Audio"
 
 #: src/gui/channel_dialog.py:158 src/gui/channel_dialog.py:478
-#: src/gui/download_dialog.py:26 src/gui/favorites.py:157
+#: src/gui/download_dialog.py:25 src/gui/favorites.py:157
 #: src/gui/favorites.py:306 src/gui/history.py:223 src/gui/history.py:283
 #: src/gui/playlist_dialog.py:142 src/gui/playlist_dialog.py:363
 #: src/media_player/media_gui.py:221 src/media_player/media_gui.py:1182
@@ -1288,7 +1304,7 @@ msgstr "Comment rating removed"
 
 #: src/gui/comments_dialog.py:561
 msgid "حدث خطأ أثناء تنفيذ الإجراء على التعليق."
-msgstr ""
+msgstr "حدث خطأ أثناء تنفيذ الإجراء على التعليق."
 
 #: src/gui/comments_dialog.py:577
 msgid "تم نسخ نص التعليق"
@@ -1310,52 +1326,56 @@ msgstr "Export to text document (txt)..."
 msgid "التصدير إلى صفحة ويب (html)..."
 msgstr "Export to web page (html)..."
 
-#: src/gui/download_complete_dialog.py:12
+#: src/gui/download_complete_dialog.py:14
 msgid "اكتمل التنزيل"
 msgstr "Download complete"
 
-#: src/gui/download_complete_dialog.py:20
+#: src/gui/download_complete_dialog.py:22
 msgid "اكتمل التنزيل بنجاح."
 msgstr "Download completed successfully."
 
-#: src/gui/download_complete_dialog.py:21
+#: src/gui/download_complete_dialog.py:23
 msgid "موافق"
 msgstr "OK"
 
-#: src/gui/download_complete_dialog.py:26
+#: src/gui/download_complete_dialog.py:28
 msgid "تشغيل الملف الذي تم تنزيله"
 msgstr "Play downloaded file"
 
-#: src/gui/download_complete_dialog.py:27
+#: src/gui/download_complete_dialog.py:29
 msgid "إظهار الملف في مستكشف الملفات"
 msgstr "Show file in File Explorer"
 
-#: src/gui/download_complete_dialog.py:32
+#: src/gui/download_complete_dialog.py:34
 msgid "فتح مجلد التنزيل"
 msgstr "Open download folder"
 
-#: src/gui/download_dialog.py:23
+#: src/gui/download_complete_dialog.py:53
+msgid "Unable to open the downloaded file or folder."
+msgstr "Unable to open the downloaded file or folder."
+
+#: src/gui/download_dialog.py:22
 msgid "رابط التنزيل: : "
 msgstr "Download Link: "
 
-#: src/gui/download_dialog.py:26
+#: src/gui/download_dialog.py:25
 msgid "نوع المقطع"
 msgstr "Clip Type"
 
-#: src/gui/download_dialog.py:28
+#: src/gui/download_dialog.py:27
 msgid "صيغة المقطع"
 msgstr "Clip Format"
 
-#: src/gui/download_dialog.py:39 src/gui/download_dialog.py:88
-#: src/gui/settings_dialog.py:308
+#: src/gui/download_dialog.py:38 src/gui/download_dialog.py:87
+#: src/gui/settings_dialog.py:326
 msgid "مسار مجلد التنزيل: "
 msgstr "Download folder path: "
 
-#: src/gui/download_dialog.py:81 src/gui/settings_dialog.py:763
+#: src/gui/download_dialog.py:80 src/gui/settings_dialog.py:781
 msgid "اختر مجلد التنزيل"
 msgstr "Select download folder"
 
-#: src/gui/download_dialog.py:103
+#: src/gui/download_dialog.py:102
 msgid "يرجى إدخال رابط صحيح."
 msgstr "Please enter a valid link."
 
@@ -1772,292 +1792,300 @@ msgstr "Search suggestions are shown"
 msgid "Unable to save search history"
 msgstr "Unable to save search history"
 
-#: src/gui/settings_dialog.py:29
+#: src/gui/settings_dialog.py:30
 msgid "افتراضي النظام"
 msgstr "System Default"
 
-#: src/gui/settings_dialog.py:30
+#: src/gui/settings_dialog.py:31
 msgid "فاتح"
 msgstr "Light"
 
-#: src/gui/settings_dialog.py:31
+#: src/gui/settings_dialog.py:32
 msgid "داكن"
 msgstr "Dark"
 
-#: src/gui/settings_dialog.py:32
+#: src/gui/settings_dialog.py:33
 msgid "تباين عال داكن"
 msgstr "High Contrast Dark"
 
-#: src/gui/settings_dialog.py:62 src/media_player/media_gui.py:42
+#: src/gui/settings_dialog.py:63 src/media_player/media_gui.py:42
 msgid "جهاز إخراج الصوت الافتراضي"
 msgstr "Default audio output device"
 
-#: src/gui/settings_dialog.py:190
+#: src/gui/settings_dialog.py:191
 msgid "الإعدادات"
 msgstr "Settings"
 
-#: src/gui/settings_dialog.py:206 src/media_player/media_gui.py:53
+#: src/gui/settings_dialog.py:207 src/media_player/media_gui.py:53
 msgid "مواف&ق"
 msgstr "OK"
 
-#: src/gui/settings_dialog.py:208 src/media_player/media_gui.py:55
+#: src/gui/settings_dialog.py:209 src/media_player/media_gui.py:55
 msgid "إل&غاء"
 msgstr "Cancel"
 
-#: src/gui/settings_dialog.py:235
+#: src/gui/settings_dialog.py:236
 msgid "عام"
 msgstr "General"
 
-#: src/gui/settings_dialog.py:238
+#: src/gui/settings_dialog.py:239
 msgid "لغة البرنامج: "
 msgstr "Application Language: "
 
-#: src/gui/settings_dialog.py:249
+#: src/gui/settings_dialog.py:250
 msgid "مظهر البرنامج: "
 msgstr "Theme: "
 
-#: src/gui/settings_dialog.py:268
+#: src/gui/settings_dialog.py:269
 msgid "اكتشاف الروابط تلقائيًا عند فتح البرنامج"
 msgstr "Auto-detect links when the program starts"
 
-#: src/gui/settings_dialog.py:275
+#: src/gui/settings_dialog.py:276
 msgid "الكشف عن التحديثات الجديدة تلقائيًا عند فتح البرنامج"
 msgstr "Check for updates automatically on startup"
 
-#: src/gui/settings_dialog.py:283
+#: src/gui/settings_dialog.py:284
 msgid "تحميل المزيد من نتائج البحث عند الوصول إلى نهاية قائمة الفيديوهات المعروضة"
 msgstr "Load more search results when reaching the end of the list"
 
-#: src/gui/settings_dialog.py:291
+#: src/gui/settings_dialog.py:292
 msgid "تفعيل اقتراحات البحث أثناء الكتابة"
 msgstr "Enable search suggestions while typing"
 
 #: src/gui/settings_dialog.py:305
+msgid "فتح شاشة الترحيب واستكشاف الميزات..."
+msgstr "Open Welcome Screen & Feature Tour..."
+
+#: src/gui/settings_dialog.py:307
+msgid "فتح شاشة الترحيب واستكشاف الميزات"
+msgstr "Open Welcome Screen & Feature Tour"
+
+#: src/gui/settings_dialog.py:323
 msgid "التنزيل"
 msgstr "Download"
 
-#: src/gui/settings_dialog.py:319
+#: src/gui/settings_dialog.py:337
 msgid "&تغيير المسار"
 msgstr "Change path"
 
-#: src/gui/settings_dialog.py:325
+#: src/gui/settings_dialog.py:343
 msgid "صيغة التحميل المباشر: "
 msgstr "Direct download format: "
 
-#: src/gui/settings_dialog.py:331
+#: src/gui/settings_dialog.py:349
 msgid "فيديو (mp4)"
 msgstr "Video (mp4)"
 
-#: src/gui/settings_dialog.py:332
+#: src/gui/settings_dialog.py:350
 msgid "فيديو (mkv)"
 msgstr "Video (mkv)"
 
-#: src/gui/settings_dialog.py:333
+#: src/gui/settings_dialog.py:351
 msgid "صوت (m4a)"
 msgstr "Audio (m4a)"
 
-#: src/gui/settings_dialog.py:334
+#: src/gui/settings_dialog.py:352
 msgid "صوت (mp3)"
 msgstr "Audio (mp3)"
 
-#: src/gui/settings_dialog.py:335
+#: src/gui/settings_dialog.py:353
 msgid "صوت (wav)"
 msgstr "Audio (wav)"
 
-#: src/gui/settings_dialog.py:336
+#: src/gui/settings_dialog.py:354
 msgid "صوت (flac)"
 msgstr "Audio (flac)"
 
-#: src/gui/settings_dialog.py:345
+#: src/gui/settings_dialog.py:363
 msgid "جودة الصوت: "
 msgstr "Audio Quality: "
 
-#: src/gui/settings_dialog.py:350
+#: src/gui/settings_dialog.py:368
 msgid "96 ك.ب/ث"
 msgstr "96 kbps"
 
-#: src/gui/settings_dialog.py:350
+#: src/gui/settings_dialog.py:368
 msgid "128 ك.ب/ث"
 msgstr "128 kbps"
 
-#: src/gui/settings_dialog.py:350
+#: src/gui/settings_dialog.py:368
 msgid "192 ك.ب/ث"
 msgstr "192 kbps"
 
-#: src/gui/settings_dialog.py:350
+#: src/gui/settings_dialog.py:368
 msgid "320 ك.ب/ث"
 msgstr "320 kbps"
 
-#: src/gui/settings_dialog.py:361
+#: src/gui/settings_dialog.py:379
 msgid "المشغل"
 msgstr "Player"
 
-#: src/gui/settings_dialog.py:364
+#: src/gui/settings_dialog.py:382
 msgid "جودة الفيديو الافتراضية: "
 msgstr "Default video quality: "
 
-#: src/gui/settings_dialog.py:370
+#: src/gui/settings_dialog.py:388
 msgid "144ب"
 msgstr "144p"
 
-#: src/gui/settings_dialog.py:371
+#: src/gui/settings_dialog.py:389
 msgid "240ب"
 msgstr "240p"
 
-#: src/gui/settings_dialog.py:372
+#: src/gui/settings_dialog.py:390
 msgid "360ب"
 msgstr "360p"
 
-#: src/gui/settings_dialog.py:373
+#: src/gui/settings_dialog.py:391
 msgid "480ب"
 msgstr "480p"
 
-#: src/gui/settings_dialog.py:374
+#: src/gui/settings_dialog.py:392
 msgid "720ب"
 msgstr "720p"
 
-#: src/gui/settings_dialog.py:375
+#: src/gui/settings_dialog.py:393
 msgid "1080ب"
 msgstr "1080p"
 
-#: src/gui/settings_dialog.py:376
+#: src/gui/settings_dialog.py:394
 msgid "1440ب"
 msgstr "1440p"
 
-#: src/gui/settings_dialog.py:377
+#: src/gui/settings_dialog.py:395
 msgid "2160ب"
 msgstr "2160p"
 
-#: src/gui/settings_dialog.py:384
+#: src/gui/settings_dialog.py:402
 msgid "جودة الصوت الافتراضية: "
 msgstr "Default audio quality: "
 
-#: src/gui/settings_dialog.py:389
+#: src/gui/settings_dialog.py:407
 msgid "منخفضة"
 msgstr "Low"
 
-#: src/gui/settings_dialog.py:389
+#: src/gui/settings_dialog.py:407
 msgid "متوسطة"
 msgstr "Medium"
 
-#: src/gui/settings_dialog.py:389
+#: src/gui/settings_dialog.py:407
 msgid "عالية"
 msgstr "High"
 
-#: src/gui/settings_dialog.py:396 src/media_player/media_gui.py:46
+#: src/gui/settings_dialog.py:414 src/media_player/media_gui.py:46
 msgid "جهاز إخراج الصوت: "
 msgstr "Audio output device: "
 
-#: src/gui/settings_dialog.py:408
+#: src/gui/settings_dialog.py:426
 msgid "مقدار تغيير سرعة التشغيل: "
 msgstr "Playback speed step: "
 
-#: src/gui/settings_dialog.py:424
+#: src/gui/settings_dialog.py:442
 msgid "متابعة المشاهدة بعد إغلاق الفيديو وتشغيله من جديد"
 msgstr "Resume playback from where you left off"
 
-#: src/gui/settings_dialog.py:431
+#: src/gui/settings_dialog.py:449
 msgid "فتح مشغل الوسائط في وضع ملء الشاشة افتراضيًا"
 msgstr "Open media player in fullscreen by default"
 
-#: src/gui/settings_dialog.py:438
+#: src/gui/settings_dialog.py:456
 msgid "إعادة تشغيل المقطع تلقائيًا عند انتهائه"
 msgstr "Auto-repeat clip when it ends"
 
-#: src/gui/settings_dialog.py:445
+#: src/gui/settings_dialog.py:463
 msgid "الانتقال إلى المقطع التالي تلقائيًا عند انتهاء المقطع الحالي"
 msgstr "Automatically play the next clip"
 
-#: src/gui/settings_dialog.py:457
+#: src/gui/settings_dialog.py:475
 msgid "إعدادات المعادل..."
 msgstr "Equalizer Settings..."
 
-#: src/gui/settings_dialog.py:466
+#: src/gui/settings_dialog.py:484
 msgid "تفعيل SponsorBlock لتخطي المقاطع الدعائية تلقائيًا"
 msgstr "Enable SponsorBlock to skip sponsor segments automatically"
 
-#: src/gui/settings_dialog.py:474
+#: src/gui/settings_dialog.py:492
 msgid "الإعلان عن كل مقطع يتم تخطيه"
 msgstr "Announce every skipped segment"
 
-#: src/gui/settings_dialog.py:481
+#: src/gui/settings_dialog.py:499
 msgid "الفئات التي يتم تخطيها:"
 msgstr "Categories to skip:"
 
-#: src/gui/settings_dialog.py:499
+#: src/gui/settings_dialog.py:517
 msgid "تجاهل المقاطع الأقصر من (بالثواني): "
 msgstr "Ignore segments shorter than (seconds): "
 
-#: src/gui/settings_dialog.py:514
+#: src/gui/settings_dialog.py:532
 msgid "عنوان خادم SponsorBlock: "
 msgstr "SponsorBlock server URL: "
 
-#: src/gui/settings_dialog.py:528
+#: src/gui/settings_dialog.py:546
 msgid "الكوكيز"
 msgstr "Cookies"
 
-#: src/gui/settings_dialog.py:531
+#: src/gui/settings_dialog.py:549
 msgid "المتصفح لاستيراد الكوكيز: "
 msgstr "Browser to import cookies from: "
 
-#: src/gui/settings_dialog.py:549
+#: src/gui/settings_dialog.py:567
 msgid "استيراد من المتصفح"
 msgstr "Import from browser"
 
-#: src/gui/settings_dialog.py:556
+#: src/gui/settings_dialog.py:574
 msgid "مسار ملف الكوكيز: "
 msgstr "Cookies file path: "
 
-#: src/gui/settings_dialog.py:567
+#: src/gui/settings_dialog.py:585
 msgid "تغيير"
 msgstr "Change"
 
-#: src/gui/settings_dialog.py:568
+#: src/gui/settings_dialog.py:586
 msgid "حذف"
 msgstr "Delete"
 
-#: src/gui/settings_dialog.py:579
+#: src/gui/settings_dialog.py:597
 msgid "متقدم"
 msgstr "Advanced"
 
-#: src/gui/settings_dialog.py:583
+#: src/gui/settings_dialog.py:601
 msgid "عميل مشغل يوتيوب: "
 msgstr "YouTube player client: "
 
-#: src/gui/settings_dialog.py:601
+#: src/gui/settings_dialog.py:619
 msgid "التشغيل في الخلفية ومراقبة الحافظة عند بدء تشغيل النظام"
 msgstr "Run in background and monitor clipboard on system startup"
 
-#: src/gui/settings_dialog.py:608
+#: src/gui/settings_dialog.py:626
 msgid "تفعيل التكامل الآمن مع إضافة المتصفح"
 msgstr "Enable safe browser extension integration"
 
-#: src/gui/settings_dialog.py:617
+#: src/gui/settings_dialog.py:635
 msgid "تفعيل مولد رموز POT لتجاوز قيود يوتيوب (bgutil-pot)"
 msgstr "Enable POT Provider to bypass YouTube restrictions (bgutil-pot)"
 
-#: src/gui/settings_dialog.py:624
+#: src/gui/settings_dialog.py:642
 msgid "تفعيل رسائل تصحيح الأخطاء للمطورين فقط"
 msgstr "Enable debug messages for developers only"
 
-#: src/gui/settings_dialog.py:777
+#: src/gui/settings_dialog.py:795
 msgid "ملف الكوكيز المختار غير موجود."
 msgstr "Selected cookies file does not exist."
 
-#: src/gui/settings_dialog.py:786
+#: src/gui/settings_dialog.py:804
 msgid "ملفات نصية (*.txt)|*.txt"
 msgstr "Text files (*.txt)|*.txt"
 
-#: src/gui/settings_dialog.py:789
+#: src/gui/settings_dialog.py:807
 msgid "اختر ملف الكوكيز"
 msgstr "Select cookies file"
 
-#: src/gui/settings_dialog.py:857
+#: src/gui/settings_dialog.py:875
 #, python-brace-format
 msgid "تم استيراد {count} من الكوكيز بنجاح من متصفح {browser}."
 msgstr "Successfully imported {count} cookies from {browser}."
 
-#: src/gui/settings_dialog.py:861
+#: src/gui/settings_dialog.py:879
 #, python-brace-format
 msgid ""
 "تم استيراد {count} من الكوكيز من متصفح {browser}، ولكن يبدو أنه لم يتم "
@@ -2066,21 +2094,21 @@ msgstr ""
 "Imported {count} cookies from {browser}, but no active YouTube login "
 "session was found."
 
-#: src/gui/settings_dialog.py:865 src/gui/update_dialog.py:163
-#: src/gui/update_dialog.py:171
+#: src/gui/settings_dialog.py:883 src/gui/update_dialog.py:175
+#: src/gui/update_dialog.py:202
 msgid "نجاح"
 msgstr "Success"
 
-#: src/gui/settings_dialog.py:873
+#: src/gui/settings_dialog.py:891
 #, python-brace-format
 msgid "متصفح {browser} مفتوح حاليًا. يرجى إغلاق المتصفح وإعادة المحاولة."
 msgstr "{browser} is currently open. Please close the browser and try again."
 
-#: src/gui/settings_dialog.py:875
+#: src/gui/settings_dialog.py:893
 msgid "المتصفح مفتوح"
 msgstr "Browser is open"
 
-#: src/gui/settings_dialog.py:878
+#: src/gui/settings_dialog.py:896
 #, python-brace-format
 msgid ""
 "تعذر فك تشفير كوكيز متصفح {browser} مباشرة بسبب نظام الحماية (App-Bound "
@@ -2091,29 +2119,29 @@ msgstr ""
 "Encryption. You can export cookies with one click using the HexPlayer "
 "browser extension (HexPlayer Link Helper) or use Mozilla Firefox."
 
-#: src/gui/settings_dialog.py:880
+#: src/gui/settings_dialog.py:898
 msgid "خطأ في فك التشفير"
 msgstr "Decryption error"
 
-#: src/gui/settings_dialog.py:882
+#: src/gui/settings_dialog.py:900
 #, python-brace-format
 msgid "لم يتم العثور على كوكيز في متصفح {browser}."
 msgstr "No cookies found in {browser}."
 
-#: src/gui/settings_dialog.py:885
+#: src/gui/settings_dialog.py:903
 msgid "لا توجد كوكيز"
 msgstr "No cookies found"
 
-#: src/gui/settings_dialog.py:887
+#: src/gui/settings_dialog.py:905
 #, python-brace-format
 msgid "فشل استيراد الكوكيز من متصفح {browser}: {error}"
 msgstr "Failed to import cookies from {browser}: {error}"
 
-#: src/gui/settings_dialog.py:933
-msgid "تعذر تحديث تكامل المتصفح في Windows."
-msgstr "Could not update browser integration in Windows."
+#: src/gui/settings_dialog.py:951
+msgid "Unable to update browser integration."
+msgstr "Unable to update browser integration."
 
-#: src/gui/settings_dialog.py:973
+#: src/gui/settings_dialog.py:991
 #, python-brace-format
 msgid ""
 "لقد قمت بتغيير لغة البرنامج إلى {}, مما يعني أنه ينبغي عليك إعادة تشغيل "
@@ -2138,11 +2166,11 @@ msgstr "Exit"
 msgid "تحديث جديد متوفر"
 msgstr "New Update Available"
 
-#: src/gui/update_check_dialog.py:22
+#: src/gui/update_check_dialog.py:25
 msgid "هناك تحديث جديد متوفر للتطبيق."
 msgstr "A new update for the application is available."
 
-#: src/gui/update_check_dialog.py:26
+#: src/gui/update_check_dialog.py:29
 #, python-brace-format
 msgid ""
 "الإصدار الحالي: {current}\n"
@@ -2151,66 +2179,329 @@ msgstr ""
 "Current version: {current}\n"
 "New version: {new}"
 
-#: src/gui/update_check_dialog.py:32
+#: src/gui/update_check_dialog.py:35
 msgid "ما الجديد:"
 msgstr "What's New:"
 
-#: src/gui/update_check_dialog.py:41
+#: src/gui/update_check_dialog.py:44
 msgid "ما الجديد"
 msgstr "What's new"
 
-#: src/gui/update_check_dialog.py:48 src/gui/update_dialog.py:46
+#: src/gui/update_check_dialog.py:52 src/gui/update_dialog.py:47
 msgid "فتح المتصفح لتنزيل التحديث الجديد"
 msgstr "Open the browser to download the new update"
 
-#: src/gui/update_dialog.py:29
+#: src/gui/update_dialog.py:30
 msgid "تنزيل التحديثات"
 msgstr "Downloading Updates"
 
-#: src/gui/update_dialog.py:41
+#: src/gui/update_dialog.py:42
 msgid "في انتظار بدء التحميل..."
 msgstr "Waiting for download to start..."
 
-#: src/gui/update_dialog.py:44
+#: src/gui/update_dialog.py:45
 msgid "حالة تنزيل التحديث"
 msgstr "Update download status"
 
-#: src/gui/update_dialog.py:48
+#: src/gui/update_dialog.py:49
 msgid "إيقاف التحميل"
 msgstr "Stop Download"
 
-#: src/gui/update_dialog.py:134
+#: src/gui/update_dialog.py:144
 msgid "لا يمكن اكمال التنزيل في الوقت الحالي"
 msgstr "Cannot complete download at this time"
 
-#: src/gui/update_dialog.py:143
+#: src/gui/update_dialog.py:150
 #, python-brace-format
 msgid "يتم الآن تنزيل الملف {}"
 msgstr "Downloading file {}"
 
-#: src/gui/update_dialog.py:156
+#: src/gui/update_dialog.py:168
 msgid "حدث خطأ أثناء استخراج الملف"
 msgstr "An error occurred while extracting the file"
 
-#: src/gui/update_dialog.py:163
+#: src/gui/update_dialog.py:175
 msgid "اكتمل تنزيل الملف بنجاح"
 msgstr "File downloaded successfully"
 
-#: src/gui/update_dialog.py:169
+#: src/gui/update_dialog.py:182
+#, python-brace-format
+msgid ""
+"Update downloaded to {path}. Automatic installation is not supported on "
+"this platform. Install the update manually after closing HexPlayer. Open "
+"the download folder now?"
+msgstr ""
+"Update downloaded to {path}. Automatic installation is not supported on "
+"this platform. Install the update manually after closing HexPlayer. Open "
+"the download folder now?"
+
+#: src/gui/update_dialog.py:189
+msgid "Update downloaded"
+msgstr "Update downloaded"
+
+#: src/gui/update_dialog.py:200
 msgid "اكتمل تنزيل التحديث بنجاح. يرجى الضغط على موافق للشروع في عملية التثبيت"
 msgstr "Update downloaded successfully. Click OK to start the installation."
 
-#: src/gui/update_dialog.py:175
+#: src/gui/update_dialog.py:206
 msgid "جاري تثبيت التحديث"
 msgstr "Installing update..."
 
-#: src/gui/update_dialog.py:181
+#: src/gui/update_dialog.py:212
 msgid ""
 "حدث خطأ ما عند محاولة فتح ملف التثبيت. فضلًا أعد محاولة التحديث مجددًا, "
 "أو تواصل مع المطور للإبلاغ بالمشكلة"
 msgstr ""
 "An error occurred while opening the installation file. Please try "
 "updating again or contact the developer."
+
+#: src/gui/welcome_dialog.py:59 src/gui/welcome_dialog.py:61
+msgid "Step 1 of 4: Initial Configuration"
+msgstr "Step 1 of 4: Initial Configuration"
+
+#: src/gui/welcome_dialog.py:65
+msgid ""
+"Configure essential preferences for your listening and browsing "
+"experience. You can always change these settings later in the Settings "
+"menu."
+msgstr ""
+"Configure essential preferences for your listening and browsing "
+"experience. You can always change these settings later in the Settings "
+"menu."
+
+#: src/gui/welcome_dialog.py:75
+msgid "Interface Language:"
+msgstr "Interface Language:"
+
+#: src/gui/welcome_dialog.py:76 src/gui/welcome_dialog.py:82
+msgid "Interface Language"
+msgstr "Interface Language"
+
+#: src/gui/welcome_dialog.py:94
+msgid "Audio Mode (Fast, screen reader optimized, background listening)"
+msgstr "Audio Mode (Fast, screen reader optimized, background listening)"
+
+#: src/gui/welcome_dialog.py:95
+msgid "Video Mode (Displays video player window)"
+msgstr "Video Mode (Displays video player window)"
+
+#: src/gui/welcome_dialog.py:100 src/gui/welcome_dialog.py:105
+msgid "Preferred Playback Mode"
+msgstr "Preferred Playback Mode"
+
+#: src/gui/welcome_dialog.py:116 src/gui/welcome_dialog.py:120
+msgid "Automatically detect YouTube links copied to clipboard"
+msgstr "Automatically detect YouTube links copied to clipboard"
+
+#: src/gui/welcome_dialog.py:139 src/gui/welcome_dialog.py:141
+msgid "Step 2 of 4: Component Readiness"
+msgstr "Step 2 of 4: Component Readiness"
+
+#: src/gui/welcome_dialog.py:145
+msgid ""
+"HexPlayer includes bundled media codecs (libmpv) for instant playback. To"
+" download videos and extract high quality audio, the yt-dlp download "
+"engine is used."
+msgstr ""
+"HexPlayer includes bundled media codecs (libmpv) for instant playback. To"
+" download videos and extract high quality audio, the yt-dlp download "
+"engine is used."
+
+#: src/gui/welcome_dialog.py:154
+msgid "Download Engine Status"
+msgstr "Download Engine Status"
+
+#: src/gui/welcome_dialog.py:158
+msgid "Checking download engine..."
+msgstr "Checking download engine..."
+
+#: src/gui/welcome_dialog.py:164 src/gui/welcome_dialog.py:167
+msgid "Download or Update Download Engine"
+msgstr "Download or Update Download Engine"
+
+#: src/gui/welcome_dialog.py:180
+#, python-brace-format
+msgid "Download Engine (yt-dlp): Ready (Version: {version})"
+msgstr "Download Engine (yt-dlp): Ready (Version: {version})"
+
+#: src/gui/welcome_dialog.py:186
+msgid "Download Engine (yt-dlp): Not installed or update recommended"
+msgstr "Download Engine (yt-dlp): Not installed or update recommended"
+
+#: src/gui/welcome_dialog.py:196
+msgid "Starting download of the download engine in the background..."
+msgstr "Starting download of the download engine in the background..."
+
+#: src/gui/welcome_dialog.py:219 src/gui/welcome_dialog.py:223
+msgid "Step 3 of 4: Keyboard Shortcuts & Quick Workflows"
+msgstr "Step 3 of 4: Keyboard Shortcuts & Quick Workflows"
+
+#: src/gui/welcome_dialog.py:228
+msgid ""
+"Use Arrow keys to explore essential shortcuts. You can use these keys "
+"anywhere in the main window."
+msgstr ""
+"Use Arrow keys to explore essential shortcuts. You can use these keys "
+"anywhere in the main window."
+
+#: src/gui/welcome_dialog.py:242
+msgid "Keyboard Shortcuts Cheat Sheet"
+msgstr "Keyboard Shortcuts Cheat Sheet"
+
+#: src/gui/welcome_dialog.py:244
+msgid "Shortcut"
+msgstr "Shortcut"
+
+#: src/gui/welcome_dialog.py:245
+msgid "Action"
+msgstr "Action"
+
+#: src/gui/welcome_dialog.py:248
+msgid "Focus Search Box"
+msgstr "Focus Search Box"
+
+#: src/gui/welcome_dialog.py:249
+msgid "Move between Search, Results list, and Controls"
+msgstr "Move between Search, Results list, and Controls"
+
+#: src/gui/welcome_dialog.py:250
+msgid "Play selected video or playlist"
+msgstr "Play selected video or playlist"
+
+#: src/gui/welcome_dialog.py:251
+msgid "Play / Pause media"
+msgstr "Play / Pause media"
+
+#: src/gui/welcome_dialog.py:252
+msgid "Seek 5 seconds backward / forward"
+msgstr "Seek 5 seconds backward / forward"
+
+#: src/gui/welcome_dialog.py:253
+msgid "Volume increase / decrease"
+msgstr "Volume increase / decrease"
+
+#: src/gui/welcome_dialog.py:254
+msgid "Decrease / Increase playback speed"
+msgstr "Decrease / Increase playback speed"
+
+#: src/gui/welcome_dialog.py:255
+msgid "Mute / Unmute audio"
+msgstr "Mute / Unmute audio"
+
+#: src/gui/welcome_dialog.py:256
+msgid "Download selected media"
+msgstr "Download selected media"
+
+#: src/gui/welcome_dialog.py:257
+msgid "Open History"
+msgstr "Open History"
+
+#: src/gui/welcome_dialog.py:258
+msgid "Open Bookmarks / Favorites"
+msgstr "Open Bookmarks / Favorites"
+
+#: src/gui/welcome_dialog.py:267 src/gui/welcome_dialog.py:268
+msgid "Open Full Shortcuts Guide"
+msgstr "Open Full Shortcuts Guide"
+
+#: src/gui/welcome_dialog.py:277 src/gui/welcome_dialog.py:335
+msgid "HexPlayer Documentation"
+msgstr "HexPlayer Documentation"
+
+#: src/gui/welcome_dialog.py:280
+msgid "Full documentation opened."
+msgstr "Full documentation opened."
+
+#: src/gui/welcome_dialog.py:294 src/gui/welcome_dialog.py:296
+msgid "Step 4 of 4: You are Ready to Go!"
+msgstr "Step 4 of 4: You are Ready to Go!"
+
+#: src/gui/welcome_dialog.py:300
+msgid ""
+"Setup is complete! You can access all settings and features at any time "
+"from the main window menu bar. Press F1 anytime for the complete User "
+"Guide."
+msgstr ""
+"Setup is complete! You can access all settings and features at any time "
+"from the main window menu bar. Press F1 anytime for the complete User "
+"Guide."
+
+#: src/gui/welcome_dialog.py:309 src/gui/welcome_dialog.py:312
+msgid "Show this welcome screen on startup"
+msgstr "Show this welcome screen on startup"
+
+#: src/gui/welcome_dialog.py:317 src/gui/welcome_dialog.py:318
+msgid "Open User Documentation (F1)"
+msgstr "Open User Documentation (F1)"
+
+#: src/gui/welcome_dialog.py:324 src/gui/welcome_dialog.py:326
+msgid "Finish and Launch HexPlayer"
+msgstr "Finish and Launch HexPlayer"
+
+#: src/gui/welcome_dialog.py:338
+msgid "User Guide not found."
+msgstr "User Guide not found."
+
+#: src/gui/welcome_dialog.py:348
+msgid "HexPlayer Welcome & Setup Guide"
+msgstr "HexPlayer Welcome & Setup Guide"
+
+#: src/gui/welcome_dialog.py:356
+msgid "Initial Configuration"
+msgstr "Initial Configuration"
+
+#: src/gui/welcome_dialog.py:357
+msgid "Component Readiness"
+msgstr "Component Readiness"
+
+#: src/gui/welcome_dialog.py:358
+msgid "Keyboard Shortcuts & Quick Workflows"
+msgstr "Keyboard Shortcuts & Quick Workflows"
+
+#: src/gui/welcome_dialog.py:359
+msgid "You are Ready to Go!"
+msgstr "You are Ready to Go!"
+
+#: src/gui/welcome_dialog.py:395
+msgid "< Back"
+msgstr "< Back"
+
+#: src/gui/welcome_dialog.py:396
+msgid "Back to previous step"
+msgstr "Back to previous step"
+
+#: src/gui/welcome_dialog.py:400 src/gui/welcome_dialog.py:479
+msgid "Next >"
+msgstr "Next >"
+
+#: src/gui/welcome_dialog.py:401 src/gui/welcome_dialog.py:480
+msgid "Next step"
+msgstr "Next step"
+
+#: src/gui/welcome_dialog.py:407
+msgid "Skip / Close"
+msgstr "Skip / Close"
+
+#: src/gui/welcome_dialog.py:408
+msgid "Skip and close guide"
+msgstr "Skip and close guide"
+
+#: src/gui/welcome_dialog.py:476
+msgid "Finish"
+msgstr "Finish"
+
+#: src/gui/welcome_dialog.py:477
+msgid "Finish and save"
+msgstr "Finish and save"
+
+#: src/gui/welcome_dialog.py:485
+#, fuzzy, python-brace-format
+msgid "Step {current} of {total}: {title}"
+msgstr "Step {step} of {total}: {title}"
+
+#: src/gui/welcome_dialog.py:529
+msgid "Welcome tour completed."
+msgstr "Welcome tour completed."
 
 #: src/media_player/media_gui.py:39
 msgid "جهاز إخراج الصوت"
@@ -2401,7 +2692,7 @@ msgstr "by"
 
 #: src/media_player/media_gui.py:892
 msgid "لا تتوفر اقتراحات لهذا المقطع"
-msgstr ""
+msgstr "لا تتوفر اقتراحات لهذا المقطع"
 
 #: src/media_player/media_gui.py:929
 #, fuzzy
@@ -2873,4 +3164,582 @@ msgstr "{} views"
 
 #~ msgid "إعدادات SponsorBlock"
 #~ msgstr "SponsorBlock settings"
+
+#~ msgid "تعذر تحديث تكامل المتصفح في Windows."
+#~ msgstr "Could not update browser integration in Windows."
+
+#~ msgid "مرحبًا بك في برنامج HexPlayer!"
+#~ msgstr "Welcome to HexPlayer!"
+
+#~ msgid "مرحبًا بك في برنامج HexPlayer"
+#~ msgstr "Welcome to HexPlayer"
+
+#~ msgid ""
+#~ "HexPlayer (Accessible YouTube Downloader Pro)"
+#~ " هو مشغل ومنزل يوتيوب مصمم بالكامل"
+#~ " ليكون متوافقًا وسلسًا مع قارئات "
+#~ "الشاشة والتحكم الكامل عبر لوحة المفاتيح."
+#~ "\n"
+#~ "يتيح لك تصفح يوتيوب وتشغيل الوسائط "
+#~ "بصوت عالي الجودة أو فيديو، وتنزيل "
+#~ "المقاطع وقوائم التشغيل بدون تعقيدات "
+#~ "المتصفح."
+#~ msgstr ""
+#~ "HexPlayer (Accessible YouTube Downloader Pro)"
+#~ " is a YouTube player and downloader"
+#~ " designed from the ground up to "
+#~ "be accessible and seamless with screen"
+#~ " readers and keyboard navigation.\n"
+#~ "It allows browsing YouTube, streaming "
+#~ "media in high quality audio or "
+#~ "video, and downloading videos and "
+#~ "playlists without browser complexity."
+
+#~ msgid "اختبار الصوت وقارئ الشاشة"
+#~ msgstr "Screen Reader & Audio Test"
+
+#~ msgid ""
+#~ "اضغط على الزر أدناه للتحقق من أن"
+#~ " النطق الصوتي وقارئ الشاشة يعملان "
+#~ "بصورة صحيحة:"
+#~ msgstr ""
+#~ "Press the button below to verify "
+#~ "that screen reader speech and audio "
+#~ "output are working properly:"
+
+#~ msgid "اختبار النطق والصوت الآن"
+#~ msgstr "Test Speech & Audio Now"
+
+#~ msgid "حالة الصوت: لم يتم الاختبار بعد"
+#~ msgstr "Audio status: Not tested yet"
+
+#~ msgid "أهم مفاتيح التنقل السريع"
+#~ msgstr "Key Navigation Shortcuts"
+
+#~ msgid ""
+#~ "• Tab / Shift+Tab: للتنقل بين العناصر والأزرار.\n"
+#~ "• Alt: للوصول إلى شريط القوائم الرئيسي.\n"
+#~ "• F1: لفتح دليل الاستخدام المفصل في أي وقت.\n"
+#~ "• Ctrl+F: للبحث في يوتيوب وتصفح النتائج.\n"
+#~ "• Ctrl+D: لتنزيل مقطع أو قائمة تشغيل من خلال رابط.\n"
+#~ "• Ctrl+Y: لتشغيل أي رابط يوتيوب مباشرة.\n"
+#~ "• Ctrl+Shift+S: لتصفح مقاطع Shorts القصيرة والتبديل بينها بالأسهم."
+#~ msgstr ""
+#~ "• Tab / Shift+Tab: Navigate between controls and buttons.\n"
+#~ "• Alt: Access the main menu bar.\n"
+#~ "• F1: Open the complete user guide at any time.\n"
+#~ "• Ctrl+F: Search YouTube and browse results.\n"
+#~ "• Ctrl+D: Download a video or playlist from a link.\n"
+#~ "• Ctrl+Y: Play any YouTube link directly.\n"
+#~ "• Ctrl+Shift+S: Watch Shorts clips and navigate with arrows."
+
+#~ msgid "قائمة أهم مفاتيح التنقل السريع"
+#~ msgstr "Key navigation shortcuts list"
+
+#~ msgid "النطق الصوتي وقارئ الشاشة يعملان بنجاح في برنامج HexPlayer! مرحبًا بك."
+#~ msgstr ""
+#~ "Speech and screen reader are working "
+#~ "successfully in HexPlayer! Welcome."
+
+#~ msgid "حالة الصوت: يعمل بنجاح!"
+#~ msgstr "Audio status: Working successfully!"
+
+#~ msgid "استكشاف ميزات البرنامج الرئيسية"
+#~ msgstr "Explore Core Features"
+
+#~ msgid "اختر الميزة للاستكشاف ومعرفة كيفية استخدامها:"
+#~ msgstr "Select a feature to explore and learn how to use it:"
+
+#~ msgid "البحث في يوتيوب وتصفح النتائج (Ctrl+F)"
+#~ msgstr "Search YouTube & Browse Results (Ctrl+F)"
+
+#~ msgid "مشغل الوسائط الذكي (Ctrl+Y)"
+#~ msgstr "Smart Media Player (Ctrl+Y)"
+
+#~ msgid "تنزيل المقاطع وقوائم التشغيل (Ctrl+D)"
+#~ msgstr "Download Videos & Playlists (Ctrl+D)"
+
+#~ msgid "مشاهدة مقاطع يوتيوب القصيرة Shorts (Ctrl+Shift+S)"
+#~ msgstr "Watch YouTube Shorts (Ctrl+Shift+S)"
+
+#~ msgid "سجل المشاهدة والمفضلة (Ctrl+H / Ctrl+Shift+F)"
+#~ msgstr "Watch History & Favorites (Ctrl+H / Ctrl+Shift+F)"
+
+#~ msgid "مراقبة الروابط وتكامل المتصفح"
+#~ msgstr "Link Monitoring & Browser Integration"
+
+#~ msgid "قائمة الميزات المتاحة للاستكشاف"
+#~ msgstr "Available features list"
+
+#~ msgid "تفاصيل الميزة وطريقة الاستخدام"
+#~ msgstr "Feature Details & Usage"
+
+#~ msgid "تفاصيل الميزة المختارة"
+#~ msgstr "Selected feature details"
+
+#~ msgid "تجربة الميزة الآن"
+#~ msgstr "Try Feature Now"
+
+#~ msgid ""
+#~ "ميزة البحث تتيح لك إدخال أي كلمة"
+#~ " بحث، وتصفية النتائج حسب الفيديوهات "
+#~ "أو القنوات أو قوائم التشغيل.\n"
+#~ "• الاختصار: Ctrl+F من أي مكان في البرنامج.\n"
+#~ "• التنقل: استخدم الأسهم للتنقل بين "
+#~ "النتائج، واضغط Enter للتشغيل السريع، أو"
+#~ " مفتاح التطبيقات لفتح قائمة الخيارات "
+#~ "الإضافية مثل تنزيل المقطع، أو فتح "
+#~ "القناة، أو عرض التعليقات."
+#~ msgstr ""
+#~ "Search allows typing any query and "
+#~ "filtering results by videos, channels, "
+#~ "or playlists.\n"
+#~ "• Shortcut: Ctrl+F from anywhere in the app.\n"
+#~ "• Navigation: Use arrows to browse "
+#~ "results, press Enter for instant play,"
+#~ " or press the Applications/Context menu "
+#~ "key for extra options such as "
+#~ "downloading, opening the channel, or "
+#~ "reading comments."
+
+#~ msgid ""
+#~ "مشغل وسائط مدمج عالي الكفاءة مبني على مكتبة MPV.\n"
+#~ "• الاختصار: Ctrl+Y لتشغيل رابط مباشر.\n"
+#~ "• التحكم: المسافة للتشغيل/الإيقاف المؤقت، "
+#~ "الأسهم للتقديم والتأخير، Ctrl+الأسهم للتحكم"
+#~ " بمضخم الصوت حتى 200%، الأقواس [ "
+#~ "و ] لتغيير السرعة، Ctrl+E لفتح "
+#~ "معادل الصوت (Equalizer)، و Ctrl+C للتنقل"
+#~ " بين الفصول (Chapters)."
+#~ msgstr ""
+#~ "High-performance built-in media player powered by MPV.\n"
+#~ "• Shortcut: Ctrl+Y to play a direct URL.\n"
+#~ "• Controls: Space for play/pause, arrows"
+#~ " to seek, Ctrl+Arrows for volume "
+#~ "boost up to 200%, brackets [ and"
+#~ " ] for playback speed, Ctrl+E for "
+#~ "Equalizer, and Ctrl+C to navigate "
+#~ "chapters."
+
+#~ msgid ""
+#~ "تنزيل المقاطع وقوائم التشغيل والقنوات بأعلى جودة متوفرة وبأفضل سرعة.\n"
+#~ "• الاختصار: Ctrl+D من أي نافذة.\n"
+#~ "• الصيغ: يدعم التنزيل كفيديو MP4 "
+#~ "بدقة متعددة (حتى 4K)، أو ملف صوتي"
+#~ " MP3 أو M4A.\n"
+#~ "• التلقائية: يدعم التحميل في الخلفية مع إشعارات ناطقة ونسب مئوية فورية."
+#~ msgstr ""
+#~ "Download videos, playlists, and channels "
+#~ "at top available quality and fastest "
+#~ "speed.\n"
+#~ "• Shortcut: Ctrl+D from any window.\n"
+#~ "• Formats: Supports MP4 video at "
+#~ "various resolutions (up to 4K), or "
+#~ "MP3/M4A audio.\n"
+#~ "• Automated: Background downloads with "
+#~ "spoken announcements and live progress "
+#~ "percentages."
+
+#~ msgid ""
+#~ "تجربة استماع ومشاهدة مخصصة لمقاطع يوتيوب القصيرة (YouTube Shorts).\n"
+#~ "• الاختصار: Ctrl+Shift+S.\n"
+#~ "• الاستخدام: تصفح المقاطع بالأسهم للأعلى"
+#~ " والأسفل بسلاسة فائقة، مع تحميل مسبق"
+#~ " فوري للمقطع التالي وتكرار تلقائي "
+#~ "مستمر ودعم التعليقات والإعجاب."
+#~ msgstr ""
+#~ "Dedicated listening and viewing experience for YouTube Shorts.\n"
+#~ "• Shortcut: Ctrl+Shift+S.\n"
+#~ "• Usage: Seamlessly navigate clips using"
+#~ " Up and Down arrows, with instant "
+#~ "preloading of the next clip, continuous"
+#~ " looping, comments, and likes."
+
+#~ msgid ""
+#~ "حفظ ومتابعة المقاطع التي تفضلها أو شاهدتها سابقًا.\n"
+#~ "• سجل المشاهدة: Ctrl+H لعرض السجل "
+#~ "ومتابعة موضع التشغيل الأخير تلقائيًا.\n"
+#~ "• المفضلة: Ctrl+Shift+F لإدارة مكتبتك "
+#~ "المفضلة محليًا واستعراضها دون الحاجة "
+#~ "للاتصال بالإنترنت."
+#~ msgstr ""
+#~ "Save and track content you love or previously watched.\n"
+#~ "• History: Ctrl+H to view watch "
+#~ "history and resume from where you "
+#~ "left off.\n"
+#~ "• Favorites: Ctrl+Shift+F to organize "
+#~ "your favorite library locally without "
+#~ "needing an Internet connection."
+
+#~ msgid ""
+#~ "تكامل ذكي مع المتصفحات (Edge, Chrome, Brave) ومراقبة الحافظة.\n"
+#~ "• الحافظة: بمجرد نسخ أي رابط "
+#~ "يوتيوب، يعرض البرنامج تلقائيًا خيارات "
+#~ "التشغيل والتنزيل السريع.\n"
+#~ "• إضافة المتصفح: ترسل أي فيديو مفتوح بنقرة واحدة إلى HexPlayer فورًا."
+#~ msgstr ""
+#~ "Smart integration with web browsers "
+#~ "(Edge, Chrome, Brave) and clipboard "
+#~ "monitoring.\n"
+#~ "• Clipboard: As soon as you copy"
+#~ " a YouTube link, the app prompts "
+#~ "you to play or download it.\n"
+#~ "• Extension: Sends any open YouTube "
+#~ "video directly to HexPlayer with one "
+#~ "click."
+
+#~ msgid "فتح نافذة البحث (Ctrl+F)"
+#~ msgstr "Open Search Dialog (Ctrl+F)"
+
+#~ msgid "فحص محرك التشغيل MPV"
+#~ msgstr "Test MPV Playback Engine"
+
+#~ msgid "فتح نافذة التنزيل (Ctrl+D)"
+#~ msgstr "Open Download Dialog (Ctrl+D)"
+
+#~ msgid "معلومات تشغيل مقاطع Shorts"
+#~ msgstr "Shorts Playback Information"
+
+#~ msgid "فتح سجل المشاهدة (Ctrl+H)"
+#~ msgstr "Open Watch History (Ctrl+H)"
+
+#~ msgid "تجربة الميزة"
+#~ msgstr "Try Feature"
+
+#~ msgid "تم اختيار: {name}"
+#~ msgstr "Selected: {name}"
+
+#~ msgid "تم فتح نافذة البحث بنجاح."
+#~ msgstr "Search dialog opened successfully."
+
+#~ msgid "محرك التشغيل MPV جاهز. تم العثور على {count} جهاز إخراج صوتي."
+#~ msgstr "MPV player is ready. Found {count} audio output devices."
+
+#~ msgid "محرك MPV متوفر وجاهز للتشغيل."
+#~ msgstr "MPV engine is available and ready for playback."
+
+#~ msgid "تم فتح نافذة التنزيل."
+#~ msgstr "Download dialog opened."
+
+#~ msgid ""
+#~ "ميزة Shorts جاهزة. استخدم الاختصار "
+#~ "Ctrl+Shift+S في النافذة الرئيسية لتشغيلها."
+#~ msgstr ""
+#~ "Shorts feature is ready. Use "
+#~ "Ctrl+Shift+S in the main window to "
+#~ "open it."
+
+#~ msgid "تم فتح سجل المشاهدة."
+#~ msgstr "Watch history opened."
+
+#~ msgid "تم فتح مجلد إضافة المتصفح."
+#~ msgstr "Browser extension folder opened."
+
+#~ msgid "فحص وتنزيل المكونات الإضافية"
+#~ msgstr "Component Health & Setup"
+
+#~ msgid ""
+#~ "يعتمد برنامج HexPlayer على أدوات خارجية"
+#~ " لتوفير أعلى سرعة وكفاءة للتنزيل "
+#~ "وتجاوز قيود يوتيوب. يمكنك هنا التحقق "
+#~ "من حالة المكونات وتنزيل أي مكون "
+#~ "مفقود مباشرة بنقرة واحدة:"
+#~ msgstr ""
+#~ "HexPlayer relies on external tools to"
+#~ " provide maximum download speed and "
+#~ "bypass YouTube restrictions. You can "
+#~ "check component status and download any"
+#~ " missing component with a single "
+#~ "click:"
+
+#~ msgid "مكتبة واي تي دي إل بي (yt-dlp)"
+#~ msgstr "yt-dlp Library"
+
+#~ msgid ""
+#~ "المحرك الأساسي لتنزيل المقاطع الصوتية "
+#~ "والمرئية وقوائم التشغيل واستخراج بياناتها."
+#~ msgstr ""
+#~ "Core engine for downloading audio/video "
+#~ "clips, playlists, and extracting metadata."
+
+#~ msgid "جاري الفحص..."
+#~ msgstr "Checking..."
+
+#~ msgid "تنزيل yt-dlp"
+#~ msgstr "Download yt-dlp"
+
+#~ msgid "بيئة تشغيل دينو (Deno)"
+#~ msgstr "Deno Runtime"
+
+#~ msgid ""
+#~ "بيئة تشغيل جافاسكريبت مطلوبة لمكتبة "
+#~ "YouTube.js (InnerTube) لتصفح القنوات "
+#~ "والتعليقات والبحث المتقدم."
+#~ msgstr ""
+#~ "JavaScript runtime required for InnerTube "
+#~ "(YouTube.js) for channel browsing, comments,"
+#~ " and advanced search."
+
+#~ msgid "تنزيل Deno"
+#~ msgstr "Download Deno"
+
+#~ msgid "مولد رموز POT (bgutil-pot)"
+#~ msgstr "POT Token Provider (bgutil-pot)"
+
+#~ msgid ""
+#~ "أداة متقدمة لتوليد رموز التحقق (PO "
+#~ "Token) لمنع حظر يوتيوب أو تقييد "
+#~ "سرعة التنزيل."
+#~ msgstr ""
+#~ "Advanced tool generating Proof-of-Origin"
+#~ " (PO) tokens to bypass YouTube "
+#~ "throttling and 403 blocks."
+
+#~ msgid "تنزيل مولد POT"
+#~ msgstr "Download POT Provider"
+
+#~ msgid "إعادة فحص كافة المكونات"
+#~ msgstr "Recheck All Components"
+
+#~ msgid "تنزيل المكونات المفقودة تلقائيًا"
+#~ msgstr "Download Missing Components Automatically"
+
+#~ msgid "الحالة: مثبت (الإصدار: {ver})"
+#~ msgstr "Status: Installed (Version: {ver})"
+
+#~ msgid "فحص تحديث yt-dlp"
+#~ msgstr "Check yt-dlp Update"
+
+#~ msgid "الحالة: غير مثبت (موصى به للتنزيل)"
+#~ msgstr "Status: Not Installed (Recommended for download)"
+
+#~ msgid "تنزيل yt-dlp الآن"
+#~ msgstr "Download yt-dlp Now"
+
+#~ msgid "متوفر"
+#~ msgstr "Available"
+
+#~ msgid "فحص تحديث Deno"
+#~ msgstr "Check Deno Update"
+
+#~ msgid "الحالة: غير مثبت (مطلوب لبعض وظائف يوتيوب)"
+#~ msgstr "Status: Not Installed (Required for some YouTube features)"
+
+#~ msgid "تنزيل Deno الآن"
+#~ msgstr "Download Deno Now"
+
+#~ msgid "فحص تحديث مولد POT"
+#~ msgstr "Check POT Provider Update"
+
+#~ msgid "الحالة: غير مثبت (اختياري / موصى به)"
+#~ msgstr "Status: Not Installed (Optional / Recommended)"
+
+#~ msgid "تنزيل مولد POT الآن"
+#~ msgstr "Download POT Provider Now"
+
+#~ msgid "اكتمل فحص المكونات: {installed} مثبتة، {missing} مفقودة."
+#~ msgstr "Component check completed: {installed} installed, {missing} missing."
+
+#~ msgid "بدء تنزيل مكتبة واي تي دي إل بي..."
+#~ msgstr "Starting yt-dlp download..."
+
+#~ msgid "التحقق من وجود تحديث لـ واي تي دي إل بي..."
+#~ msgstr "Checking for yt-dlp update..."
+
+#~ msgid "بدء تنزيل أداة Deno..."
+#~ msgstr "Starting Deno download..."
+
+#~ msgid "التحقق من وجود تحديث لـ Deno..."
+#~ msgstr "Checking for Deno update..."
+
+#~ msgid "بدء تنزيل مولد رموز POT..."
+#~ msgstr "Starting POT Provider download..."
+
+#~ msgid "التحقق من وجود تحديث لـ مولد رموز POT..."
+#~ msgstr "Checking for POT Provider update..."
+
+#~ msgid "كافة المكونات مثبتة بالفعل!"
+#~ msgstr "All components are already installed!"
+
+#~ msgid "المكونات مكتملة"
+#~ msgstr "Components Complete"
+
+#~ msgid "جاري تنزيل المكونات المفقودة ({count} مكونات)..."
+#~ msgstr "Downloading missing components ({count} components)..."
+
+#~ msgid "الإعدادات والتخصيص السريع"
+#~ msgstr "Quick Settings & Personalization"
+
+#~ msgid "خصص أهم الإعدادات المفضلة لبرنامج HexPlayer لتبدأ الاستخدام براحة تامة:"
+#~ msgstr "Customize key preferences for HexPlayer to get started with ease:"
+
+#~ msgid "لغة البرنامج:"
+#~ msgstr "App Language:"
+
+#~ msgid "لغة البرنامج"
+#~ msgstr "App Language"
+
+#~ msgid "وضع التشغيل المفضل:"
+#~ msgstr "Preferred Playback Mode:"
+
+#~ msgid "تشغيل كصوت فقط (افتراضي ومناسب لقارئات الشاشة)"
+#~ msgstr "Play as audio only (default and screen reader friendly)"
+
+#~ msgid "تشغيل كنافذة فيديو كاملة"
+#~ msgstr "Play as full video window"
+
+#~ msgid "وضع التشغيل المفضل"
+#~ msgstr "Preferred Playback Mode"
+
+#~ msgid "مظهر البرنامج:"
+#~ msgstr "App Theme:"
+
+#~ msgid "مظهر البرنامج"
+#~ msgstr "App Theme"
+
+#~ msgid "مجلد التنزيل الافتراضي:"
+#~ msgstr "Default Download Folder:"
+
+#~ msgid "مسار مجلد التنزيل الافتراضي"
+#~ msgstr "Default download folder path"
+
+#~ msgid "استعراض..."
+#~ msgstr "Browse..."
+
+#~ msgid "استعراض واختيار مجلد التنزيل"
+#~ msgstr "Browse and select download folder"
+
+#~ msgid "المراقبة والاكتشاف التلقائي"
+#~ msgstr "Monitoring & Auto Detection"
+
+#~ msgid "اكتشاف روابط يوتيوب المنسوخة في الحافظة تلقائيًا"
+#~ msgstr "Automatically detect copied YouTube links in clipboard"
+
+#~ msgid "استمرار المراقبة التلقائية للروابط في الخلفية عند إغلاق النافذة"
+#~ msgstr "Continue background link monitoring when window is closed"
+
+#~ msgid "حفظ التفضيلات الآن"
+#~ msgstr "Save Preferences Now"
+
+#~ msgid "تم تطبيق المظهر: {theme}"
+#~ msgstr "Theme applied: {theme}"
+
+#~ msgid "اختر مجلد حفظ التنزيلات:"
+#~ msgstr "Select download destination folder:"
+
+#~ msgid "تم اختيار المجلد: {path}"
+#~ msgstr "Folder selected: {path}"
+
+#~ msgid "تم حفظ التفضيلات بنجاح."
+#~ msgstr "Preferences saved successfully."
+
+#~ msgid "أنت الآن جاهز تمامًا للانطلاق!"
+#~ msgstr "You are all set and ready to go!"
+
+#~ msgid "أنت الآن جاهز تمامًا للانطلاق"
+#~ msgstr "You are all set and ready to go"
+
+#~ msgid ""
+#~ "تهانينا! لقد استكشفت أهم ميزات البرنامج"
+#~ " وتعرفت على كيفية استخدامه وتهيئة "
+#~ "مكوناته.\n"
+#~ "\n"
+#~ "• يمكنك في أي وقت فتح دليل الاستخدام الكامل بالضغط على مفتاح F1.\n"
+#~ "• للوصول إلى كافة الخيارات المتقدمة "
+#~ "(مثل SponsorBlock والمعادل وتكامل المتصفح)،"
+#~ " اضغط Alt+S لفتح نافذة الإعدادات.\n"
+#~ "• لإعادة فتح هذه الجولة الإرشادية، "
+#~ "يمكنك اختيارها من قائمة 'حول' في "
+#~ "الشريط العلوي."
+#~ msgstr ""
+#~ "Congratulations! You have explored the "
+#~ "core features and configured components "
+#~ "and settings.\n"
+#~ "\n"
+#~ "• You can open the complete user guide at any time by pressing F1.\n"
+#~ "• For advanced options (such as "
+#~ "SponsorBlock, Equalizer, and browser "
+#~ "integration), press Alt+S to open "
+#~ "Settings.\n"
+#~ "• You can reopen this guide anytime from the 'About' menu."
+
+#~ msgid "إجراءات سريعة مفيدة"
+#~ msgstr "Useful Quick Actions"
+
+#~ msgid "فتح دليل الاستخدام الشامل (F1)"
+#~ msgstr "Open Complete User Guide (F1)"
+
+#~ msgid "فتح دليل الاستخدام الشامل"
+#~ msgstr "Open Complete User Guide"
+
+#~ msgid "فتح نافذة الإعدادات الكاملة (Alt+S)"
+#~ msgstr "Open Full Settings Dialog (Alt+S)"
+
+#~ msgid "فتح نافذة الإعدادات الكاملة"
+#~ msgstr "Open Full Settings Dialog"
+
+#~ msgid "عدم إظهار هذه الجولة مرة أخرى عند بدء التشغيل القادم"
+#~ msgstr "Do not show this tour again on next startup"
+
+#~ msgid "شاشة الترحيب واستكشاف برنامج HexPlayer"
+#~ msgstr "Welcome to HexPlayer & Feature Tour"
+
+#~ msgid "مرحبًا بك في البرنامج"
+#~ msgstr "Welcome to HexPlayer"
+
+#~ msgid "استكشاف ميزات البرنامج"
+#~ msgstr "Explore App Features"
+
+#~ msgid "جاهز للانطلاق"
+#~ msgstr "Ready to Launch"
+
+#~ msgid "HexPlayer - Accessible YouTube Downloader Pro"
+#~ msgstr ""
+
+#~ msgid "دليلك التفاعلي السريع لاستكشاف الميزات وتهيئة المكونات والإعدادات"
+#~ msgstr ""
+#~ "Your quick interactive guide to "
+#~ "exploring features, components, and settings"
+
+#~ msgid "خطوات الجولة:"
+#~ msgstr "Tour Steps:"
+
+#~ msgid "خطوات الجولة"
+#~ msgstr "Tour Steps"
+
+#~ msgid "قائمة خطوات جولة الترحيب"
+#~ msgstr "Welcome tour steps list"
+
+#~ msgid "عرض هذه الشاشة عند بدء تشغيل البرنامج"
+#~ msgstr "Show this screen on application startup"
+
+#~ msgid "< الساب&ق"
+#~ msgstr "< &Previous"
+
+#~ msgid "الخطوة السابقة"
+#~ msgstr "Previous Step"
+
+#~ msgid "التال&ي >"
+#~ msgstr "&Next >"
+
+#~ msgid "الخطوة التالية"
+#~ msgstr "Next Step"
+
+#~ msgid "ابدأ استخدام البرنام&ج"
+#~ msgstr "Start Using the &App"
+
+#~ msgid "ابدأ استخدام البرنامج"
+#~ msgstr "Start Using the App"
+
+#~ msgid "إغلاق شاشة الترحيب"
+#~ msgstr "Close Welcome Screen"
+
+#~ msgid ""
+#~ "مرحبًا بك في برنامج HexPlayer! تم "
+#~ "فتح شاشة الترحيب والتعريف بالبرنامج "
+#~ "وميزاته."
+#~ msgstr "Welcome to HexPlayer! The welcome screen and feature tour is now open."
+
+#~ msgid "مرحبًا بك في HexPlayer! تم تفعيل النافذة الرئيسية للبرنامج."
+#~ msgstr "Welcome to HexPlayer! Main application window is now active."
 
