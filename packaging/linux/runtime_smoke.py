@@ -24,6 +24,20 @@ if sys.platform == "linux" and "--packaging-smoke-test" in sys.argv:
     ):
         importlib.import_module(module)
 
+    speechd_lib = ctypes.util.find_library("speechd")
+    if speechd_lib:
+        try:
+            ctypes.CDLL(speechd_lib)
+        except Exception:
+            pass
+    try:
+        import prism
+
+        ctx = prism.Context()
+        _ = ctx.acquire_best()
+    except Exception:
+        pass
+
     library = ctypes.util.find_library("mpv")
     if not library:
         raise RuntimeError("System libmpv was not found")

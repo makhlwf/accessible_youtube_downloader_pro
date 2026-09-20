@@ -162,6 +162,7 @@ jobs:
           test -s artifacts/windows/HexPlayer.exe
           test -s "artifacts/linux/HexPlayer-$VERSION-linux-x86_64.tar.gz"
           test -s "artifacts/linux/HexPlayer-$VERSION-linux-amd64.deb"
+          test -s "artifacts/linux/HexPlayer-$VERSION-1.x86_64.rpm"
           (cd artifacts/linux && sha256sum --check ./*.sha256)
           if [ -z "$RELEASE_MESSAGE" ]; then
             RELEASE_MESSAGE="Automated Beta Build for version $VERSION ($SOURCE_SHA)"
@@ -196,9 +197,13 @@ jobs:
         run: |
           $url = "https://github.com/$env:GITHUB_REPOSITORY/releases/download/$env:TAG/HexPlayer.exe"
           $linuxUrl = "https://github.com/$env:GITHUB_REPOSITORY/releases/download/$env:TAG/HexPlayer-$env:VERSION-linux-x86_64.tar.gz"
+          $debUrl = "https://github.com/$env:GITHUB_REPOSITORY/releases/download/$env:TAG/HexPlayer-$env:VERSION-linux-amd64.deb"
+          $rpmUrl = "https://github.com/$env:GITHUB_REPOSITORY/releases/download/$env:TAG/HexPlayer-$env:VERSION-1.x86_64.rpm"
           $platforms = [ordered]@{
             windows = @{url=$url}
             linux = @{url=$linuxUrl}
+            deb = @{url=$debUrl}
+            rpm = @{url=$rpmUrl}
           }
           $utf8 = [System.Text.UTF8Encoding]::new($false)
           $update = [ordered]@{version=$env:VERSION; url=$url; whats_new=$env:WHATS_NEW; platforms=$platforms} | ConvertTo-Json -Depth 4
