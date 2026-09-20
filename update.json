@@ -1,19 +1,19 @@
 {
-  "version": "5.0.0",
-  "url": "https://github.com/makhlwf/accessible_youtube_downloader_pro/releases/download/v5.0.0/HexPlayer.exe",
-  "whats_new": "Full experimental Linux support (Ubuntu .deb, Fedora .rpm, universal installer), accessible 4-step Welcome Wizard, recent search history, authenticated cookies playback fix, and performance improvements.",
+  "version": "5.0.1",
+  "url": "https://github.com/makhlwf/accessible_youtube_downloader_pro/releases/download/v5.0.1/HexPlayer.exe",
+  "whats_new": "Hotfix v5.0.1: Fixes YouTube search 400 Bad Request error and Welcome Wizard language selection.",
   "platforms": {
     "windows": {
-      "url": "https://github.com/makhlwf/accessible_youtube_downloader_pro/releases/download/v5.0.0/HexPlayer.exe"
+      "url": "https://github.com/makhlwf/accessible_youtube_downloader_pro/releases/download/v5.0.1/HexPlayer.exe"
     },
     "linux": {
-      "url": "https://github.com/makhlwf/accessible_youtube_downloader_pro/releases/download/v5.0.0/HexPlayer-5.0.0-linux-x86_64.tar.gz"
+      "url": "https://github.com/makhlwf/accessible_youtube_downloader_pro/releases/download/v5.0.1/HexPlayer-5.0.1-linux-x86_64.tar.gz"
     },
     "deb": {
-      "url": "https://github.com/makhlwf/accessible_youtube_downloader_pro/releases/download/v5.0.0/HexPlayer-5.0.0-linux-amd64.deb"
+      "url": "https://github.com/makhlwf/accessible_youtube_downloader_pro/releases/download/v5.0.1/HexPlayer-5.0.1-linux-amd64.deb"
     },
     "rpm": {
-      "url": "https://github.com/makhlwf/accessible_youtube_downloader_pro/releases/download/v5.0.0/HexPlayer-5.0.0-1.x86_64.rpm"
+      "url": "https://github.com/makhlwf/accessible_youtube_downloader_pro/releases/download/v5.0.1/HexPlayer-5.0.1-1.x86_64.rpm"
     }
   }
 }
