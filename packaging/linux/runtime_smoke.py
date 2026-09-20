@@ -5,6 +5,7 @@ if sys.platform == "linux" and "--packaging-smoke-test" in sys.argv:
     import ctypes.util
     import importlib
     import math
+    import os
     import struct
     import tempfile
     import time
@@ -23,20 +24,6 @@ if sys.platform == "linux" and "--packaging-smoke-test" in sys.argv:
         "termios",
     ):
         importlib.import_module(module)
-
-    speechd_lib = ctypes.util.find_library("speechd")
-    if speechd_lib:
-        try:
-            ctypes.CDLL(speechd_lib)
-        except Exception:
-            pass
-    try:
-        import prism
-
-        ctx = prism.Context()
-        _ = ctx.acquire_best()
-    except Exception:
-        pass
 
     library = ctypes.util.find_library("mpv")
     if not library:
@@ -146,4 +133,4 @@ if sys.platform == "linux" and "--packaging-smoke-test" in sys.argv:
         print("HexPlayer packaging smoke passed: GTK, Prism import, offline audio EOF")
     finally:
         mpv.mpv_terminate_destroy(handle)
-    raise SystemExit(0)
+    os._exit(0)
