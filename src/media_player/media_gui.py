@@ -360,7 +360,9 @@ class MediaGui(wx.Frame):
             return
         if config_get("player_fullscreen_default"):
             wx.CallAfter(self.toggleFullScreen, True)
+        self.current_audio_track_id = getattr(stream, "audio_track_id", None)
         Thread(target=self.fetch_qualities, daemon=True).start()
+        Thread(target=self.fetch_audio_tracks, daemon=True).start()
         Thread(target=self.fetch_chapters, daemon=True).start()
         Thread(target=self.fetch_subtitles, daemon=True).start()
         self.fetch_like_count()
@@ -1633,6 +1635,14 @@ class MediaGui(wx.Frame):
 
     def onContextMenu(self, event=None):
         if hasattr(self, "trackOptionsMenu"):
+            if (
+                hasattr(self, "audioTracksMenu")
+                and not self.available_audio_tracks
+                and self.player
+            ):
+                p_tracks = self.player.get_audio_tracks()
+                if p_tracks:
+                    self.populate_audio_tracks_menu([])
             self.PopupMenu(self.trackOptionsMenu)
 
     def toggleRepeatTracks(self, event=None):

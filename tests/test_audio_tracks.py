@@ -384,3 +384,69 @@ def test_media_gui_populate_and_switch_audio_tracks(monkeypatch):
     assert gui.audio_track_items["ar"].IsChecked()
     assert not gui.audio_track_items["en"].IsChecked()
     assert any("تم التبديل" in s or "Switched" in s for s in spoken)
+
+
+def test_audio_track_translations_in_po_mo_files():
+    import gettext
+    import os
+
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    locales_dir = os.path.join(base_dir, "src", "languages")
+
+    ar_trans = gettext.translation(
+        "HexPlayer", localedir=locales_dir, languages=["ar"], fallback=True
+    )
+    en_trans = gettext.translation(
+        "HexPlayer", localedir=locales_dir, languages=["en"], fallback=True
+    )
+
+    assert en_trans.gettext("المسارات الصوتية") == "Audio tracks"
+    assert ar_trans.gettext("المسارات الصوتية") == "المسارات الصوتية"
+
+    assert en_trans.gettext("لا توجد مسارات صوتية متاحة") == "No audio tracks available"
+    assert (
+        ar_trans.gettext("لا توجد مسارات صوتية متاحة") == "لا توجد مسارات صوتية متاحة"
+    )
+
+    assert (
+        en_trans.gettext("تعذر تغيير المسار الصوتي") == "Could not change audio track"
+    )
+    assert ar_trans.gettext("تعذر تغيير المسار الصوتي") == "تعذر تغيير المسار الصوتي"
+
+    assert (
+        en_trans.gettext("لغة المسار الصوتي المفضلة: ")
+        == "Preferred audio language track: "
+    )
+    assert (
+        en_trans.gettext("فرض لغة الصوت الأصلية افتراضيًا عند تشغيل الفيديو")
+        == "Force the original audio language by default when playing a video"
+    )
+
+    # Test language names translations in English
+    expected_en = {
+        "العربية": "Arabic",
+        "الإنجليزية": "English",
+        "الإسبانية": "Spanish",
+        "الفرنسية": "French",
+        "الألمانية": "German",
+        "الإيطالية": "Italian",
+        "البرتغالية": "Portuguese",
+        "الروسية": "Russian",
+        "اليابانية": "Japanese",
+        "الكورية": "Korean",
+        "الهندية": "Hindi",
+        "التركية": "Turkish",
+        "الإندونيسية": "Indonesian",
+        "الصينية": "Chinese",
+        "الفيتنامية": "Vietnamese",
+        "البنغالية": "Bengali",
+        "البولندية": "Polish",
+        "التايلاندية": "Thai",
+        "الهولندية": "Dutch",
+        "السويدية": "Swedish",
+        "الفارسية": "Persian",
+        "الأردية": "Urdu",
+    }
+    for ar_name, en_name in expected_en.items():
+        assert en_trans.gettext(ar_name) == en_name
+        assert ar_trans.gettext(ar_name) == ar_name
