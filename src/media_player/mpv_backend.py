@@ -736,6 +736,45 @@ class MpvMediaPlayer:
             result = self._set_property_string("audio-device", device_id or "auto")
         return result >= 0
 
+    def get_track_list(self) -> list[dict[str, Any]]:
+        with self._lock:
+            if self._closed:
+                return []
+            tracks = self._get_property_node("track-list")
+        return tracks if isinstance(tracks, list) else []
+
+    def get_audio_tracks(self) -> list[dict[str, Any]]:
+        tracks = self.get_track_list()
+        return [t for t in tracks if isinstance(t, dict) and t.get("type") == "audio"]
+
+    def get_current_audio_track(self) -> str:
+        with self._lock:
+            if self._closed:
+                return ""
+            return self._get_property_string("aid") or ""
+
+    def set_audio_track(self, track_id: int | str) -> bool:
+        with self._lock:
+            if self._closed:
+                return False
+            result = self._set_property_string("aid", str(track_id))
+        return result >= 0
+
+    def add_audio_track(
+        self, url: str, select: bool = True, title: str = "", lang: str = ""
+    ) -> bool:
+        with self._lock:
+            if self._closed:
+                return False
+            flag = "select" if select else "auto"
+            args = ["audio-add", url, flag]
+            if title:
+                args.append(title)
+                if lang:
+                    args.append(lang)
+            result = self._command(*args, check=False)
+        return result == 0
+
     def set_equalizer(self, equalizer: Any) -> None:
         if hasattr(equalizer, "apply_to_mpv"):
             equalizer.apply_to_mpv(self)

@@ -46,6 +46,8 @@ defaults = {
     "pot_provider_port": 4416,
     "search_suggestions": True,
     "welcome_completed": False,
+    "force_original_audio": False,
+    "preferred_audio_language": get_default_language(),
 }
 
 _cache = {}

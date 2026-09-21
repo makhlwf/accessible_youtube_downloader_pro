@@ -229,6 +229,14 @@ class MediaGui(wx.Frame):
         self.qualitySubMenu = trackOptions.AppendSubMenu(
             self.qualityMenu, _("جودة التشغيل")
         )
+        self.audioTracksMenu = wx.Menu()
+        self.audioTracksMenu.Append(-1, _("جاري التحميل...")).Enable(False)
+        self.audioTracksSubMenu = trackOptions.AppendSubMenu(
+            self.audioTracksMenu, _("المسارات الصوتية")
+        )
+        self.available_audio_tracks = []
+        self.current_audio_track_id = None
+        self.audio_track_items = {}
         self.chaptersMenu = wx.Menu()
         self.chaptersMenu.Append(-1, _("جاري التحميل...")).Enable(False)
         self.chaptersSubMenu = trackOptions.AppendSubMenu(
@@ -822,6 +830,18 @@ class MediaGui(wx.Frame):
             return
         wx.CallAfter(self.populate_quality_menu, qualities)
 
+    def fetch_audio_tracks(self):
+        try:
+            tracks = utils.get_available_audio_tracks(
+                self.url, audio_mode=self.audio_mode
+            )
+        except Exception:
+            logger.debug("Failed to fetch audio tracks", exc_info=True)
+            tracks = []
+        if self._closing:
+            return
+        wx.CallAfter(self.populate_audio_tracks_menu, tracks)
+
     def fetch_suggestions(self, load_more=False):
         if getattr(self, "_loading_suggestions", False):
             return
@@ -984,7 +1004,10 @@ class MediaGui(wx.Frame):
             self.player.media.stop()
             time.sleep(0.5)
             new_stream = utils.get_specific_quality_stream(
-                self.url, height, audio_mode=self.audio_mode
+                self.url,
+                height,
+                audio_mode=self.audio_mode,
+                audio_track_id=self.current_audio_track_id,
             )
             if new_stream:
                 self.current_quality = height
@@ -1009,6 +1032,165 @@ class MediaGui(wx.Frame):
                 wx.CallAfter(self.player.media.play)
 
         Thread(target=reload, daemon=True).start()
+
+    def populate_audio_tracks_menu(self, tracks):
+        if not self.can_update_player_ui():
+            return
+        try:
+            for item in self.audioTracksMenu.GetMenuItems():
+                self.audioTracksMenu.DestroyItem(item)
+
+            self.available_audio_tracks = list(tracks or [])
+            self.audio_track_items = {}
+
+            if not self.available_audio_tracks and self.player:
+                player_tracks = self.player.get_audio_tracks()
+                if player_tracks:
+                    for tr in player_tracks:
+                        tr_id = str(tr.get("id"))
+                        title = tr.get("title") or ""
+                        lang = tr.get("lang") or ""
+                        name = utils.get_language_display_name(lang, title)
+                        label = (
+                            f"{name} ({lang})"
+                            if lang and name != lang
+                            else (name or f"Track {tr_id}")
+                        )
+                        self.available_audio_tracks.append(
+                            {
+                                "id": tr_id,
+                                "mpv_id": tr_id,
+                                "lang": lang,
+                                "label": label,
+                                "name": name,
+                                "selected": tr.get("selected", False),
+                            }
+                        )
+
+            if not self.available_audio_tracks:
+                self.audioTracksMenu.Append(-1, _("لا توجد مسارات صوتية متاحة")).Enable(
+                    False
+                )
+                return
+
+            selected_track_id = self.current_audio_track_id
+            if selected_track_id is None:
+                sel_track = next(
+                    (t for t in self.available_audio_tracks if t.get("selected")),
+                    next(
+                        (
+                            t
+                            for t in self.available_audio_tracks
+                            if t.get("is_original")
+                        ),
+                        self.available_audio_tracks[0],
+                    ),
+                )
+                selected_track_id = sel_track["id"]
+                self.current_audio_track_id = selected_track_id
+
+            for track in self.available_audio_tracks:
+                track_id = track["id"]
+                label = track.get("label") or track.get("name") or str(track_id)
+                item = self.audioTracksMenu.AppendCheckItem(-1, label)
+                self.audio_track_items[track_id] = item
+                if track_id == selected_track_id:
+                    item.Check(True)
+                if hasattr(self, "Bind"):
+                    self.Bind(
+                        wx.EVT_MENU,
+                        lambda event, t=track: self.on_change_audio_track(t),
+                        item,
+                    )
+        except RuntimeError:
+            logger.debug(
+                "Skipping audio tracks menu update after player close",
+                exc_info=True,
+            )
+
+    def on_change_audio_track(self, track):
+        if not self.player or self._closing:
+            return
+        track_id = track.get("id")
+        label = track.get("label") or track.get("name") or str(track_id)
+        if track_id == self.current_audio_track_id:
+            speak(_("المسار الصوتي {name} محدد بالفعل").format(name=label))
+            return
+
+        speak(_("جاري التبديل إلى المسار الصوتي: {name}").format(name=label))
+        track_url = track.get("url")
+        lang = track.get("lang") or ""
+
+        def _do_switch():
+            switched = False
+            if "mpv_id" in track:
+                switched = self.player.set_audio_track(track["mpv_id"])
+            elif track_url:
+                try:
+                    tracks = self.player.get_audio_tracks()
+                    for mpv_tr in tracks:
+                        if mpv_tr.get("external-filename") == track_url:
+                            switched = self.player.set_audio_track(mpv_tr["id"])
+                            break
+                except Exception:
+                    pass
+
+                if not switched:
+                    switched = self.player.add_audio_track(
+                        track_url, select=True, title=label, lang=lang
+                    )
+
+            if not switched and track_url:
+                position = self.player.media.get_position()
+                self.player.media.stop()
+                time.sleep(0.3)
+                new_stream = utils.get_specific_quality_stream(
+                    self.url,
+                    self.current_quality,
+                    audio_mode=self.audio_mode,
+                    audio_track_id=track_id,
+                )
+                if new_stream:
+
+                    def _update():
+                        options = []
+                        if hasattr(new_stream, "headers") and new_stream.headers:
+                            ua = new_stream.headers.get("User-Agent")
+                            if ua:
+                                options.append(f":http-user-agent={ua}")
+                        if hasattr(new_stream, "audio_url") and new_stream.audio_url:
+                            options.append(f":input-slave={new_stream.audio_url}")
+                        if self.audio_mode:
+                            options.append(":no-video")
+                        self.player.set_media(new_stream.url, options)
+                        self.player.media.play()
+                        self.player.media.set_position(position)
+
+                    wx.CallAfter(_update)
+                    switched = True
+
+            def _finish():
+                if not self.can_update_player_ui():
+                    return
+                if switched:
+                    self.current_audio_track_id = track_id
+                    for tid, item in self.audio_track_items.items():
+                        try:
+                            item.Check(tid == track_id)
+                        except Exception:
+                            pass
+                    speak(_("تم التبديل إلى المسار الصوتي: {name}").format(name=label))
+                else:
+                    speak(_("تعذر تغيير المسار الصوتي"))
+                    for tid, item in self.audio_track_items.items():
+                        try:
+                            item.Check(tid == self.current_audio_track_id)
+                        except Exception:
+                            pass
+
+            wx.CallAfter(_finish)
+
+        Thread(target=_do_switch, daemon=True).start()
 
     def _download_media(
         self, format_type, url, dlg, path=None, quality=None, title=None
@@ -2018,6 +2200,7 @@ class MediaGui(wx.Frame):
         self.player.set_media(stream.url, options=options)
         self.url = url
         self.title = title
+        self.current_audio_track_id = getattr(stream, "audio_track_id", None)
         self.reset_subtitles_for_media()
         self.current_channel = self._resolve_channel(stream, url, index)
         self.SetTitle(f"{title} - {application.name}")
@@ -2061,6 +2244,10 @@ class MediaGui(wx.Frame):
                 self.qualityMenu.DestroyItem(item)
             self.qualityMenu.Append(-1, _("جاري التحميل...")).Enable(False)
             Thread(target=self.fetch_qualities, daemon=True).start()
+            for item in self.audioTracksMenu.GetMenuItems():
+                self.audioTracksMenu.DestroyItem(item)
+            self.audioTracksMenu.Append(-1, _("جاري التحميل...")).Enable(False)
+            Thread(target=self.fetch_audio_tracks, daemon=True).start()
             for item in self.chaptersMenu.GetMenuItems():
                 self.chaptersMenu.DestroyItem(item)
             self.chaptersMenu.Append(-1, _("جاري التحميل...")).Enable(False)
