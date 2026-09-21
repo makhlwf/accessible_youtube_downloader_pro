@@ -821,6 +821,91 @@ def get_quality_description(height):
     )
 
 
+AUDIO_TRACK_LANGUAGES = [
+    ("ar", _("العربية")),
+    ("en", _("الإنجليزية")),
+    ("es", _("الإسبانية")),
+    ("fr", _("الفرنسية")),
+    ("de", _("الألمانية")),
+    ("it", _("الإيطالية")),
+    ("pt", _("البرتغالية")),
+    ("ru", _("الروسية")),
+    ("ja", _("اليابانية")),
+    ("ko", _("الكورية")),
+    ("hi", _("الهندية")),
+    ("tr", _("التركية")),
+    ("id", _("الإندونيسية")),
+    ("zh", _("الصينية")),
+    ("vi", _("الفيتنامية")),
+    ("bn", _("البنغالية")),
+    ("pl", _("البولندية")),
+    ("th", _("التايلاندية")),
+    ("nl", _("الهولندية")),
+    ("sv", _("السويدية")),
+    ("fa", _("الفارسية")),
+    ("ur", _("الأردية")),
+]
+
+
+def is_language_match(track_lang, target_lang):
+    if not track_lang or not target_lang:
+        return False
+    tl = str(track_lang).strip().lower()
+    tgt = str(target_lang).strip().lower()
+    if tl == tgt:
+        return True
+    tl_base = tl.split("-")[0].split("_")[0]
+    tgt_base = tgt.split("-")[0].split("_")[0]
+    if tl_base == tgt_base:
+        return True
+    iso_map = {
+        "eng": "en",
+        "ara": "ar",
+        "spa": "es",
+        "fra": "fr",
+        "fre": "fr",
+        "deu": "de",
+        "ger": "de",
+        "ita": "it",
+        "por": "pt",
+        "rus": "ru",
+        "jpn": "ja",
+        "kor": "ko",
+        "hin": "hi",
+        "tur": "tr",
+        "ind": "id",
+        "zho": "zh",
+        "chi": "zh",
+        "vie": "vi",
+        "ben": "bn",
+        "pol": "pl",
+        "tha": "th",
+        "nld": "nl",
+        "dut": "nl",
+        "swe": "sv",
+        "fas": "fa",
+        "per": "fa",
+        "urd": "ur",
+    }
+    tl_mapped = iso_map.get(tl_base, tl_base)
+    tgt_mapped = iso_map.get(tgt_base, tgt_base)
+    return tl_mapped == tgt_mapped
+
+
+def get_language_display_name(lang_code, note=""):
+    code_base = (lang_code or "").split("-")[0].split("_")[0].lower()
+    for code, label in AUDIO_TRACK_LANGUAGES:
+        if code.lower() == code_base:
+            return label
+    if note:
+        cleaned_note = str(note).split("-")[0].split("(")[0].split(",")[0].strip()
+        if cleaned_note and not cleaned_note.isdigit() and len(cleaned_note) > 1:
+            return cleaned_note
+    if lang_code and lang_code != "und":
+        return str(lang_code).upper()
+    return _("الصوت الأصلي")
+
+
 def download_yt_dlp(parent=None):
     from gui.update_dialog import UpdateDialog
 
@@ -1409,7 +1494,172 @@ def prefetch_dns():
 prefetch_dns()
 
 
-def pick_best_format(formats, preferred_index, is_video=True, target_height=None):
+def get_audio_tracks_from_formats(formats, entry=None):
+    if not formats:
+        return []
+    audio_formats = [
+        f for f in formats if f.get("acodec") != "none" and f.get("vcodec") == "none"
+    ]
+    if not audio_formats:
+        audio_formats = [f for f in formats if f.get("acodec") != "none"]
+    if not audio_formats:
+        return []
+
+    tracks_by_key = OrderedDict()
+    entry_lang = (entry.get("language") if isinstance(entry, dict) else "") or ""
+
+    for f in audio_formats:
+        lang = f.get("language") or ""
+        note = str(f.get("format_note", ""))
+        pref = f.get("language_preference")
+        is_orig = (
+            (pref is not None and pref > 0)
+            or "original" in note.lower()
+            or f.get("is_original") is True
+            or (bool(entry_lang) and is_language_match(lang, entry_lang))
+        )
+        key = lang if lang else "default"
+        if key not in tracks_by_key:
+            tracks_by_key[key] = {
+                "id": key,
+                "lang": lang or "und",
+                "is_original": is_orig,
+                "formats": [f],
+                "note": note,
+            }
+        else:
+            tracks_by_key[key]["formats"].append(f)
+            if is_orig:
+                tracks_by_key[key]["is_original"] = True
+
+    has_orig = any(tr["is_original"] for tr in tracks_by_key.values())
+    if not has_orig and tracks_by_key:
+        first_key = next(iter(tracks_by_key))
+        tracks_by_key[first_key]["is_original"] = True
+
+    tracks = []
+    for key, tr in tracks_by_key.items():
+        name = get_language_display_name(tr["lang"], tr["note"])
+        if tr["is_original"]:
+            if len(tracks_by_key) > 1 and name != _("الصوت الأصلي"):
+                label = _("{language} (أصلي)").format(language=name)
+            else:
+                label = _("الصوت الأصلي")
+        else:
+            label = name
+        tr["name"] = name
+        tr["label"] = label
+        tracks.append(tr)
+
+    return tracks
+
+
+def select_audio_format(
+    formats,
+    entry=None,
+    preferred_lang=None,
+    force_original=None,
+    preferred_quality_index=None,
+    audio_track_id=None,
+):
+    if not formats:
+        return None, None
+
+    tracks = get_audio_tracks_from_formats(formats, entry=entry)
+    if not tracks:
+        return None, None
+
+    if preferred_quality_index is None:
+        try:
+            preferred_quality_index = int(config_get("defaultaudioquality"))
+        except Exception:
+            preferred_quality_index = 1
+
+    target_abr = AUDIO_QUALITIES[min(preferred_quality_index, len(AUDIO_QUALITIES) - 1)]
+
+    if audio_track_id:
+        chosen_track = next((t for t in tracks if t["id"] == audio_track_id), None)
+        if chosen_track:
+            fmts = chosen_track["formats"]
+            fmts_with_abr = [f for f in fmts if f.get("abr") is not None]
+            best_fmt = (
+                min(fmts_with_abr, key=lambda x: abs((x.get("abr") or 0) - target_abr))
+                if fmts_with_abr
+                else fmts[-1]
+            )
+            return best_fmt, chosen_track
+
+    if force_original is None:
+        force_original = bool(config_get("force_original_audio"))
+    if preferred_lang is None:
+        preferred_lang = config_get("preferred_audio_language")
+
+    orig_track = next((t for t in tracks if t["is_original"]), tracks[0])
+
+    if force_original:
+        chosen_track = orig_track
+    elif preferred_lang:
+        matched_track = next(
+            (t for t in tracks if is_language_match(t["lang"], preferred_lang)),
+            None,
+        )
+        if matched_track:
+            chosen_track = matched_track
+        else:
+            chosen_track = orig_track
+    else:
+        chosen_track = orig_track
+
+    fmts = chosen_track["formats"]
+    fmts_with_abr = [f for f in fmts if f.get("abr") is not None]
+    best_fmt = (
+        min(fmts_with_abr, key=lambda x: abs((x.get("abr") or 0) - target_abr))
+        if fmts_with_abr
+        else fmts[-1]
+    )
+    return best_fmt, chosen_track
+
+
+def get_available_audio_tracks(url, audio_mode=False):
+    info = get_media_info(url)
+    if not info:
+        return []
+    formats = info.get("formats", [])
+    tracks = get_audio_tracks_from_formats(formats, entry=info)
+    if not tracks:
+        return []
+
+    try:
+        preferred_audio_idx = int(config_get("defaultaudioquality"))
+    except Exception:
+        preferred_audio_idx = 1
+    target_abr = AUDIO_QUALITIES[min(preferred_audio_idx, len(AUDIO_QUALITIES) - 1)]
+
+    for track in tracks:
+        fmts = track["formats"]
+        fmts_with_abr = [f for f in fmts if f.get("abr") is not None]
+        if fmts_with_abr:
+            best_fmt = min(
+                fmts_with_abr, key=lambda x: abs((x.get("abr") or 0) - target_abr)
+            )
+        else:
+            best_fmt = fmts[-1]
+        track["url"] = best_fmt.get("url")
+        track["format_id"] = best_fmt.get("format_id")
+        track["abr"] = best_fmt.get("abr")
+
+    return tracks
+
+
+def pick_best_format(
+    formats,
+    preferred_index,
+    is_video=True,
+    target_height=None,
+    preferred_audio_lang=None,
+    force_original=None,
+    audio_track_id=None,
+):
     if is_video:
         target_list = VIDEO_QUALITIES
         if target_height is not None:
@@ -1468,17 +1718,38 @@ def pick_best_format(formats, preferred_index, is_video=True, target_height=None
 
         audio_fmt = None
         if fmt.get("acodec") == "none":
-            audio_formats = [
-                f
-                for f in formats
-                if f.get("acodec") != "none" and f.get("vcodec") == "none"
-            ]
-            if audio_formats:
-                audio_formats.sort(key=lambda x: x.get("abr") or 0)
-                audio_fmt = audio_formats[-1]
+            audio_fmt, chosen_track = select_audio_format(
+                formats,
+                preferred_lang=preferred_audio_lang,
+                force_original=force_original,
+                audio_track_id=audio_track_id,
+            )
+            if audio_fmt is None:
+                audio_formats = [
+                    f
+                    for f in formats
+                    if f.get("acodec") != "none" and f.get("vcodec") == "none"
+                ]
+                if audio_formats:
+                    audio_formats.sort(key=lambda x: x.get("abr") or 0)
+                    audio_fmt = audio_formats[-1]
+            elif chosen_track is not None:
+                audio_fmt["_chosen_track"] = chosen_track
 
         return fmt, audio_fmt, fmt.get("height")
     else:
+        fmt, chosen_track = select_audio_format(
+            formats,
+            preferred_lang=preferred_audio_lang,
+            force_original=force_original,
+            preferred_quality_index=preferred_index,
+            audio_track_id=audio_track_id,
+        )
+        if fmt is not None:
+            if chosen_track is not None:
+                fmt["_chosen_track"] = chosen_track
+            return fmt, None, fmt.get("abr")
+
         available = [
             f
             for f in formats
@@ -1492,7 +1763,7 @@ def pick_best_format(formats, preferred_index, is_video=True, target_height=None
             return None, None, None
 
         available.sort(key=lambda x: x.get("abr") or 0)
-        target_abr = AUDIO_QUALITIES[preferred_index]
+        target_abr = AUDIO_QUALITIES[min(preferred_index, len(AUDIO_QUALITIES) - 1)]
 
         # Find the format with abr closest to target_abr
         fmt = min(available, key=lambda x: abs((x.get("abr") or 0) - target_abr))
@@ -1514,6 +1785,9 @@ class Stream:
         view_count=None,
         upload_date="",
         sponsorblock_segments=None,
+        audio_track_id=None,
+        audio_track_lang=None,
+        audio_track_label=None,
     ):
         self.title = title
         self.url = url
@@ -1526,6 +1800,9 @@ class Stream:
         self.view_count = view_count
         self.upload_date = upload_date
         self.sponsorblock_segments = sponsorblock_segments
+        self.audio_track_id = audio_track_id
+        self.audio_track_lang = audio_track_lang
+        self.audio_track_label = audio_track_label
 
 
 def _attach_sponsorblock_segments(stream, url):
@@ -1543,17 +1820,33 @@ def _attach_sponsorblock_segments(stream, url):
     return stream
 
 
-def _stream_from_info(entry, audio_mode=False):
+def _stream_from_info(
+    entry,
+    audio_mode=False,
+    preferred_audio_lang=None,
+    force_original=None,
+    audio_track_id=None,
+):
     formats = entry.get("formats", [])
     if audio_mode:
         preferred_audio = int(config_get("defaultaudioquality"))
         fmt, audio_fmt, quality = pick_best_format(
-            formats, preferred_audio, is_video=False
+            formats,
+            preferred_audio,
+            is_video=False,
+            preferred_audio_lang=preferred_audio_lang,
+            force_original=force_original,
+            audio_track_id=audio_track_id,
         )
     else:
         preferred_video = int(config_get("defaultvideoquality"))
         fmt, audio_fmt, quality = pick_best_format(
-            formats, preferred_video, is_video=True
+            formats,
+            preferred_video,
+            is_video=True,
+            preferred_audio_lang=preferred_audio_lang,
+            force_original=force_original,
+            audio_track_id=audio_track_id,
         )
 
     if not fmt:
@@ -1570,6 +1863,11 @@ def _stream_from_info(entry, audio_mode=False):
     headers.setdefault("User-Agent", "libmpv")
 
     audio_url = audio_fmt.get("url") if audio_fmt else None
+    track_info = (
+        (audio_fmt.get("_chosen_track") if isinstance(audio_fmt, dict) else None)
+        or (fmt.get("_chosen_track") if isinstance(fmt, dict) else None)
+        or {}
+    )
     return Stream(
         title,
         url_to_play,
@@ -1581,6 +1879,9 @@ def _stream_from_info(entry, audio_mode=False):
         channel_url=entry.get("channel_url") or entry.get("uploader_url") or "",
         view_count=entry.get("view_count"),
         upload_date=entry.get("upload_date") or entry.get("timestamp") or "",
+        audio_track_id=track_info.get("id"),
+        audio_track_lang=track_info.get("lang"),
+        audio_track_label=track_info.get("label"),
     )
 
 
@@ -1859,7 +2160,7 @@ def get_subtitle_cues(url, language_code):
     return cues
 
 
-def get_specific_quality_stream(url, height, audio_mode=False):
+def get_specific_quality_stream(url, height, audio_mode=False, audio_track_id=None):
     info = get_media_info(url)
     if info is None:
         return None
@@ -1870,12 +2171,9 @@ def get_specific_quality_stream(url, height, audio_mode=False):
         0,
         is_video=not audio_mode,
         target_height=height if not audio_mode else None,
+        audio_track_id=audio_track_id,
     )
     if audio_mode and isinstance(height, int):
-        # For audio, target_height is not really height but we might want to handle it
-        # Actually pick_best_format for audio doesn't support target_height yet
-        # But we can pass preferred_index
-        # Let's just find the closest abr if audio_mode
         for f in formats:
             if (
                 f.get("acodec") != "none"
@@ -1888,7 +2186,33 @@ def get_specific_quality_stream(url, height, audio_mode=False):
 
     if stream:
         audio_url = audio_stream.get("url") if audio_stream else None
-        return Stream(title, stream["url"], audio_url=audio_url, quality=quality)
+        track_info = (
+            (
+                audio_stream.get("_chosen_track")
+                if isinstance(audio_stream, dict)
+                else None
+            )
+            or (stream.get("_chosen_track") if isinstance(stream, dict) else None)
+            or {}
+        )
+        headers = {}
+        headers.update(info.get("http_headers", {}) or {})
+        headers.update(stream.get("http_headers", {}) or {})
+        return Stream(
+            title,
+            stream["url"],
+            headers=headers,
+            audio_url=audio_url,
+            quality=quality,
+            webpage_url=info.get("webpage_url") or info.get("original_url") or "",
+            channel_name=info.get("channel") or info.get("uploader") or "",
+            channel_url=info.get("channel_url") or info.get("uploader_url") or "",
+            view_count=info.get("view_count"),
+            upload_date=info.get("upload_date") or info.get("timestamp") or "",
+            audio_track_id=track_info.get("id"),
+            audio_track_lang=track_info.get("lang"),
+            audio_track_label=track_info.get("label"),
+        )
     return None
 
 

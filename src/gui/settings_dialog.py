@@ -412,6 +412,31 @@ class SettingsDialog(wx.Dialog):
         self.audioQuality.Selection = int(config_get("defaultaudioquality"))
         _add_row(grid, self.audioQualityLabel, self.audioQuality)
 
+        preferred_audio_lang_label_text = _("لغة المسار الصوتي المفضلة: ")
+        self.preferredAudioLanguageLabel = wx.StaticText(
+            page, -1, preferred_audio_lang_label_text
+        )
+        self.preferred_audio_lang_choices = utils.AUDIO_TRACK_LANGUAGES
+        self.preferredAudioLanguage = wx.Choice(
+            page,
+            -1,
+            choices=[label for _, label in self.preferred_audio_lang_choices],
+            name="preferred_audio_language",
+        )
+        _set_accessible_name(
+            self.preferredAudioLanguage, preferred_audio_lang_label_text
+        )
+        self.preferredAudioLanguage.SetSelection(
+            self.getPreferredAudioLanguageSelection(
+                config_get("preferred_audio_language")
+            )
+        )
+        _add_row(
+            grid,
+            self.preferredAudioLanguageLabel,
+            self.preferredAudioLanguage,
+        )
+
         self.audioOutputDevices = _get_audio_output_device_choices()
         audio_output_label_text = _("جهاز إخراج الصوت: ")
         self.audioOutputDeviceLabel = wx.StaticText(page, -1, audio_output_label_text)
@@ -466,11 +491,19 @@ class SettingsDialog(wx.Dialog):
             name="autonext",
         )
         self.autoPlayNext.SetValue(config_get("autonext"))
+        self.forceOriginalAudio = SettingsCheckBox(
+            page,
+            -1,
+            _("فرض لغة الصوت الأصلية افتراضيًا عند تشغيل الفيديو"),
+            name="force_original_audio",
+        )
+        self.forceOriginalAudio.SetValue(bool(config_get("force_original_audio")))
         for checkbox in (
             self.continueWatching,
             self.openPlayerFullscreen,
             self.repeateTracks,
             self.autoPlayNext,
+            self.forceOriginalAudio,
         ):
             sizer.Add(checkbox, 0, wx.EXPAND | wx.ALL, 5)
 
@@ -683,6 +716,19 @@ class SettingsDialog(wx.Dialog):
     def getPlayerClientSelection(self, selected_client):
         for index, (client_id, _label) in enumerate(self.player_client_choices):
             if client_id == selected_client:
+                return index
+        return 0
+
+    def getPreferredAudioLanguageSelection(self, selected_lang):
+        selected_lang = str(selected_lang or "").strip().lower()
+        for index, (lang_code, _label) in enumerate(self.preferred_audio_lang_choices):
+            if lang_code.lower() == selected_lang:
+                return index
+        from language_handler import get_default_language
+
+        default_lang = get_default_language().lower()
+        for index, (lang_code, _label) in enumerate(self.preferred_audio_lang_choices):
+            if lang_code.lower() == default_lang:
                 return index
         return 0
 
@@ -961,6 +1007,21 @@ class SettingsDialog(wx.Dialog):
             config_set("defaultformat", str(self.formats.Selection))
         config_set("defaultvideoquality", self.videoQuality.Selection)
         config_set("defaultaudioquality", self.audioQuality.Selection)
+        if hasattr(self, "preferredAudioLanguage") and hasattr(
+            self, "preferred_audio_lang_choices"
+        ):
+            sel = (
+                self.preferredAudioLanguage.GetSelection()
+                if hasattr(self.preferredAudioLanguage, "GetSelection")
+                else getattr(self.preferredAudioLanguage, "Selection", 0)
+            )
+            if 0 <= sel < len(self.preferred_audio_lang_choices):
+                config_set(
+                    "preferred_audio_language",
+                    self.preferred_audio_lang_choices[sel][0],
+                )
+        if hasattr(self, "forceOriginalAudio"):
+            config_set("force_original_audio", bool(self.forceOriginalAudio.GetValue()))
         if hasattr(self, "playerClientBox") and hasattr(self, "player_client_choices"):
             config_set(
                 "player_client",

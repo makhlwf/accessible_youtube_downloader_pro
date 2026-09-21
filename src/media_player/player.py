@@ -190,6 +190,38 @@ class Player:
         if self.window is not None and hasattr(self.window, "on_audio_output_fallback"):
             self.window.on_audio_output_fallback()
 
+    def get_audio_tracks(self):
+        try:
+            return self.media.get_audio_tracks() if self.media else []
+        except Exception:
+            logger.exception("Could not get MPV audio tracks")
+            return []
+
+    def get_current_audio_track(self):
+        try:
+            return self.media.get_current_audio_track() if self.media else ""
+        except Exception:
+            logger.exception("Could not get current MPV audio track")
+            return ""
+
+    def set_audio_track(self, track_id):
+        try:
+            return self.media.set_audio_track(track_id) if self.media else False
+        except Exception:
+            logger.exception("Could not set MPV audio track: %s", track_id)
+            return False
+
+    def add_audio_track(self, url, select=True, title="", lang=""):
+        try:
+            return (
+                self.media.add_audio_track(url, select=select, title=title, lang=lang)
+                if self.media
+                else False
+            )
+        except Exception:
+            logger.exception("Could not add MPV audio track: %s", url)
+            return False
+
     def close(self):
         self._closing = True
         self.window = None

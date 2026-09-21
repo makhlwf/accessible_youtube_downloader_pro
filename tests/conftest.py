@@ -205,6 +205,14 @@ class Choice(wxWindow):
     def GetSelection(self):
         return self._selection
 
+    @property
+    def Selection(self):
+        return self.GetSelection()
+
+    @Selection.setter
+    def Selection(self, n):
+        self.SetSelection(n)
+
     def GetCount(self):
         return len(self._choices)
 
