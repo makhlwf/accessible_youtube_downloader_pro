@@ -416,7 +416,7 @@ class SettingsDialog(wx.Dialog):
         self.preferredAudioLanguageLabel = wx.StaticText(
             page, -1, preferred_audio_lang_label_text
         )
-        self.preferred_audio_lang_choices = utils.AUDIO_TRACK_LANGUAGES
+        self.preferred_audio_lang_choices = utils.get_audio_track_languages()
         self.preferredAudioLanguage = wx.Choice(
             page,
             -1,
