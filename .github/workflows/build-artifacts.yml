@@ -31,7 +31,7 @@ jobs:
       - name: Install Linux compile and runtime dependencies
         if: runner.os == 'Linux'
         run: sudo bash packaging/linux/install-deps.sh
-      - uses: astral-sh/setup-uv@v10.1.0
+      - uses: astral-sh/setup-uv@v10.2.0
         id: setup-uv
         with:
           enable-cache: true
