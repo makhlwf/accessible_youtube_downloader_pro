@@ -339,6 +339,41 @@ exe_host = EXE(
     entitlements_file=None,
 )
 
+# Analysis and EXE for the hexplayer CLI (Console, shares runtime with HexPlayer)
+a_cli = Analysis(
+    [os.path.join(SRC_DIR, "hexplayer_cli.py")],
+    pathex=[SRC_DIR],
+    binaries=[],
+    datas=[],
+    hiddenimports=hiddenimports,
+    hookspath=[],
+    hooksconfig={},
+    runtime_hooks=[],
+    excludes=[],
+    noarchive=False,
+    optimize=0,
+)
+
+pyz_cli = PYZ(a_cli.pure)
+
+exe_cli = EXE(
+    pyz_cli,
+    a_cli.scripts,
+    [],
+    exclude_binaries=True,
+    name="hexplayer",
+    debug=False,
+    bootloader_ignore_signals=False,
+    strip=False,
+    upx=True,
+    console=True,
+    disable_windowed_traceback=False,
+    argv_emulation=False,
+    target_arch=None,
+    codesign_identity=None,
+    entitlements_file=None,
+)
+
 # Single COLLECT sharing the same _internal directory
 coll = COLLECT(
     exe_main,
@@ -347,6 +382,9 @@ coll = COLLECT(
     exe_host,
     a_host.binaries,
     a_host.datas,
+    exe_cli,
+    a_cli.binaries,
+    a_cli.datas,
     strip=False,
     upx=True,
     upx_exclude=[],
