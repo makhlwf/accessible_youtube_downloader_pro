@@ -35,6 +35,7 @@ LZMAUseSeparateProcess=yes
 InternalCompressLevel=ultra
 WizardStyle=modern dark polar includetitlebar
 LicenseFile={#RepoRoot}PRIVACY_POLICY.md
+ChangesEnvironment=yes
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
@@ -71,10 +72,17 @@ arabic.NoInternet=لم يتم اكتشاف اتصال بالإنترنت.%n%nل�
 english.DownloadFailed=Failed to download some components.%n%nyou can download them manually later.
 arabic.DownloadFailed=فشل تحميل بعض المكونات.%n%nيمكنك تحميلها يدويًا لاحقًا.
 
+english.AddToPath=Add HexPlayer to the system PATH (enables the hexplayer command line tool)
+arabic.AddToPath=إضافة HexPlayer إلى مسار النظام (لتفعيل أداة سطر الأوامر hexplayer)
+
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 Name: "download_ytdlp"; Description: "{cm:DownloadYtDlp}"; Flags: unchecked
 Name: "download_deno"; Description: "{cm:DownloadDeno}"; Flags: unchecked
+Name: "addtopath"; Description: "{cm:AddToPath}"; Flags: unchecked
+
+[Registry]
+Root: HKCU; Subkey: "Environment"; ValueType: expandsz; ValueName: "Path"; ValueData: "{olddata};{app}"; Tasks: addtopath; Check: NeedsAddPath(ExpandConstant('{app}'))
 
 [Files]
 Source: "{#RepoRoot}dist\HexPlayer\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
@@ -99,6 +107,41 @@ const
 
 var
   DownloadPage: TDownloadWizardPage;
+
+function NeedsAddPath(Param: string): Boolean;
+var
+  OrigPath: string;
+begin
+  // Only append when the directory is not already on the per-user PATH.
+  if not RegQueryStringValue(HKEY_CURRENT_USER, 'Environment', 'Path', OrigPath) then
+  begin
+    Result := True;
+    Exit;
+  end;
+  Result := Pos(';' + Uppercase(Param) + ';', ';' + Uppercase(OrigPath) + ';') = 0;
+end;
+
+procedure RemoveFromPath(DirToRemove: string);
+var
+  OrigPath: string;
+  NewPath: string;
+  P: Integer;
+begin
+  if not RegQueryStringValue(HKEY_CURRENT_USER, 'Environment', 'Path', OrigPath) then
+    Exit;
+  NewPath := ';' + OrigPath + ';';
+  // Remove the entry regardless of its position within the PATH string.
+  P := Pos(';' + Uppercase(DirToRemove) + ';', Uppercase(NewPath));
+  if P = 0 then
+    Exit;
+  Delete(NewPath, P, Length(DirToRemove) + 1);
+  // Trim the sentinel semicolons we added around the value.
+  if (Length(NewPath) > 0) and (NewPath[1] = ';') then
+    Delete(NewPath, 1, 1);
+  if (Length(NewPath) > 0) and (NewPath[Length(NewPath)] = ';') then
+    Delete(NewPath, Length(NewPath), 1);
+  RegWriteExpandStringValue(HKEY_CURRENT_USER, 'Environment', 'Path', NewPath);
+end;
 
 function IsOnline: Boolean;
 var
@@ -205,4 +248,10 @@ begin
   begin
     DownloadComponents;
   end;
+end;
+
+procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
+begin
+  if CurUninstallStep = usUninstall then
+    RemoveFromPath(ExpandConstant('{app}'));
 end;
