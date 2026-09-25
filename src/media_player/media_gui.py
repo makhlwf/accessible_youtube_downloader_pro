@@ -2455,10 +2455,18 @@ class MediaGui(wx.Frame):
         from gui.equalizer_dialog import EqualizerDialog
         from media_player.equalizer import EqualizerService
 
-        EqualizerDialog(
-            self,
-            self.player.eq if self.player and self.player.eq else EqualizerService(),
-        ).Show()
+        # Bind the dialog to the live player's own equalizer service so edits
+        # persist on the player. Create one lazily if the equalizer was off when
+        # the player started.
+        if self.player:
+            if self.player.eq is None:
+                self.player.eq = EqualizerService()
+                self.player.eq.load_settings()
+            service = self.player.eq
+        else:
+            service = EqualizerService()
+
+        EqualizerDialog(self, service).Show()
 
     def extract_description(self):
         if self.extracting_description or hasattr(self, "description"):

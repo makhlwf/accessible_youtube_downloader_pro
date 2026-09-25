@@ -95,6 +95,7 @@ data_to_add = [
     "assets",
     "browser_extension",
     "docs",
+    "eq_presets",
     "languages",
 ]
 

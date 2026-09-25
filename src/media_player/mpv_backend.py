@@ -781,17 +781,54 @@ class MpvMediaPlayer:
         elif hasattr(equalizer, "preamp") and hasattr(equalizer, "bands"):
             self.apply_equalizer(equalizer.preamp, equalizer.bands)
 
+    # Standard 15-band ISO (2/3-octave) graphic-equalizer center frequencies.
+    _EQ_FREQUENCIES = (
+        25,
+        40,
+        63,
+        100,
+        160,
+        250,
+        400,
+        630,
+        1000,
+        1600,
+        2500,
+        4000,
+        6300,
+        10000,
+        16000,
+    )
+
     def apply_equalizer(self, preamp: float, bands: list[float]) -> None:
-        frequencies = [60, 170, 310, 600, 1000, 3000, 6000, 12000, 14000, 16000]
+        """Build an FFmpeg audio-filter chain from the preamp/band gains.
+
+        Runs under the backend lock and is a no-op once the handle is closed so
+        it can be called safely from GUI callbacks while playback tears down.
+        """
+        try:
+            preamp = float(preamp)
+        except TypeError, ValueError:
+            preamp = 0.0
+
         filters = []
         if abs(preamp) > 0.001:
             filters.append(f"volume={preamp:g}dB")
-        for frequency, gain in zip(frequencies, bands):
+        for frequency, raw_gain in zip(self._EQ_FREQUENCIES, bands or []):
+            try:
+                gain = float(raw_gain)
+            except TypeError, ValueError:
+                continue
             if abs(gain) > 0.001:
-                filters.append(f"equalizer=f={frequency}:t=q:w=1:g={gain:g}")
+                # Q=2 keeps 2/3-octave bands from overlapping into each other,
+                # so the chain tracks the per-band gains like a real graphic EQ.
+                filters.append(f"equalizer=f={frequency}:t=q:w=2:g={gain:g}")
 
         value = f"lavfi=[{','.join(filters)}]" if filters else ""
-        self._set_property_string("af", value)
+        with self._lock:
+            if self._closed:
+                return
+            self._set_property_string("af", value)
 
     def close(self) -> None:
         with self._lock:

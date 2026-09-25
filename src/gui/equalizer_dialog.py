@@ -3,6 +3,7 @@ import wx
 from language_handler import _
 from media_player.equalizer import EqualizerService
 from media_player.media_gui import MediaGui
+from media_player.preset_library import BAND_COUNT
 from settings_handler import config_get, config_set
 from theme_handler import apply_theme
 
@@ -62,7 +63,7 @@ def _preset_labels():
 
 class EqualizerDialog(wx.Dialog):
     def __init__(self, parent, equalizer_service: EqualizerService):
-        super().__init__(parent, title=_("إعدادات المعادل"), size=(640, 480))
+        super().__init__(parent, title=_("إعدادات المعادل"), size=(900, 480))
         self.equalizer_service = equalizer_service
         self.equalizer_service.load_settings()
         self.preset_labels = _preset_labels()
@@ -102,15 +103,32 @@ class EqualizerDialog(wx.Dialog):
         bands_sizer = wx.BoxSizer(wx.HORIZONTAL)
         self.sliders = {}
 
-        # 10 bands + preamp
-        # frequencies: 60, 170, 310, 600, 1k, 3k, 6k, 12k, 14k, 16k
-        frequencies = [60, 170, 310, 600, 1000, 3000, 6000, 12000, 14000, 16000]
+        # 15 bands + preamp
+        # Standard 15-band ISO graphic-equalizer center frequencies (Hz).
+        frequencies = [
+            25,
+            40,
+            63,
+            100,
+            160,
+            250,
+            400,
+            630,
+            1000,
+            1600,
+            2500,
+            4000,
+            6300,
+            10000,
+            16000,
+        ]
 
         # Preamp
         self.add_slider(bands_sizer, self, _("مضخم الصوت"), "preamp", -20, 20)
 
         for i, freq in enumerate(frequencies):
-            self.add_slider(bands_sizer, self, f"{freq}Hz", f"band_{i}", -20, 20)
+            label = f"{freq / 1000:g}kHz" if freq >= 1000 else f"{freq}Hz"
+            self.add_slider(bands_sizer, self, label, f"band_{i}", -20, 20)
 
         sizer.Add(bands_sizer, 1, wx.EXPAND | wx.ALL, 5)
 
@@ -235,7 +253,7 @@ class EqualizerDialog(wx.Dialog):
 
     def update_ui_from_service(self):
         self.sliders["preamp"].SetValue(int(self.equalizer_service.get_preamp()))
-        for i in range(10):
+        for i in range(BAND_COUNT):
             slider_id = f"band_{i}"
             if slider_id in self.sliders:
                 self.sliders[slider_id].SetValue(

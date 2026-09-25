@@ -31,7 +31,7 @@ defaults = {
     "playback_speed_step": 0.05,
     "eq_enabled": False,
     "eq_preamp": 0.0,
-    "eq_bands": "0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0",
+    "eq_bands": "0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0",
     "eq_preset": "Flat",
     "theme": "System Default",
     "player_client": "default",
