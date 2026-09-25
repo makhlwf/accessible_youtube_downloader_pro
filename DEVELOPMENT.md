@@ -116,7 +116,8 @@ accessible_youtube_downloader_pro/
 │   │   ├── player.py                  # High-level media player wrapper
 │   │   ├── mpv_backend.py             # Ctypes bindings & event loops for libmpv-2.dll
 │   │   ├── media_gui.py               # Playback GUI controls & screen-reader hotkeys
-│   │   ├── equalizer.py               # 10-band audio equalizer controller
+│   │   ├── equalizer.py               # 15-band audio equalizer controller
+│   │   ├── preset_library.py          # Loads equalizer presets from eq_presets/*.json
 │   │   └── timecodes.py               # Chapter and timestamp parsing utilities
 │   │
 │   ├── youtube_browser/               # Search & Channel Browsing Subsystem
@@ -135,7 +136,7 @@ accessible_youtube_downloader_pro/
 │   │   ├── favorites.py               # Local saved favorites dialog
 │   │   ├── history.py                 # Local watch history viewer
 │   │   ├── settings_dialog.py         # Comprehensive application settings modal
-│   │   ├── equalizer_dialog.py        # 10-band graphic equalizer modal
+│   │   ├── equalizer_dialog.py        # 15-band graphic equalizer modal
 │   │   ├── download_dialog.py         # Download format & quality options modal
 │   │   ├── download_progress.py       # Real-time download task progress UI
 │   │   ├── update_dialog.py           # App & tool update wizard
@@ -341,7 +342,7 @@ Playback is powered by MPV via Ctypes in `src/media_player/mpv_backend.py`.
 ### Critical Architecture Rules for MPV:
 1. **Thread Synchronization:** MPV callbacks execute on native C background threads. **NEVER** update wxPython UI elements directly inside an MPV callback. Always wrap UI updates in `wx.CallAfter()`.
 2. **Audio Output Device Routing:** Audio output device switching (`F12`) routes directly through MPV's `audio-device` property.
-3. **Equalizer Filter:** The 10-band equalizer manipulates MPV's `af` (audio filter) string property using the `equalizer` filter specifier (`equalizer=f=31.25:g=0:f=62.5:g=0...`).
+3. **Equalizer Filter:** The 15-band equalizer manipulates MPV's `af` (audio filter) string property using the `equalizer` filter specifier (`equalizer=f=25:t=q:w=2:g=0,equalizer=f=40:...`), across the standard 15-band ISO graphic-EQ grid (25 Hz to 16 kHz). Preset definitions live in `src/eq_presets/`, one JSON file per preset (`{"key", "preamp", "bands"}` with 15 band gains). Presets are listed alphabetically by `key` in the dropdown, so no ordering field is stored. To add or edit a preset, drop in or change a JSON file — `media_player/preset_library.py` loads, validates, and clamps them at startup. New presets should also get a translated label in `gui/equalizer_dialog.py`.
 
 ---
 

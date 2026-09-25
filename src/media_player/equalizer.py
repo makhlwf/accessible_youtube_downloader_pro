@@ -1,196 +1,35 @@
 from typing import Any, ClassVar
 
+from media_player.preset_library import (
+    BAND_COUNT,
+    GAIN_MAX,
+    GAIN_MIN,
+    load_presets,
+)
+
 
 class EqualizerService:
-    """Service to manage MPV audio equalizer settings."""
+    """Service to manage MPV audio equalizer settings.
 
-    # Each preset holds a preamp level in dB plus one gain (dB) per band, ordered
-    # from the lowest frequency to the highest:
-    # 60, 170, 310, 600, 1k, 3k, 6k, 12k, 14k and 16k Hz.
-    # The preamp compensates the overall level so heavily boosted presets do not
-    # clip. Preset keys are stored in the settings file, so they must stay stable;
-    # only their translated labels change (see gui/equalizer_dialog.py).
-    PRESETS: ClassVar[dict[str, dict[str, Any]]] = {
-        "Flat": {"preamp": 0.0, "bands": [0.0] * 10},
-        "Rock": {
-            "preamp": 5.0,
-            "bands": [8.0, 5.0, -5.0, -8.0, -3.0, 3.0, 8.0, 11.0, 11.0, 11.0],
-        },
-        "Pop": {
-            "preamp": -2.0,
-            "bands": [-2.0, -1.0, 3.0, 7.0, 7.0, 5.0, 0.0, -2.0, -2.0, -2.0],
-        },
-        "Jazz": {
-            "preamp": 2.0,
-            "bands": [0.0, 0.0, 0.0, 3.0, 3.0, 3.0, 0.0, 3.0, 5.0, 5.0],
-        },
-        "Classical": {
-            "preamp": 0.0,
-            "bands": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -5.0, -5.0, -5.0, -8.0],
-        },
-        "Acoustic": {
-            "preamp": -1.0,
-            "bands": [4.0, 4.0, 3.0, 1.0, 2.0, 2.0, 3.0, 3.0, 2.0, 1.0],
-        },
-        "Blues": {
-            "preamp": -1.0,
-            "bands": [3.0, 2.0, 1.0, 0.0, -1.0, 0.0, 2.0, 3.0, 3.0, 2.0],
-        },
-        "Club": {
-            "preamp": -2.0,
-            "bands": [0.0, 0.0, 5.0, 4.0, 4.0, 4.0, 2.0, 0.0, 0.0, 0.0],
-        },
-        "Country": {
-            "preamp": -1.0,
-            "bands": [-2.0, 0.0, 2.0, 3.0, 0.0, 0.0, 2.0, 3.0, 3.0, 2.0],
-        },
-        "Dance": {
-            "preamp": -2.0,
-            "bands": [7.0, 6.0, 2.0, 0.0, 0.0, -3.0, -5.0, -5.0, 0.0, 0.0],
-        },
-        "Electronic": {
-            "preamp": -2.0,
-            "bands": [6.0, 5.0, 1.0, 0.0, -2.0, 2.0, 1.0, 2.0, 6.0, 7.0],
-        },
-        "Hip Hop": {
-            "preamp": -3.0,
-            "bands": [8.0, 7.0, 2.0, 4.0, -2.0, -2.0, 2.0, 0.0, 2.0, 4.0],
-        },
-        "Large Hall": {
-            "preamp": -2.0,
-            "bands": [7.0, 7.0, 4.0, 3.0, 0.0, -3.0, -3.0, -3.0, 0.0, 0.0],
-        },
-        "Latin": {
-            "preamp": -1.0,
-            "bands": [5.0, 3.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3.0, 6.0],
-        },
-        "Live": {
-            "preamp": -1.0,
-            "bands": [-3.0, 0.0, 3.0, 4.0, 4.0, 4.0, 3.0, 2.0, 2.0, 2.0],
-        },
-        "Metal": {
-            "preamp": -3.0,
-            "bands": [6.0, 4.0, 0.0, -4.0, -2.0, 2.0, 4.0, 7.0, 8.0, 8.0],
-        },
-        "Party": {
-            "preamp": -2.0,
-            "bands": [5.0, 5.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 5.0, 5.0],
-        },
-        "Piano": {
-            "preamp": -1.0,
-            "bands": [3.0, 2.0, 0.0, 3.0, 3.0, 1.0, 3.0, 4.0, 3.0, 4.0],
-        },
-        "R&B": {
-            "preamp": -3.0,
-            "bands": [6.0, 8.0, 5.0, 1.0, -2.0, -1.0, 2.0, 3.0, 4.0, 5.0],
-        },
-        "Reggae": {
-            "preamp": -1.0,
-            "bands": [0.0, 0.0, 0.0, -4.0, 0.0, 5.0, 5.0, 0.0, 0.0, 0.0],
-        },
-        "Ska": {
-            "preamp": -2.0,
-            "bands": [-2.0, -3.0, -2.0, 0.0, 3.0, 4.0, 6.0, 6.0, 6.0, 5.0],
-        },
-        "Soft Rock": {
-            "preamp": -1.0,
-            "bands": [3.0, 2.0, 1.0, 0.0, -3.0, -3.0, -1.0, 1.0, 3.0, 6.0],
-        },
-        "Techno": {
-            "preamp": -2.0,
-            "bands": [6.0, 5.0, 0.0, -4.0, -3.0, 0.0, 5.0, 6.0, 6.0, 6.0],
-        },
-        "Bass Boost": {
-            "preamp": -3.0,
-            "bands": [10.0, 8.0, 6.0, 3.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-        },
-        "Bass Reducer": {
-            "preamp": 1.0,
-            "bands": [-8.0, -6.0, -4.0, -2.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-        },
-        "Treble Boost": {
-            "preamp": -2.0,
-            "bands": [0.0, 0.0, 0.0, 0.0, 1.0, 3.0, 6.0, 8.0, 9.0, 9.0],
-        },
-        "Treble Reducer": {
-            "preamp": 1.0,
-            "bands": [0.0, 0.0, 0.0, 0.0, 0.0, -2.0, -5.0, -7.0, -8.0, -8.0],
-        },
-        "Full Bass": {
-            "preamp": -2.0,
-            "bands": [7.0, 7.0, 7.0, 4.0, 1.0, -5.0, -8.0, -9.0, -9.0, -9.0],
-        },
-        "Full Treble": {
-            "preamp": -4.0,
-            "bands": [-9.0, -9.0, -9.0, -5.0, 2.0, 7.0, 11.0, 11.0, 11.0, 12.0],
-        },
-        "Full Bass & Treble": {
-            "preamp": -3.0,
-            "bands": [6.0, 5.0, 0.0, -5.0, -3.0, 1.0, 6.0, 8.0, 9.0, 9.0],
-        },
-        "Loudness": {
-            "preamp": -4.0,
-            "bands": [8.0, 6.0, 0.0, 0.0, -2.0, 0.0, 2.0, 6.0, 8.0, 8.0],
-        },
-        "Soft": {
-            "preamp": -2.0,
-            "bands": [3.0, 1.0, 0.0, -1.0, 0.0, 2.0, 5.0, 6.0, 7.0, 7.0],
-        },
-        "Deep": {
-            "preamp": -1.0,
-            "bands": [6.0, 4.0, 2.0, 1.0, 3.0, 1.0, -2.0, -4.0, -5.0, -6.0],
-        },
-        "Vocal Boost": {
-            "preamp": -1.0,
-            "bands": [-3.0, -2.0, 0.0, 4.0, 6.0, 5.0, 3.0, 0.0, -1.0, -2.0],
-        },
-        "Speech": {
-            "preamp": 0.0,
-            "bands": [-6.0, -4.0, 0.0, 4.0, 6.0, 6.0, 4.0, 1.0, 0.0, -2.0],
-        },
-        "Quran": {
-            "preamp": -1.0,
-            "bands": [-2.0, 0.0, 2.0, 4.0, 5.0, 4.0, 2.0, 1.0, 0.0, 0.0],
-        },
-        "Audiobook": {
-            "preamp": 0.0,
-            "bands": [-5.0, -3.0, 0.0, 3.0, 5.0, 5.0, 3.0, 1.0, 0.0, -1.0],
-        },
-        "Movie": {
-            "preamp": -2.0,
-            "bands": [5.0, 4.0, 0.0, 1.0, 3.0, 3.0, 1.0, 2.0, 4.0, 5.0],
-        },
-        "Gaming": {
-            "preamp": -1.0,
-            "bands": [4.0, 3.0, 0.0, 0.0, 2.0, 3.0, 3.0, 4.0, 4.0, 3.0],
-        },
-        "Night": {
-            "preamp": 2.0,
-            "bands": [-6.0, -4.0, -2.0, 0.0, 2.0, 2.0, 1.0, -1.0, -3.0, -4.0],
-        },
-        "Headphones": {
-            "preamp": -3.0,
-            "bands": [4.0, 8.0, 4.0, -2.0, -1.0, 1.0, 3.0, 6.0, 8.0, 9.0],
-        },
-        "Earbuds": {
-            "preamp": -2.0,
-            "bands": [5.0, 3.0, -1.0, -2.0, 0.0, 2.0, 3.0, 5.0, 6.0, 6.0],
-        },
-        "Small Speakers": {
-            "preamp": 0.0,
-            "bands": [-4.0, -2.0, 0.0, 3.0, 4.0, 4.0, 3.0, 3.0, 2.0, 1.0],
-        },
-        "Car": {
-            "preamp": -2.0,
-            "bands": [6.0, 5.0, 3.0, 2.0, -1.0, -1.0, 2.0, 4.0, 5.0, 6.0],
-        },
-    }
+    Each preset holds a preamp level in dB plus one gain (dB) per band, ordered
+    from the lowest frequency to the highest across the standard 15-band ISO
+    graphic-equalizer grid:
+    25, 40, 63, 100, 160, 250, 400, 630, 1k, 1.6k, 2.5k, 4k, 6.3k, 10k, 16k Hz.
+    The preamp compensates the overall level so heavily boosted presets do not
+    clip. Preset keys are stored in the settings file, so they must stay stable;
+    only their translated labels change (see gui/equalizer_dialog.py).
+
+    Presets are defined in the ``eq_presets`` data directory, one JSON file per
+    preset, and loaded once here (see media_player/preset_library.py).
+    """
+
+    PRESETS: ClassVar[dict[str, dict[str, Any]]] = load_presets()
 
     def __init__(self) -> None:
         """Initialize the equalizer service."""
         self.equalizer = self
         self.preamp: float = 0.0
-        self.bands: list[float] = [0.0] * 10
+        self.bands: list[float] = [0.0] * BAND_COUNT
 
     def set_preamp(self, value: float) -> None:
         """Set the preamp level.
@@ -214,11 +53,11 @@ class EqualizerService:
         """Set the gain for a specific equalizer band.
 
         Args:
-            index: Band index (0 to 9).
+            index: Band index (0 to 14).
             value: Gain value (typically -20.0 to 20.0).
         """
-        if not 0 <= index <= 9:
-            raise ValueError("Index out of range (0 to 9).")
+        if not 0 <= index < BAND_COUNT:
+            raise ValueError(f"Index out of range (0 to {BAND_COUNT - 1}).")
         if not -20.0 <= value <= 20.0:
             raise ValueError("Gain value out of range (-20.0 to 20.0).")
         self.bands[index] = value
@@ -227,13 +66,13 @@ class EqualizerService:
         """Get the gain for a specific equalizer band.
 
         Args:
-            index: Band index (0 to 9).
+            index: Band index (0 to 14).
 
         Returns:
             Gain value.
         """
-        if not 0 <= index <= 9:
-            raise ValueError("Index out of range (0 to 9).")
+        if not 0 <= index < BAND_COUNT:
+            raise ValueError(f"Index out of range (0 to {BAND_COUNT - 1}).")
         return self.bands[index]
 
     def apply_preset(self, name: str) -> None:
@@ -250,25 +89,50 @@ class EqualizerService:
             self.set_band(i, value)
 
     def load_settings(self) -> None:
-        """Load equalizer settings from configuration."""
+        """Load equalizer settings from configuration, tolerating bad data.
+
+        Corrupt or hand-edited settings must never crash startup, so each value
+        is parsed independently: an unreadable preamp is ignored (the current
+        value is kept), while individual band gains are clamped into range and
+        malformed band entries are skipped.
+
+        Band counts have changed across versions (10 -> 15). A stored ``eq_bands``
+        string whose length no longer matches ``BAND_COUNT`` cannot be mapped
+        onto the current frequency grid, so instead of applying a wrong-frequency
+        curve we fall back to the saved preset's bands when it names a known one,
+        and otherwise leave the bands flat.
+        """
         import settings_handler
 
         preamp = settings_handler.config_get("eq_preamp")
         if preamp is not None:
             try:
-                self.set_preamp(float(preamp))
-            except ValueError, TypeError:
-                pass
+                value = float(preamp)
+            except TypeError, ValueError:
+                value = None
+            if value is not None and GAIN_MIN <= value <= GAIN_MAX:
+                self.preamp = value
 
         bands_str = settings_handler.config_get("eq_bands")
-        if bands_str:
-            try:
-                band_values = [float(v) for v in bands_str.split(",")]
-                for i, value in enumerate(band_values):
-                    if i < 10:
-                        self.set_band(i, value)
-            except ValueError, TypeError:
-                pass
+        tokens = [t.strip() for t in str(bands_str).split(",")] if bands_str else []
+
+        if len(tokens) == BAND_COUNT:
+            for index, token in enumerate(tokens):
+                if not token:
+                    continue
+                try:
+                    gain = float(token)
+                except TypeError, ValueError:
+                    continue
+                self.bands[index] = max(GAIN_MIN, min(GAIN_MAX, gain))
+            return
+
+        # Legacy or malformed band string: migrate from the saved preset if we
+        # can, otherwise keep the flat defaults.
+        preset = settings_handler.config_get("eq_preset")
+        if preset in self.PRESETS:
+            for index, gain in enumerate(self.PRESETS[preset]["bands"]):
+                self.bands[index] = gain
 
     def save_settings(self) -> None:
         """Save current equalizer settings to configuration."""
@@ -281,7 +145,7 @@ class EqualizerService:
     def reset(self) -> None:
         """Reset equalizer to flat settings (0 gain on all bands and preamp)."""
         self.set_preamp(0.0)
-        for i in range(10):
+        for i in range(BAND_COUNT):
             self.set_band(i, 0.0)
 
     def apply_to_player(self, player: Any) -> None:

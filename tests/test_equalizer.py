@@ -84,7 +84,9 @@ def test_load_settings():
 
         def side_effect(key):
             if key == "eq_bands":
-                return "1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0,10.0"
+                return (
+                    "1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0,10.0,11.0,12.0,13.0,14.0,15.0"
+                )
             if key == "eq_preamp":
                 return 5.0
             return None
@@ -95,7 +97,7 @@ def test_load_settings():
         eq.load_settings()
         assert eq.preamp == 5.0
         assert eq.get_band(0) == 1.0
-        assert eq.get_band(9) == 10.0
+        assert eq.get_band(14) == 15.0
 
 
 def test_load_settings_invalid_preamp():
@@ -131,8 +133,8 @@ def test_save_settings():
         eq.save_settings()
 
         mock_set.assert_any_call("eq_preamp", 3.0)
-        # The expected bands string for 1.0, 2.0, then 8 zeros
-        expected_bands = "1.0,2.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0"
+        # The expected bands string for 1.0, 2.0, then 13 zeros
+        expected_bands = "1.0,2.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0"
         mock_set.assert_any_call("eq_bands", expected_bands)
 
 
@@ -153,10 +155,10 @@ def test_preset_catalogue_is_large():
         assert name in EqualizerService.PRESETS
 
 
-def test_every_preset_has_ten_valid_bands():
+def test_every_preset_has_fifteen_valid_bands():
     for name, preset in EqualizerService.PRESETS.items():
         bands = preset["bands"]
-        assert len(bands) == 10, name
+        assert len(bands) == 15, name
         assert -20.0 <= float(preset["preamp"]) <= 20.0, name
         for gain in bands:
             assert -20.0 <= float(gain) <= 20.0, name
@@ -167,7 +169,7 @@ def test_every_preset_can_be_applied():
     for name, preset in EqualizerService.PRESETS.items():
         eq.apply_preset(name)
         assert eq.get_preamp() == preset["preamp"], name
-        assert [eq.get_band(index) for index in range(10)] == preset["bands"], name
+        assert [eq.get_band(index) for index in range(15)] == preset["bands"], name
 
 
 def test_flat_preset_clears_previous_preset():
@@ -175,4 +177,4 @@ def test_flat_preset_clears_previous_preset():
     eq.apply_preset("Bass Boost")
     eq.apply_preset("Flat")
     assert eq.get_preamp() == 0.0
-    assert all(eq.get_band(index) == 0.0 for index in range(10))
+    assert all(eq.get_band(index) == 0.0 for index in range(15))

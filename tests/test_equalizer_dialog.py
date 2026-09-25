@@ -11,7 +11,7 @@ from media_player.equalizer import EqualizerService
 class FakeEqualizerService:
     def __init__(self):
         self.preamp = 0.0
-        self.bands = [0.0] * 10
+        self.bands = [0.0] * 15
         self.set_preamp_called = False
         self.set_band_called = False
         self.last_preamp = 0.0
@@ -46,7 +46,7 @@ class FakeEqualizerService:
 
     def reset(self):
         self.set_preamp(0.0)
-        for index in range(10):
+        for index in range(15):
             self.set_band(index, 0.0)
 
     def apply_to_player(self, player):
@@ -156,7 +156,7 @@ class TestEqualizerDialog(unittest.TestCase):
         self.dialog.on_reset(None)
 
         assert self.fake_service.get_preamp() == 0.0
-        assert self.fake_service.bands == [0.0] * 10
+        assert self.fake_service.bands == [0.0] * 15
         assert self.saved_config["eq_preset"] == "Flat"
         assert self.saved_config["eq_enabled"] is False
 
