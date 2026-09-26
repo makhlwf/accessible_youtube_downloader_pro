@@ -118,7 +118,6 @@ Common `code` values:
 | `deno_missing` | The command needs the Deno runtime installed. |
 | `stream_failed` | No playable stream could be resolved. |
 | `download_failed` | The download did not complete. |
-| `action_failed` | A signed-in action (comment/like) was rejected. |
 | `unknown_config_key` | `config set` was given a key that does not exist. |
 | `unexpected` | An unhandled exception; `error` carries the detail. |
 | `cancelled` | The process was interrupted. |
@@ -132,8 +131,8 @@ prompting, it returns a structured error so your app can react.
 
 - **Deno runtime** — required by InnerTube-backed features. Install with
   `hexplayer deps update --deno`. Missing → `code: "deno_missing"`.
-- **Cookies file** — required for signed-in features (posting comments, likes,
-  home feed, Shorts, online watch history). Configure with
+- **Cookies file** — required for signed-in read-only features (home feed,
+  Shorts, online watch history). Configure with
   `hexplayer cookies set <path>`. Missing → `code: "cookies_missing"`.
 
 Commands that require **both** are marked below. Your app should check
@@ -312,17 +311,6 @@ hexplayer --json replies --token TOKEN [--continuation TOKEN]
 `data` includes the comment/reply items and a `continuation` token (when more
 pages exist) that you pass back via `--continuation`.
 
-### post-comment / like-comment / reply-comment  *(requires Deno and cookies)*
-
-```
-hexplayer --json post-comment URL "TEXT"
-hexplayer --json like-comment URL COMMENT_ID [--action like|dislike|remove_like]
-hexplayer --json reply-comment URL COMMENT_ID "TEXT"
-```
-
-Success → a success message. Rejected action → `code: "action_failed"`.
-Missing prerequisites → `code: "deno_missing"` or `code: "cookies_missing"`.
-
 ### chapters
 
 ```
@@ -331,15 +319,13 @@ hexplayer --json chapters URL
 
 `data` is an array of `{ "time", "title" }` objects (time in milliseconds).
 
-### likes / like
+### likes
 
 ```
 hexplayer --json likes URL
-hexplayer --json like URL [--action like|dislike|remove_like]
 ```
 
-`likes` returns the like count and your rating state. `like` mutates it and
-**requires Deno and cookies**.
+`likes` returns the like count and your rating state. It is read-only.
 
 ### channel / playlist
 

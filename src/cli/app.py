@@ -150,28 +150,6 @@ def build_parser():
     replies.add_argument("--parent", help=_("معرف التعليق الأصلي (للاحتياط)."))
     replies.set_defaults(func=commands.cmd_replies)
 
-    post_comment = sub.add_parser("post-comment", help=_("نشر تعليق."))
-    post_comment.add_argument("url", help=_("رابط المرئي."))
-    post_comment.add_argument("text", help=_("نص التعليق."))
-    post_comment.set_defaults(func=commands.cmd_post_comment)
-
-    like_comment = sub.add_parser("like-comment", help=_("التفاعل مع تعليق."))
-    like_comment.add_argument("url", help=_("رابط المرئي."))
-    like_comment.add_argument("comment_id", help=_("معرف التعليق."))
-    like_comment.add_argument(
-        "--action",
-        choices=["like", "dislike", "remove_like"],
-        default="like",
-        help=_("نوع التفاعل."),
-    )
-    like_comment.set_defaults(func=commands.cmd_like_comment)
-
-    reply_comment = sub.add_parser("reply-comment", help=_("الرد على تعليق."))
-    reply_comment.add_argument("url", help=_("رابط المرئي."))
-    reply_comment.add_argument("comment_id", help=_("معرف التعليق."))
-    reply_comment.add_argument("text", help=_("نص الرد."))
-    reply_comment.set_defaults(func=commands.cmd_reply_comment)
-
     chapters = sub.add_parser("chapters", help=_("عرض فصول المرئي."))
     chapters.add_argument("url", help=_("رابط المرئي."))
     chapters.set_defaults(func=commands.cmd_chapters)
@@ -179,16 +157,6 @@ def build_parser():
     likes = sub.add_parser("likes", help=_("عرض عدد الإعجابات وحالة التقييم."))
     likes.add_argument("url", help=_("رابط المرئي."))
     likes.set_defaults(func=commands.cmd_likes)
-
-    like = sub.add_parser("like", help=_("الإعجاب بمرئي أو إلغاؤه."))
-    like.add_argument("url", help=_("رابط المرئي."))
-    like.add_argument(
-        "--action",
-        choices=["like", "dislike", "remove_like"],
-        default="like",
-        help=_("نوع التفاعل."),
-    )
-    like.set_defaults(func=commands.cmd_like)
 
     channel = sub.add_parser("channel", help=_("تصفح قناة."))
     channel.add_argument("url", help=_("رابط القناة."))
