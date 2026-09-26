@@ -86,8 +86,8 @@ opens a dialog; instead it prints a localized error explaining how to fix it.
 
 - **Deno runtime** (InnerTube features): install with
   `hexplayer deps update --deno`.
-- **Cookies file** (signed-in features such as posting comments, likes, home
-  feed, shorts, and online watch history): set one with
+- **Cookies file** (signed-in read-only features such as the home feed, shorts,
+  and online watch history): set one with
   `hexplayer cookies set <path>`.
 
 Commands that require both are noted below.
@@ -205,30 +205,6 @@ hexplayer replies --token TOKEN [--continuation TOKEN] [--url URL] [--parent COM
 - `--token` — replies token (required).
 - `--continuation`, `--url`, `--parent` — optional fallbacks for pagination.
 
-### post-comment
-
-Post a comment. **Requires Deno and cookies.**
-
-```bash
-hexplayer post-comment URL "TEXT"
-```
-
-### like-comment
-
-React to a comment. **Requires Deno and cookies.**
-
-```bash
-hexplayer like-comment URL COMMENT_ID [--action like|dislike|remove_like]
-```
-
-### reply-comment
-
-Reply to a comment. **Requires Deno and cookies.**
-
-```bash
-hexplayer reply-comment URL COMMENT_ID "TEXT"
-```
-
 ### chapters
 
 Show a video's chapters.
@@ -243,14 +219,6 @@ Show a video's like count and your rating state.
 
 ```bash
 hexplayer likes URL
-```
-
-### like
-
-Like or dislike a video, or remove your rating. **Requires Deno and cookies.**
-
-```bash
-hexplayer like URL [--action like|dislike|remove_like]
 ```
 
 ### channel

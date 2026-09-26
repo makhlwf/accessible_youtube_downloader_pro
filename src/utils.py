@@ -3119,7 +3119,12 @@ def _linux_release_asset_url(url, arch, distro=None):
             ["-linux-arm64.deb", "-arm64.deb", "_arm64.deb", ".arm64.deb"]
         )
 
-    tar_suffixes = [f"-linux-{arch}.tar.gz", f"-{arch}.tar.gz"]
+    tar_suffixes = [
+        f"-linux-{arch}.tar.xz",
+        f"-{arch}.tar.xz",
+        f"-linux-{arch}.tar.gz",
+        f"-{arch}.tar.gz",
+    ]
 
     if distro == "fedora":
         suffixes = rpm_suffixes + tar_suffixes
@@ -3181,13 +3186,13 @@ def _select_app_update(info):
         if distro == "fedora":
             if u.endswith(".rpm"):
                 return 0
-            if u.endswith(".tar.gz"):
+            if u.endswith((".tar.gz", ".tar.xz")):
                 return 1
             return 2
         elif distro == "debian":
             if u.endswith(".deb"):
                 return 0
-            if u.endswith(".tar.gz"):
+            if u.endswith((".tar.gz", ".tar.xz")):
                 return 1
             return 2
         else:

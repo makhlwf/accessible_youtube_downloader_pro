@@ -339,37 +339,6 @@ def cmd_replies(args, emitter):
     return 0
 
 
-def _emit_action_result(emitter, result, success_message):
-    """Emit the outcome of a mutating deno action returning ``{success,error}``."""
-    if isinstance(result, dict) and result.get("success"):
-        emitter.message(success_message)
-        return 0
-    error = result.get("error") if isinstance(result, dict) else _("فشلت العملية.")
-    emitter.error(error or _("فشلت العملية."), code="action_failed")
-    return 1
-
-
-def cmd_post_comment(args, emitter):
-    if not require_deno(emitter) or not require_cookies(emitter):
-        return 1
-    result = utils.post_video_comment(args.url, args.text)
-    return _emit_action_result(emitter, result, _("تم نشر التعليق."))
-
-
-def cmd_like_comment(args, emitter):
-    if not require_deno(emitter) or not require_cookies(emitter):
-        return 1
-    result = utils.like_comment(args.url, args.comment_id, action=args.action)
-    return _emit_action_result(emitter, result, _("تم تحديث تقييم التعليق."))
-
-
-def cmd_reply_comment(args, emitter):
-    if not require_deno(emitter) or not require_cookies(emitter):
-        return 1
-    result = utils.reply_to_comment(args.url, args.comment_id, args.text)
-    return _emit_action_result(emitter, result, _("تم نشر الرد."))
-
-
 def cmd_chapters(args, emitter):
     chapters = utils.get_video_chapters(args.url)
     lines = [
@@ -392,13 +361,6 @@ def cmd_likes(args, emitter):
     ]
     emitter.result(info, lines)
     return 0
-
-
-def cmd_like(args, emitter):
-    if not require_deno(emitter) or not require_cookies(emitter):
-        return 1
-    result = utils.like_video(args.url, action=args.action)
-    return _emit_action_result(emitter, result, _("تم تحديث تقييم المرئي."))
 
 
 def cmd_channel(args, emitter):
