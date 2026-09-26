@@ -355,9 +355,9 @@ def test_rpm_spec_package_linux_flow(tmp_path, monkeypatch):
     assert f"HexPlayer-{version}-1.x86_64.rpm" in sha_content
 
     # Check tarball
-    tarball = dist_dir / f"HexPlayer-{version}-linux-x86_64.tar.gz"
+    tarball = dist_dir / f"HexPlayer-{version}-linux-x86_64.tar.xz"
     assert tarball.is_file()
-    assert (dist_dir / f"HexPlayer-{version}-linux-x86_64.tar.gz.sha256").is_file()
+    assert (dist_dir / f"HexPlayer-{version}-linux-x86_64.tar.xz.sha256").is_file()
 
     # deb should not have been generated on Fedora without dpkg-deb
     assert not (dist_dir / f"HexPlayer-{version}-linux-amd64.deb").exists()
@@ -413,7 +413,7 @@ def test_rpm_spec_package_linux_flow_ubuntu(tmp_path, monkeypatch):
     build_mod.package_linux()
 
     # All three artifacts should be produced with their .sha256 files
-    tarball = dist_dir / f"HexPlayer-{version}-linux-x86_64.tar.gz"
+    tarball = dist_dir / f"HexPlayer-{version}-linux-x86_64.tar.xz"
     deb = dist_dir / f"HexPlayer-{version}-linux-amd64.deb"
     rpm = dist_dir / f"HexPlayer-{version}-1.x86_64.rpm"
 

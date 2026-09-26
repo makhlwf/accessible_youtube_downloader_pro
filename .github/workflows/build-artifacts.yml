@@ -78,7 +78,7 @@ jobs:
       - name: Smoke Ubuntu tarball from path with spaces as normal user
         if: runner.os == 'Linux'
         timeout-minutes: 3
-        run: python3 packaging/linux/validate_package.py --tarball dist/*.tar.gz
+        run: python3 packaging/linux/validate_package.py --tarball dist/*.tar.xz
       - name: Install Inno Setup
         if: runner.os == 'Windows'
         run: choco install innosetup -y
@@ -98,7 +98,7 @@ jobs:
         with:
           name: ${{ matrix.artifact }}
           path: |
-            dist/*.tar.gz
+            dist/*.tar.xz
             dist/*.deb
             dist/*.rpm
             dist/*.sha256

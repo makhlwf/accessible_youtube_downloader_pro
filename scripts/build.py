@@ -201,8 +201,8 @@ def package_linux():
     architecture = "x86_64"
 
     shutil.copy2(ROOT / "LICENSE", PACKAGE_DIR / "LICENSE")
-    archive_path = DIST_DIR / f"HexPlayer-{version}-linux-x86_64.tar.gz"
-    with tarfile.open(archive_path, "w:gz") as archive:
+    archive_path = DIST_DIR / f"HexPlayer-{version}-linux-x86_64.tar.xz"
+    with tarfile.open(archive_path, "w:xz") as archive:
         archive.add(PACKAGE_DIR, arcname=APP_NAME)
     staging = BUILD_DIR / "staging"
     app_dir = staging / "opt" / "hexplayer"

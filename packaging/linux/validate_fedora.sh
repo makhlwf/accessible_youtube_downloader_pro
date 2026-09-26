@@ -35,7 +35,7 @@ timeout --kill-after=10s 150s runuser -u smoke -- \
     python3 /validation/validate_package.py --installed
 
 # Smoke tarball as normal user with xvfb and dbus
-archives=(/artifacts/*.tar.gz)
+archives=(/artifacts/*.tar.xz)
 if [ "${#archives[@]}" -ne 1 ] || [ ! -f "${archives[0]}" ]; then
     printf '%s\n' 'Expected exactly one Linux tarball in /artifacts.' >&2
     exit 1
