@@ -27,6 +27,12 @@ MPV_EVENT_START_FILE = 6
 MPV_EVENT_END_FILE = 7
 MPV_EVENT_FILE_LOADED = 8
 
+# mpv 0.38.0 (libmpv client API 2.3, 0x00020003) inserted an "index" argument
+# into the ``loadfile`` command *before* the options map. Builds older than that
+# (e.g. Ubuntu 24.04 ships mpv 0.37 / API 2.2) expect options in that slot, so
+# the command shape must be chosen from the runtime API version. See _load_current.
+MPV_LOADFILE_INDEX_API = 0x00020003
+
 MPV_END_FILE_REASON_EOF = 0
 MPV_END_FILE_REASON_STOP = 2
 MPV_END_FILE_REASON_QUIT = 3
@@ -262,6 +268,9 @@ def _load_mpv() -> ctypes.CDLL:
     lib.mpv_error_string.argtypes = [ctypes.c_int]
     lib.mpv_error_string.restype = ctypes.c_char_p
 
+    lib.mpv_client_api_version.argtypes = []
+    lib.mpv_client_api_version.restype = ctypes.c_ulong
+
     lib.mpv_free.argtypes = [ctypes.c_void_p]
     lib.mpv_free.restype = None
 
@@ -341,6 +350,10 @@ class MpvMediaPlayer:
     def __init__(self, hwnd: int | None = None, end_callback=None) -> None:
         _ensure_numeric_locale()
         self._lib = _load_mpv()
+        try:
+            self._api_version = int(self._lib.mpv_client_api_version())
+        except Exception:
+            self._api_version = 0
         self._handle = self._lib.mpv_create()
         if not self._handle:
             raise MPVError("Unable to create an MPV handle.")
@@ -412,11 +425,23 @@ class MpvMediaPlayer:
 
         options = parse_player_options(self._current_media.options)
         keepalive: list[bytes] = []
-        command_values = (MpvNode * 5)()
+
+        # mpv >= 0.38 (API 2.3) takes: loadfile <url> <flags> <index> <options>.
+        # Older builds (e.g. Ubuntu 24.04's mpv 0.37) omit <index> and read the
+        # options map from that slot instead, so passing the newer 5-arg shape
+        # makes them parse "-1" as options and reject the map -> MPV_ERROR
+        # "invalid parameter", which aborts all playback on Linux. Choose the
+        # command shape from the runtime API version.
+        use_index = self._api_version >= MPV_LOADFILE_INDEX_API
+        num_args = 5 if use_index else 4
+        command_values = (MpvNode * num_args)()
         command_values[0] = self._string_node("loadfile", keepalive)
         command_values[1] = self._string_node(self._current_media.url, keepalive)
         command_values[2] = self._string_node("replace", keepalive)
-        command_values[3] = self._string_node("-1", keepalive)
+        options_index = 3
+        if use_index:
+            command_values[3] = self._string_node("-1", keepalive)
+            options_index = 4
 
         option_values = (MpvNode * len(options))()
         option_keys = (ctypes.c_char_p * len(options))()
@@ -434,10 +459,10 @@ class MpvMediaPlayer:
         option_node = MpvNode()
         option_node.format = MPV_FORMAT_NODE_MAP
         option_node.u.list = ctypes.pointer(option_list)
-        command_values[4] = option_node
+        command_values[options_index] = option_node
 
         command_list = MpvNodeList()
-        command_list.num = len(command_values)
+        command_list.num = num_args
         command_list.values = command_values
         command_list.keys = None
 
