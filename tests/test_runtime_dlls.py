@@ -83,3 +83,45 @@ def test_configure_dll_search_path_keeps_directory_handles(tmp_path, monkeypatch
     assert runtime_dir.resolve() in roots
     assert os.environ["PATH"].split(os.pathsep)[0] == str(runtime_dir.resolve())
     assert handles[-1][1] in runtime_dlls._dll_directory_handles
+
+
+def test_wayland_session_prefers_xwayland_backend(monkeypatch):
+    monkeypatch.setattr(sys, "platform", "linux")
+    monkeypatch.setenv("WAYLAND_DISPLAY", "wayland-0")
+    monkeypatch.delenv("GDK_BACKEND", raising=False)
+
+    runtime_dlls.configure_linux_display_backend()
+
+    # mpv can only embed video via "wid" on X11, so we force XWayland (with a
+    # native Wayland fallback so the app still launches if XWayland is missing).
+    assert os.environ["GDK_BACKEND"] == "x11,wayland"
+
+
+def test_explicit_gdk_backend_is_respected(monkeypatch):
+    monkeypatch.setattr(sys, "platform", "linux")
+    monkeypatch.setenv("WAYLAND_DISPLAY", "wayland-0")
+    monkeypatch.setenv("GDK_BACKEND", "wayland")
+
+    runtime_dlls.configure_linux_display_backend()
+
+    assert os.environ["GDK_BACKEND"] == "wayland"
+
+
+def test_x11_session_is_left_untouched(monkeypatch):
+    monkeypatch.setattr(sys, "platform", "linux")
+    monkeypatch.delenv("WAYLAND_DISPLAY", raising=False)
+    monkeypatch.delenv("GDK_BACKEND", raising=False)
+
+    runtime_dlls.configure_linux_display_backend()
+
+    assert "GDK_BACKEND" not in os.environ
+
+
+def test_non_linux_platform_is_left_untouched(monkeypatch):
+    monkeypatch.setattr(sys, "platform", "win32")
+    monkeypatch.setenv("WAYLAND_DISPLAY", "wayland-0")
+    monkeypatch.delenv("GDK_BACKEND", raising=False)
+
+    runtime_dlls.configure_linux_display_backend()
+
+    assert "GDK_BACKEND" not in os.environ
