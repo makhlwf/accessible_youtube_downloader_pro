@@ -37,7 +37,7 @@
 
 HexPlayer is the current continuation of Accessible YouTube Downloader Pro. It is designed for blind and visually impaired Windows and Linux users who want a screen-reader friendly way to use YouTube without relying on the YouTube web interface. On Windows, HexPlayer works with screen readers (NVDA, JAWS, Narrator, System Access, etc.) and Windows speech engines via [Prism](https://github.com/ethindp/prism).
 
-The current application version is **5.2.0**.
+The current application version is **5.3.0**.
 
 ### Supported systems
 
@@ -174,7 +174,7 @@ HexPlayer.exe /SILENT /NORESTART /DOWNLOADCOMPONENTS=1
 
 Open the [Releases page](https://github.com/makhlwf/accessible_youtube_downloader_pro/releases), choose a stable release or the **beta** pre-release, and expand its **Assets** list. Beta builds are for testing and can change independently of stable releases. Choose a release that lists the Linux asset you need; if your chosen release does not include it, select another release with that asset or use [the source setup](#running-from-source). Do not use the Windows installer on Linux.
 
-HexPlayer provides native packages for **Fedora / RHEL** (`.rpm`), **Ubuntu / Debian** (`.deb`), and generic `.tar.gz` archives for x86_64 distributions with glibc 2.39 or newer. Each asset is accompanied by a `.sha256` checksum file. In all commands below, replace `VERSION` with the version in the downloaded filename (e.g. `4.8.0`).
+HexPlayer provides native packages for **Fedora / RHEL** (`.rpm`), **Ubuntu / Debian** (`.deb`), and generic `.tar.xz` archives for x86_64 distributions with glibc 2.39 or newer. Each asset is accompanied by a `.sha256` checksum file. In all commands below, replace `VERSION` with the version in the downloaded filename (e.g. `4.8.0`).
 
 ### Quick Start: Unified Linux Installer (`install.sh`)
 
@@ -217,7 +217,7 @@ APT installs the package and its declared runtime dependencies. Start HexPlayer 
 
 ### Tarball: Generic x86_64 Linux Distributions
 
-Download the `linux-x86_64.tar.gz` asset and its matching `.sha256` file from the same release. The tarball is not a dependency-free portable build. Install your distribution's runtime packages first, then extract and run.
+Download the `linux-x86_64.tar.xz` asset and its matching `.sha256` file from the same release. The tarball is not a dependency-free portable build. Install your distribution's runtime packages first, then extract and run.
 
 #### Fedora runtime packages
 
@@ -242,13 +242,13 @@ Use your distribution's package manager to install equivalents of the runtime li
 #### Verify, extract, and launch
 
 ```bash
-sha256sum -c HexPlayer-VERSION-linux-x86_64.tar.gz.sha256
+sha256sum -c HexPlayer-VERSION-linux-x86_64.tar.xz.sha256
 ```
 
 Continue only if verification succeeds:
 
 ```bash
-tar -xzf HexPlayer-VERSION-linux-x86_64.tar.gz
+tar -xf HexPlayer-VERSION-linux-x86_64.tar.xz
 ./HexPlayer/HexPlayer
 ```
 

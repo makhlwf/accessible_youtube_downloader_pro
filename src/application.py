@@ -1,7 +1,7 @@
 # a module to hold application constants to be not re written everytime
 
 name = "HexPlayer"
-version = "5.2.0"
+version = "5.3.0"
 github_url = "https://github.com/makhlwf/accessible_youtube_downloader_pro"
 releases_page_url = f"{github_url}/releases"
 author = "Makhlwf"

@@ -448,7 +448,7 @@ uv run --no-sync python src\accessible_youtube_downloader_pro.py
 
 Check the [HexPlayer releases and assets](https://github.com/makhlwf/accessible_youtube_downloader_pro/releases). Linux assets are not available until a release containing them is published. If the chosen release has no Linux assets, use the source setup below instead of the Windows executable.
 
-Published releases provide native packages for Fedora (`HexPlayer-VERSION-1.x86_64.rpm`), Ubuntu/Debian (`HexPlayer-VERSION-linux-amd64.deb`), generic x86_64 archives (`HexPlayer-VERSION-linux-x86_64.tar.gz`), and a matching `.sha256` checksum file for each. Replace `VERSION` below with the downloaded release version (e.g. `4.8.0`) and run commands in the download directory. Verify the checksum before installation.
+Published releases provide native packages for Fedora (`HexPlayer-VERSION-1.x86_64.rpm`), Ubuntu/Debian (`HexPlayer-VERSION-linux-amd64.deb`), generic x86_64 archives (`HexPlayer-VERSION-linux-x86_64.tar.xz`), and a matching `.sha256` checksum file for each. Replace `VERSION` below with the downloaded release version (e.g. `4.8.0`) and run commands in the download directory. Verify the checksum before installation.
 
 #### Quick Start: Unified Linux Installer (`install.sh`)
 
@@ -497,8 +497,8 @@ sudo apt install libstdc++6 libgtk-3-0t64 libmpv2 ffmpeg libnotify4 \
     libsecret-1-0 libwebkit2gtk-4.1-0 libgl1 libglu1-mesa libsm6 libxtst6 \
     libspeechd2 speech-dispatcher xdg-utils espeak-ng xclip wl-clipboard
 
-sha256sum --check HexPlayer-VERSION-linux-x86_64.tar.gz.sha256
-tar -xzf HexPlayer-VERSION-linux-x86_64.tar.gz
+sha256sum --check HexPlayer-VERSION-linux-x86_64.tar.xz.sha256
+tar -xf HexPlayer-VERSION-linux-x86_64.tar.xz
 ./HexPlayer/HexPlayer
 ```
 
@@ -573,7 +573,7 @@ xvfb-run -a uv run --no-sync python scripts/build.py
 **The build deletes the repository's existing `build/` and `dist/` directories before running PyInstaller. Save any artifacts you need elsewhere first.** The script verifies system libmpv, FFmpeg, FFprobe, builds the main executable and native messaging host, validates the layout, and generates:
 
 - `dist/HexPlayer/HexPlayer` and `dist/HexPlayer/HexPlayerNativeHost`, with their shared `_internal` directory.
-- `dist/HexPlayer-VERSION-linux-x86_64.tar.gz`.
+- `dist/HexPlayer-VERSION-linux-x86_64.tar.xz`.
 - `dist/HexPlayer-VERSION-linux-amd64.deb` (if `dpkg-deb` is available).
 - `dist/HexPlayer-VERSION-1.x86_64.rpm` (if `rpmbuild` is available).
 - A matching `.sha256` file for each built artifact.
