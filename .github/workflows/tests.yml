@@ -57,3 +57,6 @@ jobs:
       - name: Check real GTK, Prism and libmpv
         timeout-minutes: 2
         run: timeout --kill-after=10s 90s dbus-run-session -- xvfb-run -a uv run --no-sync python packaging/linux/runtime_smoke.py --packaging-smoke-test
+      - name: Diagnose libmpv playback and wxGTK video embedding
+        timeout-minutes: 4
+        run: timeout --kill-after=10s 180s dbus-run-session -- xvfb-run -a uv run --no-sync python packaging/linux/mpv_player_diagnostics.py
