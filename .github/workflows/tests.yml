@@ -15,7 +15,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10.1.0
+      - uses: astral-sh/setup-uv@v10.2.0
         with:
           enable-cache: true
           cache-suffix: unit-tests
@@ -35,7 +35,7 @@ jobs:
       - uses: actions/checkout@v7
       - name: Install Linux compile and runtime dependencies
         run: sudo bash packaging/linux/install-deps.sh
-      - uses: astral-sh/setup-uv@v10.1.0
+      - uses: astral-sh/setup-uv@v10.2.0
         id: uv
         with:
           enable-cache: true
