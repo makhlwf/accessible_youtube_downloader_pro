@@ -1,20 +1,20 @@
 {
   "version": "5",
   "specifiers": {
-    "npm:youtubei.js@18.0.0": "18.0.0"
+    "npm:youtubei.js@18.1.0": "18.1.0"
   },
   "npm": {
-    "@bufbuild/protobuf@2.14.0": {
-      "integrity": "sha512-C3UGsiCwSprE2NKIIFA3hCDlpXTMCAXRZuEVp88L1GY36Y41+rYL5fryE+nOFhp4p4JPQvdV8PQ4DWgHgeTE+w=="
+    "@bufbuild/protobuf@2.15.0": {
+      "integrity": "sha512-DAheWUkVr/SJTWCc+lg9dhY0eN4SaWlf4+bG1KzHeXbnqt0AfB/NX0Z+VunGlM1ki1B4zVvye27MpKh/svySUA=="
     },
     "fflate@0.8.3": {
       "integrity": "sha512-tbZNuJrLwGUp3zshBtdy4W+ORxZuIh8a5ilyIEQDC5rY1f3U20JMry0Ll3WBzU58EZKsEuJFXhb5gwv8CsPvgA=="
     },
-    "meriyah@7.3.2": {
-      "integrity": "sha512-uFPXbsoxaEd7PafMz3K/n/Z3kXz7iZBJtYU0VQB/kcV7i33+JghLTKweabLir480FUsyLz6gUIj4LW7kCQ35TA=="
+    "meriyah@7.3.3": {
+      "integrity": "sha512-uE5cnoNj+UYhoMdZDuymCzr5TzEuE3ZF2C4kn6Z76rLhkwnvZ/+6dUZnM41T3fifyuhW0+n8vK7eq6DKJxUfPA=="
     },
-    "youtubei.js@18.0.0": {
-      "integrity": "sha512-7Tztl5QzNL4nIhiAxa4P/0C8cDDsUe0j4iaUeNiaA+ZfSe/l+HkHxXyoWlQXNW7IPi2n6AW23ysVMJLDh+AwWQ==",
+    "youtubei.js@18.1.0": {
+      "integrity": "sha512-4Goo3ZeO6/kE8Mq67eC8Z9K1rijeqRwyKxf/YM4lqf8bB4r/s8JC0V3YFx7+l/AJR3LnAsulTsiIj+AFe0cduA==",
       "dependencies": [
         "@bufbuild/protobuf",
         "fflate",
@@ -27,7 +27,7 @@
   },
   "workspace": {
     "dependencies": [
-      "npm:youtubei.js@18.0.0"
+      "npm:youtubei.js@18.1.0"
     ]
   }
 }
