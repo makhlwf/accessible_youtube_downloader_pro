@@ -186,7 +186,7 @@ def main():
         else:
             extracted = directory / "tar extraction with spaces"
             extracted.mkdir()
-            with tarfile.open(args.tarball, "r:gz") as archive:
+            with tarfile.open(args.tarball, "r:*") as archive:
                 archive.extractall(extracted, filter="data")
             executable = extracted / "HexPlayer" / "HexPlayer"
             host = executable.with_name("HexPlayerNativeHost")

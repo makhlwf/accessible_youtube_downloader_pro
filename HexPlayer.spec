@@ -6,6 +6,14 @@ from PyInstaller.utils.hooks import collect_submodules, collect_all
 ROOT = os.path.abspath(SPECPATH)
 SRC_DIR = os.path.join(ROOT, "src")
 
+# Strip symbol tables from collected binaries on Linux. wxGTK, libpython and the
+# other bundled .so files ship unstripped and carry large debug/symbol sections;
+# stripping them roughly halves the uncompressed Linux payload. binutils `strip`
+# is present on the Linux build runners (see packaging/linux/install-deps.sh).
+# PE binaries on Windows are left untouched (the Inno Setup installer already
+# compresses them with lzma2/ultra64), so this is Linux-only.
+STRIP = sys.platform == "linux"
+
 
 def src_item_path(item):
     return os.path.normpath(os.path.join(SRC_DIR, item))
@@ -36,7 +44,6 @@ def find_system_dll(name):
 binary_files = [
     "api-ms-win-core-path-l1-1-0.dll",
     "avcodec-60.dll",
-    "avdevice-60.dll",
     "avfilter-9.dll",
     "avformat-60.dll",
     "avutil-58.dll",
@@ -292,7 +299,7 @@ exe_main = EXE(
     name="HexPlayer",
     debug=False,
     bootloader_ignore_signals=False,
-    strip=False,
+    strip=STRIP,
     upx=True,
     console=False,
     disable_windowed_traceback=False,
@@ -329,7 +336,7 @@ exe_host = EXE(
     name="HexPlayerNativeHost",
     debug=False,
     bootloader_ignore_signals=False,
-    strip=False,
+    strip=STRIP,
     upx=True,
     console=True,
     disable_windowed_traceback=False,
@@ -364,7 +371,7 @@ exe_cli = EXE(
     name="hexplayer",
     debug=False,
     bootloader_ignore_signals=False,
-    strip=False,
+    strip=STRIP,
     upx=True,
     console=True,
     disable_windowed_traceback=False,
@@ -385,7 +392,7 @@ coll = COLLECT(
     exe_cli,
     a_cli.binaries,
     a_cli.datas,
-    strip=False,
+    strip=STRIP,
     upx=True,
     upx_exclude=[],
     name="HexPlayer",

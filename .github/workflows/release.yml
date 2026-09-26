@@ -160,7 +160,7 @@ jobs:
         run: |
           set -euo pipefail
           test -s artifacts/windows/HexPlayer.exe
-          test -s "artifacts/linux/HexPlayer-$VERSION-linux-x86_64.tar.gz"
+          test -s "artifacts/linux/HexPlayer-$VERSION-linux-x86_64.tar.xz"
           test -s "artifacts/linux/HexPlayer-$VERSION-linux-amd64.deb"
           test -s "artifacts/linux/HexPlayer-$VERSION-1.x86_64.rpm"
           (cd artifacts/linux && sha256sum --check ./*.sha256)
@@ -196,7 +196,7 @@ jobs:
           WHATS_NEW: ${{ inputs.whats_new }}
         run: |
           $url = "https://github.com/$env:GITHUB_REPOSITORY/releases/download/$env:TAG/HexPlayer.exe"
-          $linuxUrl = "https://github.com/$env:GITHUB_REPOSITORY/releases/download/$env:TAG/HexPlayer-$env:VERSION-linux-x86_64.tar.gz"
+          $linuxUrl = "https://github.com/$env:GITHUB_REPOSITORY/releases/download/$env:TAG/HexPlayer-$env:VERSION-linux-x86_64.tar.xz"
           $debUrl = "https://github.com/$env:GITHUB_REPOSITORY/releases/download/$env:TAG/HexPlayer-$env:VERSION-linux-amd64.deb"
           $rpmUrl = "https://github.com/$env:GITHUB_REPOSITORY/releases/download/$env:TAG/HexPlayer-$env:VERSION-1.x86_64.rpm"
           $platforms = [ordered]@{
