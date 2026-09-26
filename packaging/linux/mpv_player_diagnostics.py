@@ -101,6 +101,10 @@ def report_environment(lib: ctypes.CDLL) -> None:
         f"XDG_SESSION_TYPE  = {os.environ.get('XDG_SESSION_TYPE', '<unset>')}",
         flush=True,
     )
+    print(
+        f"GDK_BACKEND       = {os.environ.get('GDK_BACKEND', '<unset>')}",
+        flush=True,
+    )
     try:
         api = lib.mpv_client_api_version()
         print(
@@ -272,6 +276,116 @@ def make_test_video(directory: Path) -> str | None:
     return str(video)
 
 
+def probe_loadfile_signature(lib: ctypes.CDLL, url: str, audio_url: str) -> None:
+    """Reproduce MpvMediaPlayer._load_current's node command in both shapes.
+
+    mpv 0.38 (API 2.3) inserted an <index> arg into loadfile *before* <options>.
+    HexPlayer builds the 5-arg (with-index) shape. On older system libmpv this
+    is the prime suspect for the "invalid argument" playback failure: the app
+    ships the new shape while the runtime expects the old one. This runs the
+    exact node command both ways and reports the return code for each, so the
+    CI log shows which shape the *system* libmpv actually accepts.
+    """
+    _print_header("LOADFILE COMMAND SIGNATURE (node command, real app path)")
+    api = 0
+    try:
+        api = int(lib.mpv_client_api_version())
+    except Exception:
+        pass
+    expected = api >= mpv_backend.MPV_LOADFILE_INDEX_API
+    print(
+        f"  runtime API = 0x{api:08x}; app will send "
+        f"{'5-arg (with index)' if expected else '4-arg (legacy)'} shape",
+        flush=True,
+    )
+    # Mirror parse_player_options output for a real YouTube DASH stream.
+    options = {"user-agent": "HexPlayer/diag", "audio-file": audio_url}
+
+    for use_index, label in (
+        (True, "5-arg (index, mpv>=0.38)"),
+        (False, "4-arg (legacy)"),
+    ):
+        handle = lib.mpv_create()
+        if not handle:
+            print(f"  [{label}] mpv_create failed", flush=True)
+            continue
+        for name, value in APP_INIT_OPTIONS:
+            lib.mpv_set_option_string(handle, name.encode(), value.encode())
+        lib.mpv_set_option_string(handle, b"vo", b"null")
+        if lib.mpv_initialize(handle) < 0:
+            print(f"  [{label}] mpv_initialize failed", flush=True)
+            lib.mpv_terminate_destroy(handle)
+            continue
+        keepalive: list[bytes] = []
+        root = _build_loadfile_node(
+            url, options, use_index=use_index, keepalive=keepalive
+        )
+        code = lib.mpv_command_node(handle, ctypes.byref(root), None)
+        status = "OK" if code >= 0 else f"ERROR ({_err(lib, code)})"
+        marker = "  <-- shape HexPlayer sends" if use_index == expected else ""
+        print(f"  [{label}] mpv_command_node -> {status}{marker}", flush=True)
+        lib.mpv_terminate_destroy(handle)
+
+
+def _build_loadfile_node(
+    url: str, options: dict[str, str], *, use_index: bool, keepalive: list[bytes]
+) -> mpv_backend.MpvNode:
+    """Build the loadfile MPV_FORMAT_NODE_ARRAY exactly like _load_current."""
+    mb = mpv_backend
+
+    def snode(value: str) -> mpv_backend.MpvNode:
+        data = value.encode("utf-8")
+        keepalive.append(data)
+        node = mb.MpvNode()
+        node.format = mb.MPV_FORMAT_STRING
+        node.u.string = ctypes.c_char_p(data)
+        return node
+
+    num_args = 5 if use_index else 4
+    command_values = (mb.MpvNode * num_args)()
+    command_values[0] = snode("loadfile")
+    command_values[1] = snode(url)
+    command_values[2] = snode("replace")
+    options_index = 3
+    if use_index:
+        command_values[3] = snode("-1")
+        options_index = 4
+
+    option_values = (mb.MpvNode * len(options))()
+    option_keys = (ctypes.c_char_p * len(options))()
+    for index, (key, value) in enumerate(options.items()):
+        key_bytes = key.encode("utf-8")
+        keepalive.append(key_bytes)
+        option_keys[index] = ctypes.c_char_p(key_bytes)
+        option_values[index] = snode(value)
+
+    option_list = mb.MpvNodeList()
+    option_list.num = len(options)
+    option_list.values = option_values
+    option_list.keys = option_keys
+    option_node = mb.MpvNode()
+    option_node.format = mb.MPV_FORMAT_NODE_MAP
+    option_node.u.list = ctypes.pointer(option_list)
+    command_values[options_index] = option_node
+
+    command_list = mb.MpvNodeList()
+    command_list.num = num_args
+    command_list.values = command_values
+    command_list.keys = None
+    root = mb.MpvNode()
+    root.format = mb.MPV_FORMAT_NODE_ARRAY
+    root.u.list = ctypes.pointer(command_list)
+    # Keep every backing object alive until the command call returns.
+    root._keepalive = (  # type: ignore[attr-defined]
+        command_values,
+        command_list,
+        option_list,
+        option_values,
+        option_keys,
+    )
+    return root
+
+
 def probe_gtk_handle() -> int | None:
     """Create a real wxGTK frame and return GetHandle() — the MediaGui wid path."""
     _print_header("wxGTK GetHandle() (video embedding source)")
@@ -311,6 +425,11 @@ def main() -> int:
         directory = Path(tmp)
         audio_url = make_test_audio(directory)
         video_url = make_test_video(directory)
+
+        # Prime suspect: the loadfile command signature mismatch (mpv < 0.38).
+        # This exercises the real node command path, unlike the raw 2-arg
+        # loadfile used by the run_playback controls below.
+        probe_loadfile_signature(lib, video_url, audio_url)
 
         # Control: audio-only path (MediaGui audio_mode -> hwnd=None, :no-video).
         audio_ok = run_playback(
