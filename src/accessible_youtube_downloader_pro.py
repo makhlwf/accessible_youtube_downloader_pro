@@ -6,9 +6,12 @@ import struct
 import sys
 
 # Early setup for MPV and other DLLs
-from runtime_dlls import configure_dll_search_path
+from runtime_dlls import configure_dll_search_path, configure_linux_display_backend
 
 configure_dll_search_path()
+# Force XWayland on Wayland sessions before wx/GTK starts, so mpv can embed video
+# into a real X11 window (wid embedding is unsupported on native Wayland).
+configure_linux_display_backend()
 
 import logging
 import subprocess
@@ -130,6 +133,13 @@ def setup_logging(argv=None):
         file_h = logging.FileHandler(paths.log_path, encoding="utf-8", mode="a")
         file_h.setFormatter(formatter)
         root_logger.addHandler(file_h)
+    except Exception:
+        pass
+
+    try:
+        from logging_config import apply_logging_settings
+
+        apply_logging_settings()
     except Exception:
         pass
 
