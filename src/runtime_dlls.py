@@ -34,6 +34,29 @@ def runtime_roots(extra_roots: Iterable[Path | str] = ()) -> list[Path]:
     return roots
 
 
+def configure_linux_display_backend() -> None:
+    """Prefer XWayland for video embedding on Wayland sessions.
+
+    mpv can only embed video into a foreign window through the ``wid`` option on
+    X11, win32, and macOS (see ``src/include/mpv/client.h``). A native Wayland
+    surface has no X11 window id to hand mpv, so embedded playback fails there
+    while audio keeps working. When a Wayland session is detected we ask GDK to
+    prefer the X11 backend (XWayland) so wx windows get a real X11 XID that mpv
+    can embed into, with the native Wayland backend kept as a fallback so the app
+    still launches (audio-only) if XWayland is unavailable.
+
+    Must run before wx/GTK initializes (GDK reads ``GDK_BACKEND`` at startup); an
+    explicit ``GDK_BACKEND`` set by the user is left untouched.
+    """
+    if not sys.platform.startswith("linux"):
+        return
+    if not os.environ.get("WAYLAND_DISPLAY"):
+        return
+    if os.environ.get("GDK_BACKEND"):
+        return
+    os.environ["GDK_BACKEND"] = "x11,wayland"
+
+
 def configure_dll_search_path(extra_roots: Iterable[Path | str] = ()) -> list[Path]:
     roots = runtime_roots(extra_roots)
     if sys.platform != "win32":
