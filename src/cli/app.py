@@ -53,7 +53,7 @@ def build_parser():
     from language_handler import _
 
     parser = argparse.ArgumentParser(
-        prog="hexplayer",
+        prog="hexplayer-cli",
         description=_("واجهة سطر الأوامر لتطبيق HexPlayer لتنزيل وتصفح يوتيوب."),
     )
     parser.add_argument(

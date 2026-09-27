@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-09-26 17:31+0200\n"
+"POT-Creation-Date: 2026-09-27 16:38+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1587,14 +1587,14 @@ msgstr ""
 
 #: src/cli/runtime.py:145
 msgid ""
-"هذه الميزة تتطلب تثبيت أداة Deno. ثبّتها عبر الأمر: hexplayer deps update"
-" --deno"
+"هذه الميزة تتطلب تثبيت أداة Deno. ثبّتها عبر الأمر: hexplayer-cli deps "
+"update --deno"
 msgstr ""
 
 #: src/cli/runtime.py:160
 msgid ""
-"هذه الميزة تتطلب ملف كوكيز صالح. اضبطه عبر الأمر: hexplayer cookies set "
-"<المسار>"
+"هذه الميزة تتطلب ملف كوكيز صالح. اضبطه عبر الأمر: hexplayer-cli cookies "
+"set <المسار>"
 msgstr ""
 
 #: src/download_handler/downloader.py:426

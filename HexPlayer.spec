@@ -346,7 +346,12 @@ exe_host = EXE(
     entitlements_file=None,
 )
 
-# Analysis and EXE for the hexplayer CLI (Console, shares runtime with HexPlayer)
+# Analysis and EXE for the hexplayer CLI (Console, shares runtime with HexPlayer).
+# NOTE: the CLI binary MUST NOT be named "hexplayer" — on case-insensitive
+# filesystems (Windows) that collides with the "HexPlayer" GUI exe in the shared
+# COLLECT directory and, since this EXE is bundled after exe_main, the console
+# CLI silently overwrites HexPlayer.exe, so double-clicking launches the CLI (a
+# terminal window) instead of the GUI. Keep it distinct: "hexplayer-cli".
 a_cli = Analysis(
     [os.path.join(SRC_DIR, "hexplayer_cli.py")],
     pathex=[SRC_DIR],
@@ -368,7 +373,7 @@ exe_cli = EXE(
     a_cli.scripts,
     [],
     exclude_binaries=True,
-    name="hexplayer",
+    name="hexplayer-cli",
     debug=False,
     bootloader_ignore_signals=False,
     strip=STRIP,
