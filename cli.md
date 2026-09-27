@@ -1,6 +1,6 @@
 # HexPlayer Command Line Interface
 
-HexPlayer ships a dedicated command line tool, `hexplayer`, that exposes the
+HexPlayer ships a dedicated command line tool, `hexplayer-cli`, that exposes the
 application's YouTube features without opening the graphical interface. It is
 designed to be scriptable and screen-reader friendly in a terminal: every
 command supports plain human-readable text output and a machine-readable
@@ -15,9 +15,9 @@ command supports plain human-readable text output and a machine-readable
 ## Installation and PATH
 
 On Windows, the installer includes an optional task **"Add HexPlayer to the
-system PATH (enables the hexplayer command line tool)"**. When selected, the
+system PATH (enables the hexplayer-cli command line tool)"**. When selected, the
 installation directory is appended to your per-user `PATH` (HKCU), so you can
-run `hexplayer` from any Command Prompt, PowerShell, or terminal window.
+run `hexplayer-cli` from any Command Prompt, PowerShell, or terminal window.
 
 - The task is **off by default**; enable it on the "Select Additional Tasks"
   page of the installer.
@@ -30,11 +30,11 @@ run `hexplayer` from any Command Prompt, PowerShell, or terminal window.
 If you did not enable the task, you can still run the tool with its full path:
 
 ```powershell
-"%LOCALAPPDATA%\HexPlayer\hexplayer.exe" --help
+"%LOCALAPPDATA%\HexPlayer\hexplayer-cli.exe" --help
 ```
 
-On Linux, the native packages install a `hexplayer` launcher on `PATH`
-already.
+On Linux, the CLI ships inside the installed package as
+`/opt/hexplayer/hexplayer-cli` (it is not added to `PATH`).
 
 When running from source, invoke the CLI module directly:
 
@@ -57,8 +57,8 @@ name:
 Examples:
 
 ```bash
-hexplayer --json search "lofi hip hop"
-hexplayer --lang en info https://youtu.be/dQw4w9WgXcQ
+hexplayer-cli --json search "lofi hip hop"
+hexplayer-cli --lang en info https://youtu.be/dQw4w9WgXcQ
 ```
 
 ### JSON output shape
@@ -85,10 +85,10 @@ Some commands need external resources to be configured first. The CLI never
 opens a dialog; instead it prints a localized error explaining how to fix it.
 
 - **Deno runtime** (InnerTube features): install with
-  `hexplayer deps update --deno`.
+  `hexplayer-cli deps update --deno`.
 - **Cookies file** (signed-in read-only features such as the home feed, shorts,
   and online watch history): set one with
-  `hexplayer cookies set <path>`.
+  `hexplayer-cli cookies set <path>`.
 
 Commands that require both are noted below.
 
@@ -101,7 +101,7 @@ Commands that require both are noted below.
 Search YouTube.
 
 ```bash
-hexplayer search "QUERY" [--type video|playlist|channel] [--pages N]
+hexplayer-cli search "QUERY" [--type video|playlist|channel] [--pages N]
 ```
 
 - `--type` — result type (default `video`).
@@ -112,7 +112,7 @@ hexplayer search "QUERY" [--type video|playlist|channel] [--pages N]
 Show search suggestions for a query.
 
 ```bash
-hexplayer suggest "QUERY"
+hexplayer-cli suggest "QUERY"
 ```
 
 ### info
@@ -120,7 +120,7 @@ hexplayer suggest "QUERY"
 Show information about a video.
 
 ```bash
-hexplayer info URL
+hexplayer-cli info URL
 ```
 
 ### formats
@@ -128,7 +128,7 @@ hexplayer info URL
 List the available formats for a video.
 
 ```bash
-hexplayer formats URL
+hexplayer-cli formats URL
 ```
 
 ### qualities
@@ -136,7 +136,7 @@ hexplayer formats URL
 List the available qualities for a video.
 
 ```bash
-hexplayer qualities URL [--audio]
+hexplayer-cli qualities URL [--audio]
 ```
 
 - `--audio` — list audio qualities instead of video.
@@ -146,7 +146,7 @@ hexplayer qualities URL [--audio]
 Get a direct playable stream URL.
 
 ```bash
-hexplayer stream-url URL [--audio] [--quality HEIGHT]
+hexplayer-cli stream-url URL [--audio] [--quality HEIGHT]
 ```
 
 - `--audio` — audio-only stream.
@@ -157,7 +157,7 @@ hexplayer stream-url URL [--audio] [--quality HEIGHT]
 Download a video, audio track, or a whole playlist.
 
 ```bash
-hexplayer download URL [--format mp4|mkv|m4a|mp3|wav|flac] [--quality HEIGHT] [--output DIR] [--folder]
+hexplayer-cli download URL [--format mp4|mkv|m4a|mp3|wav|flac] [--quality HEIGHT] [--output DIR] [--folder]
 ```
 
 - `--format` — output file format (default `mp4`). `mp4`/`mkv` produce video;
@@ -175,8 +175,8 @@ is suppressed and only the final result is emitted.
 Manage subtitles.
 
 ```bash
-hexplayer subtitles list URL
-hexplayer subtitles get URL --lang CODE [--output FILE.srt]
+hexplayer-cli subtitles list URL
+hexplayer-cli subtitles get URL --lang CODE [--output FILE.srt]
 ```
 
 - `list` — show available subtitle tracks.
@@ -188,7 +188,7 @@ hexplayer subtitles get URL --lang CODE [--output FILE.srt]
 Show a video's comments.
 
 ```bash
-hexplayer comments URL [--sort top|new] [--continuation TOKEN]
+hexplayer-cli comments URL [--sort top|new] [--continuation TOKEN]
 ```
 
 - `--sort` — comment ordering (default `top`).
@@ -199,7 +199,7 @@ hexplayer comments URL [--sort top|new] [--continuation TOKEN]
 Show replies to a comment.
 
 ```bash
-hexplayer replies --token TOKEN [--continuation TOKEN] [--url URL] [--parent COMMENT_ID]
+hexplayer-cli replies --token TOKEN [--continuation TOKEN] [--url URL] [--parent COMMENT_ID]
 ```
 
 - `--token` — replies token (required).
@@ -210,7 +210,7 @@ hexplayer replies --token TOKEN [--continuation TOKEN] [--url URL] [--parent COM
 Show a video's chapters.
 
 ```bash
-hexplayer chapters URL
+hexplayer-cli chapters URL
 ```
 
 ### likes
@@ -218,7 +218,7 @@ hexplayer chapters URL
 Show a video's like count and your rating state.
 
 ```bash
-hexplayer likes URL
+hexplayer-cli likes URL
 ```
 
 ### channel
@@ -226,7 +226,7 @@ hexplayer likes URL
 Browse a channel.
 
 ```bash
-hexplayer channel URL [--tab home|videos|shorts|live|playlists|community|channels|about] [--pages N]
+hexplayer-cli channel URL [--tab home|videos|shorts|live|playlists|community|channels|about] [--pages N]
 ```
 
 - `--tab` — channel tab to open (default `videos`).
@@ -237,7 +237,7 @@ hexplayer channel URL [--tab home|videos|shorts|live|playlists|community|channel
 Show a playlist's contents.
 
 ```bash
-hexplayer playlist URL
+hexplayer-cli playlist URL
 ```
 
 ### home
@@ -245,7 +245,7 @@ hexplayer playlist URL
 Show the home feed. **Requires Deno and cookies.**
 
 ```bash
-hexplayer home [--continuation TOKEN]
+hexplayer-cli home [--continuation TOKEN]
 ```
 
 ### shorts
@@ -253,7 +253,7 @@ hexplayer home [--continuation TOKEN]
 Show Shorts recommendations. **Requires Deno and cookies.**
 
 ```bash
-hexplayer shorts [--seed VIDEO_ID]
+hexplayer-cli shorts [--seed VIDEO_ID]
 ```
 
 ### watch-history
@@ -261,7 +261,7 @@ hexplayer shorts [--seed VIDEO_ID]
 Show watch history.
 
 ```bash
-hexplayer watch-history [--online] [--limit N] [--offset N] [--continuation TOKEN]
+hexplayer-cli watch-history [--online] [--limit N] [--offset N] [--continuation TOKEN]
 ```
 
 - `--online` — use your online YouTube history (**requires Deno and cookies**)
@@ -274,9 +274,9 @@ hexplayer watch-history [--online] [--limit N] [--offset N] [--continuation TOKE
 Manage local favorites.
 
 ```bash
-hexplayer favorites list
-hexplayer favorites add URL [--title TITLE] [--channel NAME] [--channel-url URL] [--live]
-hexplayer favorites remove URL
+hexplayer-cli favorites list
+hexplayer-cli favorites add URL [--title TITLE] [--channel NAME] [--channel-url URL] [--live]
+hexplayer-cli favorites remove URL
 ```
 
 ### search-history
@@ -284,8 +284,8 @@ hexplayer favorites remove URL
 Manage your local search history.
 
 ```bash
-hexplayer search-history list
-hexplayer search-history clear
+hexplayer-cli search-history list
+hexplayer-cli search-history clear
 ```
 
 ### config
@@ -293,10 +293,10 @@ hexplayer search-history clear
 Read and change application settings.
 
 ```bash
-hexplayer config get KEY
-hexplayer config set KEY VALUE
-hexplayer config list
-hexplayer config path
+hexplayer-cli config get KEY
+hexplayer-cli config set KEY VALUE
+hexplayer-cli config list
+hexplayer-cli config path
 ```
 
 - `set` accepts only known setting keys.
@@ -307,9 +307,9 @@ hexplayer config path
 Manage the cookies file used for signed-in features.
 
 ```bash
-hexplayer cookies status
-hexplayer cookies set PATH
-hexplayer cookies clear
+hexplayer-cli cookies status
+hexplayer-cli cookies set PATH
+hexplayer-cli cookies clear
 ```
 
 - `status` reports only whether a cookies file is configured and present. It
@@ -322,8 +322,8 @@ hexplayer cookies clear
 Manage external components.
 
 ```bash
-hexplayer deps versions
-hexplayer deps update [--ytdlp] [--deno] [--youtubei] [--pot] [--all]
+hexplayer-cli deps versions
+hexplayer-cli deps update [--ytdlp] [--deno] [--youtubei] [--pot] [--all]
 ```
 
 - `versions` — show installed versions of yt-dlp, Deno, YouTube.js, and the POT
@@ -335,7 +335,7 @@ hexplayer deps update [--ytdlp] [--deno] [--youtubei] [--pot] [--all]
 
 ## Tips
 
-- Use `hexplayer COMMAND --help` (and `hexplayer COMMAND SUBCOMMAND --help`)
+- Use `hexplayer-cli COMMAND --help` (and `hexplayer-cli COMMAND SUBCOMMAND --help`)
   to see the help for any command directly in your terminal.
 - Combine `--json` with tools like `jq` to build scripts around HexPlayer.
 - Interface text follows your configured language; override per invocation with

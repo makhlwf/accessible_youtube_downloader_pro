@@ -72,8 +72,8 @@ arabic.NoInternet=لم يتم اكتشاف اتصال بالإنترنت.%n%nل�
 english.DownloadFailed=Failed to download some components.%n%nyou can download them manually later.
 arabic.DownloadFailed=فشل تحميل بعض المكونات.%n%nيمكنك تحميلها يدويًا لاحقًا.
 
-english.AddToPath=Add HexPlayer to the system PATH (enables the hexplayer command line tool)
-arabic.AddToPath=إضافة HexPlayer إلى مسار النظام (لتفعيل أداة سطر الأوامر hexplayer)
+english.AddToPath=Add HexPlayer to the system PATH (enables the hexplayer-cli command line tool)
+arabic.AddToPath=إضافة HexPlayer إلى مسار النظام (لتفعيل أداة سطر الأوامر hexplayer-cli)
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked

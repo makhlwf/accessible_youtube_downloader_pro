@@ -3,7 +3,7 @@
 This guide is for developers who want to use HexPlayer's YouTube capabilities
 **from their own applications**.
 
-HexPlayer's programmatic surface is its command line tool, `hexplayer`, running
+HexPlayer's programmatic surface is its command line tool, `hexplayer-cli`, running
 in **`--json` mode**. You invoke it as a subprocess, pass a command, and read a
 single JSON document from standard output. There is no separate network service
 and no public importable Python library; the CLI *is* the API, and `--json` is
@@ -34,13 +34,14 @@ its stable contract.
 Call the executable with the global `--json` flag **before** the command name:
 
 ```
-hexplayer --json <command> [subcommand] [arguments] [options]
+hexplayer-cli --json <command> [subcommand] [arguments] [options]
 ```
 
 - On Windows, if the installer's "Add HexPlayer to the system PATH" task was
-  selected, `hexplayer` is on `PATH`. Otherwise call the full path, e.g.
-  `%LOCALAPPDATA%\HexPlayer\hexplayer.exe`.
-- On Linux, the native packages install `hexplayer` on `PATH`.
+  selected, `hexplayer-cli` is on `PATH`. Otherwise call the full path, e.g.
+  `%LOCALAPPDATA%\HexPlayer\hexplayer-cli.exe`.
+- On Linux, the CLI ships inside the installed package as
+  `/opt/hexplayer/hexplayer-cli` (it is not added to `PATH`).
 - From source: `python src/hexplayer_cli.py --json <command> ...`.
 
 Each invocation is stateless, does one thing, and exits. Successful results and
@@ -83,7 +84,7 @@ command below).
 ```json
 {
   "ok": false,
-  "error": "This feature requires a valid cookies file. Set it with: hexplayer cookies set <path>",
+  "error": "This feature requires a valid cookies file. Set it with: hexplayer-cli cookies set <path>",
   "code": "cookies_missing"
 }
 ```
@@ -130,10 +131,10 @@ Some commands need resources the CLI will not install on the fly. Instead of
 prompting, it returns a structured error so your app can react.
 
 - **Deno runtime** — required by InnerTube-backed features. Install with
-  `hexplayer deps update --deno`. Missing → `code: "deno_missing"`.
+  `hexplayer-cli deps update --deno`. Missing → `code: "deno_missing"`.
 - **Cookies file** — required for signed-in read-only features (home feed,
   Shorts, online watch history). Configure with
-  `hexplayer cookies set <path>`. Missing → `code: "cookies_missing"`.
+  `hexplayer-cli cookies set <path>`. Missing → `code: "cookies_missing"`.
 
 Commands that require **both** are marked below. Your app should check
 `deps versions` and `cookies status` up front if it depends on these.
@@ -148,7 +149,7 @@ truncated with `…` for readability.
 ### search
 
 ```
-hexplayer --json search "QUERY" [--type video|playlist|channel] [--pages N]
+hexplayer-cli --json search "QUERY" [--type video|playlist|channel] [--pages N]
 ```
 
 `data` is an array of result objects. `views` is present only when known.
@@ -172,7 +173,7 @@ hexplayer --json search "QUERY" [--type video|playlist|channel] [--pages N]
 ### suggest
 
 ```
-hexplayer --json suggest "QUERY"
+hexplayer-cli --json suggest "QUERY"
 ```
 
 `data` is an array of suggestion strings.
@@ -184,7 +185,7 @@ hexplayer --json suggest "QUERY"
 ### info
 
 ```
-hexplayer --json info URL
+hexplayer-cli --json info URL
 ```
 
 `data` is a single video object. Fields YouTube does not return are `null`.
@@ -211,7 +212,7 @@ hexplayer --json info URL
 ### formats
 
 ```
-hexplayer --json formats URL
+hexplayer-cli --json formats URL
 ```
 
 `data` is an array of format objects.
@@ -236,7 +237,7 @@ hexplayer --json formats URL
 ### qualities
 
 ```
-hexplayer --json qualities URL [--audio]
+hexplayer-cli --json qualities URL [--audio]
 ```
 
 `data` is an array of available heights (video) or bitrates (`--audio`).
@@ -248,7 +249,7 @@ hexplayer --json qualities URL [--audio]
 ### stream-url
 
 ```
-hexplayer --json stream-url URL [--audio] [--quality HEIGHT]
+hexplayer-cli --json stream-url URL [--audio] [--quality HEIGHT]
 ```
 
 `data` carries the resolved playable stream. `audio_url` is set when video and
@@ -274,7 +275,7 @@ Failure → `code: "stream_failed"`.
 ### download
 
 ```
-hexplayer --json download URL [--format mp4|mkv|m4a|mp3|wav|flac] [--quality HEIGHT] [--output DIR] [--folder]
+hexplayer-cli --json download URL [--format mp4|mkv|m4a|mp3|wav|flac] [--quality HEIGHT] [--output DIR] [--folder]
 ```
 
 In `--json` mode, per-chunk progress is suppressed and only the final result is
@@ -293,8 +294,8 @@ Failure → `code: "download_failed"`.
 ### subtitles
 
 ```
-hexplayer --json subtitles list URL
-hexplayer --json subtitles get URL --lang CODE [--output FILE.srt]
+hexplayer-cli --json subtitles list URL
+hexplayer-cli --json subtitles get URL --lang CODE [--output FILE.srt]
 ```
 
 `list` → `data` is an array of `{ "code", "label", "source" }`. `get` with
@@ -304,8 +305,8 @@ objects and the SRT text is the message.
 ### comments / replies
 
 ```
-hexplayer --json comments URL [--sort top|new] [--continuation TOKEN]
-hexplayer --json replies --token TOKEN [--continuation TOKEN]
+hexplayer-cli --json comments URL [--sort top|new] [--continuation TOKEN]
+hexplayer-cli --json replies --token TOKEN [--continuation TOKEN]
 ```
 
 `data` includes the comment/reply items and a `continuation` token (when more
@@ -314,7 +315,7 @@ pages exist) that you pass back via `--continuation`.
 ### chapters
 
 ```
-hexplayer --json chapters URL
+hexplayer-cli --json chapters URL
 ```
 
 `data` is an array of `{ "time", "title" }` objects (time in milliseconds).
@@ -322,7 +323,7 @@ hexplayer --json chapters URL
 ### likes
 
 ```
-hexplayer --json likes URL
+hexplayer-cli --json likes URL
 ```
 
 `likes` returns the like count and your rating state. It is read-only.
@@ -330,8 +331,8 @@ hexplayer --json likes URL
 ### channel / playlist
 
 ```
-hexplayer --json channel URL [--tab videos|shorts|live|playlists|community|channels|about|home] [--pages N]
-hexplayer --json playlist URL
+hexplayer-cli --json channel URL [--tab videos|shorts|live|playlists|community|channels|about|home] [--pages N]
+hexplayer-cli --json playlist URL
 ```
 
 `data` is an array of entry objects, same item shape as `search`.
@@ -339,8 +340,8 @@ hexplayer --json playlist URL
 ### home / shorts  *(requires Deno and cookies)*
 
 ```
-hexplayer --json home [--continuation TOKEN]
-hexplayer --json shorts [--seed VIDEO_ID]
+hexplayer-cli --json home [--continuation TOKEN]
+hexplayer-cli --json shorts [--seed VIDEO_ID]
 ```
 
 Without a cookies file these return `code: "cookies_missing"`.
@@ -348,7 +349,7 @@ Without a cookies file these return `code: "cookies_missing"`.
 ### watch-history
 
 ```
-hexplayer --json watch-history [--online] [--limit N] [--offset N] [--continuation TOKEN]
+hexplayer-cli --json watch-history [--online] [--limit N] [--offset N] [--continuation TOKEN]
 ```
 
 Local history (default) → an array of watched items:
@@ -374,9 +375,9 @@ Local history (default) → an array of watched items:
 ### favorites
 
 ```
-hexplayer --json favorites list
-hexplayer --json favorites add URL [--title T] [--channel C] [--channel-url U] [--live]
-hexplayer --json favorites remove URL
+hexplayer-cli --json favorites list
+hexplayer-cli --json favorites add URL [--title T] [--channel C] [--channel-url U] [--live]
+hexplayer-cli --json favorites remove URL
 ```
 
 `list` → an array of favorite objects:
@@ -402,8 +403,8 @@ hexplayer --json favorites remove URL
 ### search-history
 
 ```
-hexplayer --json search-history list
-hexplayer --json search-history clear
+hexplayer-cli --json search-history list
+hexplayer-cli --json search-history clear
 ```
 
 `list` → an array of query strings. `clear` → a success message.
@@ -411,10 +412,10 @@ hexplayer --json search-history clear
 ### config
 
 ```
-hexplayer --json config get KEY
-hexplayer --json config set KEY VALUE
-hexplayer --json config list
-hexplayer --json config path
+hexplayer-cli --json config get KEY
+hexplayer-cli --json config set KEY VALUE
+hexplayer-cli --json config list
+hexplayer-cli --json config path
 ```
 
 ```json
@@ -427,9 +428,9 @@ hexplayer --json config path
 ### cookies
 
 ```
-hexplayer --json cookies status
-hexplayer --json cookies set PATH
-hexplayer --json cookies clear
+hexplayer-cli --json cookies status
+hexplayer-cli --json cookies set PATH
+hexplayer-cli --json cookies clear
 ```
 
 `status` reports **only** whether a cookies file is configured and present. It
@@ -442,8 +443,8 @@ never returns the file's contents.
 ### deps
 
 ```
-hexplayer --json deps versions
-hexplayer --json deps update [--ytdlp] [--deno] [--youtubei] [--pot] [--all]
+hexplayer-cli --json deps versions
+hexplayer-cli --json deps update [--ytdlp] [--deno] [--youtubei] [--pot] [--all]
 ```
 
 ```json
@@ -472,10 +473,10 @@ import json
 import subprocess
 
 
-def hexplayer(*args, lang="en"):
-    """Call the hexplayer CLI in JSON mode and return the parsed envelope."""
+def hexplayer-cli(*args, lang="en"):
+    """Call the hexplayer-cli CLI in JSON mode and return the parsed envelope."""
     result = subprocess.run(
-        ["hexplayer", "--json", "--lang", lang, *args],
+        ["hexplayer-cli", "--json", "--lang", lang, *args],
         capture_output=True,
         text=True,
         encoding="utf-8",
@@ -488,7 +489,7 @@ def hexplayer(*args, lang="en"):
     return envelope
 
 
-results = hexplayer("search", "lofi hip hop")
+results = hexplayer-cli("search", "lofi hip hop")
 for item in results["data"]:
     print(item["title"], "->", item["url"])
 ```
@@ -498,10 +499,10 @@ for item in results["data"]:
 ```js
 const { execFile } = require("node:child_process");
 
-function hexplayer(args, lang = "en") {
+function hexplayer-cli(args, lang = "en") {
   return new Promise((resolve, reject) => {
     execFile(
-      "hexplayer",
+      "hexplayer-cli",
       ["--json", "--lang", lang, ...args],
       { encoding: "utf8" },
       (_err, stdout, stderr) => {
@@ -512,7 +513,7 @@ function hexplayer(args, lang = "en") {
   });
 }
 
-hexplayer(["info", "https://youtu.be/rFZHOHl-L8A"])
+hexplayer-cli(["info", "https://youtu.be/rFZHOHl-L8A"])
   .then((env) => console.log(env.data.title, env.data.view_count))
   .catch((env) => console.error(env.code, env.error));
 ```
@@ -521,10 +522,10 @@ hexplayer(["info", "https://youtu.be/rFZHOHl-L8A"])
 
 ```bash
 # Print the URL of the first search result.
-hexplayer --json search "lofi" | jq -r '.data[0].url'
+hexplayer-cli --json search "lofi" | jq -r '.data[0].url'
 
 # Fail the script if a download did not complete.
-hexplayer --json download "https://youtu.be/VIDEO_ID" --format mp3 \
+hexplayer-cli --json download "https://youtu.be/VIDEO_ID" --format mp3 \
   | jq -e '.ok' >/dev/null || { echo "download failed"; exit 1; }
 ```
 
@@ -534,7 +535,7 @@ hexplayer --json download "https://youtu.be/VIDEO_ID" --format mp3 \
 
 HexPlayer is free software released under the **GNU General Public License,
 version 3.0 (GPL-3.0)**. When you build on top of it — including calling the
-`hexplayer` CLI as described in this guide — you take on the obligations of that
+`hexplayer-cli` CLI as described in this guide — you take on the obligations of that
 license. This section states what this project requires of integrators. It is a
 summary for convenience, **not legal advice**; the authoritative terms are in
 the `LICENSE` file shipped with HexPlayer, and you should read it in full.
@@ -591,7 +592,7 @@ particular:
 
 ### Summary
 
-1. Use the `hexplayer` CLI as a subprocess, per this guide.
+1. Use the `hexplayer-cli` CLI as a subprocess, per this guide.
 2. Credit **HexPlayer** by name, visibly, with a link — always.
 3. Keep the license and notices intact, and comply with GPL-3.0.
 4. When in doubt about your obligations, read `LICENSE` and seek legal advice.

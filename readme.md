@@ -110,24 +110,24 @@ The full English and Arabic guides are available inside the app with `F1` and in
 
 ## Command Line Interface
 
-HexPlayer includes a dedicated command line tool, `hexplayer`, that exposes the
+HexPlayer includes a dedicated command line tool, `hexplayer-cli`, that exposes the
 application's YouTube features without opening the graphical interface. It
 supports every feature except playback, works in both human-readable and
 `--json` output modes, and is designed to be usable in a terminal with a screen
 reader.
 
 On Windows, the installer offers an optional task to add HexPlayer to your
-per-user `PATH` so the `hexplayer` command is available from any terminal. On
-Linux, the native packages already install a `hexplayer` launcher on `PATH`.
+per-user `PATH` so the `hexplayer-cli` command is available from any terminal. On
+Linux, the CLI ships inside the installed package as `/opt/hexplayer/hexplayer-cli`.
 
 ```bash
-hexplayer search "lofi hip hop"
-hexplayer download https://youtu.be/VIDEO_ID --format mp3
-hexplayer --json info https://youtu.be/VIDEO_ID
+hexplayer-cli search "lofi hip hop"
+hexplayer-cli download https://youtu.be/VIDEO_ID --format mp3
+hexplayer-cli --json info https://youtu.be/VIDEO_ID
 ```
 
 See the full [Command Line Interface guide](cli.md) for every command and
-option, or run `hexplayer --help`.
+option, or run `hexplayer-cli --help`.
 
 Building HexPlayer into your own application? The
 [Developer API guide](api.md) documents the `--json` contract, the expected

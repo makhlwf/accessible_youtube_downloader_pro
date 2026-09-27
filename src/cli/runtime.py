@@ -142,7 +142,7 @@ def require_deno(emitter):
         return True
     emitter.error(
         _(
-            "هذه الميزة تتطلب تثبيت أداة Deno. ثبّتها عبر الأمر: hexplayer deps update --deno"
+            "هذه الميزة تتطلب تثبيت أداة Deno. ثبّتها عبر الأمر: hexplayer-cli deps update --deno"
         ),
         code="deno_missing",
     )
@@ -157,7 +157,7 @@ def require_cookies(emitter):
         return True
     emitter.error(
         _(
-            "هذه الميزة تتطلب ملف كوكيز صالح. اضبطه عبر الأمر: hexplayer cookies set <المسار>"
+            "هذه الميزة تتطلب ملف كوكيز صالح. اضبطه عبر الأمر: hexplayer-cli cookies set <المسار>"
         ),
         code="cookies_missing",
     )

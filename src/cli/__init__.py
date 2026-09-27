@@ -6,7 +6,7 @@ favorites/history, settings and dependency management) without starting the
 wxPython GUI. It reuses the same backend modules the desktop app uses.
 
 The entry point is :func:`main`, invoked by ``src/hexplayer_cli.py`` (the
-frozen ``hexplayer`` console executable) and by ``python -m cli``.
+frozen ``hexplayer-cli`` console executable) and by ``python -m cli``.
 """
 
 from cli.app import main

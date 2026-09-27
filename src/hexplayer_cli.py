@@ -1,6 +1,6 @@
 """Frozen console entry point for the HexPlayer command line interface.
 
-This module is the target of the dedicated ``hexplayer.exe`` PyInstaller EXE
+This module is the target of the dedicated ``hexplayer-cli.exe`` PyInstaller EXE
 (console subsystem). It performs the same early DLL search-path setup as the
 GUI entry point so bundled native libraries resolve correctly, ensures the
 source directory is importable when running from source, then hands control to
