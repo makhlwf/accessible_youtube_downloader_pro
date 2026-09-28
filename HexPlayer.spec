@@ -50,6 +50,7 @@ binary_files = [
     "postproc-57.dll",
     "swresample-4.dll",
     "swscale-7.dll",
+    "vulkan-1.dll",
     "ffmpeg.exe",
     "ffprobe.exe",
     "libmpv-2.dll",
@@ -66,12 +67,14 @@ if sys.platform != "win32":
 binaries = []
 for item in binary_files:
     source_path = src_item_path(item)
-    if os.path.isfile(source_path):
+    if not os.path.isfile(source_path) and item == "vulkan-1.dll":
+        source_path = find_system_dll(item)
+    if source_path and os.path.isfile(source_path):
         binaries.append((source_path, "."))
 
 for dll_name in system_binary_files:
     source_path = find_system_dll(dll_name)
-    if source_path:
+    if source_path and not any(b[0] == source_path for b in binaries):
         binaries.append((source_path, "."))
 
 try:

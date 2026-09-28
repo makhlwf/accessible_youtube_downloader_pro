@@ -36,24 +36,32 @@ def ensure_mpv_runtime():
         return
     mpv_dll = SRC_DIR / "libmpv-2.dll"
     mpv_archive = SRC_DIR / "libmpv-2.dll.zip"
-    if mpv_dll.exists():
-        return
-    if not mpv_archive.exists():
-        raise RuntimeError("libmpv-2.dll or libmpv-2.dll.zip is required to build")
-    print("Extracting libmpv-2.dll from bundled archive...")
-    with zipfile.ZipFile(mpv_archive) as archive:
-        member = next(
-            (
-                name
-                for name in archive.namelist()
-                if os.path.basename(name).lower() == "libmpv-2.dll"
-            ),
-            None,
+    if not mpv_dll.exists():
+        if not mpv_archive.exists():
+            raise RuntimeError("libmpv-2.dll or libmpv-2.dll.zip is required to build")
+        print("Extracting libmpv-2.dll from bundled archive...")
+        with zipfile.ZipFile(mpv_archive) as archive:
+            member = next(
+                (
+                    name
+                    for name in archive.namelist()
+                    if os.path.basename(name).lower() == "libmpv-2.dll"
+                ),
+                None,
+            )
+            if member is None:
+                raise RuntimeError("libmpv-2.dll.zip does not contain libmpv-2.dll")
+            with archive.open(member) as source, mpv_dll.open("wb") as target:
+                shutil.copyfileobj(source, target)
+
+    vulkan_dll = SRC_DIR / "vulkan-1.dll"
+    if not vulkan_dll.exists():
+        system_vulkan = (
+            Path(os.environ.get("WINDIR", r"C:\Windows")) / "System32" / "vulkan-1.dll"
         )
-        if member is None:
-            raise RuntimeError("libmpv-2.dll.zip does not contain libmpv-2.dll")
-        with archive.open(member) as source, mpv_dll.open("wb") as target:
-            shutil.copyfileobj(source, target)
+        if system_vulkan.exists():
+            print("Copying vulkan-1.dll from System32 to src/...")
+            shutil.copy2(system_vulkan, vulkan_dll)
 
 
 def executable_name(name):
@@ -90,6 +98,13 @@ def validate_package_layout():
         PACKAGE_DIR / executable_name(HOST_NAME),
         internal / "browser_extension" / "manifest.json",
     ]
+    if sys.platform == "win32":
+        required.extend(
+            [
+                internal / "libmpv-2.dll",
+                internal / "vulkan-1.dll",
+            ]
+        )
     patterns = [
         "_cffi_backend*.pyd",
         "prism/_native/_prism_cffi.pyd",

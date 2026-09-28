@@ -125,3 +125,112 @@ def test_non_linux_platform_is_left_untouched(monkeypatch):
     runtime_dlls.configure_linux_display_backend()
 
     assert "GDK_BACKEND" not in os.environ
+
+
+def test_ensure_vulkan_dependency_copies_when_missing(tmp_path, monkeypatch):
+    target_dir = tmp_path / "target"
+    target_dir.mkdir()
+    source_dir = tmp_path / "source"
+    source_dir.mkdir()
+    source_vulkan = source_dir / "vulkan-1.dll"
+    source_vulkan.write_bytes(b"VULKAN")
+
+    monkeypatch.setattr(sys, "platform", "win32")
+    monkeypatch.setattr(mpv_backend, "runtime_roots", lambda: [source_dir])
+
+    mpv_backend._ensure_vulkan_dependency(target_dir)
+
+    target_vulkan = target_dir / "vulkan-1.dll"
+    assert target_vulkan.is_file()
+    assert target_vulkan.read_bytes() == b"VULKAN"
+
+
+def test_ensure_vulkan_dependency_skips_when_already_exists(tmp_path, monkeypatch):
+    target_dir = tmp_path / "target"
+    target_dir.mkdir()
+    target_vulkan = target_dir / "vulkan-1.dll"
+    target_vulkan.write_bytes(b"EXISTING")
+
+    monkeypatch.setattr(sys, "platform", "win32")
+    mpv_backend._ensure_vulkan_dependency(target_dir)
+
+    assert target_vulkan.read_bytes() == b"EXISTING"
+
+
+def test_windows_mpv_falls_back_to_winmode_zero_on_oserror(tmp_path, monkeypatch):
+    dll = tmp_path / "libmpv-2.dll"
+    dll.write_bytes(b"MZ")
+    monkeypatch.setattr(sys, "platform", "win32")
+    monkeypatch.setattr(mpv_backend, "_mpv_lib", None)
+    monkeypatch.setattr(mpv_backend, "_mpv_candidates", lambda: [dll])
+    configure = MagicMock()
+
+    mock_lib = MagicMock()
+
+    def fake_cdll(name, *args, **kwargs):
+        if kwargs.get("winmode") == 0:
+            return mock_lib
+        raise OSError("WinError 126: Module not found")
+
+    monkeypatch.setattr(mpv_backend.ctypes, "CDLL", fake_cdll)
+    monkeypatch.setattr(mpv_backend, "configure_dll_search_path", configure)
+
+    lib = mpv_backend._load_mpv()
+    assert lib is mock_lib
+
+
+def test_windows_mpv_raises_informative_error_when_vulkan_missing(
+    tmp_path, monkeypatch
+):
+    dll = tmp_path / "libmpv-2.dll"
+    dll.write_bytes(b"MZ")
+    monkeypatch.setattr(sys, "platform", "win32")
+    monkeypatch.setattr(mpv_backend, "_mpv_lib", None)
+    monkeypatch.setattr(mpv_backend, "_mpv_candidates", lambda: [dll])
+    monkeypatch.setattr(mpv_backend, "runtime_roots", lambda *args, **kwargs: [])
+    monkeypatch.setenv("WINDIR", str(tmp_path / "nonexistent_windir"))
+    configure = MagicMock()
+
+    def fail_cdll(*args, **kwargs):
+        raise OSError("WinError 126: Module not found")
+
+    monkeypatch.setattr(mpv_backend.ctypes, "CDLL", fail_cdll)
+    monkeypatch.setattr(mpv_backend, "configure_dll_search_path", configure)
+
+    with pytest.raises(mpv_backend.MPVError, match="vulkan-1.dll is missing"):
+        mpv_backend._load_mpv()
+
+
+def test_validate_package_layout_requires_vulkan_on_windows(tmp_path, monkeypatch):
+    import importlib.util
+    from pathlib import Path
+
+    build_script_path = Path(__file__).resolve().parents[1] / "scripts" / "build.py"
+    spec = importlib.util.spec_from_file_location("build_script", build_script_path)
+    assert spec and spec.loader
+    build_script = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(build_script)
+
+    package_dir = tmp_path / "HexPlayer"
+    internal_dir = package_dir / "_internal"
+    internal_dir.mkdir(parents=True)
+    monkeypatch.setattr(build_script, "PACKAGE_DIR", package_dir)
+    monkeypatch.setattr(sys, "platform", "win32")
+
+    (package_dir / "HexPlayer.exe").write_bytes(b"")
+    (package_dir / "HexPlayerNativeHost.exe").write_bytes(b"")
+    ext_dir = internal_dir / "browser_extension"
+    ext_dir.mkdir(parents=True)
+    (ext_dir / "manifest.json").write_bytes(b"{}")
+    (internal_dir / "_cffi_backend.pyd").write_bytes(b"")
+    prism_dir = internal_dir / "prism" / "_native"
+    prism_dir.mkdir(parents=True)
+    (prism_dir / "_prism_cffi.pyd").write_bytes(b"")
+    (prism_dir / "prism.dll").write_bytes(b"")
+
+    with pytest.raises(RuntimeError, match="vulkan-1.dll"):
+        build_script.validate_package_layout()
+
+    (internal_dir / "libmpv-2.dll").write_bytes(b"")
+    (internal_dir / "vulkan-1.dll").write_bytes(b"")
+    build_script.validate_package_layout()
