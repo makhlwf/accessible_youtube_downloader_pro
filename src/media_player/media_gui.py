@@ -15,6 +15,7 @@ from gui.description import DescriptionDialog
 from gui.download_progress import DownloadProgress
 from gui.quality_selection import QualitySelectionDialog
 from gui.settings_dialog import SettingsDialog
+from gui.sleep_timer_dialog import SleepTimerDialog
 from language_handler import _
 from media_player.player import Player, State
 from media_player.suggestions_service import SuggestionsService
@@ -251,6 +252,28 @@ class MediaGui(wx.Frame):
         self.subtitlesMenu.AppendSubMenu(self.subtitlesLanguageMenu, _("لغة الترجمة"))
         trackOptions.AppendSubMenu(self.subtitlesMenu, _("الترجمة"))
 
+        # Sleep timer submenu. Off/15/30/45/60/finish/custom form one consecutive
+        # radio group (mutually exclusive), so the screen reader announces which
+        # option is active. The separator ends the group; the announce item follows.
+        self.sleepTimerMenu = wx.Menu()
+        self.sleepOffItem = self.sleepTimerMenu.AppendRadioItem(-1, _("إيقاف"))
+        self.sleep15Item = self.sleepTimerMenu.AppendRadioItem(-1, _("‏15 دقيقة"))  # noqa: PLE2502
+        self.sleep30Item = self.sleepTimerMenu.AppendRadioItem(-1, _("‏30 دقيقة"))  # noqa: PLE2502
+        self.sleep45Item = self.sleepTimerMenu.AppendRadioItem(-1, _("‏45 دقيقة"))  # noqa: PLE2502
+        self.sleep60Item = self.sleepTimerMenu.AppendRadioItem(-1, _("‏60 دقيقة"))  # noqa: PLE2502
+        self.sleepFinishItem = self.sleepTimerMenu.AppendRadioItem(
+            -1, _("إيقاف بعد انتهاء المقطع الحالي")
+        )
+        self.sleepCustomItem = self.sleepTimerMenu.AppendRadioItem(
+            -1, _("مدة مخصصة...")
+        )
+        self.sleepTimerMenu.AppendSeparator()
+        self.sleepAnnounceItem = self.sleepTimerMenu.Append(
+            -1, _("الوقت المتبقي لمؤقت النوم\tctrl+shift+s")
+        )
+        self.sleepOffItem.Check(True)
+        trackOptions.AppendSubMenu(self.sleepTimerMenu, _("مؤقت النوم"))
+
         descriptionItem = trackOptions.Append(-1, _("وصف الفيديو\tctrl+shift+d"))
         commentsItem = trackOptions.Append(-1, _("تعليقات الفيديو\tctrl+shift+m"))
         jumpToTimeItem = trackOptions.Append(-1, _("الانتقال إلى وقت...\tctrl+g"))
@@ -277,6 +300,11 @@ class MediaGui(wx.Frame):
                 (wx.ACCEL_CTRL, ord("B"), browserItem.GetId()),
                 (wx.ACCEL_CTRL | wx.ACCEL_SHIFT, ord("C"), channelItem.GetId()),
                 (wx.ACCEL_ALT, ord("S"), settingsItem.GetId()),
+                (
+                    wx.ACCEL_CTRL | wx.ACCEL_SHIFT,
+                    ord("S"),
+                    self.sleepAnnounceItem.GetId(),
+                ),
             ]
         )
         self.SetAcceleratorTable(hotKeys)
@@ -302,6 +330,14 @@ class MediaGui(wx.Frame):
         self.Bind(wx.EVT_MENU, self.onBrowser, browserItem)
         self.Bind(wx.EVT_MENU, self.onOpenChannel, channelItem)
         self.Bind(wx.EVT_MENU, lambda event: SettingsDialog(self), settingsItem)
+        self.Bind(wx.EVT_MENU, lambda e: self.set_sleep_timer(0), self.sleepOffItem)
+        self.Bind(wx.EVT_MENU, lambda e: self.set_sleep_timer(15), self.sleep15Item)
+        self.Bind(wx.EVT_MENU, lambda e: self.set_sleep_timer(30), self.sleep30Item)
+        self.Bind(wx.EVT_MENU, lambda e: self.set_sleep_timer(45), self.sleep45Item)
+        self.Bind(wx.EVT_MENU, lambda e: self.set_sleep_timer(60), self.sleep60Item)
+        self.Bind(wx.EVT_MENU, self.on_sleep_finish_current, self.sleepFinishItem)
+        self.Bind(wx.EVT_MENU, self.on_sleep_custom, self.sleepCustomItem)
+        self.Bind(wx.EVT_MENU, self.announce_sleep_remaining, self.sleepAnnounceItem)
         self.Bind(wx.EVT_KEY_DOWN, self.onKeyDown)
         self.Bind(wx.EVT_CHAR_HOOK, self.onCharHook)
         self.Bind(wx.EVT_CONTEXT_MENU, self.onContextMenu)
@@ -376,6 +412,13 @@ class MediaGui(wx.Frame):
         self.history_timer.Start(10000)  # 10 seconds
         self.subtitle_timer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.on_subtitle_timer, self.subtitle_timer)
+        # Sleep timer (per-window). One-shot wx.Timer; a monotonic deadline drives
+        # the "time remaining" announcement.
+        self.sleep_timer = wx.Timer(self)
+        self.Bind(wx.EVT_TIMER, self.on_sleep_timer, self.sleep_timer)
+        self.sleep_deadline = None  # time.monotonic() target while armed, else None
+        self.sleep_minutes = None  # armed duration in minutes, else None
+        self.sleep_finish_current = False  # pause at end of current video, no advance
         self.sponsorblock_segments = []
         self._last_sponsorblock_skip_time = 0
         self._last_sponsorblock_target = None
@@ -1585,6 +1628,13 @@ class MediaGui(wx.Frame):
                 logger.debug(
                     "Could not stop sponsorblock timer during close", exc_info=True
                 )
+        if hasattr(self, "sleep_timer"):
+            try:
+                self.sleep_timer.Stop()
+            except Exception:
+                logger.debug("Could not stop sleep timer during close", exc_info=True)
+        # Prevent a late in-flight Player.reset thread from acting on this window.
+        self.sleep_finish_current = False
         player = self.player
         self.player = None
         if player is not None:
@@ -1664,6 +1714,109 @@ class MediaGui(wx.Frame):
         config_set("autonext", True)
         config_set("repeatTracks", False)
         speak(_("تشغيل المقطع التالي تلقائيًا مفعل"))
+
+    def set_sleep_timer(self, minutes):
+        """Arm or disarm a duration-based sleep timer. ``minutes == 0`` disarms."""
+        self.sleep_finish_current = False
+        if self.sleep_timer.IsRunning():
+            self.sleep_timer.Stop()
+        if not minutes:
+            self.sleep_deadline = None
+            self.sleep_minutes = None
+            self._sync_sleep_menu()
+            speak(_("تم إيقاف مؤقت النوم"))
+            return
+        minutes = int(minutes)
+        ms = minutes * 60 * 1000
+        self.sleep_minutes = minutes
+        self.sleep_deadline = time.monotonic() + ms / 1000.0
+        self.sleep_timer.StartOnce(ms)
+        config_set("sleep_timer_last_minutes", minutes)
+        self._sync_sleep_menu()
+        speak(_("مؤقت النوم: {}").format(utils.time_formatting(minutes * 60)))
+
+    def on_sleep_finish_current(self, event=None):
+        if self.sleep_timer.IsRunning():
+            self.sleep_timer.Stop()
+        self.sleep_deadline = None
+        self.sleep_minutes = None
+        self.sleep_finish_current = True
+        self._sync_sleep_menu()
+        speak(_("سيتم الإيقاف بعد انتهاء المقطع الحالي"))
+
+    def on_sleep_custom(self, event=None):
+        default_minutes = 30
+        try:
+            default_minutes = int(config_get("sleep_timer_last_minutes"))
+        except TypeError, ValueError:
+            pass
+        dialog = SleepTimerDialog(self, max(1, default_minutes))
+        try:
+            if dialog.ShowModal() == wx.ID_OK:
+                minutes = dialog.get_minutes()
+                if minutes and minutes > 0:
+                    self.set_sleep_timer(minutes)
+                    return
+            # Cancelled or invalid: leave state unchanged, restore the radio check.
+            self._sync_sleep_menu()
+        finally:
+            dialog.Destroy()
+
+    def on_sleep_timer(self, event=None):
+        """One-shot expiry handler; runs on the GUI thread."""
+        self.sleep_deadline = None
+        self.sleep_minutes = None
+        self._sync_sleep_menu()
+        self._sleep_pause_now()
+
+    @has_player
+    def _sleep_pause_now(self):
+        # Guaranteed pause: act only if actually playing (never a blind toggle).
+        try:
+            if self.player.media.get_state() != State.Playing:
+                return
+            if self.is_live:
+                self.player.media.stop()  # mirrors playAction for live streams
+            else:
+                self.player.media.pause()  # toggle, gated so Playing -> Paused only
+        except Exception:
+            logger.debug("Sleep timer could not pause playback", exc_info=True)
+            return
+        speak(_("انتهى مؤقت النوم. تم إيقاف التشغيل"))
+
+    def announce_sleep_remaining(self, event=None):
+        if self.sleep_finish_current:
+            speak(_("مؤقت النوم مضبوط للإيقاف بعد انتهاء المقطع الحالي"))
+            return
+        if self.sleep_deadline is None:
+            speak(_("مؤقت النوم غير مفعل"))
+            return
+        remaining = max(0, int(self.sleep_deadline - time.monotonic()))
+        speak(
+            _("الوقت المتبقي لمؤقت النوم: {}").format(utils.time_formatting(remaining))
+        )
+
+    def _sync_sleep_menu(self):
+        """Reflect the current sleep-timer state in the radio group."""
+        if self.sleep_finish_current:
+            self.sleepFinishItem.Check(True)
+            return
+        if self.sleep_minutes is None:
+            self.sleepOffItem.Check(True)
+            return
+        presets = {
+            15: self.sleep15Item,
+            30: self.sleep30Item,
+            45: self.sleep45Item,
+            60: self.sleep60Item,
+        }
+        presets.get(self.sleep_minutes, self.sleepCustomItem).Check(True)
+
+    def _on_sleep_finish_reached(self):
+        """Called via wx.CallAfter from Player.reset when finish-current fires."""
+        self.sleep_finish_current = False
+        self._sync_sleep_menu()
+        speak(_("انتهى المقطع. تم الإيقاف بسبب مؤقت النوم"))
 
     def _is_context_menu_key(self, event):
         key = event.GetKeyCode()
