@@ -1,19 +1,19 @@
 {
-  "version": "5.3.1",
-  "url": "https://github.com/makhlwf/accessible_youtube_downloader_pro/releases/download/v5.3.1/HexPlayer.exe",
-  "whats_new": "Fixed: double-clicking HexPlayer now opens the graphical interface with no terminal window. The command line tool has been renamed to hexplayer-cli so it no longer replaces the main app on Windows.",
+  "version": "5.5.0",
+  "url": "https://github.com/makhlwf/accessible_youtube_downloader_pro/releases/download/v5.5.0/HexPlayer.exe",
+  "whats_new": "New sleep timer",
   "platforms": {
     "windows": {
-      "url": "https://github.com/makhlwf/accessible_youtube_downloader_pro/releases/download/v5.3.1/HexPlayer.exe"
+      "url": "https://github.com/makhlwf/accessible_youtube_downloader_pro/releases/download/v5.5.0/HexPlayer.exe"
     },
     "linux": {
-      "url": "https://github.com/makhlwf/accessible_youtube_downloader_pro/releases/download/v5.3.1/HexPlayer-5.3.1-linux-x86_64.tar.xz"
+      "url": "https://github.com/makhlwf/accessible_youtube_downloader_pro/releases/download/v5.5.0/HexPlayer-5.5.0-linux-x86_64.tar.xz"
     },
     "deb": {
-      "url": "https://github.com/makhlwf/accessible_youtube_downloader_pro/releases/download/v5.3.1/HexPlayer-5.3.1-linux-amd64.deb"
+      "url": "https://github.com/makhlwf/accessible_youtube_downloader_pro/releases/download/v5.5.0/HexPlayer-5.5.0-linux-amd64.deb"
     },
     "rpm": {
-      "url": "https://github.com/makhlwf/accessible_youtube_downloader_pro/releases/download/v5.3.1/HexPlayer-5.3.1-1.x86_64.rpm"
+      "url": "https://github.com/makhlwf/accessible_youtube_downloader_pro/releases/download/v5.5.0/HexPlayer-5.5.0-1.x86_64.rpm"
     }
   }
 }
