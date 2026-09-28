@@ -86,6 +86,11 @@ class Player:
         if current_media is not None:
             self.media.set_media(current_media)
             self.apply_saved_audio_output_device()
+        window = self.window
+        if window is not None and getattr(window, "sleep_finish_current", False):
+            # Sleep timer (finish-current): end here without replaying or advancing.
+            wx.CallAfter(window._on_sleep_finish_reached)
+            return
         if getattr(self.window, "shorts_mode", False) or (
             config_get("repeatTracks") and not config_get("autonext")
         ):

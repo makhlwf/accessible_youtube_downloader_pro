@@ -61,6 +61,24 @@ def test_search_suggestions_default_setting_exists():
     assert defaults["search_suggestions"] is True
 
 
+def test_sleep_timer_last_minutes_default_is_30():
+    assert defaults["sleep_timer_last_minutes"] == 30
+
+
+def test_sleep_timer_last_minutes_round_trips():
+    if os.path.exists(os.path.join(settings_path, "settings.ini")):
+        os.remove(os.path.join(settings_path, "settings.ini"))
+    config_initialization()
+
+    assert config_get("sleep_timer_last_minutes") == 30
+
+    config_set("sleep_timer_last_minutes", 45)
+    assert config_get("sleep_timer_last_minutes") == 45
+
+    if os.path.exists(os.path.join(settings_path, "settings.ini")):
+        os.remove(os.path.join(settings_path, "settings.ini"))
+
+
 def test_settings_checkbox_accessible_role_uses_checkbutton():
     from gui import settings_dialog
 

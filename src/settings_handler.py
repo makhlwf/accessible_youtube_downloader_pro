@@ -48,6 +48,7 @@ defaults = {
     "welcome_completed": False,
     "force_original_audio": False,
     "preferred_audio_language": get_default_language(),
+    "sleep_timer_last_minutes": 30,
 }
 
 _cache = {}
