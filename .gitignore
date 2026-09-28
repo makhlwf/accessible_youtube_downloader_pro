@@ -235,3 +235,6 @@ temp_pytest/
 .claude/*.local.json
 .claude/skills
 
+
+# GSD planning docs (local-only; commit_docs=false)
+.planning/
