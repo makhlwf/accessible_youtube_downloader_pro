@@ -1,10 +1,134 @@
+import mmap
 import os
+import struct
 import sys
 from collections.abc import Iterable
 from pathlib import Path
+from typing import Any
 
 _dll_directory_handles = []
 _registered_dll_directories: set[str] = set()
+
+# PE COFF machine identifiers we care about when validating bundled binaries.
+IMAGE_FILE_MACHINE_I386 = 0x014C
+IMAGE_FILE_MACHINE_AMD64 = 0x8664
+IMAGE_FILE_MACHINE_ARM64 = 0xAA64
+
+_MACHINE_NAMES = {
+    IMAGE_FILE_MACHINE_I386: "x86",
+    IMAGE_FILE_MACHINE_AMD64: "x64",
+    IMAGE_FILE_MACHINE_ARM64: "arm64",
+}
+
+
+def machine_name(machine: int | None) -> str:
+    if not machine:
+        return "unknown"
+    return _MACHINE_NAMES.get(machine, hex(machine))
+
+
+def pe_machine(path: Path | str) -> int | None:
+    """Return the PE COFF machine value for ``path``, or ``None`` if not a PE.
+
+    Reads only the DOS/PE headers, so it is cheap even for very large DLLs and
+    safe to call on arbitrary files (non-PE input yields ``None``).
+    """
+    try:
+        with open(path, "rb") as handle:
+            header = handle.read(4096)
+    except OSError:
+        return None
+    if len(header) < 0x40 or header[:2] != b"MZ":
+        return None
+    try:
+        e_lfanew = struct.unpack_from("<I", header, 0x3C)[0]
+        if e_lfanew + 6 > len(header) or header[e_lfanew : e_lfanew + 4] != b"PE\0\0":
+            return None
+        return struct.unpack_from("<H", header, e_lfanew + 4)[0]
+    except struct.error:
+        return None
+
+
+def pe_imported_dlls(path: Path | str) -> list[str]:
+    """Return the names of the DLLs ``path`` imports at load time.
+
+    Parses the PE import directory with the standard library only (no pefile
+    dependency in the frozen app). Memory-maps the file so it stays cheap for
+    the ~120 MB libmpv build. Returns ``[]`` for anything that is not a valid
+    PE image or that cannot be parsed.
+    """
+    try:
+        with open(path, "rb") as handle:
+            mapped = mmap.mmap(handle.fileno(), 0, access=mmap.ACCESS_READ)
+    except OSError, ValueError:
+        return []
+
+    try:
+        data: Any = mapped
+        if len(data) < 0x40 or data[:2] != b"MZ":
+            return []
+        e_lfanew = struct.unpack_from("<I", data, 0x3C)[0]
+        if data[e_lfanew : e_lfanew + 4] != b"PE\0\0":
+            return []
+        coff = e_lfanew + 4
+        num_sections = struct.unpack_from("<H", data, coff + 2)[0]
+        size_optional = struct.unpack_from("<H", data, coff + 16)[0]
+        optional = coff + 20
+        magic = struct.unpack_from("<H", data, optional)[0]
+        if magic == 0x20B:  # PE32+ (64-bit)
+            num_rva = struct.unpack_from("<I", data, optional + 108)[0]
+            directory_base = optional + 112
+        elif magic == 0x10B:  # PE32 (32-bit)
+            num_rva = struct.unpack_from("<I", data, optional + 92)[0]
+            directory_base = optional + 96
+        else:
+            return []
+        if num_rva < 2:  # need at least the import directory (index 1)
+            return []
+        import_rva = struct.unpack_from("<I", data, directory_base + 8)[0]
+        if not import_rva:
+            return []
+
+        sections = []
+        section_base = optional + size_optional
+        for index in range(num_sections):
+            offset = section_base + index * 40
+            virtual_size = struct.unpack_from("<I", data, offset + 8)[0]
+            virtual_addr = struct.unpack_from("<I", data, offset + 12)[0]
+            raw_size = struct.unpack_from("<I", data, offset + 16)[0]
+            raw_ptr = struct.unpack_from("<I", data, offset + 20)[0]
+            sections.append((virtual_addr, max(virtual_size, raw_size), raw_ptr))
+
+        def rva_to_offset(rva: int) -> int | None:
+            for virtual_addr, span, raw_ptr in sections:
+                if virtual_addr <= rva < virtual_addr + span:
+                    return raw_ptr + (rva - virtual_addr)
+            return None
+
+        descriptor = rva_to_offset(import_rva)
+        if descriptor is None:
+            return []
+
+        names: list[str] = []
+        for index in range(1024):  # bound the loop against malformed tables
+            entry = descriptor + index * 20
+            if entry + 20 > len(data):
+                break
+            original_thunk = struct.unpack_from("<I", data, entry)[0]
+            name_rva = struct.unpack_from("<I", data, entry + 12)[0]
+            first_thunk = struct.unpack_from("<I", data, entry + 16)[0]
+            if not (original_thunk or name_rva or first_thunk):
+                break  # null terminator descriptor
+            name_offset = rva_to_offset(name_rva) if name_rva else None
+            if name_offset is not None and name_offset < len(data):
+                end = data.find(b"\0", name_offset)
+                if end != -1:
+                    names.append(data[name_offset:end].decode("ascii", "replace"))
+        return names
+    except struct.error, ValueError:
+        return []
+    finally:
+        mapped.close()
 
 
 def _add_unique_path(paths: list[Path], path: Path) -> None:

@@ -40,9 +40,13 @@ def find_system_dll(name):
     return None
 
 
-# Native runtime binary files
+# Native runtime binary files.
+# NOTE: do NOT bundle api-ms-win-* API-set stubs here. Windows resolves those
+# contracts (e.g. api-ms-win-core-path-l1-1-0.dll, which libmpv-2.dll imports)
+# from the OS API-set schema. Shipping a real file with that name can only
+# shadow the OS copy, and a wrong-architecture stub makes the 64-bit
+# libmpv-2.dll fail to load one of its runtime dependencies.
 binary_files = [
-    "api-ms-win-core-path-l1-1-0.dll",
     "avcodec-60.dll",
     "avfilter-9.dll",
     "avformat-60.dll",

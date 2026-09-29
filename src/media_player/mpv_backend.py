@@ -12,7 +12,13 @@ from enum import IntEnum
 from pathlib import Path
 from typing import Any, ClassVar
 
-from runtime_dlls import configure_dll_search_path, runtime_roots
+from runtime_dlls import (
+    configure_dll_search_path,
+    machine_name,
+    pe_imported_dlls,
+    pe_machine,
+    runtime_roots,
+)
 
 MPV_FORMAT_STRING = 1
 MPV_FORMAT_FLAG = 3
@@ -199,6 +205,37 @@ def _ensure_vulkan_dependency(target_dir: Path) -> None:
                 pass
 
 
+def _diagnose_dependencies(dll_path: Path) -> list[str]:
+    """Explain why a bundled libmpv-2.dll refused to load, best-effort.
+
+    Walks libmpv's PE import table and, for every dependency we actually ship
+    next to it, checks the architecture matches. A 32-bit DLL sitting beside the
+    64-bit libmpv-2.dll (e.g. a stray ``api-ms-win-*`` stub) is rejected by the
+    Windows loader as a bad runtime dependency, which surfaces as the generic
+    "could not load one of its runtime dependencies" error. Read-only; the
+    caller is already on an error path, so this never raises.
+    """
+    problems: list[str] = []
+    try:
+        host_machine = pe_machine(dll_path)
+        search_dirs = list(runtime_roots([dll_path.parent]))
+        for dependency in pe_imported_dlls(dll_path):
+            for directory in search_dirs:
+                candidate = directory / dependency
+                if not candidate.is_file():
+                    continue
+                dep_machine = pe_machine(candidate)
+                if host_machine and dep_machine and dep_machine != host_machine:
+                    problems.append(
+                        f"bundled {dependency} is {machine_name(dep_machine)} "
+                        f"but libmpv-2.dll is {machine_name(host_machine)}"
+                    )
+                break
+    except Exception:
+        pass
+    return problems
+
+
 def _load_mpv() -> ctypes.CDLL:
     global _mpv_lib
     if _mpv_lib is not None:
@@ -244,6 +281,7 @@ def _load_mpv() -> ctypes.CDLL:
                     )
                     if not vulkan_file.exists() and not system_vulkan.exists():
                         missing_info.append("vulkan-1.dll is missing")
+                    missing_info.extend(_diagnose_dependencies(dll_path))
                 extra = f" ({'; '.join(missing_info)})" if missing_info else ""
                 raise MPVError(
                     f"Failed to load {dll_path}. The file exists, but Windows could "
