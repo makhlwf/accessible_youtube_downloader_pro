@@ -110,6 +110,8 @@ class MediaGui(wx.Frame):
         results=None,
         audio_mode=False,
         shorts_mode=False,
+        mix_mode=False,
+        mix_playlist_id=None,
     ):
         wx.Frame.__init__(self, parent, title=f"{title} - {application.name}")
         self.title = title
@@ -119,6 +121,9 @@ class MediaGui(wx.Frame):
         self.results = results
         self.audio_mode = audio_mode
         self.shorts_mode = shorts_mode
+        self.mix_mode = mix_mode
+        self.mix_playlist_id = mix_playlist_id
+        self._fetching_more_mix = False
         self.current_index = 0
         if isinstance(self.results, list):
             self.current_index = self._find_result_index(url) or 0
@@ -383,9 +388,17 @@ class MediaGui(wx.Frame):
             options.append(":no-video")
 
         try:
+            # Always register the frame's window handle with mpv, even in audio
+            # mode. mpv only reads `wid` at initialization, so if we passed None
+            # here an audio-started session could never embed video later: playing
+            # a recommendation/track in video mode (which drops `:no-video`) would
+            # leave mpv with no window to draw into and it would spawn its own
+            # top-level "index.m3u8 - mpv" window outside the app. With the handle
+            # set, audio playback still shows nothing (`:no-video` => vid=no) and a
+            # later switch to video renders into this frame instead of popping out.
             self.player = Player(
                 stream.url,
-                self.GetHandle() if not audio_mode else None,
+                self.GetHandle(),
                 self,
                 options=options,
             )
@@ -887,6 +900,22 @@ class MediaGui(wx.Frame):
             return
         wx.CallAfter(self.populate_audio_tracks_menu, tracks)
 
+    def _format_suggestion_display(self, v):
+        """Build the screen-reader label for one panel item.
+
+        Handles both related-video items ({title, duration, channel}) and
+        mix items ({title, author}).
+        """
+        title = v.get("title", "")
+        duration = v.get("duration", "")
+        channel_name = (v.get("channel") or {}).get("name", "") or v.get("author", "")
+        parts = [title]
+        if duration:
+            parts.append(duration)
+        if channel_name:
+            parts.append(f"{_('بواسطة')} {channel_name}")
+        return ", ".join(p for p in parts if p)
+
     def fetch_suggestions(self, load_more=False):
         if getattr(self, "_loading_suggestions", False):
             return
@@ -909,71 +938,81 @@ class MediaGui(wx.Frame):
 
             target_url = self.url
             continuation = self.suggestions_continuation if load_more else None
-            res = SuggestionsService.fetch_related(
-                target_url, limit=20, continuation=continuation
-            )
-            if getattr(self, "_closing", False) or self.url != target_url:
+            if getattr(self, "mix_mode", False):
+                seed = None
+                if load_more and isinstance(self.results, list) and self.results:
+                    seed = self.results[-1].get("id")
+                res = utils.get_mix(
+                    self.mix_playlist_id,
+                    video_id=seed,
+                    continuation=continuation,
+                )
+            else:
+                res = SuggestionsService.fetch_related(
+                    target_url, limit=20, continuation=continuation
+                )
+            if getattr(self, "_closing", False) or (
+                not getattr(self, "mix_mode", False) and self.url != target_url
+            ):
                 return
 
             videos = res.get("videos", [])
             new_continuation = res.get("continuation")
 
             def _update_ui():
-                if (
-                    not self
-                    or getattr(self, "_closing", False)
-                    or self.url != target_url
-                ):
+                if not self or getattr(self, "_closing", False):
+                    return
+                if not getattr(self, "mix_mode", False) and self.url != target_url:
                     return
                 try:
                     self.suggestions_continuation = new_continuation
+                    is_mix = getattr(self, "mix_mode", False)
 
                     if load_more:
-                        self.suggestions_data.extend(videos)
-                        new_titles = []
-                        for v in videos:
-                            title = v.get("title", "")
-                            duration = v.get("duration", "")
-                            channel_name = (v.get("channel") or {}).get("name", "")
-                            if duration and channel_name:
-                                new_titles.append(
-                                    f"{title}, {duration}, {_('بواسطة')} {channel_name}"
-                                )
-                            elif duration:
-                                new_titles.append(f"{title}, {duration}")
-                            elif channel_name:
-                                new_titles.append(
-                                    f"{title}, {_('بواسطة')} {channel_name}"
-                                )
-                            else:
-                                new_titles.append(title)
+                        if is_mix:
+                            existing = {
+                                item.get("id")
+                                for item in self.suggestions_data
+                                if isinstance(item, dict)
+                            }
+                            videos_to_add = [
+                                v
+                                for v in videos
+                                if isinstance(v, dict) and v.get("id") not in existing
+                            ]
+                        else:
+                            videos_to_add = videos
+                        self.suggestions_data.extend(videos_to_add)
+                        new_titles = [
+                            self._format_suggestion_display(v) for v in videos_to_add
+                        ]
                         current_sel = self.suggestions_list.GetSelection()
-                        self.suggestions_list.Append(new_titles)
+                        if new_titles:
+                            self.suggestions_list.Append(new_titles)
                         if current_sel != wx.NOT_FOUND:
                             self.suggestions_list.SetSelection(current_sel)
                     else:
                         self.suggestions_data = list(videos)
+                        if is_mix:
+                            # In mix mode the panel list IS the playback queue.
+                            self.results = self.suggestions_data
+                            self.current_index = (
+                                self._find_result_index(self.url) or 0
+                            )
                         if not self.suggestions_data:
                             items = [_("لا تتوفر اقتراحات لهذا المقطع")]
                         else:
-                            items = []
-                            for v in self.suggestions_data:
-                                title = v.get("title", "")
-                                duration = v.get("duration", "")
-                                channel_name = (v.get("channel") or {}).get("name", "")
-                                if duration and channel_name:
-                                    items.append(
-                                        f"{title}, {duration}, {_('بواسطة')} {channel_name}"
-                                    )
-                                elif duration:
-                                    items.append(f"{title}, {duration}")
-                                elif channel_name:
-                                    items.append(
-                                        f"{title}, {_('بواسطة')} {channel_name}"
-                                    )
-                                else:
-                                    items.append(title)
+                            items = [
+                                self._format_suggestion_display(v)
+                                for v in self.suggestions_data
+                            ]
                         self.suggestions_list.Set(items)
+                        if (
+                            is_mix
+                            and self.suggestions_data
+                            and 0 <= self.current_index < len(self.suggestions_data)
+                        ):
+                            self.suggestions_list.SetSelection(self.current_index)
 
                     if not self.IsFullScreen():
                         self.load_more_suggestions_btn.Show(
@@ -1367,7 +1406,10 @@ class MediaGui(wx.Frame):
             idx = index
         if idx == wx.NOT_FOUND or not (0 <= idx < len(self.suggestions_data)):
             return
-        self._suggestions_mode = True
+        if not getattr(self, "mix_mode", False):
+            # In mix mode the panel already is the queue; don't switch into
+            # the generic suggestions queue mode.
+            self._suggestions_mode = True
         self.results = self.suggestions_data
         self.current_index = idx
         self._previous_button.Show(True)
@@ -2194,6 +2236,65 @@ class MediaGui(wx.Frame):
 
         Thread(target=_task, daemon=True).start()
 
+    def _fetch_more_mix(self):
+        if (
+            getattr(self, "_fetching_more_mix", False)
+            or not getattr(self, "mix_mode", False)
+            or not isinstance(self.results, list)
+            or not self.results
+        ):
+            return
+        self._fetching_more_mix = True
+
+        def _task():
+            try:
+                last_id = self.results[-1].get("id")
+                res = utils.get_mix(
+                    self.mix_playlist_id,
+                    video_id=last_id,
+                    continuation=self.suggestions_continuation,
+                )
+                more = res.get("videos") or []
+                new_continuation = res.get("continuation")
+                if not self._closing:
+                    existing_ids = {
+                        item.get("id")
+                        for item in self.results
+                        if isinstance(item, dict)
+                    }
+                    new_items = [
+                        v
+                        for v in more
+                        if isinstance(v, dict) and v.get("id") not in existing_ids
+                    ]
+
+                    def _apply():
+                        if not self or getattr(self, "_closing", False):
+                            return
+                        self.suggestions_continuation = new_continuation
+                        if not new_items:
+                            return
+                        self.results.extend(new_items)
+                        try:
+                            self.suggestions_list.Append(
+                                [
+                                    self._format_suggestion_display(v)
+                                    for v in new_items
+                                ]
+                            )
+                        except Exception:
+                            logger.debug(
+                                "Could not append mix items to panel", exc_info=True
+                            )
+
+                    wx.CallAfter(_apply)
+            except Exception as e:
+                logger.debug(f"Failed to fetch more mix items: {e}")
+            finally:
+                self._fetching_more_mix = False
+
+        Thread(target=_task, daemon=True).start()
+
     def _resolve_channel(self, stream=None, url=None, index=None):
         channel_name = getattr(stream, "channel_name", "") if stream else ""
         channel_url = getattr(stream, "channel_url", "") if stream else ""
@@ -2416,10 +2517,23 @@ class MediaGui(wx.Frame):
             self.chaptersMenu.Append(-1, _("جاري التحميل...")).Enable(False)
             Thread(target=self.fetch_chapters, daemon=True).start()
             Thread(target=self.fetch_subtitles, daemon=True).start()
-            self.suggestions_continuation = None
-            Thread(target=self.fetch_suggestions, daemon=True).start()
+            if getattr(self, "mix_mode", False):
+                # Mix mode: the panel already holds the mix queue; keep the
+                # currently playing item highlighted instead of refetching.
+                if index is not None:
+                    wx.CallAfter(self._highlight_mix_selection, index)
+            else:
+                self.suggestions_continuation = None
+                Thread(target=self.fetch_suggestions, daemon=True).start()
         # Report new track to history
         self._report_watch_history(0)
+
+    def _highlight_mix_selection(self, index):
+        try:
+            if 0 <= index < self.suggestions_list.GetCount():
+                self.suggestions_list.SetSelection(index)
+        except Exception:
+            pass
 
     def next(self):
         if self.results is None:
@@ -2427,10 +2541,13 @@ class MediaGui(wx.Frame):
 
         if (
             getattr(self, "shorts_mode", False)
+            or getattr(self, "mix_mode", False)
             or getattr(self, "_suggestions_mode", False)
             or (isinstance(self.results, list) and not self._has_parent_listbox())
         ):
             count = len(self.results)
+            if getattr(self, "mix_mode", False) and self.current_index >= count - 3:
+                self._fetch_more_mix()
             if self.current_index >= count - 1:
                 speak(_("نهاية القائمة"))
                 return
@@ -2488,6 +2605,7 @@ class MediaGui(wx.Frame):
 
         if (
             getattr(self, "shorts_mode", False)
+            or getattr(self, "mix_mode", False)
             or getattr(self, "_suggestions_mode", False)
             or (isinstance(self.results, list) and not self._has_parent_listbox())
         ):
@@ -2637,3 +2755,87 @@ class MediaGui(wx.Frame):
             )
         finally:
             self.extracting_description = False
+
+
+def _prepare_mix_playback(playlist_id, seed_video_id, audio_mode):
+    """Fetch the initial mix items and resolve the first track's stream.
+
+    Runs on the LoadingDialog background thread. Returns a dict describing the
+    mix, or None on failure. Each item URL is a plain ``watch?v=<id>`` link
+    (no ``&list=``) so per-track extraction never recurses into mix handling.
+    """
+    mix = utils.get_mix(playlist_id, video_id=seed_video_id or None)
+    videos = mix.get("videos") if isinstance(mix, dict) else None
+    if not videos:
+        return None
+    first = videos[0]
+    first_url = first.get("url")
+    if not first_url:
+        return None
+    stream = get_playable_stream(first_url, audio_mode)
+    if stream is None:
+        return None
+    mix_title = (mix.get("mixTitle") if isinstance(mix, dict) else None) or first.get(
+        "title"
+    )
+    return {
+        "stream": stream,
+        "url": first_url,
+        "videos": videos,
+        "continuation": mix.get("continuation") if isinstance(mix, dict) else None,
+        "title": mix_title or _("قائمة تشغيل مختلطة"),
+    }
+
+
+def play_mix(parent, playlist_id, seed_video_id=None, audio_mode=False):
+    """Open a YouTube Mix as an infinite, continuation-driven player queue.
+
+    Shared entry point used by the home feed, pasted/clipboard URLs and search
+    results. Plays the first track immediately and lets the recommendation panel
+    browse the (growing) mix tracklist.
+    """
+    if not playlist_id:
+        utils.show_error(_("لا يمكن تشغيل الرابط"), parent=parent)
+        return None
+    if not utils.check_yt_dlp(parent):
+        return None
+    logger.info(
+        "play_mix: opening mix playlist=%s seed=%s audio_mode=%s",
+        playlist_id,
+        seed_video_id,
+        audio_mode,
+    )
+    data = LoadingDialog(
+        parent,
+        _("جاري التشغيل"),
+        _prepare_mix_playback,
+        playlist_id,
+        seed_video_id,
+        audio_mode,
+    ).res
+    if not data:
+        logger.error("play_mix: could not prepare mix playlist=%s", playlist_id)
+        utils.show_error(
+            _("تعذر تشغيل قائمة التشغيل المختلطة"), parent=parent
+        )
+        return None
+    logger.info(
+        "play_mix: prepared %d items, title=%r, continuation=%s",
+        len(data["videos"]),
+        data["title"],
+        "yes" if data.get("continuation") else "no",
+    )
+    speak(_("جاري تشغيل قائمة مختلطة: {name}").format(name=data["title"]))
+    gui = MediaGui(
+        parent,
+        data["title"],
+        data["stream"],
+        data["url"],
+        audio_mode=audio_mode,
+        results=data["videos"],
+        mix_mode=True,
+        mix_playlist_id=playlist_id,
+    )
+    # Seed the panel's continuation so infinite growth works from the first item.
+    gui.suggestions_continuation = data.get("continuation")
+    return gui

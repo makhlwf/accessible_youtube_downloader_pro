@@ -315,6 +315,29 @@ async function handleGetHomeFeed(params) {
                     url: `https://www.youtube.com/watch?v=${id}`
                 });
             }
+        } else if (obj.radioRenderer || obj.compactRadioRenderer) {
+            // Mix / auto-generated radio playlist (RD...) surfaced in the feed.
+            const r = obj.radioRenderer || obj.compactRadioRenderer;
+            const pid = r.playlistId;
+            const title = r.title?.runs?.[0]?.text || r.title?.simpleText || r.title?.toString();
+            if (pid && title && String(pid).startsWith('RD')) {
+                const seed = r.navigationEndpoint?.watchEndpoint?.videoId
+                    || r.videos?.[0]?.childVideoRenderer?.videoId || '';
+                const author = r.shortBylineText?.runs?.[0]?.text
+                    || r.longBylineText?.runs?.[0]?.text
+                    || (r.videoCountText?.runs || []).map(x => x.text).join('')
+                    || 'YouTube';
+                results.push({
+                    type: 'mix',
+                    title: title,
+                    author: author,
+                    id: seed,
+                    playlistId: pid,
+                    url: seed
+                        ? `https://www.youtube.com/watch?v=${seed}&list=${pid}`
+                        : `https://www.youtube.com/playlist?list=${pid}`
+                });
+            }
         } else if (obj.continuationItemRenderer) {
             const token = obj.continuationItemRenderer.continuationEndpoint?.continuationCommand?.token;
             if (token) nextToken = token;
@@ -369,6 +392,43 @@ async function handleGetHomeFeed(params) {
                         
                         if (isShort) return;
 
+                        // Mix / auto-generated radio playlist (RD...) lockup.
+                        // Detect by the RD-prefixed content/playlist id itself
+                        // rather than by the exact `type` string: youtubei.js
+                        // labels these variously (LockupView, LockupViewModel,
+                        // Radio, ...), and a missed match here lets the generic
+                        // fallback below emit `watch?v=RD...` (the playlist id in
+                        // the video slot), which yt-dlp then fails to resolve.
+                        const lockupContentId = (v.content_id || v.contentId || '').toString();
+                        const lockupPlaylistId = (v.playlist_id || v.playlistId || '').toString();
+                        const mixPid = lockupContentId.startsWith('RD')
+                            ? lockupContentId
+                            : (lockupPlaylistId.startsWith('RD') ? lockupPlaylistId : '');
+                        if (mixPid || type === 'Radio' || type === 'CompactRadio') {
+                            const pid = mixPid || lockupPlaylistId || lockupContentId;
+                            if (pid && pid.startsWith('RD')) {
+                                const mixTitle = v.metadata?.title?.text
+                                    || v.metadata?.title?.runs?.[0]?.text
+                                    || v.title?.toString() || 'Mix';
+                                const mixAuthor = v.metadata?.metadata?.metadata_rows?.[0]?.metadata_parts?.[0]?.text?.text
+                                    || v.author?.name || 'YouTube';
+                                // Classic RD<videoId> mixes embed the seed video
+                                // id; expose it so playback can seed /next with it.
+                                const seed = /^RD[\w-]{11}$/.test(pid) ? pid.slice(2) : '';
+                                results.push({
+                                    type: 'mix',
+                                    title: mixTitle,
+                                    author: mixAuthor,
+                                    id: seed,
+                                    playlistId: pid,
+                                    url: seed
+                                        ? `https://www.youtube.com/watch?v=${seed}&list=${pid}`
+                                        : `https://www.youtube.com/playlist?list=${pid}`
+                                });
+                            }
+                            return;
+                        }
+
                         let id, title, author, views, date;
 
                         if (type === 'LockupView' || v.metadata) {
@@ -408,7 +468,11 @@ async function handleGetHomeFeed(params) {
                             date = v.published_time?.toString() || v.publishedTimeText?.toString();
                         }
 
-                        if (id && title) {
+                        // Only emit a playable video when `id` is a real 11-char
+                        // YouTube video id. This rejects playlist/mix ids (RD..,
+                        // PL.., etc.) that some lockups expose as `content_id`,
+                        // so a playlist id never becomes a bogus `watch?v=` URL.
+                        if (id && title && /^[\w-]{11}$/.test(String(id))) {
                             let displayAuthor = author;
                             if (views) displayAuthor += ` (${views})`;
                             if (date) displayAuthor += ` - ${date}`;
@@ -462,9 +526,10 @@ async function handleGetHomeFeed(params) {
     const unique = [];
     const seen = new Set();
     results.forEach(v => {
-        if (!seen.has(v.id)) {
+        const key = v.type === 'mix' ? `mix:${v.playlistId}` : v.id;
+        if (!seen.has(key)) {
             unique.push(v);
-            seen.add(v.id);
+            seen.add(key);
         }
     });
 
@@ -926,6 +991,106 @@ async function handleGetShortsFeed(params) {
     }
 }
 
+async function handleGetMix(params) {
+    if (!params.cookiesPath) {
+        throw new Error("Cookies path is required for Mixes");
+    }
+    const yt = await getYT(params.cookiesPath, params.location);
+
+    const playlistId = params.playlistId;
+    if (!playlistId) {
+        throw new Error("playlistId is required for Mix");
+    }
+
+    // Determine the seed video the mix is anchored to. The caller may provide
+    // one (the last played track, when growing the queue, or the &list= URL's
+    // videoId). It is OPTIONAL: the watch-next /next endpoint accepts a mix
+    // playlistId on its own and seeds the panel from the mix's first item.
+    // NOTE: mixes are NOT viewable via getPlaylist ("This playlist type is
+    // unviewable"), so we must never seed through it.
+    let seedId = params.videoId || null;
+    // For classic "RD<videoId>" radio mixes the seed video id is encoded in the
+    // playlist id itself; recover it as a hint when the caller gave none.
+    if (!seedId && /^RD[\w-]{11}$/.test(playlistId)) {
+        seedId = playlistId.slice(2);
+    }
+
+    // The mix queue lives in the watch-next response's playlist panel. Mixes
+    // are infinite: re-requesting with the last played video as the seed
+    // returns the next window (mirrors how the Shorts feed is extended).
+    const nextPayload = {
+        playlistId: playlistId,
+        racyCheckOk: true,
+        contentCheckOk: true
+    };
+    if (seedId) nextPayload.videoId = seedId;
+    const response = await yt.actions.execute('/next', nextPayload);
+
+    const data = response.data || {};
+    const panel = data?.contents?.twoColumnWatchNextResults?.playlist?.playlist || null;
+
+    const videos = [];
+    const seen = new Set();
+    const mixTitle = textValue(panel?.title) || 'Mix';
+
+    const pushItem = (renderer) => {
+        if (!renderer) return;
+        const id = renderer.videoId;
+        if (!id || seen.has(id)) return;
+        const title = textValue(renderer.title) || `Video (${id})`;
+        const author = textValue(renderer.longBylineText || renderer.shortBylineText) || 'Unknown';
+        seen.add(id);
+        videos.push({
+            id,
+            title,
+            author,
+            url: `https://www.youtube.com/watch?v=${id}`
+        });
+    };
+
+    let continuation = null;
+    if (panel && Array.isArray(panel.contents)) {
+        for (const entry of panel.contents) {
+            if (entry.playlistPanelVideoRenderer) {
+                pushItem(entry.playlistPanelVideoRenderer);
+            } else if (entry.continuationItemRenderer) {
+                continuation = entry.continuationItemRenderer?.continuationEndpoint?.continuationCommand?.token || continuation;
+            }
+        }
+        const cont = panel.continuations?.[0]?.nextContinuationData?.continuation
+            || panel.continuations?.[0]?.reloadContinuationData?.continuation;
+        if (cont) continuation = cont;
+    }
+
+    // Fallback: some mixes surface via the generic watch-next feed rather than
+    // a playlist panel. Seed from that so the queue is never empty. Requires a
+    // seed video; skipped when the mix was opened from the playlistId alone.
+    if (videos.length === 0 && seedId) {
+        try {
+            const info = await yt.getInfo(seedId);
+            const feed = info.watch_next_feed || [];
+            for (const item of feed) {
+                const vid = item.payload?.videoId || item.video_id || item.id;
+                if (vid && !seen.has(vid)) {
+                    seen.add(vid);
+                    const title = textValue(item.payload?.title || item.title) || `Video (${vid})`;
+                    const author = textValue(item.payload?.author || item.author) || 'Unknown';
+                    videos.push({
+                        id: vid,
+                        title,
+                        author,
+                        url: `https://www.youtube.com/watch?v=${vid}`
+                    });
+                }
+            }
+        } catch (e) {
+            // ignore - empty result handled by caller
+        }
+    }
+
+    return { videos, playlistId, mixTitle, continuation: continuation || null };
+}
+
 async function handleUpdateWatchHistory(params) {
     if (!params.cookiesPath || !params.videoId) {
         throw new Error("videoId and cookiesPath are required for watch history");
@@ -984,6 +1149,8 @@ async function main() {
                 result = await handleGetPlaylist(params);
             } else if (command === 'get_shorts_feed') {
                 result = await handleGetShortsFeed(params);
+            } else if (command === 'get_mix') {
+                result = await handleGetMix(params);
             } else {
                 throw new Error(`Unknown command: ${command}`);
             }

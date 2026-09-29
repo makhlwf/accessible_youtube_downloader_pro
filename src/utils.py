@@ -610,6 +610,37 @@ def _use_yt_dlp_module(module):
     return True
 
 
+_extractor_warmup_lock = threading.Lock()
+_extractors_warmed = False
+
+
+def _warm_youtube_extractor():
+    """Import the yt-dlp YouTube extractor once, single-threaded.
+
+    yt-dlp resolves its (lazy) extractor classes on first use. The home-feed
+    scraper fans out many worker threads that each trigger that first import at
+    the same moment, and the concurrent partial initialization races, failing
+    with a spurious ``ImportError: cannot import name '_EJS_WIKI_URL' ... most
+    likely due to a circular import`` from ``_video.py`` — which breaks *all*
+    extraction, not just the racing thread. Warming the import once behind a
+    lock makes every later thread reuse the fully-initialized module.
+    """
+    global _extractors_warmed
+    if _extractors_warmed:
+        return
+    with _extractor_warmup_lock:
+        if _extractors_warmed:
+            return
+        try:
+            importlib.import_module("yt_dlp.extractor.youtube._video")
+        except Exception as exc:
+            # A genuine failure will resurface on the real extract call; don't
+            # wedge the flag so a later attempt can retry the import.
+            logger.warning(f"yt-dlp YouTube extractor warmup failed: {exc}")
+            return
+        _extractors_warmed = True
+
+
 def _loaded_from_path(module, path):
     module_file = os.path.abspath(getattr(module, "__file__", ""))
     expected_path = os.path.abspath(path)
@@ -769,6 +800,9 @@ def get_ydl_instance(client=None, cookies_path=None):
     """Returns a fresh YoutubeDL instance for thread-safe extraction."""
     if not YoutubeDL:
         return None
+    # Force the (lazy) YouTube extractor import once before parallel scraper
+    # threads race it into a spurious circular-import failure.
+    _warm_youtube_extractor()
     has_cookies = bool(cookies_path and os.path.exists(cookies_path))
     clients = get_configured_player_clients(client, has_cookies=has_cookies)
     opts = PLAYER_OPTS.copy()
@@ -1929,7 +1963,137 @@ def _finish_stream_extraction(cache_key, event):
         event.set()
 
 
+def extract_mix_id(url):
+    """Return the mix/radio playlist id (RD...) from a URL, or None.
+
+    Anchored to the ``list=`` query parameter so it does not false-match on
+    video ids that merely contain the substring ``RD``.
+    """
+    if not url:
+        return None
+    match = re.search(r"[?&]list=(RD[\w-]+)", url)
+    if match:
+        return match.group(1)
+    return None
+
+
+def is_mix_url(url):
+    """True when the URL points at a YouTube Mix (auto-generated RD playlist)."""
+    return extract_mix_id(url) is not None
+
+
+def extract_video_id(url):
+    """Return the ``v=`` video id from a watch URL, or None.
+
+    Used to seed a mix with the specific video the user opened (optional; the
+    mix can also be seeded from the playlist alone).
+    """
+    if not url:
+        return None
+    match = re.search(r"[?&]v=([\w-]{11})", url)
+    if match:
+        return match.group(1)
+    return None
+
+
+def get_mix(playlist_id, video_id=None, continuation=None, parent=None):
+    """Fetch a window of a YouTube Mix (auto-generated RD playlist) via Deno.
+
+    Mixes are infinite/personalized; pass the last played ``video_id`` to fetch
+    the next window (mirrors :func:`get_shorts_feed`). Returns a dict
+    ``{"videos": [...], "continuation": ...}`` (empty on failure).
+    """
+    feature_name = _("قائمة التشغيل المختلطة")
+    if not ensure_deno_installed(parent=parent, feature_name=feature_name):
+        return {"videos": [], "continuation": None}
+    if not ensure_cookies_configured(parent=parent, feature_name=feature_name):
+        return {"videos": [], "continuation": None}
+
+    cookies_path = config_get("cookiespath")
+    try:
+        result = deno_service.send_command(
+            "get_mix",
+            {
+                "playlistId": playlist_id,
+                "videoId": video_id,
+                "continuation": continuation,
+                "cookiesPath": cookies_path,
+                "location": get_windows_region(),
+            },
+        )
+        if isinstance(result, dict) and "videos" in result:
+            videos = result.get("videos") or []
+            logger.info(
+                "get_mix ok: playlist=%s seed=%s -> %d items, continuation=%s, title=%r",
+                playlist_id,
+                video_id,
+                len(videos),
+                "yes" if result.get("continuation") else "no",
+                result.get("mixTitle"),
+            )
+            return {
+                "videos": videos,
+                "continuation": result.get("continuation"),
+                "mixTitle": result.get("mixTitle"),
+            }
+        if isinstance(result, dict) and "error" in result:
+            logger.error(f"Failed to fetch mix: {result['error']}")
+    except Exception as e:
+        logger.error(f"Error fetching mix: {e}")
+    return {"videos": [], "continuation": None}
+
+
+# Caches a mix id -> its first real video URL so the several per-track fetchers
+# (stream, media info, likes, chapters) don't each re-hit the mix endpoint.
+_mix_seed_cache = {}
+
+
+def resolve_mix_seed_url(url):
+    """Return a directly-playable ``watch?v=<videoId>`` URL for ``url``.
+
+    A YouTube Mix id (``RD...``) sometimes lands in the *video* slot of a URL —
+    a mis-tagged related suggestion, a home-feed lockup, or a pasted mix link.
+    That is not a real video, so yt-dlp/InnerTube reject it with "This video is
+    unavailable". Detect that case and resolve it to the mix's first real track;
+    otherwise return the URL unchanged. A genuine video id is exactly 11 chars,
+    so the length guard keeps a rare RD-prefixed video id from being hijacked.
+    """
+    if not url:
+        return url
+    target = (
+        url
+        if ("youtube.com" in url or "youtu.be" in url)
+        else f"https://www.youtube.com/watch?v={url}"
+    )
+    v_match = re.search(r"[?&]v=([^&]+)", target)
+    v_value = v_match.group(1) if v_match else None
+    mix_id = None
+    if v_value and v_value.startswith("RD") and len(v_value) != 11:
+        mix_id = v_value
+    elif not v_value:
+        # Bare mix URL (playlist?list=RD... with no seed video).
+        list_match = re.search(r"[?&]list=(RD[\w-]+)", target)
+        if list_match:
+            mix_id = list_match.group(1)
+    if not mix_id:
+        return url
+    if mix_id in _mix_seed_cache:
+        return _mix_seed_cache[mix_id]
+    mix = get_mix(mix_id)
+    videos = mix.get("videos") if isinstance(mix, dict) else None
+    if videos:
+        seed_url = videos[0].get("url")
+        if seed_url:
+            _mix_seed_cache[mix_id] = seed_url
+            return seed_url
+    logger.error(f"Could not resolve mix {mix_id} to a playable video")
+    return url
+
+
 def get_playable_stream(url, audio_mode=False):
+    # A mix id sitting in the video slot must become the mix's first track
+    # before any extraction, or yt-dlp truncates it and fails "unavailable".
+    url = resolve_mix_seed_url(url)
     if "youtube.com" not in url and "youtu.be" not in url:
         url_full = f"https://www.youtube.com/watch?v={url}"
     else:
@@ -1947,24 +2111,20 @@ def get_playable_stream(url, audio_mode=False):
             _stream_cache.set(cache_key, stream)
             return _attach_sponsorblock_segments(stream, url_full)
 
-    # Handle Mix/Playlist URLs via deno service
+    # Handle finite Playlist URLs via deno service. Mix (RD...) ids are already
+    # resolved to a concrete track by resolve_mix_seed_url() above, so anything
+    # left here with an RD id has a real seed video to play — skip it.
     playlist_id = None
     if "list=" in url_full:
         playlist_id_match = re.search(r"[?&]list=([a-zA-Z0-9_-]+)", url_full)
         if playlist_id_match:
             playlist_id = playlist_id_match.group(1)
 
-    # Catch-all for Mix/RD patterns
-    if not playlist_id:
-        mix_id_match = re.search(r"(RD[a-zA-Z0-9_-]+)", url_full)
-        if mix_id_match:
-            playlist_id = mix_id_match.group(1)
-
     logger.info(
         f"DEBUG: Checking for playlist_id. URL: {url_full}. Detected ID: {playlist_id}"
     )
 
-    if playlist_id:
+    if playlist_id and not playlist_id.startswith("RD"):
         cookies_path = config_get("cookiespath")
         result = deno_service.send_command(
             "get_playlist",
@@ -2063,6 +2223,8 @@ def get_playable_stream(url, audio_mode=False):
 
 
 def get_media_info(url):
+    # Resolve a mix id in the video slot to a real track before extraction.
+    url = resolve_mix_seed_url(url)
     cached = _info_cache.get(url, ttl=3600)
     if cached:
         return cached
@@ -2472,6 +2634,7 @@ def get_video_like_info(url):
     """
     Fetches the like count and current like/dislike status for a video.
     """
+    url = resolve_mix_seed_url(url)
     cookies_path = config_get("cookiespath")
     match = youtube_regexp(url)
     if not match:
@@ -2547,6 +2710,7 @@ def get_video_chapters(url):
     Fetches the chapters for a video.
     Returns a list of dictionaries with 'title' and 'time_ms'.
     """
+    url = resolve_mix_seed_url(url)
     cookies_path = config_get("cookiespath")
     match = youtube_regexp(url)
     if not match:
