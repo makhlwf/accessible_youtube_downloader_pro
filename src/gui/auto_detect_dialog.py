@@ -1,13 +1,21 @@
 import wx
 
 from language_handler import _
-from media_player.media_gui import MediaGui
+from media_player.media_gui import MediaGui, play_mix
 from speech_client import speak
 from theme_handler import apply_theme
-from utils import check_yt_dlp, get_audio_stream
+from utils import (
+    check_yt_dlp,
+    extract_mix_id,
+    extract_video_id,
+    get_audio_stream,
+    is_mix_url,
+)
 
 
 def link_type(url):
+    if is_mix_url(url):
+        return _("قائمة تشغيل مختلطة")
     if "list" in url or "playlist" in url:
         return _("قائمة تشغيل")
     elif any(case in url for case in ("channel", "/user/", "/c/", "/@")):
@@ -44,7 +52,10 @@ class AutoDetectDialog(wx.Dialog):
         downloadButton = wx.Button(panel, -1, _("تنزيل"))
         playButton = wx.Button(panel, -1, _("تشغيل"))
 
-        if link_type(self.url) == _("قائمة تشغيل"):
+        if is_mix_url(self.url):
+            # A mix plays directly (first track) via the play button.
+            pass
+        elif link_type(self.url) == _("قائمة تشغيل"):
             playButton.Label = _("فتح...")
         elif link_type(url) != _("فيديو"):
             playButton.Disable()
@@ -83,6 +94,12 @@ class AutoDetectDialog(wx.Dialog):
         if not main_window.IsShown():
             main_window.Show()
         main_window.Raise()
+
+        mix_id = extract_mix_id(self.url)
+        if mix_id:
+            self.Destroy()
+            play_mix(main_window, mix_id, extract_video_id(self.url))
+            return
 
         if link_type(self.url) == _("قائمة تشغيل"):
             PlaylistDialog(main_window, self.url)

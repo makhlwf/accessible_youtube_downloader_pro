@@ -42,7 +42,7 @@ from gui.settings_dialog import SettingsDialog
 from gui.text_viewer import Viewer
 from gui.tray_icon import TaskBarIcon
 from language_handler import _, codes, init_translation
-from media_player.media_gui import MediaGui
+from media_player.media_gui import MediaGui, play_mix
 from pot_provider_service import pot_service
 from speech_client import speak
 from theme_handler import apply_theme
@@ -706,21 +706,32 @@ class HomeScreen(wx.Frame):
             self.home_feed_list.Show(True)
             self.load_more_home_button.Hide()
         else:
-            titles = [
-                f"{item['title']} - {item['author']}" for item in self.home_feed_data
-            ]
+            titles = []
+            for item in self.home_feed_data:
+                if item.get("type") == "mix":
+                    titles.append(
+                        _("قائمة تشغيل مختلطة: {title}").format(title=item["title"])
+                    )
+                else:
+                    titles.append(f"{item['title']} - {item['author']}")
             self.home_feed_list.Set(titles)
             self.home_feed_list.Show(True)
             self.load_more_home_button.Show(self.home_feed_continuation is not None)
         self.Layout()
 
-        # Add items to scraper using the async loop
+        # Add items to scraper using the async loop. Mixes are skipped: their URL
+        # carries a list=RD… id that would mis-resolve through get_playable_stream,
+        # and a mix is opened via play_mix (which fetches its own items) instead.
         def _add_to_scraper():
             if not load_more:
                 for i in range(min(10, self.home_feed_results.count)):
+                    if self.home_feed_data[i].get("type") == "mix":
+                        continue
                     self.scraper.add_item(i, priority=10)
             else:
                 for i in range(old_count, self.home_feed_results.count):
+                    if self.home_feed_data[i].get("type") == "mix":
+                        continue
                     self.scraper.add_item(i, priority=10)
 
         _add_to_scraper()
@@ -730,6 +741,20 @@ class HomeScreen(wx.Frame):
         if selection == wx.NOT_FOUND:
             return
         video_data = self.home_feed_data[selection]
+        if video_data.get("type") == "mix":
+            logger.info(
+                "home feed: selected item is a mix (playlistId=%s seed=%s) -> play_mix",
+                video_data.get("playlistId"),
+                video_data.get("id"),
+            )
+            play_mix(
+                self,
+                video_data.get("playlistId"),
+                video_data.get("id"),
+                audio_mode=audio_mode,
+            )
+            self.Hide()
+            return
         url = video_data["url"]
         stream = self.home_feed_results.get_stream(selection, audio_mode=audio_mode)
         if stream is None:
@@ -754,9 +779,12 @@ class HomeScreen(wx.Frame):
     def on_home_feed_list_box(self, event):
         n = self.home_feed_list.Selection
         if n != wx.NOT_FOUND:
-            self.scraper.add_item(n, priority=0)
+            if self.home_feed_data[n].get("type") != "mix":
+                self.scraper.add_item(n, priority=0)
             if n > 0 and n % 10 == 0:
                 for i in range(n, min(n + 10, self.home_feed_results.count)):
+                    if self.home_feed_data[i].get("type") == "mix":
+                        continue
                     self.scraper.add_item(i, priority=10)
 
     def on_home_feed_hook(self, event):
@@ -802,6 +830,11 @@ class HomeScreen(wx.Frame):
         url = data["link"]
         audio_mode = data["audio"]
         if not utils.check_yt_dlp(self):
+            return
+        mix_id = utils.extract_mix_id(url)
+        if mix_id:
+            play_mix(self, mix_id, utils.extract_video_id(url), audio_mode=audio_mode)
+            self.Hide()
             return
         stream = LoadingDialog(
             self, _("جاري التشغيل"), utils.get_playable_stream, url, audio_mode
