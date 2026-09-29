@@ -15,7 +15,7 @@ from gui.quality_selection import QualitySelectionDialog
 from gui.search_dialog import SearchDialog
 from gui.settings_dialog import SettingsDialog
 from language_handler import _
-from media_player.media_gui import MediaGui
+from media_player.media_gui import MediaGui, play_mix
 from settings_handler import config_get
 from speech_client import speak
 from theme_handler import apply_theme
@@ -302,7 +302,13 @@ class YoutubeBrowser(wx.Frame):
         if number == wx.NOT_FOUND:
             return
         if self.search.get_type(number) == "playlist":
-            PlaylistDialog(self, self.search.get_url(number))
+            playlist_url = self.search.get_url(number)
+            mix_id = utils.extract_mix_id(playlist_url)
+            if mix_id:
+                play_mix(self, mix_id, utils.extract_video_id(playlist_url))
+                self.Hide()
+                return
+            PlaylistDialog(self, playlist_url)
             return
         if self.search.get_type(number) == "channel":
             ChannelDialog(
@@ -336,6 +342,16 @@ class YoutubeBrowser(wx.Frame):
         if number == wx.NOT_FOUND:
             return
         if self.search.get_type(number) in ("playlist", "channel"):
+            mix_id = utils.extract_mix_id(self.search.get_url(number))
+            if mix_id:
+                play_mix(
+                    self,
+                    mix_id,
+                    utils.extract_video_id(self.search.get_url(number)),
+                    audio_mode=True,
+                )
+                self.Hide()
+                return
             self.playVideo()
             return
         title = self.search.get_title(number)

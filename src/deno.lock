@@ -1,6 +1,7 @@
 {
   "version": "5",
   "specifiers": {
+    "npm:youtubei.js@*": "18.1.0",
     "npm:youtubei.js@18.1.0": "18.1.0"
   },
   "npm": {
