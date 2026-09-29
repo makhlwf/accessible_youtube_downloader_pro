@@ -19,66 +19,41 @@ def src_item_path(item):
     return os.path.normpath(os.path.join(SRC_DIR, item))
 
 
-def find_system_dll(name):
-    search_dirs = []
-    windir = os.environ.get("WINDIR")
-    if windir:
-        search_dirs.append(os.path.join(windir, "System32"))
-    search_dirs.extend(os.environ.get("PATH", "").split(os.pathsep))
-
-    seen = set()
-    for directory in search_dirs:
-        if not directory:
-            continue
-        directory_key = directory.casefold()
-        if directory_key in seen:
-            continue
-        seen.add(directory_key)
-        candidate = os.path.join(directory, name)
-        if os.path.isfile(candidate):
-            return candidate
-    return None
-
-
 # Native runtime binary files.
 # NOTE: do NOT bundle api-ms-win-* API-set stubs here. Windows resolves those
-# contracts (e.g. api-ms-win-core-path-l1-1-0.dll, which libmpv-2.dll imports)
-# from the OS API-set schema. Shipping a real file with that name can only
-# shadow the OS copy, and a wrong-architecture stub makes the 64-bit
+# contracts from the OS API-set schema; shipping a real file with that name can
+# only shadow the OS copy, and a wrong-architecture stub makes the 64-bit
 # libmpv-2.dll fail to load one of its runtime dependencies.
+#
+# This is the x64 *shared* libmpv build: libmpv-2.dll dynamically links the
+# FFmpeg 7.x runtime (avcodec-63 / avdevice-63 / avfilter-12 / avformat-63 /
+# avutil-61 / swresample-7 / swscale-10), so all seven MUST be bundled beside
+# it. Unlike the previous static build, this libmpv-2.dll does NOT import
+# vulkan-1.dll, so vulkan is no longer bundled (mpv loads it lazily from the OS
+# only if a vulkan GPU backend is explicitly requested).
+#
+# ffprobe.exe is intentionally NOT bundled: yt-dlp performs all merge/remux/
+# audio-extract/metadata work with ffmpeg.exe and falls back to ffmpeg for
+# stream probing when ffprobe is absent (the app never uses --check-formats).
 binary_files = [
-    "avcodec-60.dll",
-    "avfilter-9.dll",
-    "avformat-60.dll",
-    "avutil-58.dll",
-    "postproc-57.dll",
-    "swresample-4.dll",
-    "swscale-7.dll",
-    "vulkan-1.dll",
+    "avcodec-63.dll",
+    "avdevice-63.dll",
+    "avfilter-12.dll",
+    "avformat-63.dll",
+    "avutil-61.dll",
+    "swresample-7.dll",
+    "swscale-10.dll",
     "ffmpeg.exe",
-    "ffprobe.exe",
     "libmpv-2.dll",
-]
-
-system_binary_files = [
-    "vulkan-1.dll",
 ]
 
 if sys.platform != "win32":
     binary_files = []
-    system_binary_files = []
 
 binaries = []
 for item in binary_files:
     source_path = src_item_path(item)
-    if not os.path.isfile(source_path) and item == "vulkan-1.dll":
-        source_path = find_system_dll(item)
-    if source_path and os.path.isfile(source_path):
-        binaries.append((source_path, "."))
-
-for dll_name in system_binary_files:
-    source_path = find_system_dll(dll_name)
-    if source_path and not any(b[0] == source_path for b in binaries):
+    if os.path.isfile(source_path):
         binaries.append((source_path, "."))
 
 try:

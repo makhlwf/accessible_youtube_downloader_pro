@@ -1,7 +1,6 @@
 import ctypes
 import locale
 import logging
-import os
 import shutil
 import sys
 import threading
@@ -180,31 +179,6 @@ def _mpv_candidates() -> list[Path]:
     return candidates
 
 
-def _ensure_vulkan_dependency(target_dir: Path) -> None:
-    if sys.platform != "win32":
-        return
-    vulkan_path = target_dir / "vulkan-1.dll"
-    if vulkan_path.exists():
-        return
-
-    # Prefer bundled roots first, then fall back to System32
-    search_dirs: list[Path] = list(runtime_roots())
-    windir = os.environ.get("WINDIR")
-    if windir:
-        search_dirs.append(Path(windir) / "System32")
-    else:
-        search_dirs.append(Path(r"C:\Windows\System32"))
-
-    for directory in search_dirs:
-        candidate = directory / "vulkan-1.dll"
-        if candidate.is_file() and candidate != vulkan_path:
-            try:
-                shutil.copy2(candidate, vulkan_path)
-                return
-            except OSError:
-                pass
-
-
 def _diagnose_dependencies(dll_path: Path) -> list[str]:
     """Explain why a bundled libmpv-2.dll refused to load, best-effort.
 
@@ -259,7 +233,6 @@ def _load_mpv() -> ctypes.CDLL:
         except OSError as exc:
             raise MPVError("libmpv-2.dll was not found.") from exc
     else:
-        _ensure_vulkan_dependency(dll_path.parent)
         configure_dll_search_path([dll_path.parent])
         try:
             lib = ctypes.CDLL(str(dll_path))
@@ -273,14 +246,6 @@ def _load_mpv() -> ctypes.CDLL:
             if lib is None:
                 missing_info = []
                 if sys.platform == "win32":
-                    vulkan_file = dll_path.parent / "vulkan-1.dll"
-                    system_vulkan = (
-                        Path(os.environ.get("WINDIR", r"C:\Windows"))
-                        / "System32"
-                        / "vulkan-1.dll"
-                    )
-                    if not vulkan_file.exists() and not system_vulkan.exists():
-                        missing_info.append("vulkan-1.dll is missing")
                     missing_info.extend(_diagnose_dependencies(dll_path))
                 extra = f" ({'; '.join(missing_info)})" if missing_info else ""
                 raise MPVError(
