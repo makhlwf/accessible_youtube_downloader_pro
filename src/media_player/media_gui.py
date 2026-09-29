@@ -996,9 +996,7 @@ class MediaGui(wx.Frame):
                         if is_mix:
                             # In mix mode the panel list IS the playback queue.
                             self.results = self.suggestions_data
-                            self.current_index = (
-                                self._find_result_index(self.url) or 0
-                            )
+                            self.current_index = self._find_result_index(self.url) or 0
                         if not self.suggestions_data:
                             items = [_("لا تتوفر اقتراحات لهذا المقطع")]
                         else:
@@ -2277,10 +2275,7 @@ class MediaGui(wx.Frame):
                         self.results.extend(new_items)
                         try:
                             self.suggestions_list.Append(
-                                [
-                                    self._format_suggestion_display(v)
-                                    for v in new_items
-                                ]
+                                [self._format_suggestion_display(v) for v in new_items]
                             )
                         except Exception:
                             logger.debug(
@@ -2815,9 +2810,7 @@ def play_mix(parent, playlist_id, seed_video_id=None, audio_mode=False):
     ).res
     if not data:
         logger.error("play_mix: could not prepare mix playlist=%s", playlist_id)
-        utils.show_error(
-            _("تعذر تشغيل قائمة التشغيل المختلطة"), parent=parent
-        )
+        utils.show_error(_("تعذر تشغيل قائمة التشغيل المختلطة"), parent=parent)
         return None
     logger.info(
         "play_mix: prepared %d items, title=%r, continuation=%s",
