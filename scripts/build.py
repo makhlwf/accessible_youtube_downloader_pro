@@ -54,15 +54,6 @@ def ensure_mpv_runtime():
             with archive.open(member) as source, mpv_dll.open("wb") as target:
                 shutil.copyfileobj(source, target)
 
-    vulkan_dll = SRC_DIR / "vulkan-1.dll"
-    if not vulkan_dll.exists():
-        system_vulkan = (
-            Path(os.environ.get("WINDIR", r"C:\Windows")) / "System32" / "vulkan-1.dll"
-        )
-        if system_vulkan.exists():
-            print("Copying vulkan-1.dll from System32 to src/...")
-            shutil.copy2(system_vulkan, vulkan_dll)
-
 
 def executable_name(name):
     return f"{name}.exe" if sys.platform == "win32" else name
@@ -99,10 +90,16 @@ def validate_package_layout():
         internal / "browser_extension" / "manifest.json",
     ]
     if sys.platform == "win32":
+        # This is the x64 shared libmpv build: libmpv-2.dll dynamically links the
+        # FFmpeg 7.x runtime, so the core FFmpeg DLLs must ship beside it. Require
+        # the three that any FFmpeg-linked libmpv always imports so a build that
+        # failed to stage the shared runtime is caught here rather than at launch.
         required.extend(
             [
                 internal / "libmpv-2.dll",
-                internal / "vulkan-1.dll",
+                internal / "avcodec-63.dll",
+                internal / "avformat-63.dll",
+                internal / "avutil-61.dll",
             ]
         )
     patterns = [

@@ -127,36 +127,6 @@ def test_non_linux_platform_is_left_untouched(monkeypatch):
     assert "GDK_BACKEND" not in os.environ
 
 
-def test_ensure_vulkan_dependency_copies_when_missing(tmp_path, monkeypatch):
-    target_dir = tmp_path / "target"
-    target_dir.mkdir()
-    source_dir = tmp_path / "source"
-    source_dir.mkdir()
-    source_vulkan = source_dir / "vulkan-1.dll"
-    source_vulkan.write_bytes(b"VULKAN")
-
-    monkeypatch.setattr(sys, "platform", "win32")
-    monkeypatch.setattr(mpv_backend, "runtime_roots", lambda: [source_dir])
-
-    mpv_backend._ensure_vulkan_dependency(target_dir)
-
-    target_vulkan = target_dir / "vulkan-1.dll"
-    assert target_vulkan.is_file()
-    assert target_vulkan.read_bytes() == b"VULKAN"
-
-
-def test_ensure_vulkan_dependency_skips_when_already_exists(tmp_path, monkeypatch):
-    target_dir = tmp_path / "target"
-    target_dir.mkdir()
-    target_vulkan = target_dir / "vulkan-1.dll"
-    target_vulkan.write_bytes(b"EXISTING")
-
-    monkeypatch.setattr(sys, "platform", "win32")
-    mpv_backend._ensure_vulkan_dependency(target_dir)
-
-    assert target_vulkan.read_bytes() == b"EXISTING"
-
-
 def test_windows_mpv_falls_back_to_winmode_zero_on_oserror(tmp_path, monkeypatch):
     dll = tmp_path / "libmpv-2.dll"
     dll.write_bytes(b"MZ")
@@ -179,16 +149,13 @@ def test_windows_mpv_falls_back_to_winmode_zero_on_oserror(tmp_path, monkeypatch
     assert lib is mock_lib
 
 
-def test_windows_mpv_raises_informative_error_when_vulkan_missing(
-    tmp_path, monkeypatch
-):
+def test_windows_mpv_raises_informative_error_on_load_failure(tmp_path, monkeypatch):
     dll = tmp_path / "libmpv-2.dll"
     dll.write_bytes(b"MZ")
     monkeypatch.setattr(sys, "platform", "win32")
     monkeypatch.setattr(mpv_backend, "_mpv_lib", None)
     monkeypatch.setattr(mpv_backend, "_mpv_candidates", lambda: [dll])
     monkeypatch.setattr(mpv_backend, "runtime_roots", lambda *args, **kwargs: [])
-    monkeypatch.setenv("WINDIR", str(tmp_path / "nonexistent_windir"))
     configure = MagicMock()
 
     def fail_cdll(*args, **kwargs):
@@ -197,7 +164,9 @@ def test_windows_mpv_raises_informative_error_when_vulkan_missing(
     monkeypatch.setattr(mpv_backend.ctypes, "CDLL", fail_cdll)
     monkeypatch.setattr(mpv_backend, "configure_dll_search_path", configure)
 
-    with pytest.raises(mpv_backend.MPVError, match="vulkan-1.dll is missing"):
+    with pytest.raises(
+        mpv_backend.MPVError, match="could not load one of its runtime dependencies"
+    ):
         mpv_backend._load_mpv()
 
 
@@ -211,7 +180,10 @@ def test_pe_machine_and_imports_read_bundled_libmpv():
     assert runtime_dlls.pe_machine(libmpv) == runtime_dlls.IMAGE_FILE_MACHINE_AMD64
     imported = {name.lower() for name in runtime_dlls.pe_imported_dlls(libmpv)}
     assert imported, "failed to parse libmpv import table"
-    assert "vulkan-1.dll" in imported
+    # The x64 shared build dynamically links the FFmpeg runtime, so avcodec must
+    # appear in its import table (the previous static build embedded FFmpeg and
+    # instead imported vulkan-1.dll).
+    assert "avcodec-63.dll" in imported
 
 
 def test_pe_machine_returns_none_for_non_pe(tmp_path):
@@ -281,7 +253,7 @@ def test_diagnose_dependencies_flags_architecture_mismatch(tmp_path, monkeypatch
     )
 
 
-def test_validate_package_layout_requires_vulkan_on_windows(tmp_path, monkeypatch):
+def test_validate_package_layout_requires_ffmpeg_dlls_on_windows(tmp_path, monkeypatch):
     import importlib.util
     from pathlib import Path
 
@@ -308,9 +280,18 @@ def test_validate_package_layout_requires_vulkan_on_windows(tmp_path, monkeypatc
     (prism_dir / "_prism_cffi.pyd").write_bytes(b"")
     (prism_dir / "prism.dll").write_bytes(b"")
 
-    with pytest.raises(RuntimeError, match="vulkan-1.dll"):
+    # No libmpv/FFmpeg runtime yet -> incomplete.
+    with pytest.raises(RuntimeError, match="libmpv-2.dll"):
         build_script.validate_package_layout()
 
+    # libmpv present but its shared FFmpeg dependencies are not.
     (internal_dir / "libmpv-2.dll").write_bytes(b"")
-    (internal_dir / "vulkan-1.dll").write_bytes(b"")
+    with pytest.raises(RuntimeError, match="avcodec-63.dll"):
+        build_script.validate_package_layout()
+
+    # The x64 shared build no longer bundles vulkan-1.dll; the FFmpeg runtime is
+    # what completes the package.
+    (internal_dir / "avcodec-63.dll").write_bytes(b"")
+    (internal_dir / "avformat-63.dll").write_bytes(b"")
+    (internal_dir / "avutil-61.dll").write_bytes(b"")
     build_script.validate_package_layout()
