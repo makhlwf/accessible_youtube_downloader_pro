@@ -201,6 +201,86 @@ def test_windows_mpv_raises_informative_error_when_vulkan_missing(
         mpv_backend._load_mpv()
 
 
+def test_pe_machine_and_imports_read_bundled_libmpv():
+    from pathlib import Path
+
+    libmpv = Path(__file__).resolve().parents[1] / "src" / "libmpv-2.dll"
+    if not libmpv.is_file():
+        pytest.skip("libmpv-2.dll not bundled in this checkout")
+
+    assert runtime_dlls.pe_machine(libmpv) == runtime_dlls.IMAGE_FILE_MACHINE_AMD64
+    imported = {name.lower() for name in runtime_dlls.pe_imported_dlls(libmpv)}
+    assert imported, "failed to parse libmpv import table"
+    assert "vulkan-1.dll" in imported
+
+
+def test_pe_machine_returns_none_for_non_pe(tmp_path):
+    plain = tmp_path / "notes.txt"
+    plain.write_bytes(b"not a PE image")
+    assert runtime_dlls.pe_machine(plain) is None
+    assert runtime_dlls.pe_imported_dlls(plain) == []
+
+    empty = tmp_path / "empty.dll"
+    empty.write_bytes(b"")
+    assert runtime_dlls.pe_machine(empty) is None
+    assert runtime_dlls.pe_imported_dlls(empty) == []
+
+
+def test_no_wrong_architecture_libmpv_dependencies_are_bundled():
+    from pathlib import Path
+
+    src = Path(__file__).resolve().parents[1] / "src"
+    libmpv = src / "libmpv-2.dll"
+    if not libmpv.is_file():
+        pytest.skip("libmpv-2.dll not bundled in this checkout")
+
+    host = runtime_dlls.pe_machine(libmpv)
+    assert host is not None
+    imported = {name.lower() for name in runtime_dlls.pe_imported_dlls(libmpv)}
+    assert imported, "failed to parse libmpv import table"
+
+    mismatched = []
+    for candidate in src.glob("*.dll"):
+        if candidate.name.lower() in imported:
+            machine = runtime_dlls.pe_machine(candidate)
+            if machine is not None and machine != host:
+                mismatched.append((candidate.name, runtime_dlls.machine_name(machine)))
+    assert not mismatched, (
+        f"Wrong-architecture libmpv dependencies bundled: {mismatched}"
+    )
+
+
+def test_diagnose_dependencies_flags_architecture_mismatch(tmp_path, monkeypatch):
+    from pathlib import Path
+
+    internal = tmp_path / "_internal"
+    internal.mkdir()
+    libmpv = internal / "libmpv-2.dll"
+    libmpv.write_bytes(b"MZ")
+    stub = internal / "api-ms-win-core-path-l1-1-0.dll"
+    stub.write_bytes(b"MZ")
+
+    monkeypatch.setattr(mpv_backend, "runtime_roots", lambda roots=(): [internal])
+    monkeypatch.setattr(
+        mpv_backend,
+        "pe_imported_dlls",
+        lambda _path: ["api-ms-win-core-path-l1-1-0.dll", "vulkan-1.dll"],
+    )
+
+    def fake_machine(path: Path) -> int:
+        if "api-ms" in str(path):
+            return runtime_dlls.IMAGE_FILE_MACHINE_I386
+        return runtime_dlls.IMAGE_FILE_MACHINE_AMD64
+
+    monkeypatch.setattr(mpv_backend, "pe_machine", fake_machine)
+
+    problems = mpv_backend._diagnose_dependencies(libmpv)
+    assert any(
+        "api-ms-win-core-path" in problem and "x86" in problem and "x64" in problem
+        for problem in problems
+    )
+
+
 def test_validate_package_layout_requires_vulkan_on_windows(tmp_path, monkeypatch):
     import importlib.util
     from pathlib import Path
