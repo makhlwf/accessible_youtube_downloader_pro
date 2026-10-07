@@ -299,6 +299,15 @@ class HomeScreen(wx.Frame):
             self.Show()
         self._start_ipc_server()
         self._startup_logic()
+        try:
+            import discord_presence
+
+            discord_presence.init_presence()
+            discord_presence.update_idle()
+        except Exception:
+            logger.debug(
+                "Failed to initialize discord presence on startup", exc_info=True
+            )
         if self.pending_launch_url:
             wx.CallAfter(self.handle_external_url, self.pending_launch_url)
 
@@ -1049,6 +1058,12 @@ class HomeScreen(wx.Frame):
         deno_service.stop()
         pot_service.stop()
         stop_async_loop()
+        try:
+            import discord_presence
+
+            discord_presence.close_presence()
+        except Exception:
+            pass
         self.Destroy()
         wx.Exit()
 

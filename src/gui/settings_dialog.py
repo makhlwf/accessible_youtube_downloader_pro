@@ -221,6 +221,7 @@ class SettingsDialog(wx.Dialog):
 
         self._bind_events(okButton)
         self._update_sponsorblock_controls()
+        self._update_discord_controls()
         apply_theme(self)
         self.ShowModal()
 
@@ -678,13 +679,51 @@ class SettingsDialog(wx.Dialog):
             name="debug",
         )
         self.debugMode.SetValue(config_get("debug"))
+        self.discordPresence = SettingsCheckBox(
+            page,
+            -1,
+            _("تفعيل التواجد الغني في ديسكورد (Discord Rich Presence)"),
+            name="discord_presence",
+        )
+        self.discordPresence.SetValue(config_get("discord_presence"))
+        self.discordShowDetails = SettingsCheckBox(
+            page,
+            -1,
+            _("عرض اسم المقطع والقناة في ديسكورد"),
+            name="discord_show_details",
+        )
+        self.discordShowDetails.SetValue(config_get("discord_show_details"))
+        self.discordShowButtons = SettingsCheckBox(
+            page,
+            -1,
+            _("إظهار أزرار المقطع في ديسكورد"),
+            name="discord_show_buttons",
+        )
+        self.discordShowButtons.SetValue(config_get("discord_show_buttons"))
+        discord_grid = _labelled_grid()
+        discord_client_id_label_text = _("معرف تطبيق ديسكورد المخصص (Client ID): ")
+        self.discordClientIdLabel = wx.StaticText(
+            page, -1, discord_client_id_label_text
+        )
+        self.discordClientId = wx.TextCtrl(
+            page,
+            -1,
+            value=str(config_get("discord_client_id") or ""),
+            name="discord_client_id",
+        )
+        _set_accessible_name(self.discordClientId, discord_client_id_label_text)
+        _add_row(discord_grid, self.discordClientIdLabel, self.discordClientId)
         for checkbox in (
             self.potProvider,
             self.backgroundMonitoring,
             self.browserIntegration,
             self.debugMode,
+            self.discordPresence,
+            self.discordShowDetails,
+            self.discordShowButtons,
         ):
             sizer.Add(checkbox, 0, wx.EXPAND | wx.ALL, 5)
+        sizer.Add(discord_grid, 0, wx.EXPAND | wx.ALL, 5)
         page.SetSizer(sizer)
 
     def _bind_events(self, okButton):
@@ -701,6 +740,9 @@ class SettingsDialog(wx.Dialog):
             self.backgroundMonitoring,
             self.browserIntegration,
             self.potProvider,
+            self.discordPresence,
+            self.discordShowDetails,
+            self.discordShowButtons,
             self.repeateTracks,
             self.autoPlayNext,
             self.sponsorBlockNotify,
@@ -708,6 +750,7 @@ class SettingsDialog(wx.Dialog):
             self.openPlayerFullscreen,
         ):
             checkbox.Bind(wx.EVT_CHECKBOX, self.onCheck)
+        self.discordPresence.Bind(wx.EVT_CHECKBOX, self.onDiscordPresenceToggle)
         self.sponsorBlock.Bind(wx.EVT_CHECKBOX, self.onSponsorBlockToggle)
         self.eqButton.Bind(wx.EVT_BUTTON, self.onEqualizer)
         self.themeBox.Bind(wx.EVT_CHOICE, self.onThemeChange)
@@ -769,6 +812,23 @@ class SettingsDialog(wx.Dialog):
         ]
         for control in controls:
             control.Enable(enabled)
+
+    def onDiscordPresenceToggle(self, event):
+        self.onCheck(event)
+        self._update_discord_controls()
+
+    def _update_discord_controls(self):
+        enabled = hasattr(self, "discordPresence") and self._checkbox_value(
+            self.discordPresence
+        )
+        for control in (
+            getattr(self, "discordShowDetails", None),
+            getattr(self, "discordShowButtons", None),
+            getattr(self, "discordClientIdLabel", None),
+            getattr(self, "discordClientId", None),
+        ):
+            if control is not None:
+                control.Enable(enabled)
 
     def _selected_sponsorblock_categories(self):
         return [
@@ -1038,6 +1098,19 @@ class SettingsDialog(wx.Dialog):
             else getattr(self.playbackSpeedStep, "Value", 0.05),
         )
         self._save_sponsorblock_settings()
+        if hasattr(self, "discordClientId"):
+            val = (
+                self.discordClientId.GetValue()
+                if hasattr(self.discordClientId, "GetValue")
+                else getattr(self.discordClientId, "Value", "")
+            )
+            config_set("discord_client_id", str(val).strip())
+        try:
+            import discord_presence
+
+            discord_presence.reload_settings()
+        except Exception:
+            pass
         selected_theme = self.theme_keys[self.themeBox.Selection]
         config_set("theme", selected_theme)
         apply_theme_to_all_windows(selected_theme)
