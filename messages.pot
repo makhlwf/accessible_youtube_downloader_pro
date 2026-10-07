@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-08 01:44+0200\n"
+"POT-Creation-Date: 2026-10-08 01:53+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -205,8 +205,8 @@ msgstr ""
 msgid "معلومات الإصدار"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:654 src/discord_presence.py:276
-#: src/discord_presence.py:283 src/discord_presence.py:304
+#: src/accessible_youtube_downloader_pro.py:654 src/discord_presence.py:278
+#: src/discord_presence.py:285 src/discord_presence.py:306
 msgid "قيد التشغيل"
 msgstr ""
 
@@ -327,28 +327,28 @@ msgstr ""
 msgid "البرنامج قيد التشغيل بالفعل."
 msgstr ""
 
-#: src/discord_presence.py:265
+#: src/discord_presence.py:267
 msgid "بدون عنوان"
 msgstr ""
 
-#: src/discord_presence.py:270 src/discord_presence.py:274
-#: src/discord_presence.py:281 src/discord_presence.py:304
+#: src/discord_presence.py:272 src/discord_presence.py:276
+#: src/discord_presence.py:283 src/discord_presence.py:306
 msgid "متوقف مؤقتًا"
 msgstr ""
 
-#: src/discord_presence.py:279
+#: src/discord_presence.py:281
 msgid "الاستماع عبر HexPlayer"
 msgstr ""
 
-#: src/discord_presence.py:320
+#: src/discord_presence.py:322
 msgid "استماع على يوتيوب"
 msgstr ""
 
-#: src/discord_presence.py:320
+#: src/discord_presence.py:322
 msgid "مشاهدة على يوتيوب"
 msgstr ""
 
-#: src/discord_presence.py:352
+#: src/discord_presence.py:354
 msgid "تصفح يوتيوب"
 msgstr ""
 

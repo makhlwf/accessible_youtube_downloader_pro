@@ -92,6 +92,8 @@ class DiscordRPCClient:
                 except OSError:
                     continue
         else:
+            if not hasattr(socket, "AF_UNIX"):
+                return False
             candidates = []
             env_paths = [
                 os.environ.get("XDG_RUNTIME_DIR"),
