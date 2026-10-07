@@ -423,6 +423,7 @@ class MediaGui(wx.Frame):
         self.history_timer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.on_history_timer, self.history_timer)
         self.history_timer.Start(10000)  # 10 seconds
+        self._update_discord_presence(is_paused=False)
         self.subtitle_timer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.on_subtitle_timer, self.subtitle_timer)
         # Sleep timer (per-window). One-shot wx.Timer; a monotonic deadline drives
@@ -832,8 +833,68 @@ class MediaGui(wx.Frame):
                 watched_seconds = self.player.media.get_time() / 1000
                 if watched_seconds > 0:
                     self._report_watch_history(watched_seconds)
+                self._update_discord_presence(is_paused=False)
         except Exception:
             pass
+
+    def _update_discord_presence(self, is_paused=None):
+        if not getattr(self, "player", None) or getattr(self, "_closing", False):
+            return
+        try:
+            import discord_presence
+
+            media = getattr(self.player, "media", None)
+            if not media:
+                return
+
+            if is_paused is None:
+                get_state = getattr(media, "get_state", None)
+                if callable(get_state):
+                    is_paused = get_state() != State.Playing
+                else:
+                    is_paused = False
+
+            time_ms = None
+            get_time = getattr(media, "get_time", None)
+            if callable(get_time):
+                try:
+                    time_ms = get_time()
+                except Exception:
+                    time_ms = None
+
+            elapsed_sec = (
+                max(0, int(time_ms / 1000))
+                if (time_ms is not None and time_ms > 0)
+                else 0
+            )
+
+            length_ms = None
+            get_length = getattr(self.player, "get_length", None)
+            if callable(get_length):
+                try:
+                    length_ms = get_length()
+                except Exception:
+                    length_ms = None
+
+            duration_sec = (
+                max(0, int(length_ms / 1000))
+                if (length_ms is not None and length_ms > 0)
+                else 0
+            )
+
+            discord_presence.update_media(
+                title=getattr(self, "title", ""),
+                channel=getattr(self, "current_channel", None),
+                elapsed=elapsed_sec,
+                duration=duration_sec,
+                is_paused=is_paused,
+                url=getattr(self, "url", None),
+                audio_mode=getattr(self, "audio_mode", False),
+            )
+        except Exception:
+            logger.debug(
+                "Failed to update discord presence from MediaGui", exc_info=True
+            )
 
     def on_sponsorblock_timer(self, event):
         if (
@@ -1296,27 +1357,33 @@ class MediaGui(wx.Frame):
             if state == State.Ended:
                 self.player.media.set_position(0.0)
             self.player.media.play()
+            self._update_discord_presence(is_paused=False)
         elif state in (State.Playing, State.Paused):
             if not self.is_live:
                 self.player.media.pause()
+                self._update_discord_presence(is_paused=(state == State.Playing))
             else:
                 self.player.media.stop()
+                self._update_discord_presence(is_paused=True)
 
     @has_player
     def forwardAction(self):
         position = self.player.media.get_position()
         self.player.media.set_position(position + self.player.seek(self.seek))
+        self._update_discord_presence()
 
     @has_player
     def rewindAction(self):
         position = self.player.media.get_position()
         self.player.media.set_position(position - self.player.seek(self.seek))
+        self._update_discord_presence()
 
     @has_player
     def set_position(self, key):
         step = int(chr(key)) / 10
         self.player.media.set_position(step)
         speak(_("الوقت المنقضي: {}").format(self.player.get_elapsed()))
+        self._update_discord_presence()
 
     @has_player
     def beginingAction(self):
@@ -1328,6 +1395,7 @@ class MediaGui(wx.Frame):
             State.Ended,
         ):
             self.player.media.play()
+        self._update_discord_presence()
 
     @has_player
     def seek_to_seconds(self, seconds, label=None):
@@ -1342,6 +1410,7 @@ class MediaGui(wx.Frame):
         self.last_spoken_subtitle_index = -1
         label = label or format_timecode(seconds)
         speak(_("الانتقال إلى {}").format(label))
+        self._update_discord_presence()
         return True
 
     @has_player
@@ -1708,6 +1777,13 @@ class MediaGui(wx.Frame):
             except Exception:
                 logger.debug("Could not show parent after media close", exc_info=True)
 
+        try:
+            import discord_presence
+
+            discord_presence.update_idle()
+        except Exception:
+            pass
+
         self.Destroy()
 
     def registerHotKey(self):
@@ -1823,6 +1899,7 @@ class MediaGui(wx.Frame):
             logger.debug("Sleep timer could not pause playback", exc_info=True)
             return
         speak(_("انتهى مؤقت النوم. تم إيقاف التشغيل"))
+        self._update_discord_presence(is_paused=True)
 
     def announce_sleep_remaining(self, event=None):
         if self.sleep_finish_current:
@@ -2469,6 +2546,7 @@ class MediaGui(wx.Frame):
         self.fetch_like_count()
         self.player.media.play()
         self.player.media.audio_set_volume(self.player.volume)
+        self._update_discord_presence(is_paused=False)
         self.sponsorblock_segments = []
         self._last_sponsorblock_skip_time = 0
         self._last_sponsorblock_target = None

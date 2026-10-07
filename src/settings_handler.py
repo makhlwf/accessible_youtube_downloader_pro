@@ -49,6 +49,10 @@ defaults = {
     "force_original_audio": False,
     "preferred_audio_language": get_default_language(),
     "sleep_timer_last_minutes": 30,
+    "discord_presence": True,
+    "discord_client_id": "",
+    "discord_show_details": True,
+    "discord_show_buttons": True,
 }
 
 _cache = {}
