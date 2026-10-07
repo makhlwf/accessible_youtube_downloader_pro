@@ -1,6 +1,7 @@
 """Unit tests for Discord Rich Presence module."""
 
 import json
+import socket
 import struct
 from unittest.mock import MagicMock, patch
 
@@ -88,7 +89,7 @@ def test_client_init():
     assert client.is_connected() is False
 
 
-def test_client_connect_and_handshake():
+def test_client_connect_and_handshake_windows():
     client = DiscordRPCClient("123456789")
     mock_file = MagicMock()
 
@@ -97,11 +98,40 @@ def test_client_connect_and_handshake():
     header = struct.pack("<II", 1, len(resp_payload))
     mock_file.read.side_effect = [header, resp_payload]
 
-    with patch("builtins.open", return_value=mock_file):
+    with patch("sys.platform", "win32"), patch("builtins.open", return_value=mock_file):
         assert client.connect() is True
         assert client.is_connected() is True
 
     # Verify handshake packet was written
+    mock_file.write.assert_called_once()
+    written_data = mock_file.write.call_args[0][0]
+    opcode, _length = struct.unpack("<II", written_data[:8])
+    assert opcode == OP_HANDSHAKE
+    payload = json.loads(written_data[8:].decode("utf-8"))
+    assert payload["client_id"] == "123456789"
+    assert payload["v"] == 1
+
+
+def test_client_connect_and_handshake_linux():
+    client = DiscordRPCClient("123456789")
+    mock_file = MagicMock()
+
+    resp_payload = json.dumps({"cmd": "DISPATCH", "evt": "READY"}).encode("utf-8")
+    header = struct.pack("<II", 1, len(resp_payload))
+    mock_file.read.side_effect = [header, resp_payload]
+
+    mock_sock = MagicMock()
+    mock_sock.makefile.return_value = mock_file
+
+    with (
+        patch("sys.platform", "linux"),
+        patch.object(socket, "AF_UNIX", 1, create=True),
+        patch("os.path.exists", return_value=True),
+        patch("socket.socket", return_value=mock_sock),
+    ):
+        assert client.connect() is True
+        assert client.is_connected() is True
+
     mock_file.write.assert_called_once()
     written_data = mock_file.write.call_args[0][0]
     opcode, _length = struct.unpack("<II", written_data[:8])
