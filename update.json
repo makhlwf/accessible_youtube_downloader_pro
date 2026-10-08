@@ -1,19 +1,19 @@
 {
-  "version": "5.6.0",
-  "url": "https://github.com/makhlwf/accessible_youtube_downloader_pro/releases/download/v5.6.0/HexPlayer.exe",
-  "whats_new": "YouTube Mixes support: play a Mix as an infinite, self-extending queue with an accessible tracklist panel. The queue refills automatically as you listen and each track is announced via your screen reader.",
+  "version": "5.7.0",
+  "url": "https://github.com/makhlwf/accessible_youtube_downloader_pro/releases/download/v5.7.0/HexPlayer.exe",
+  "whats_new": "Add full Discord Rich Presence support, showing playback status, video metadata, remaining countdown, and quick action buttons. Fix channel metadata handling and update dependencies.",
   "platforms": {
     "windows": {
-      "url": "https://github.com/makhlwf/accessible_youtube_downloader_pro/releases/download/v5.6.0/HexPlayer.exe"
+      "url": "https://github.com/makhlwf/accessible_youtube_downloader_pro/releases/download/v5.7.0/HexPlayer.exe"
     },
     "linux": {
-      "url": "https://github.com/makhlwf/accessible_youtube_downloader_pro/releases/download/v5.6.0/HexPlayer-5.6.0-linux-x86_64.tar.xz"
+      "url": "https://github.com/makhlwf/accessible_youtube_downloader_pro/releases/download/v5.7.0/HexPlayer-5.7.0-linux-x86_64.tar.xz"
     },
     "deb": {
-      "url": "https://github.com/makhlwf/accessible_youtube_downloader_pro/releases/download/v5.6.0/HexPlayer-5.6.0-linux-amd64.deb"
+      "url": "https://github.com/makhlwf/accessible_youtube_downloader_pro/releases/download/v5.7.0/HexPlayer-5.7.0-linux-amd64.deb"
     },
     "rpm": {
-      "url": "https://github.com/makhlwf/accessible_youtube_downloader_pro/releases/download/v5.6.0/HexPlayer-5.6.0-1.x86_64.rpm"
+      "url": "https://github.com/makhlwf/accessible_youtube_downloader_pro/releases/download/v5.7.0/HexPlayer-5.7.0-1.x86_64.rpm"
     }
   }
 }
