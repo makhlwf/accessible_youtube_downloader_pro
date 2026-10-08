@@ -243,6 +243,21 @@ def test_presence_media_payload_full():
     assert (
         activity["buttons"][0]["url"] == "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
     )
+    assert activity["buttons"][1]["label"] == "Download HexPlayer"
+
+
+def test_presence_media_payload_channel_as_dict():
+    presence = DiscordPresence()
+    presence._enabled = True
+    presence._show_details = True
+
+    presence.update_media(
+        title="Song with Dict Channel",
+        channel={"name": "My Channel Name", "url": "https://youtube.com/@mychannel"},
+    )
+    activity = presence._pending_activity
+    assert activity is not None
+    assert "My Channel Name" in activity["state"]
 
 
 def test_presence_media_payload_paused():
