@@ -882,9 +882,17 @@ class MediaGui(wx.Frame):
                 else 0
             )
 
+            raw_channel = getattr(self, "current_channel", None)
+            if isinstance(raw_channel, dict):
+                channel_name = raw_channel.get("name") or raw_channel.get(
+                    "channel_name"
+                )
+            else:
+                channel_name = str(raw_channel) if raw_channel else None
+
             discord_presence.update_media(
                 title=getattr(self, "title", ""),
-                channel=getattr(self, "current_channel", None),
+                channel=channel_name,
                 elapsed=elapsed_sec,
                 duration=duration_sec,
                 is_paused=is_paused,

@@ -264,10 +264,19 @@ class DiscordPresence:
 
             # Details & State
             if self._show_details:
-                display_title = title.strip() if title else _("بدون عنوان")
+                display_title = str(title).strip() if title else _("بدون عنوان")
                 activity["details"] = truncate_utf8(display_title, MAX_TEXT_BYTES)
-                if channel:
-                    channel_text = f"by {channel.strip()}"
+
+                ch_name = ""
+                if isinstance(channel, dict):
+                    ch_name = str(
+                        channel.get("name") or channel.get("channel_name") or ""
+                    ).strip()
+                elif channel:
+                    ch_name = str(channel).strip()
+
+                if ch_name:
+                    channel_text = f"by {ch_name}"
                     if is_paused:
                         channel_text += f" ({_('متوقف مؤقتًا')})"
                     activity["state"] = truncate_utf8(channel_text, MAX_TEXT_BYTES)
@@ -327,12 +336,15 @@ class DiscordPresence:
                             "url": url,
                         }
                     )
+                download_url = getattr(
+                    application, "releases_page_url", None
+                ) or getattr(application, "github_url", "")
                 buttons.append(
                     {
                         "label": truncate_utf8(
-                            f"Get {application.name}", MAX_BUTTON_LABEL_BYTES
+                            f"Download {application.name}", MAX_BUTTON_LABEL_BYTES
                         ),
-                        "url": application.github_url,
+                        "url": download_url,
                     }
                 )
                 if buttons:
@@ -364,12 +376,15 @@ class DiscordPresence:
                 },
             }
             if self._show_buttons:
+                download_url = getattr(
+                    application, "releases_page_url", None
+                ) or getattr(application, "github_url", "")
                 activity["buttons"] = [
                     {
                         "label": truncate_utf8(
-                            f"Get {application.name}", MAX_BUTTON_LABEL_BYTES
+                            f"Download {application.name}", MAX_BUTTON_LABEL_BYTES
                         ),
-                        "url": application.github_url,
+                        "url": download_url,
                     }
                 ]
 
