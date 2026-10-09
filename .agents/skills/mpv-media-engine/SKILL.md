@@ -9,13 +9,13 @@ description: >-
 
 ## Overview
 
-HexPlayer relies on a low-level ctypes bridge to `libmpv-2.dll` (`src/media_player/mpv_backend.py`) for responsive, high-fidelity media playback. It manages asynchronous MPV event observation, WASAPI audio output routing, a 10-band audio equalizer, and chapter/timecode navigation without blocking the GUI.
+HexPlayer relies on a low-level ctypes bridge to `libmpv-2.dll` (`src/media_player/mpv_backend.py`) for responsive, high-fidelity media playback. It manages asynchronous MPV event observation, WASAPI audio output routing, a 15-band audio equalizer, and chapter/timecode navigation without blocking the GUI.
 
 ## When to Use
 
 - Interfacing with or modifying `libmpv-2.dll` via Python ctypes in `src/media_player/`.
 - Diagnosing audio glitches, device switching failures (e.g. WASAPI Bluetooth/headphones), or volume/pitch drift.
-- Configuring or debugging the 10-band graphic equalizer filter chains (`firequalizer` / `equalizer`).
+- Configuring or debugging the 15-band graphic equalizer filter chain (FFmpeg `equalizer` biquads driven through `lavfi`, with a `volume` preamp stage).
 - Handling chapter markers, timecodes, subtitle tracks, or playback speed adjustments.
 - Investigating MPV event loop crashes or memory leaks during seek/pause/stop operations.
 
@@ -63,13 +63,29 @@ devices = mpv_backend.get_available_audio_output_devices()
 mpv.mpv_set_property_string(handle, b"audio-device", selected_device_id.encode("utf-8"))
 ```
 
-### 4. 10-Band Equalizer Filter String Formatting
-Equalizer settings map to FFmpeg audio filter syntax. Gains must remain clamped between -12dB and +12dB to prevent clipping distortion:
+### 4. 15-Band Equalizer Filter String Formatting
+The equalizer maps a preamp plus 15 per-band gains onto an FFmpeg audio-filter
+chain built in `MpvMediaPlayer.apply_equalizer`. Bands sit on the standard
+15-band ISO graphic-equalizer grid and each becomes a peaking `equalizer`
+biquad; the preamp is a single leading `volume` stage. Gains are clamped to
+the `[-20, +20]` dB range (`GAIN_MIN`/`GAIN_MAX` in
+`media_player/preset_library.py`); only bands and a preamp that differ from 0
+are emitted, and an empty chain clears the `af` property.
 
 ```python
-# Frequencies: 31Hz, 62Hz, 125Hz, 250Hz, 500Hz, 1kHz, 2kHz, 4kHz, 8kHz, 16kHz
-filter_str = f"firequalizer=gain_entry='entry(31,{g0});entry(62,{g1});entry(125,{g2});entry(250,{g3});entry(500,{g4});entry(1000,{g5});entry(2000,{g6});entry(4000,{g7});entry(8000,{g8});entry(16000,{g9})'"
-mpv.mpv_set_property_string(handle, b"af", filter_str.encode("utf-8"))
+# ISO centers (Hz): 25, 40, 63, 100, 160, 250, 400, 630, 1000,
+#                   1600, 2500, 4000, 6300, 10000, 16000
+filters = []
+if abs(preamp) > 0.001:
+    filters.append(f"volume={preamp:g}dB")
+for frequency, gain in zip(EQ_FREQUENCIES, bands):
+    if abs(gain) > 0.001:
+        # Q=2 (t=q:w=2) keeps the 2/3-octave bands from bleeding into each
+        # other, so the chain tracks the per-band gains like a real graphic EQ.
+        filters.append(f"equalizer=f={frequency}:t=q:w=2:g={gain:g}")
+
+value = f"lavfi=[{','.join(filters)}]" if filters else ""
+mpv.mpv_set_property_string(handle, b"af", value.encode("utf-8"))
 ```
 
 ## Quick Reference
@@ -110,12 +126,12 @@ mpv.mpv_set_property_string(handle, b"af", filter_str.encode("utf-8"))
 | :--- | :--- | :--- |
 | Blocking the UI thread with `mpv_wait_event` | Freezes the GUI completely | Run `mpv_wait_event` in daemon thread |
 | Passing unencoded strings | Python ctypes crashes on 64-bit Windows | Always `.encode('utf-8')` strings |
-| Equalizer gain > 12dB | Severe digital clipping and distortion | Clamp sliders to [-12, +12] |
+| Hard-boosting many bands with no preamp cut | Summed band gains push the signal past 0 dBFS and clip | Keep gains within the ±20 dB clamp and lower the preamp (`volume=NdB`) on heavily boosted presets |
 | Unhandled device disconnect | Playback silently terminates or crashes | Catch error and fallback to `"auto"` |
 
 ## Verification & Quality Gates
 
-- **Unit/Mock Tests**: Run `uv run pytest tests/test_equalizer.py tests/test_media_gui_speed.py tests/test_timecodes.py tests/test_chapters.py`
+- **Unit/Mock Tests**: Run `uv run pytest tests/test_equalizer.py tests/test_preset_library.py tests/test_equalizer_dialog.py tests/test_media_gui_speed.py tests/test_timecodes.py tests/test_chapters.py`
 - **Lint Check**: Run `uv run ruff check src/media_player/`
 - **Manual Verification**:
   1. Play an audio/video stream.

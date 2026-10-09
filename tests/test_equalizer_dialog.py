@@ -82,10 +82,11 @@ class TestEqualizerDialog(unittest.TestCase):
 
     def test_preamp_slider_change(self):
         slider = self.dialog.sliders["preamp"]
-        slider.SetValue(10)
+        raw = int(10 * equalizer_dialog.GAIN_SCALE)
+        slider.SetValue(raw)
 
         event = wx.CommandEvent(wx.EVT_SLIDER.typeId, slider.GetId())
-        event.SetInt(10)
+        event.SetInt(raw)
         self.dialog.on_slider_change(event, "preamp")
         # Trigger the timer callback manually
         self.dialog.on_update_timer(None)
@@ -95,16 +96,29 @@ class TestEqualizerDialog(unittest.TestCase):
 
     def test_band_slider_change(self):
         slider = self.dialog.sliders["band_0"]
-        slider.SetValue(5)
+        raw = int(5 * equalizer_dialog.GAIN_SCALE)
+        slider.SetValue(raw)
 
         event = wx.CommandEvent(wx.EVT_SLIDER.typeId, slider.GetId())
-        event.SetInt(5)
+        event.SetInt(raw)
         self.dialog.on_slider_change(event, "band_0")
         # Trigger the timer callback manually
         self.dialog.on_update_timer(None)
 
         assert self.fake_service.set_band_called is True
         assert self.fake_service.last_band == (0, 5.0)
+
+    def test_fractional_gain_survives_round_trip(self):
+        # A half-dB gain must reach the service intact rather than truncating.
+        slider = self.dialog.sliders["band_1"]
+        raw = int(-7.5 * equalizer_dialog.GAIN_SCALE)
+        slider.SetValue(raw)
+
+        event = wx.CommandEvent(wx.EVT_SLIDER.typeId, slider.GetId())
+        event.SetInt(raw)
+        self.dialog.on_slider_change(event, "band_1")
+
+        assert self.fake_service.last_band == (1, -7.5)
 
     def test_every_preset_is_offered_with_a_label(self):
         labels = _preset_labels()
@@ -130,9 +144,10 @@ class TestEqualizerDialog(unittest.TestCase):
         self.dialog.on_preset_change(None)
 
         slider = self.dialog.sliders["band_0"]
-        slider.SetValue(-7)
+        raw = int(-7 * equalizer_dialog.GAIN_SCALE)
+        slider.SetValue(raw)
         event = wx.CommandEvent(wx.EVT_SLIDER.typeId, slider.GetId())
-        event.SetInt(-7)
+        event.SetInt(raw)
         self.dialog.on_slider_change(event, "band_0")
 
         assert self.saved_config["eq_preset"] == CUSTOM_PRESET
