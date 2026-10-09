@@ -15,7 +15,7 @@ HexPlayer relies on a low-level ctypes bridge to `libmpv-2.dll` (`src/media_play
 
 - Interfacing with or modifying `libmpv-2.dll` via Python ctypes in `src/media_player/`.
 - Diagnosing audio glitches, device switching failures (e.g. WASAPI Bluetooth/headphones), or volume/pitch drift.
-- Configuring or debugging the 15-band graphic equalizer filter chain (FFmpeg `equalizer` biquads driven through `lavfi`, with a `volume` preamp stage).
+- Configuring or debugging the 15-band graphic equalizer filter chain (FFmpeg `equalizer` peaking biquads plus `lowshelf`/`highshelf` end bands, driven through `lavfi`, with a `volume` preamp stage).
 - Handling chapter markers, timecodes, subtitle tracks, or playback speed adjustments.
 - Investigating MPV event loop crashes or memory leaks during seek/pause/stop operations.
 
@@ -66,11 +66,17 @@ mpv.mpv_set_property_string(handle, b"audio-device", selected_device_id.encode("
 ### 4. 15-Band Equalizer Filter String Formatting
 The equalizer maps a preamp plus 15 per-band gains onto an FFmpeg audio-filter
 chain built in `MpvMediaPlayer.apply_equalizer`. Bands sit on the standard
-15-band ISO graphic-equalizer grid and each becomes a peaking `equalizer`
-biquad; the preamp is a single leading `volume` stage. Gains are clamped to
-the `[-20, +20]` dB range (`GAIN_MIN`/`GAIN_MAX` in
-`media_player/preset_library.py`); only bands and a preamp that differ from 0
-are emitted, and an empty chain clears the `af` property.
+15-band ISO graphic-equalizer grid. The two extreme bands behave like a real
+graphic EQ's end sliders: the lowest (25 Hz) is a **low-shelf** (`lowshelf`) and
+the highest (16 kHz) is a **high-shelf** (`highshelf`), so they lift/cut
+everything below/above the corner instead of only a narrow peak; the 13 bands in
+between are peaking `equalizer` biquads. The preamp is a single leading `volume`
+stage. Shelves use a Butterworth-ish `Q=0.7` (`_SHELF_Q`) for a smooth, ripple-
+free transition; peaking bands keep `Q=2`. Gains are clamped to the `[-20, +20]`
+dB range (`GAIN_MIN`/`GAIN_MAX` in `media_player/preset_library.py`); only bands
+and a preamp that differ from 0 are emitted, and an empty chain clears the `af`
+property. Presets inherit the shelves automatically — each preset's first/last
+band gain now drives its low/high shelf, so no preset JSON change is required.
 
 ```python
 # ISO centers (Hz): 25, 40, 63, 100, 160, 250, 400, 630, 1000,
@@ -78,8 +84,15 @@ are emitted, and an empty chain clears the `af` property.
 filters = []
 if abs(preamp) > 0.001:
     filters.append(f"volume={preamp:g}dB")
-for frequency, gain in zip(EQ_FREQUENCIES, bands):
-    if abs(gain) > 0.001:
+high_shelf_index = len(EQ_FREQUENCIES) - 1
+for index, (frequency, gain) in enumerate(zip(EQ_FREQUENCIES, bands)):
+    if abs(gain) <= 0.001:
+        continue
+    if index == 0:  # low shelf: lifts/cuts sub-bass below 25 Hz
+        filters.append(f"lowshelf=f={frequency}:t=q:w=0.7:g={gain:g}")
+    elif index == high_shelf_index:  # high shelf: all "air" above 16 kHz
+        filters.append(f"highshelf=f={frequency}:t=q:w=0.7:g={gain:g}")
+    else:
         # Q=2 (t=q:w=2) keeps the 2/3-octave bands from bleeding into each
         # other, so the chain tracks the per-band gains like a real graphic EQ.
         filters.append(f"equalizer=f={frequency}:t=q:w=2:g={gain:g}")

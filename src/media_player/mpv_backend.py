@@ -873,8 +873,20 @@ class MpvMediaPlayer:
         16000,
     )
 
+    # The two extreme bands behave like a real graphic EQ's end sliders: the
+    # lowest is a low-shelf and the highest is a high-shelf, so they lift/cut
+    # *everything* below 25 Hz (sub-bass) or above 16 kHz (air) instead of only
+    # a narrow peak around the center. A Butterworth-ish Q (0.7) gives a smooth
+    # shelf with no ripple or overshoot. The 13 bands in between stay peaking.
+    _SHELF_Q = 0.7
+
     def apply_equalizer(self, preamp: float, bands: list[float]) -> None:
         """Build an FFmpeg audio-filter chain from the preamp/band gains.
+
+        A single leading ``volume`` stage applies the preamp. The lowest band is
+        rendered as a low-shelf and the highest as a high-shelf; the bands in
+        between are peaking biquads on the ISO graphic-EQ grid. Only a preamp or
+        band that differs from 0 is emitted, and an empty chain clears ``af``.
 
         Runs under the backend lock and is a no-op once the handle is closed so
         it can be called safely from GUI callbacks while playback tears down.
@@ -887,12 +899,27 @@ class MpvMediaPlayer:
         filters = []
         if abs(preamp) > 0.001:
             filters.append(f"volume={preamp:g}dB")
-        for frequency, raw_gain in zip(self._EQ_FREQUENCIES, bands or []):
+        # The 16 kHz band is always the high shelf, regardless of how many band
+        # gains were supplied (a short list simply omits later bands).
+        high_shelf_index = len(self._EQ_FREQUENCIES) - 1
+        for index, (frequency, raw_gain) in enumerate(
+            zip(self._EQ_FREQUENCIES, bands or [])
+        ):
             try:
                 gain = float(raw_gain)
             except TypeError, ValueError:
                 continue
-            if abs(gain) > 0.001:
+            if abs(gain) <= 0.001:
+                continue
+            if index == 0:
+                filters.append(
+                    f"lowshelf=f={frequency}:t=q:w={self._SHELF_Q:g}:g={gain:g}"
+                )
+            elif index == high_shelf_index:
+                filters.append(
+                    f"highshelf=f={frequency}:t=q:w={self._SHELF_Q:g}:g={gain:g}"
+                )
+            else:
                 # Q=2 keeps 2/3-octave bands from overlapping into each other,
                 # so the chain tracks the per-band gains like a real graphic EQ.
                 filters.append(f"equalizer=f={frequency}:t=q:w=2:g={gain:g}")
