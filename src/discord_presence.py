@@ -32,6 +32,7 @@ OP_PONG = 4
 
 MAX_TEXT_BYTES = 128
 MAX_BUTTON_LABEL_BYTES = 32
+MAX_BUTTON_URL_BYTES = 512
 
 
 def truncate_utf8(text: str | None, max_bytes: int = MAX_TEXT_BYTES) -> str:
@@ -70,6 +71,24 @@ def extract_video_id(url: str | None) -> str | None:
     return None
 
 
+def is_valid_button_url(url: str | None) -> bool:
+    """Return True if ``url`` is a button URL Discord will accept.
+
+    Discord validates every button URL and rejects the *entire* SET_ACTIVITY
+    payload with an "Invalid Form Body" error if any one of them is empty,
+    missing an http(s) scheme, or excessively long. A single bad URL therefore
+    silently drops the whole presence (details, state and all), not just the
+    offending button. Validating up front keeps one bad URL from taking the
+    activity down with it.
+    """
+    if not url or not isinstance(url, str):
+        return False
+    url = url.strip()
+    if not url.startswith(("http://", "https://")):
+        return False
+    return 0 < len(url.encode("utf-8")) <= MAX_BUTTON_URL_BYTES
+
+
 class DiscordRPCClient:
     """Low-level cross-platform Discord IPC client."""
 
@@ -77,6 +96,7 @@ class DiscordRPCClient:
         self.client_id = client_id
         self.stream = None
         self._sock = None
+        self.last_response: dict[str, Any] | None = None
 
     def connect(self) -> bool:
         """Attempt to connect to a local Discord IPC pipe or socket."""
@@ -153,7 +173,14 @@ class DiscordRPCClient:
             return False
 
     def send_activity(self, activity: dict[str, Any] | None) -> bool:
-        """Send SET_ACTIVITY payload to Discord."""
+        """Send SET_ACTIVITY payload to Discord.
+
+        The boolean return reflects whether the IPC transaction completed over a
+        healthy connection. A Discord-level validation rejection (e.g. a bad
+        button URL producing an "Invalid Form Body") is logged as a warning and
+        stored in :attr:`last_response`, but does not drop the connection, so it
+        can be diagnosed without triggering a reconnect loop.
+        """
         if not self.stream:
             return False
         try:
@@ -166,7 +193,20 @@ class DiscordRPCClient:
             self.stream.write(struct.pack("<II", OP_FRAME, len(data)) + data)
             header = self._read_exact(8)
             _opcode, length = struct.unpack("<II", header)
-            self._read_exact(length)
+            body = self._read_exact(length)
+            try:
+                self.last_response = json.loads(body.decode("utf-8"))
+            except ValueError, UnicodeDecodeError:
+                self.last_response = None
+            if isinstance(self.last_response, dict) and (
+                self.last_response.get("evt") == "ERROR"
+            ):
+                err = self.last_response.get("data") or {}
+                logger.warning(
+                    "Discord rejected activity (code %s): %s",
+                    err.get("code"),
+                    err.get("message"),
+                )
             return True
         except Exception as e:
             logger.debug("Failed to send Discord activity: %s", e)
@@ -326,27 +366,28 @@ class DiscordPresence:
             # Buttons
             if self._show_buttons:
                 buttons = []
-                if url and url.startswith(("http://", "https://")):
+                if is_valid_button_url(url):
                     btn_label = (
                         _("استماع على يوتيوب") if audio_mode else _("مشاهدة على يوتيوب")
                     )
                     buttons.append(
                         {
                             "label": truncate_utf8(btn_label, MAX_BUTTON_LABEL_BYTES),
-                            "url": url,
+                            "url": url.strip(),
                         }
                     )
                 download_url = getattr(
                     application, "releases_page_url", None
                 ) or getattr(application, "github_url", "")
-                buttons.append(
-                    {
-                        "label": truncate_utf8(
-                            f"Download {application.name}", MAX_BUTTON_LABEL_BYTES
-                        ),
-                        "url": download_url,
-                    }
-                )
+                if is_valid_button_url(download_url):
+                    buttons.append(
+                        {
+                            "label": truncate_utf8(
+                                f"Download {application.name}", MAX_BUTTON_LABEL_BYTES
+                            ),
+                            "url": download_url.strip(),
+                        }
+                    )
                 if buttons:
                     activity["buttons"] = buttons[:2]
 
@@ -379,14 +420,15 @@ class DiscordPresence:
                 download_url = getattr(
                     application, "releases_page_url", None
                 ) or getattr(application, "github_url", "")
-                activity["buttons"] = [
-                    {
-                        "label": truncate_utf8(
-                            f"Download {application.name}", MAX_BUTTON_LABEL_BYTES
-                        ),
-                        "url": download_url,
-                    }
-                ]
+                if is_valid_button_url(download_url):
+                    activity["buttons"] = [
+                        {
+                            "label": truncate_utf8(
+                                f"Download {application.name}", MAX_BUTTON_LABEL_BYTES
+                            ),
+                            "url": download_url.strip(),
+                        }
+                    ]
 
             self._pending_activity = activity
             self._dirty = True
