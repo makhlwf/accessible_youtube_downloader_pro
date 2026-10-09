@@ -27,6 +27,7 @@ import struct
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 import wave
 from pathlib import Path
@@ -83,6 +84,36 @@ def _configure_log_api(lib: ctypes.CDLL) -> None:
 def _err(lib: ctypes.CDLL, code: int) -> str:
     text = lib.mpv_error_string(code)
     return _decode(text) if text else str(code)
+
+
+def _terminate_with_timeout(
+    lib: ctypes.CDLL, handle: int, timeout_s: float = 10.0
+) -> None:
+    """Destroy an mpv handle without letting a stuck teardown hang the run.
+
+    On headless CI, ``mpv_terminate_destroy`` can block indefinitely when the
+    handle had video embedded into an invalid wxGTK ``wid`` (a GtkWidget*, not
+    an X11 XID) with a software GL context. That is exactly the repro path this
+    script exercises, and a wedged teardown would make the whole diagnostics
+    run exceed its CI timeout and fail with exit 124 instead of printing its
+    report. The process is about to exit anyway, so if destroy does not return
+    promptly we abandon the handle on a daemon thread and keep going.
+    """
+    done = threading.Event()
+
+    def _destroy() -> None:
+        try:
+            lib.mpv_terminate_destroy(handle)
+        finally:
+            done.set()
+
+    threading.Thread(target=_destroy, daemon=True).start()
+    if not done.wait(timeout_s):
+        print(
+            f"  WARNING: mpv_terminate_destroy did not return within {timeout_s:g}s; "
+            "abandoning handle (likely a headless embedded-video teardown hang)",
+            flush=True,
+        )
 
 
 def _print_header(title: str) -> None:
@@ -227,7 +258,7 @@ def run_playback(
     finally:
         for line in logs[-40:]:
             print(f"  mpv> {_safe(line)}", flush=True)
-        lib.mpv_terminate_destroy(handle)
+        _terminate_with_timeout(lib, handle)
 
     print(f"  RESULT: loaded={loaded} played_to_eof={ok}", flush=True)
     return ok
