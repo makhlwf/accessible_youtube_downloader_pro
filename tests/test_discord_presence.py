@@ -12,6 +12,7 @@ from discord_presence import (
     DiscordPresence,
     DiscordRPCClient,
     extract_video_id,
+    is_valid_button_url,
     truncate_utf8,
 )
 
@@ -75,6 +76,20 @@ def test_extract_video_id():
     assert extract_video_id("https://example.com/not-youtube") is None
     assert extract_video_id("") is None
     assert extract_video_id(None) is None
+
+
+def test_is_valid_button_url():
+    assert is_valid_button_url("https://github.com/makhlwf/HexPlayer/releases")
+    assert is_valid_button_url("http://example.com")
+    assert is_valid_button_url("  https://youtu.be/dQw4w9WgXcQ  ")  # trimmed
+    # Rejected: empty, None, no scheme, non-http scheme
+    assert not is_valid_button_url("")
+    assert not is_valid_button_url(None)
+    assert not is_valid_button_url("github.com/releases")
+    assert not is_valid_button_url("ftp://example.com/file")
+    assert not is_valid_button_url("javascript:alert(1)")
+    # Rejected: excessively long URL (Discord caps button URLs)
+    assert not is_valid_button_url("https://example.com/" + "a" * 600)
 
 
 # ============================================================================
@@ -189,6 +204,34 @@ def test_client_send_failure_disconnects():
     assert client.is_connected() is False
 
 
+def test_client_send_activity_error_response_is_logged(caplog):
+    """A Discord validation ERROR is surfaced via last_response + a warning,
+    but the connection stays up (no reconnect loop)."""
+    client = DiscordRPCClient("123456789")
+    mock_file = MagicMock()
+    client.stream = mock_file
+
+    resp_payload = json.dumps(
+        {
+            "cmd": "SET_ACTIVITY",
+            "evt": "ERROR",
+            "data": {"code": 4000, "message": "Invalid Form Body"},
+        }
+    ).encode("utf-8")
+    header = struct.pack("<II", 1, len(resp_payload))
+    mock_file.read.side_effect = [header, resp_payload]
+
+    with caplog.at_level("WARNING"):
+        result = client.send_activity({"details": "x", "buttons": [{"label": "a"}]})
+
+    # Transaction completed over a healthy connection -> True, stays connected
+    assert result is True
+    assert client.is_connected() is True
+    assert client.last_response is not None
+    assert client.last_response["evt"] == "ERROR"
+    assert "Invalid Form Body" in caplog.text
+
+
 # ============================================================================
 # 3. DiscordPresence high-level manager tests
 # ============================================================================
@@ -244,6 +287,48 @@ def test_presence_media_payload_full():
         activity["buttons"][0]["url"] == "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
     )
     assert activity["buttons"][1]["label"] == "Download HexPlayer"
+
+
+def test_presence_media_buttons_skip_invalid_download_url():
+    """An empty/invalid download URL must drop that button rather than emit a
+    button with an invalid URL, which Discord would reject along with the whole
+    activity (details, state and all)."""
+    presence = DiscordPresence()
+    presence._enabled = True
+    presence._show_details = True
+    presence._show_buttons = True
+
+    with (
+        patch.object(discord_presence.application, "releases_page_url", ""),
+        patch.object(discord_presence.application, "github_url", ""),
+    ):
+        # No media URL and no valid download URL -> no buttons key at all,
+        # but the rest of the activity is still present.
+        presence.update_media(title="Song", channel="Chan", url=None)
+        activity = presence._pending_activity
+
+    assert activity is not None
+    assert activity["details"] == "Song"
+    assert "buttons" not in activity
+
+
+def test_presence_media_buttons_all_urls_valid():
+    """Every emitted button must carry a Discord-valid http(s) URL."""
+    presence = DiscordPresence()
+    presence._enabled = True
+    presence._show_details = True
+    presence._show_buttons = True
+
+    presence.update_media(
+        title="Song",
+        channel="Chan",
+        url="https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    )
+    activity = presence._pending_activity
+    assert activity is not None
+    for button in activity["buttons"]:
+        assert is_valid_button_url(button["url"])
+        assert 1 <= len(button["label"]) <= 32
 
 
 def test_presence_media_payload_channel_as_dict():
