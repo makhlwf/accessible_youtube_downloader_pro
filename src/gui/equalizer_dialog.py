@@ -9,6 +9,49 @@ from theme_handler import apply_theme
 
 CUSTOM_PRESET = "Custom"
 
+# wx.Slider is integer-only, so gains are stored internally in 0.1 dB units.
+# This keeps fractional gains (from presets or hand-edited settings) from being
+# truncated to whole dB and lets the user dial half-dB steps by keyboard.
+GAIN_SCALE = 10  # slider units per dB
+GAIN_LINE = 5  # arrow keys nudge by 0.5 dB
+GAIN_PAGE = 20  # page up/down jumps by 2 dB
+
+
+def _format_gain_db(db: float) -> str:
+    """Screen-reader label for a gain value, e.g. '+6.0 dB', '-7.5 dB'.
+
+    "dB" is left untranslated, matching the dialog's "Hz"/"kHz" band labels.
+    """
+    if db > 0:
+        return f"+{db:.1f} dB"
+    if db < 0:
+        return f"{db:.1f} dB"
+    return "0.0 dB"
+
+
+if isinstance(getattr(wx, "Accessible", None), type):
+
+    class _GainAccessible(wx.Accessible):
+        """Announce a scaled gain slider's real dB value to screen readers.
+
+        Because the slider stores gain in 0.1 dB units (see ``GAIN_SCALE``), the
+        native control would otherwise speak the raw scaled integer (e.g. "-75")
+        instead of the gain the user cares about ("-7.5 dB"). Only ``GetValue``
+        is overridden; every other property returns ``wx.ACC_NOT_IMPLEMENTED`` so
+        the control keeps its default name, role, and state handling.
+        """
+
+        def __init__(self, slider):
+            super().__init__(slider)
+            self._slider = slider
+
+        def GetValue(self, childId):
+            try:
+                db = self._slider.GetValue() / GAIN_SCALE
+            except Exception:
+                return (wx.ACC_NOT_IMPLEMENTED, "")
+            return (wx.ACC_OK, _format_gain_db(db))
+
 
 def _preset_labels():
     """Translated labels for every preset key, in dropdown order."""
@@ -68,6 +111,8 @@ class EqualizerDialog(wx.Dialog):
         self.equalizer_service.load_settings()
         self.preset_labels = _preset_labels()
         self.preset_keys = [*EqualizerService.PRESETS, CUSTOM_PRESET]
+        # Keep Python refs to custom accessibles so they outlive construction.
+        self._accessibles = []
 
         self.update_timer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.on_update_timer, self.update_timer)
@@ -183,24 +228,39 @@ class EqualizerDialog(wx.Dialog):
 
         slider = wx.Slider(
             parent,
-            value=int(initial_value),
-            minValue=min_val,
-            maxValue=max_val,
+            value=round(initial_value * GAIN_SCALE),
+            minValue=min_val * GAIN_SCALE,
+            maxValue=max_val * GAIN_SCALE,
             style=wx.SL_VERTICAL,
         )
+        # Keyboard steps in dB terms, independent of the 0.1 dB storage scale.
+        if hasattr(slider, "SetLineSize"):
+            slider.SetLineSize(GAIN_LINE)
+        if hasattr(slider, "SetPageSize"):
+            slider.SetPageSize(GAIN_PAGE)
         slider.Bind(
             wx.EVT_SLIDER, lambda event: self.on_slider_change(event, slider_id)
         )
 
         # Accessibility
         slider.SetName(label)
+        if isinstance(getattr(wx, "Accessible", None), type) and hasattr(
+            slider, "SetAccessible"
+        ):
+            try:
+                accessible = _GainAccessible(slider)
+                slider.SetAccessible(accessible)
+                self._accessibles.append(accessible)
+            except Exception:
+                # Platforms without wxUSE_ACCESSIBILITY must still get a slider.
+                pass
 
         vbox.Add(slider, 1, wx.EXPAND | wx.ALL, 5)
         sizer.Add(vbox, 0, wx.EXPAND | wx.ALL, 5)
         self.sliders[slider_id] = slider
 
     def on_slider_change(self, event, slider_id):
-        value = event.GetInt()
+        value = event.GetInt() / GAIN_SCALE
         config_set("eq_enabled", True)
 
         if slider_id == "preamp":
@@ -252,10 +312,12 @@ class EqualizerDialog(wx.Dialog):
         self.on_update_timer(None)
 
     def update_ui_from_service(self):
-        self.sliders["preamp"].SetValue(int(self.equalizer_service.get_preamp()))
+        self.sliders["preamp"].SetValue(
+            round(self.equalizer_service.get_preamp() * GAIN_SCALE)
+        )
         for i in range(BAND_COUNT):
             slider_id = f"band_{i}"
             if slider_id in self.sliders:
                 self.sliders[slider_id].SetValue(
-                    int(self.equalizer_service.get_band(i))
+                    round(self.equalizer_service.get_band(i) * GAIN_SCALE)
                 )
