@@ -53,6 +53,11 @@ defaults = {
     "discord_client_id": "",
     "discord_show_details": True,
     "discord_show_buttons": True,
+    "youtube_music_enabled": True,
+    "youtube_music_default_audio_quality": 2,
+    "youtube_music_filter_explicit": False,
+    "youtube_music_lyrics": True,
+    "youtube_music_home_sections": 5,
 }
 
 _cache = {}

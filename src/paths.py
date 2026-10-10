@@ -66,6 +66,14 @@ pot_provider_exe = os.path.join(
 )
 pot_provider_plugins_dir = os.path.join(pot_provider_dir, "plugins")
 pot_provider_version_file = os.path.join(pot_provider_dir, "version.json")
+ytmusic_dir = os.path.join(settings_path, "ytmusic")
+
+
+def get_ytmusic_dir():
+    """Return the YouTube Music data dir (for the browser.json auth fallback),
+    creating it on demand."""
+    os.makedirs(ytmusic_dir, exist_ok=True)
+    return ytmusic_dir
 
 
 def get_default_download_dir():

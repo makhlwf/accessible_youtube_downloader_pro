@@ -342,6 +342,7 @@ class HomeScreen(wx.Frame):
             panel, -1, _("الفيديوهات المفضلة	ctrl+shift+f"), name="tab"
         )
         self.historyBtn = wx.Button(panel, -1, _("سجل المشاهدة\tctrl+h"), name="tab")
+        self.musicBtn = wx.Button(panel, -1, _("يوتيوب ميوزك\tctrl+m"), name="tab")
 
         # Home feed
         self.home_feed_list = wx.ListBox(panel, -1, name="home_feed")
@@ -367,6 +368,14 @@ class HomeScreen(wx.Frame):
 
         panel.SetSizer(sizer)
 
+        # Root frame sizer so a sibling YouTube Music panel can be flipped in
+        # place (shown/hidden) without opening a new window. Built lazily.
+        self._root_sizer = wx.BoxSizer(wx.VERTICAL)
+        self._root_sizer.Add(panel, 1, wx.EXPAND)
+        self.SetSizer(self._root_sizer)
+        self.music_panel = None
+        self._in_music_mode = False
+
     def _setup_menus(self):
         menuBar = wx.MenuBar()
 
@@ -380,6 +389,7 @@ class HomeScreen(wx.Frame):
         self.shortsItem = mainMenu.Append(-1, _("مشاهدة Shorts\tctrl+shift+s"))
         self.favItem = mainMenu.Append(-1, _("الفيديوهات المفضلة	ctrl+shift+f"))
         self.historyItem = mainMenu.Append(-1, _("سجل المشاهدة\tctrl+h"))
+        self.musicItem = mainMenu.Append(-1, _("يوتيوب ميوزك\tctrl+m"))
         self.openPathItem = mainMenu.Append(-1, _("فتح مجلد التنزيل\tctrl+p"))
         self.settingsItem = mainMenu.Append(-1, _("الإعدادات...\talt+s"))
         self.exitItem = mainMenu.Append(-1, _("خروج\tctrl+w"))
@@ -440,6 +450,7 @@ class HomeScreen(wx.Frame):
                 (wx.ACCEL_CTRL | wx.ACCEL_SHIFT, ord("S"), self.shortsItem.GetId()),
                 (wx.ACCEL_CTRL | wx.ACCEL_SHIFT, ord("F"), self.favItem.GetId()),
                 (wx.ACCEL_CTRL, ord("H"), self.historyItem.GetId()),
+                (wx.ACCEL_CTRL, ord("M"), self.musicItem.GetId()),
                 (wx.ACCEL_CTRL, ord("P"), self.openPathItem.GetId()),
                 (wx.ACCEL_ALT, ord("S"), self.settingsItem.GetId()),
                 (wx.ACCEL_CTRL, ord("W"), self.exitItem.GetId()),
@@ -457,6 +468,7 @@ class HomeScreen(wx.Frame):
         self.Bind(wx.EVT_MENU, self.on_open_shorts, self.shortsItem)
         self.Bind(wx.EVT_MENU, self.onFavorite, self.favItem)
         self.Bind(wx.EVT_MENU, self.onHistory, self.historyItem)
+        self.Bind(wx.EVT_MENU, self.onMusic, self.musicItem)
         self.Bind(wx.EVT_MENU, self.onOpenPath, self.openPathItem)
         self.Bind(wx.EVT_MENU, self.onSettings, self.settingsItem)
         self.Bind(wx.EVT_MENU, self.onExit, self.exitItem)
@@ -512,6 +524,8 @@ class HomeScreen(wx.Frame):
         self.shortsBtn.Bind(wx.EVT_BUTTON, self.on_open_shorts)
         self.favBtn.Bind(wx.EVT_BUTTON, self.onFavorite)
         self.historyBtn.Bind(wx.EVT_BUTTON, self.onHistory)
+        self.musicBtn.Bind(wx.EVT_BUTTON, self.onMusic)
+        self.Bind(wx.EVT_SHOW, self._on_frame_show)
         self.load_more_home_button.Bind(
             wx.EVT_BUTTON, lambda event: self.load_home_feed(True)
         )
@@ -862,6 +876,86 @@ class HomeScreen(wx.Frame):
 
     def onHistory(self, event):
         HistoryDialog(self)
+
+    def _ensure_music_panel(self):
+        if self.music_panel is None:
+            from youtube_music.music_panel import YouTubeMusicPanel
+
+            self.music_panel = YouTubeMusicPanel(self, self)
+            self._root_sizer.Add(self.music_panel, 1, wx.EXPAND)
+            self.music_panel.Hide()
+        return self.music_panel
+
+    def onMusic(self, event=None):
+        self.open_music()
+
+    def open_music(self):
+        """Flip the UI in place from YouTube to YouTube Music (same window)."""
+        if not settings_handler.config_get("youtube_music_enabled"):
+            speak(_("يوتيوب ميوزك معطّل من الإعدادات"))
+            return
+        try:
+            panel = self._ensure_music_panel()
+        except Exception:
+            logger.exception("Failed to open YouTube Music")
+            speak(_("تعذر فتح يوتيوب ميوزك"))
+            utils.show_error(_("تعذر فتح يوتيوب ميوزك."), parent=self)
+            return
+        self.Freeze()
+        try:
+            self.panel.Hide()
+            panel.Show()
+            self._root_sizer.Layout()
+        finally:
+            self.Thaw()
+        self._in_music_mode = True
+        speak(_("يوتيوب ميوزك"))
+        panel.activate()
+
+    def close_music(self):
+        """Flip back from YouTube Music to the normal YouTube home screen."""
+        self._in_music_mode = False
+        if self.music_panel is not None:
+            self.music_panel.Hide()
+        self.panel.Show()
+        self._root_sizer.Layout()
+        try:
+            self.musicBtn.SetFocus()
+        except Exception:
+            logger.debug("Could not focus music button after close", exc_info=True)
+        speak(_("يوتيوب"))
+
+    def _on_frame_show(self, event):
+        """When the frame is reshown after the media player closes while in
+        YouTube Music mode, re-assert the flip so the normal home never flashes
+        and focus returns to the music list."""
+        event.Skip()
+        if (
+            event.IsShown()
+            and getattr(self, "_in_music_mode", False)
+            and self.music_panel is not None
+        ):
+            wx.CallAfter(self._restore_music_after_show)
+
+    def _restore_music_after_show(self):
+        if not getattr(self, "_in_music_mode", False) or self.music_panel is None:
+            return
+        if self.panel.IsShown() or not self.music_panel.IsShown():
+            self.Freeze()
+            try:
+                self.panel.Hide()
+                self.music_panel.Show()
+                self._root_sizer.Layout()
+            finally:
+                self.Thaw()
+        self.music_panel.focus_list()
+
+    def open_music_settings(self):
+        """Open Settings (used when YouTube Music needs the user to sign in)."""
+        try:
+            SettingsDialog(self)
+        except Exception:
+            logger.exception("Failed to open settings from YouTube Music")
 
     def detectFromClipboard(self, config):
         if not config:
