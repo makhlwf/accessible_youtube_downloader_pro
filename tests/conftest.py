@@ -420,6 +420,28 @@ mock_py_yt.Suggestions = Suggestions
 sys.modules["py_yt"] = mock_py_yt
 sys.modules["pyperclip"] = MagicMock()
 
+
+class _MockYTMusic:
+    """Stand-in for ytmusicapi.YTMusic so imports never hit the network.
+
+    Any method call returns an empty list by default; tests that need specific
+    payloads patch ``youtube_music.service.YTMusic`` directly.
+    """
+
+    def __init__(self, *args, **kwargs):
+        self.auth = args[0] if args else kwargs.get("auth")
+
+    def __getattr__(self, name):
+        def _method(*args, **kwargs):
+            return []
+
+        return _method
+
+
+mock_ytmusicapi = MagicMock()
+mock_ytmusicapi.YTMusic = _MockYTMusic
+sys.modules["ytmusicapi"] = mock_ytmusicapi
+
 import pytest
 
 

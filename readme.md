@@ -52,6 +52,7 @@ Linux speech announcements use Prism with Speech Dispatcher. Orca is the screen 
 ## Key Features
 
 - **YouTube search and browsing:** Search videos, playlists, channels, and live content directly inside the app.
+- **YouTube Music:** Flip the main screen in place (no new window) into a full, accessible YouTube Music experience — personalized home feed, search across songs, videos, albums, artists, and playlists, album/artist/playlist browsing, your library (playlists, songs, albums, artists, subscriptions, liked songs, listening history), moods and genres, song radio/watch playlists with auto-advance, and lyrics. Play as audio by default, start a radio, download a track, like/rate songs, add to your library or playlists, create/rename/delete playlists, and subscribe or unsubscribe — with destructive account actions always confirmed and announced. Personalized data reuses the same browser cookies HexPlayer already imports; anonymous search and browsing work without signing in.
 - **YouTube Shorts Experience:** Browse YouTube Shorts recommendations seamlessly with dedicated `Up`/`Down` navigation, background stream preloading for zero-buffering playback, continuous native looping, and context-aware actions like Liking, Disliking, and Commenting (requires cookies file).
 - **Playlist and channel views:** Open playlists and browse channel tabs such as videos, shorts, live streams, playlists, community, channels, and about.
 - **Accessible media player:** Play content as video or audio-only with keyboard shortcuts, volume boost, playback speed control, chapters, quality switching, equalizer, and audio output device selection.
@@ -88,6 +89,7 @@ HexPlayer is designed to be fully navigable from the keyboard.
 | `Ctrl + Shift + S` | Watch Shorts (requires cookies file) |
 | `Ctrl + Shift + F` | Open Favorites |
 | `Ctrl + H` | Open Watch History |
+| `Ctrl + M` | Open YouTube Music (flip in place; the "Back to YouTube" button returns) |
 | `Ctrl + P` | Open download folder |
 | `Alt + S` | Open settings |
 | `F1` | Open user guide |

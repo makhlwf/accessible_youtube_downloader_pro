@@ -203,6 +203,7 @@ class SettingsDialog(wx.Dialog):
         self._build_player_page()
         self._build_sponsorblock_page()
         self._build_cookies_page()
+        self._build_youtube_music_page()
         self._build_advanced_page()
         okButton = wx.Button(self, wx.ID_OK, _("مواف&ق"), name="ok_cancel")
         okButton.SetDefault()
@@ -222,6 +223,7 @@ class SettingsDialog(wx.Dialog):
         self._bind_events(okButton)
         self._update_sponsorblock_controls()
         self._update_discord_controls()
+        self._update_youtube_music_controls()
         apply_theme(self)
         self.ShowModal()
 
@@ -629,6 +631,109 @@ class SettingsDialog(wx.Dialog):
         sizer.Add(grid, 0, wx.EXPAND | wx.ALL, 8)
         page.SetSizer(sizer)
 
+    def _build_youtube_music_page(self):
+        page, sizer = self._new_page(_("يوتيوب ميوزك"))
+        self.youtubeMusicEnabled = SettingsCheckBox(
+            page, -1, _("تفعيل يوتيوب ميوزك"), name="youtube_music_enabled"
+        )
+        self.youtubeMusicEnabled.SetValue(bool(config_get("youtube_music_enabled")))
+        sizer.Add(self.youtubeMusicEnabled, 0, wx.EXPAND | wx.ALL, 5)
+
+        self.youtubeMusicLyrics = SettingsCheckBox(
+            page, -1, _("إظهار كلمات الأغاني عند توفرها"), name="youtube_music_lyrics"
+        )
+        self.youtubeMusicLyrics.SetValue(bool(config_get("youtube_music_lyrics")))
+        sizer.Add(self.youtubeMusicLyrics, 0, wx.EXPAND | wx.ALL, 5)
+
+        self.youtubeMusicExplicit = SettingsCheckBox(
+            page,
+            -1,
+            _("إخفاء المحتوى الصريح"),
+            name="youtube_music_filter_explicit",
+        )
+        self.youtubeMusicExplicit.SetValue(
+            bool(config_get("youtube_music_filter_explicit"))
+        )
+        sizer.Add(self.youtubeMusicExplicit, 0, wx.EXPAND | wx.ALL, 5)
+
+        grid = _labelled_grid()
+        quality_label_text = _("جودة الصوت الافتراضية: ")
+        quality_label = wx.StaticText(page, -1, quality_label_text)
+        self.youtubeMusicQuality = wx.Choice(
+            page,
+            -1,
+            name="youtube_music_default_audio_quality",
+            choices=[_("منخفضة"), _("متوسطة"), _("عالية")],
+        )
+        _set_accessible_name(self.youtubeMusicQuality, quality_label_text)
+        try:
+            self.youtubeMusicQuality.Selection = int(
+                config_get("youtube_music_default_audio_quality")
+            )
+        except TypeError, ValueError:
+            self.youtubeMusicQuality.Selection = 2
+        _add_row(grid, quality_label, self.youtubeMusicQuality)
+        sizer.Add(grid, 0, wx.EXPAND | wx.ALL, 8)
+
+        self.youtubeMusicAuthStatus = wx.StaticText(
+            page, -1, self._music_auth_status_text()
+        )
+        self.youtubeMusicAuthStatus.SetName("youtube_music_auth_status")
+        sizer.Add(self.youtubeMusicAuthStatus, 0, wx.EXPAND | wx.ALL, 5)
+
+        self.youtubeMusicImportButton = wx.Button(
+            page, -1, _("استيراد كوكيز المتصفح لتسجيل الدخول"), name="youtube_music"
+        )
+        sizer.Add(self.youtubeMusicImportButton, 0, wx.ALL, 5)
+        page.SetSizer(sizer)
+
+    def _music_auth_status_text(self):
+        try:
+            from youtube_music import auth_bridge
+
+            signed_in = auth_bridge.is_authenticated(config_get("cookiespath"))
+        except Exception:
+            signed_in = False
+        if signed_in:
+            return _("الحالة: مسجّل الدخول (البيانات الشخصية متاحة).")
+        return _("الحالة: غير مسجّل الدخول (البحث والتصفح العام فقط).")
+
+    def _update_youtube_music_controls(self):
+        enabled = self._checkbox_value(self.youtubeMusicEnabled)
+        for control in (
+            self.youtubeMusicLyrics,
+            self.youtubeMusicExplicit,
+            self.youtubeMusicQuality,
+            self.youtubeMusicImportButton,
+        ):
+            control.Enable(enabled)
+
+    def onYouTubeMusicToggle(self, event):
+        self.onCheck(event)
+        self._update_youtube_music_controls()
+
+    def onImportMusicCookies(self, event):
+        # Reuse the shared browser-cookie import, then refresh the music auth
+        # status and drop the cached authenticated client.
+        self.onImportBrowserCookies(event)
+
+    def _refresh_music_auth_status(self):
+        if hasattr(self, "youtubeMusicAuthStatus"):
+            self.youtubeMusicAuthStatus.SetLabel(self._music_auth_status_text())
+        try:
+            from youtube_music import service as ytmusic_service
+
+            ytmusic_service.reload_auth()
+        except Exception:
+            pass
+
+    def _save_youtube_music(self):
+        if hasattr(self, "youtubeMusicQuality"):
+            config_set(
+                "youtube_music_default_audio_quality",
+                self.youtubeMusicQuality.Selection,
+            )
+
     def _build_advanced_page(self):
         page, sizer = self._new_page(_("متقدم"))
         grid = _labelled_grid()
@@ -748,10 +853,14 @@ class SettingsDialog(wx.Dialog):
             self.sponsorBlockNotify,
             self.continueWatching,
             self.openPlayerFullscreen,
+            self.youtubeMusicLyrics,
+            self.youtubeMusicExplicit,
         ):
             checkbox.Bind(wx.EVT_CHECKBOX, self.onCheck)
         self.discordPresence.Bind(wx.EVT_CHECKBOX, self.onDiscordPresenceToggle)
         self.sponsorBlock.Bind(wx.EVT_CHECKBOX, self.onSponsorBlockToggle)
+        self.youtubeMusicEnabled.Bind(wx.EVT_CHECKBOX, self.onYouTubeMusicToggle)
+        self.youtubeMusicImportButton.Bind(wx.EVT_BUTTON, self.onImportMusicCookies)
         self.eqButton.Bind(wx.EVT_BUTTON, self.onEqualizer)
         self.themeBox.Bind(wx.EVT_CHOICE, self.onThemeChange)
         okButton.Bind(wx.EVT_BUTTON, self.onOk)
@@ -970,6 +1079,7 @@ class SettingsDialog(wx.Dialog):
             self.preferences["browser_cookies_source"] = browser_id
             config_set("cookiespath", path)
             config_set("browser_cookies_source", browser_id)
+            self._refresh_music_auth_status()
             try:
                 import native_messaging_host
 
@@ -1098,6 +1208,13 @@ class SettingsDialog(wx.Dialog):
             else getattr(self.playbackSpeedStep, "Value", 0.05),
         )
         self._save_sponsorblock_settings()
+        self._save_youtube_music()
+        try:
+            from youtube_music import service as ytmusic_service
+
+            ytmusic_service.reload_auth()
+        except Exception:
+            pass
         if hasattr(self, "discordClientId"):
             val = (
                 self.discordClientId.GetValue()

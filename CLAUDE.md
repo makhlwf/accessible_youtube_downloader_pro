@@ -16,7 +16,7 @@ Every action, line of code, and commit must strictly prioritize screen reader re
    - Blind users navigate entirely by keyboard and auditory feedback.
    - Every interactive control must have an accessible label, tab traversal (`wx.TAB_TRAVERSAL`), and standard keyboard shortcuts (Enter, Space, Escape).
    - Announce state transitions, playback events, and errors immediately via:
-     `from speech_client import speech_client; speech_client.speak(msg, interrupt=True)`
+     `from speech_client import speak; speak(msg, interrupt=True)`
 
 3. **Internationalization (i18n) Discipline**:
    - Never hardcode user-facing English strings. Always use `from language_handler import _`.
@@ -55,5 +55,6 @@ Consult the appropriate skill in `.agents/skills/` before making changes to any 
 - **GitHub Releases**: `.agents/skills/github-release-operations/SKILL.md`
 - **Testing & Quality**: `.agents/skills/pytest-mocking-strategy/SKILL.md`
 - **Translations**: `.agents/skills/gettext-i18n-pipeline/SKILL.md`
+- **YouTube Music**: `.agents/skills/youtube-music-engine/SKILL.md`
 
 Full multi-agent team coordination guidelines are available in `.agents/ORCHESTRATION.md`.
