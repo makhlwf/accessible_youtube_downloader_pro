@@ -30,27 +30,40 @@ import utils
 import windows_url_association
 from async_utils import start_async_loop, stop_async_loop
 from deno_service import deno_service
-from doc_handler import documentation_get
 from gui.activity_dialog import LoadingDialog
-from gui.auto_detect_dialog import AutoDetectDialog
 from gui.custom_controls import CustomLabel
-from gui.download_dialog import DownloadDialog
-from gui.favorites import Favorites
-from gui.history import HistoryDialog
-from gui.link_dlg import LinkDlg
-from gui.settings_dialog import SettingsDialog
-from gui.text_viewer import Viewer
 from gui.tray_icon import TaskBarIcon
 from language_handler import _, codes, init_translation
-from media_player.media_gui import MediaGui, play_mix
 from pot_provider_service import pot_service
 from speech_client import speak
 from theme_handler import apply_theme
-from youtube_browser.browser import YoutubeBrowser
 from youtube_browser.scraper import Scraper
-from youtube_browser.search_handler import SimpleResult
 
-utils.configure_py_yt_subprocess()
+# NOTE: heavy, feature-specific modules (media_gui/mpv, the YouTube browser,
+# per-feature dialogs, yt-dlp) are intentionally NOT imported here. They are
+# imported lazily inside the handler that first needs them so the home screen
+# can appear without paying their (~1s combined) import cost at launch.
+
+
+def _warm_background_runtimes():
+    """Load the heavy YouTube runtimes off the UI thread, just after launch.
+
+    Both pull in large dependency trees (yt-dlp ~0.9s; py_yt + aiohttp ~0.4s)
+    that are not needed to show the home screen, so neither is imported at
+    module load any more. Warming them here keeps the window instant while they
+    become ready well before the first search / playback / download. Both calls
+    are idempotent, so the lazy consumers that may also trigger them are safe.
+    """
+    try:
+        utils.load_yt_dlp()
+    except Exception:
+        logger.debug("Background yt-dlp warmup failed", exc_info=True)
+    try:
+        # Windows-only shim that stops py_yt's botGuard subprocess from flashing
+        # a console window; importing py_yt here is what costs the ~0.4s.
+        utils.configure_py_yt_subprocess()
+    except Exception:
+        logger.debug("Background py_yt subprocess shim failed", exc_info=True)
 
 
 def is_debug_invocation(argv=None):
@@ -294,10 +307,22 @@ class HomeScreen(wx.Frame):
         apply_theme(self)
         self._setup_menus()
         self._bind_events()
+        # Cheap and affects the initial control set (the Shorts button/menu item
+        # are hidden without a cookies file), so it runs during construction —
+        # before first paint — rather than in the deferred startup work below.
+        self.update_shorts_button_visibility()
 
         if not start_hidden:
             self.Show()
         self._start_ipc_server()
+        # Defer non-essential startup work until after the window is shown and
+        # the event loop is running, so the UI appears immediately instead of
+        # blocking on browser-extension sync, URL association, home-feed loading
+        # and the Discord presence connection. wx.CallAfter keeps it on the GUI
+        # thread (invariant 1), so it runs once MainLoop starts painting.
+        wx.CallAfter(self._deferred_startup)
+
+    def _deferred_startup(self):
         self._startup_logic()
         try:
             import discord_presence
@@ -309,7 +334,7 @@ class HomeScreen(wx.Frame):
                 "Failed to initialize discord presence on startup", exc_info=True
             )
         if self.pending_launch_url:
-            wx.CallAfter(self.handle_external_url, self.pending_launch_url)
+            self.handle_external_url(self.pending_launch_url)
 
     def _init_ui(self):
         self.Centre()
@@ -575,7 +600,6 @@ class HomeScreen(wx.Frame):
         cookies_path = settings_handler.config_get("cookiespath")
         if cookies_path and os.path.exists(cookies_path):
             self.load_home_feed()
-        self.update_shorts_button_visibility()
 
         autodetect = settings_handler.config_get("autodetect")
         bg_monitoring = settings_handler.config_get("background_monitoring")
@@ -620,6 +644,8 @@ class HomeScreen(wx.Frame):
                 return
             detected_url = utils.extract_supported_youtube_url(clip_content)
             if detected_url:
+                from gui.auto_detect_dialog import AutoDetectDialog
+
                 dlg = AutoDetectDialog(self, detected_url)
                 utils.ensure_focus(dlg)
                 dlg.ShowModal()
@@ -693,6 +719,8 @@ class HomeScreen(wx.Frame):
         threading.Thread(target=_load, daemon=True).start()
 
     def _update_home_feed(self, data, load_more=False):
+        from youtube_browser.search_handler import SimpleResult
+
         if isinstance(data, dict) and data.get("error"):
             err_msg = data["error"]
             wx.MessageBox(
@@ -760,6 +788,8 @@ class HomeScreen(wx.Frame):
         _add_to_scraper()
 
     def on_home_feed_play(self, event, audio_mode=False):
+        from media_player.media_gui import MediaGui, play_mix
+
         selection = self.home_feed_list.GetSelection()
         if selection == wx.NOT_FOUND:
             return
@@ -846,6 +876,9 @@ class HomeScreen(wx.Frame):
             )
 
     def onPlay(self, event):
+        from gui.link_dlg import LinkDlg
+        from media_player.media_gui import MediaGui, play_mix
+
         linkDlg = LinkDlg(self)
         data = linkDlg.data
         if not data["link"]:
@@ -869,12 +902,18 @@ class HomeScreen(wx.Frame):
         self.Hide()
 
     def onDownload(self, event):
+        from gui.download_dialog import DownloadDialog
+
         DownloadDialog(self).Show()
 
     def onSearch(self, event):
+        from youtube_browser.browser import YoutubeBrowser
+
         YoutubeBrowser(self)
 
     def onHistory(self, event):
+        from gui.history import HistoryDialog
+
         HistoryDialog(self)
 
     def _ensure_music_panel(self):
@@ -952,6 +991,8 @@ class HomeScreen(wx.Frame):
 
     def open_music_settings(self):
         """Open Settings (used when YouTube Music needs the user to sign in)."""
+        from gui.settings_dialog import SettingsDialog
+
         try:
             SettingsDialog(self)
         except Exception:
@@ -967,6 +1008,8 @@ class HomeScreen(wx.Frame):
         self.last_clip_content = clip_content
         detected_url = utils.extract_supported_youtube_url(clip_content)
         if detected_url:
+            from gui.auto_detect_dialog import AutoDetectDialog
+
             AutoDetectDialog(self, detected_url).ShowModal()
 
     def handle_external_url(self, url):
@@ -976,11 +1019,15 @@ class HomeScreen(wx.Frame):
         if not self.IsShown():
             self.Show()
         self.Raise()
+        from gui.auto_detect_dialog import AutoDetectDialog
+
         dlg = AutoDetectDialog(self, url, source="external")
         utils.ensure_focus(dlg)
         dlg.ShowModal()
 
     def onSettings(self, event):
+        from gui.settings_dialog import SettingsDialog
+
         SettingsDialog(self)
         if settings_handler.config_get("background_monitoring"):
             utils.set_startup(True)
@@ -1015,6 +1062,8 @@ class HomeScreen(wx.Frame):
             self.panel.Layout()
 
     def on_open_shorts(self, event=None):
+        from media_player.media_gui import MediaGui
+
         if not utils.has_cookies_file():
             utils.show_error(
                 _("يجب تحديد ملف الكوكيز من الإعدادات لاستخدام ميزة Shorts."),
@@ -1066,6 +1115,8 @@ class HomeScreen(wx.Frame):
         self.Hide()
 
     def onFavorite(self, event):
+        from gui.favorites import Favorites
+
         Favorites(self)
         self.Hide()
 
@@ -1087,7 +1138,9 @@ class HomeScreen(wx.Frame):
             if not settings_handler.config_get("welcome_completed"):
                 wx.CallAfter(self.show_welcome_screen)
             else:
-                self.startup_dependency_checks()
+                # Deferred off the synchronous Show() path so dependency probing
+                # (which can lazily import yt-dlp) never blocks the first paint.
+                wx.CallAfter(self.startup_dependency_checks)
             self.checked = True
         self.instruction.SetFocus()
         event.Skip()
@@ -1112,11 +1165,16 @@ class HomeScreen(wx.Frame):
         utils.check_pot_provider(self)
 
     def onGuide(self, event):
+        from doc_handler import documentation_get
+        from gui.text_viewer import Viewer
+
         content = documentation_get()
         if content:
             Viewer(self, _("دليل استخدام برنامج HexPlayer"), content).ShowModal()
 
     def onPrivacyPolicy(self, event):
+        from gui.text_viewer import Viewer
+
         path = os.path.join(
             os.path.dirname(os.path.dirname(__file__)), "PRIVACY_POLICY.md"
         )
@@ -1241,4 +1299,12 @@ if __name__ == "__main__":
 
     start_hidden = "--background" in sys.argv and not launch_url
     home_screen = HomeScreen(start_hidden=start_hidden, launch_url=launch_url)
+
+    # Warm the heavy YouTube runtimes in the background. They are no longer
+    # imported at module load (that cost ~1.3s of the startup time); loading
+    # them here, after the window is built and just before MainLoop paints it,
+    # keeps the UI instant while they become ready for the first play / search /
+    # download and the home-feed prefetch.
+    threading.Thread(target=_warm_background_runtimes, daemon=True).start()
+
     app.MainLoop()

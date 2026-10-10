@@ -6,10 +6,15 @@ import accessible_youtube_downloader_pro as app_main
 from accessible_youtube_downloader_pro import get_launch_url, is_debug_invocation
 
 
-def test_py_yt_console_suppression_installed_at_startup():
+def test_py_yt_console_suppression_installed_by_startup_warmup():
+    # The shim is no longer installed at import time (py_yt is a ~0.4s import
+    # that would slow launch); it is installed by the background startup warmup
+    # via configure_py_yt_subprocess(). The call is idempotent.
     import subprocess
 
     from py_yt.botGuard import bot_guard
+
+    app_main.utils.configure_py_yt_subprocess()
 
     if app_main.sys.platform == "win32":
         assert isinstance(bot_guard.subprocess, app_main.utils._WindowlessSubprocess)

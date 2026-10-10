@@ -1,7 +1,6 @@
 import wx
 
 from language_handler import _
-from media_player.media_gui import MediaGui, play_mix
 from speech_client import speak
 from theme_handler import apply_theme
 from utils import (
@@ -88,6 +87,8 @@ class AutoDetectDialog(wx.Dialog):
         self.Destroy()
 
     def onPlay(self, event):
+        from media_player.media_gui import MediaGui, play_mix
+
         from .playlist_dialog import PlaylistDialog
 
         main_window = wx.GetApp().GetTopWindow()
