@@ -567,6 +567,7 @@ _stream_inflight_lock = threading.Lock()
 
 yt_dlp_module = None
 YoutubeDL = None
+_yt_dlp_load_lock = threading.Lock()
 
 
 class InvalidYtDlpArchiveError(ImportError):
@@ -647,7 +648,7 @@ def _loaded_from_path(module, path):
     return module_file.lower().startswith(expected_path.lower())
 
 
-def load_yt_dlp():
+def _load_yt_dlp_locked():
     global YoutubeDL, yt_dlp_module
     tried_paths = set()
     while os.path.exists(paths.yt_dlp_path) and paths.yt_dlp_path not in tried_paths:
@@ -684,7 +685,22 @@ def load_yt_dlp():
     return False
 
 
-load_yt_dlp()
+def load_yt_dlp(force=False):
+    """Import yt-dlp on demand (idempotent and thread-safe).
+
+    yt-dlp is a large, slow import (~0.9s) that is not needed to show the home
+    screen, so it is no longer imported at module load. The first consumer to
+    need it — ``check_yt_dlp()``, the background warm thread started at app
+    startup, or an explicit caller — triggers the load, and every later call
+    returns immediately. ``force=True`` reloads even when a module is already
+    loaded, so a freshly downloaded/updated archive takes effect in place.
+    """
+    if YoutubeDL is not None and not force:
+        return True
+    with _yt_dlp_load_lock:
+        if YoutubeDL is not None and not force:
+            return True
+        return _load_yt_dlp_locked()
 
 
 class YtDlpLogger:
@@ -1000,7 +1016,7 @@ def download_yt_dlp(parent=None):
     paths.yt_dlp_path = (
         target_path if os.path.exists(target_path) else paths._get_yt_dlp_path()
     )
-    load_yt_dlp()
+    load_yt_dlp(force=True)
 
 
 def get_latest_github_release(repo):
@@ -1355,6 +1371,10 @@ def update_deno():
 
 
 def check_yt_dlp(parent=None):
+    if not YoutubeDL:
+        # yt-dlp is loaded lazily now; try to bring it in before concluding it
+        # is missing, so we only prompt to download when it is genuinely absent.
+        load_yt_dlp()
     if not YoutubeDL:
         msg = wx.MessageBox(
             _("لم يتم العثور على مكتبة واي تي دي إل بي, هل تريد تنزيلها الآن؟"),

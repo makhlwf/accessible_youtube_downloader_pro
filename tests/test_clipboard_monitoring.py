@@ -61,7 +61,7 @@ def test_on_clip_timer_skips_when_app_active():
             "pyperclip.paste",
             return_value="https://www.youtube.com/watch?v=test1234567",
         ),
-        patch("accessible_youtube_downloader_pro.AutoDetectDialog") as mock_dialog,
+        patch("gui.auto_detect_dialog.AutoDetectDialog") as mock_dialog,
     ):
         home_screen.on_clip_timer(None)
         assert (
@@ -86,7 +86,7 @@ def test_on_clip_timer_skips_when_same_content():
             "pyperclip.paste",
             return_value="https://www.youtube.com/watch?v=test1234567",
         ),
-        patch("accessible_youtube_downloader_pro.AutoDetectDialog") as mock_dialog,
+        patch("gui.auto_detect_dialog.AutoDetectDialog") as mock_dialog,
     ):
         home_screen.on_clip_timer(None)
         mock_dialog.assert_not_called()
@@ -106,7 +106,7 @@ def test_detect_from_clipboard_updates_last_clip_content():
             "pyperclip.paste",
             return_value="https://www.youtube.com/watch?v=test1234567",
         ),
-        patch("accessible_youtube_downloader_pro.AutoDetectDialog") as mock_dialog,
+        patch("gui.auto_detect_dialog.AutoDetectDialog") as mock_dialog,
     ):
         mock_dlg_instance = MagicMock()
         mock_dialog.return_value = mock_dlg_instance

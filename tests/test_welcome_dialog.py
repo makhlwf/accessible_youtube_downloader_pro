@@ -209,7 +209,9 @@ class TestWelcomeDialog(unittest.TestCase):
             mock_call_after.assert_called_once_with(home.show_welcome_screen)
             home.startup_dependency_checks.assert_not_called()
 
-        # 2. When welcome_completed is True:
+        # 2. When welcome_completed is True: dependency checks are deferred off
+        # the synchronous Show() path via wx.CallAfter (so they never block the
+        # first paint), not called inline.
         home.checked = False
         with (
             patch("settings_handler.config_get", return_value=True),
@@ -218,8 +220,8 @@ class TestWelcomeDialog(unittest.TestCase):
             mock_event = MagicMock()
             home.onShow(mock_event)
             self.assertTrue(home.checked)
-            home.startup_dependency_checks.assert_called_once()
-            mock_call_after.assert_not_called()
+            mock_call_after.assert_called_once_with(home.startup_dependency_checks)
+            home.startup_dependency_checks.assert_not_called()
 
         # 3. onWelcomeTour calls show_welcome_screen
         home.onWelcomeTour = HomeScreen.onWelcomeTour.__get__(home, HomeScreen)
