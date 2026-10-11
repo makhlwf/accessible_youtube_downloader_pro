@@ -95,7 +95,7 @@ def get_default_download_dir():
                             if os.path.isabs(candidate):
                                 downloads = candidate
                         break
-        except OSError, ValueError:
+        except (OSError, ValueError):
             pass
     return os.path.join(downloads, "HexPlayer")
 
