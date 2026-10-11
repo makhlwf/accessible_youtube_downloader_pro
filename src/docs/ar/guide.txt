@@ -83,11 +83,11 @@ https://docs.astral.sh/uv/getting-started/installation/
 git clone https://github.com/makhlwf/accessible_youtube_downloader_pro.git
 cd accessible_youtube_downloader_pro
 sudo bash packaging/linux/install-deps.sh
-uv python install 3.14.7
+uv python install 3.14.8
 UV_CONCURRENT_BUILDS=1 uv sync --locked
 uv run python src/accessible_youtube_downloader_pro.py
 
-يتعرف سكربت الاعتماديات تلقائياً على التوزيعة (Fedora أو Ubuntu/Debian) ويثبت مكتبات البناء والتشغيل عبر DNF أو APT. إصدار Python المثبت في .python-version هو 3.14.7؛ وقد يبنى wxPython من المصدر، مما يحتاج إلى وقت وذاكرة. شغل uv والبرنامج كمستخدم عادي، دون sudo.
+يتعرف سكربت الاعتماديات تلقائياً على التوزيعة (Fedora أو Ubuntu/Debian) ويثبت مكتبات البناء والتشغيل عبر DNF أو APT. إصدار Python المثبت في .python-version هو 3.14.8؛ وقد يبنى wxPython من المصدر، مما يحتاج إلى وقت وذاكرة. شغل uv والبرنامج كمستخدم عادي، دون sudo.
 
 التشغيل الأول ومواقع البيانات على لينكس
 

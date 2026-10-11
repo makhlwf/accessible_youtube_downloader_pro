@@ -320,12 +320,12 @@ Install Git and curl if needed (`sudo dnf install git curl` on Fedora or `sudo a
 git clone https://github.com/makhlwf/accessible_youtube_downloader_pro.git
 cd accessible_youtube_downloader_pro
 sudo bash packaging/linux/install-deps.sh
-uv python install 3.14.7
+uv python install 3.14.8
 UV_CONCURRENT_BUILDS=1 uv sync --locked
 uv run python src/accessible_youtube_downloader_pro.py
 ```
 
-`packaging/linux/install-deps.sh` automatically detects your distribution (Fedora/RHEL or Ubuntu/Debian) and installs the required build and runtime dependencies using DNF or APT. Python 3.14.7 is pinned in `.python-version`; wxPython may build from source, so synchronization can take time and memory. Run uv and HexPlayer as your normal user, not with `sudo`.
+`packaging/linux/install-deps.sh` automatically detects your distribution (Fedora/RHEL or Ubuntu/Debian) and installs the required build and runtime dependencies using DNF or APT. Python 3.14.8 is pinned in `.python-version`; wxPython may build from source, so synchronization can take time and memory. Run uv and HexPlayer as your normal user, not with `sudo`.
 
 ### First launch and user data
 
