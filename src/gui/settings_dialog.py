@@ -43,7 +43,7 @@ def _normalise_audio_output_device(device_id):
 def _as_float(value, fallback):
     try:
         return float(value)
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return fallback
 
 
@@ -670,7 +670,7 @@ class SettingsDialog(wx.Dialog):
             self.youtubeMusicQuality.Selection = int(
                 config_get("youtube_music_default_audio_quality")
             )
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             self.youtubeMusicQuality.Selection = 2
         _add_row(grid, quality_label, self.youtubeMusicQuality)
         sizer.Add(grid, 0, wx.EXPAND | wx.ALL, 8)

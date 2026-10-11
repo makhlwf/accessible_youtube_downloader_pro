@@ -60,7 +60,7 @@ def pe_imported_dlls(path: Path | str) -> list[str]:
     try:
         with open(path, "rb") as handle:
             mapped = mmap.mmap(handle.fileno(), 0, access=mmap.ACCESS_READ)
-    except (OSError, ValueError):
+    except OSError, ValueError:
         return []
 
     try:
@@ -125,7 +125,7 @@ def pe_imported_dlls(path: Path | str) -> list[str]:
                 if end != -1:
                     names.append(data[name_offset:end].decode("ascii", "replace"))
         return names
-    except (struct.error, ValueError):
+    except struct.error, ValueError:
         return []
     finally:
         mapped.close()

@@ -196,7 +196,7 @@ class DiscordRPCClient:
             body = self._read_exact(length)
             try:
                 self.last_response = json.loads(body.decode("utf-8"))
-            except (ValueError, UnicodeDecodeError):
+            except ValueError, UnicodeDecodeError:
                 self.last_response = None
             if isinstance(self.last_response, dict) and (
                 self.last_response.get("evt") == "ERROR"

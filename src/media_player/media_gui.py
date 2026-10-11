@@ -131,7 +131,7 @@ class MediaGui(wx.Frame):
         if start_index is not None:
             try:
                 self.current_index = int(start_index)
-            except (TypeError, ValueError):
+            except TypeError, ValueError:
                 self.current_index = 0
         elif isinstance(self.results, list):
             self.current_index = self._find_result_index(url) or 0
@@ -1417,7 +1417,7 @@ class MediaGui(wx.Frame):
     def seek_to_seconds(self, seconds, label=None):
         try:
             seconds = max(0, int(seconds))
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             speak(_("صيغة الوقت غير صحيحة"))
             return False
 
@@ -1880,7 +1880,7 @@ class MediaGui(wx.Frame):
         default_minutes = 30
         try:
             default_minutes = int(config_get("sleep_timer_last_minutes"))
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             pass
         dialog = SleepTimerDialog(self, max(1, default_minutes))
         try:

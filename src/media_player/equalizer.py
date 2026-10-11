@@ -108,7 +108,7 @@ class EqualizerService:
         if preamp is not None:
             try:
                 value = float(preamp)
-            except (TypeError, ValueError):
+            except TypeError, ValueError:
                 value = None
             if value is not None and GAIN_MIN <= value <= GAIN_MAX:
                 self.preamp = value
@@ -122,7 +122,7 @@ class EqualizerService:
                     continue
                 try:
                     gain = float(token)
-                except (TypeError, ValueError):
+                except TypeError, ValueError:
                     continue
                 self.bands[index] = max(GAIN_MIN, min(GAIN_MAX, gain))
             return

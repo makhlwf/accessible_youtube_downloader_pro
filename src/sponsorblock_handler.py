@@ -84,7 +84,7 @@ def get_min_segment_duration() -> float:
     """Segments shorter than this many seconds are ignored."""
     try:
         value = float(config_get("sponsorblock_min_duration"))
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return 0.0
     return max(0.0, value)
 

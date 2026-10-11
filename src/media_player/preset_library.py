@@ -100,7 +100,7 @@ def load_presets(directory: str | None = None) -> OrderedDict[str, dict[str, Any
             with open(path, encoding="utf-8") as handle:
                 raw = json.load(handle)
             key, preset = _parse_preset(raw)
-        except (OSError, TypeError, ValueError, json.JSONDecodeError):
+        except OSError, TypeError, ValueError, json.JSONDecodeError:
             logger.exception("Skipping invalid equalizer preset: %s", path)
             continue
         if key in collected:

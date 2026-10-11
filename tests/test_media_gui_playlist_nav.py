@@ -116,4 +116,3 @@ def test_play_result_forwards_playlist_mode_and_start_index(monkeypatch):
     assert captured["kwargs"].get("start_index") == 1
     assert captured["kwargs"].get("results") is result
     frame.Hide.assert_called_once()
-

@@ -208,7 +208,7 @@ def _get_children(window):
         return []
     try:
         return list(get_children())
-    except (RuntimeError, TypeError):
+    except RuntimeError, TypeError:
         return []
 
 
@@ -234,7 +234,7 @@ def _call_window_method(window, method_name, *args):
         return
     try:
         method(*args)
-    except (AttributeError, RuntimeError):
+    except AttributeError, RuntimeError:
         return
 
 
@@ -244,5 +244,5 @@ def _call_theme_hook(window, theme_name):
         return
     try:
         hook(theme_name)
-    except (AttributeError, RuntimeError):
+    except AttributeError, RuntimeError:
         return
