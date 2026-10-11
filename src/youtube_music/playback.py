@@ -28,7 +28,7 @@ def play_result(frame, result, index, audio_mode=True):
 
     try:
         row = result.data_list[index]
-    except IndexError, AttributeError, TypeError:
+    except (IndexError, AttributeError, TypeError):
         return None
     if not row.get("videoId"):
         return None
@@ -55,6 +55,8 @@ def play_result(frame, result, index, audio_mode=True):
         can_download=True,
         results=result,
         audio_mode=audio_mode,
+        playlist_mode=True,
+        start_index=index,
     )
     frame.Hide()
     return gui
@@ -78,7 +80,7 @@ def start_radio(frame, result, index, audio_mode=True):
 
     try:
         row = result.data_list[index]
-    except IndexError, AttributeError, TypeError:
+    except (IndexError, AttributeError, TypeError):
         return None
     video_id = row.get("videoId")
     playlist_id = row.get("playlistId")
