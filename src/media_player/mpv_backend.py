@@ -893,7 +893,7 @@ class MpvMediaPlayer:
         """
         try:
             preamp = float(preamp)
-        except TypeError, ValueError:
+        except (TypeError, ValueError):
             preamp = 0.0
 
         filters = []
@@ -907,7 +907,7 @@ class MpvMediaPlayer:
         ):
             try:
                 gain = float(raw_gain)
-            except TypeError, ValueError:
+            except (TypeError, ValueError):
                 continue
             if abs(gain) <= 0.001:
                 continue

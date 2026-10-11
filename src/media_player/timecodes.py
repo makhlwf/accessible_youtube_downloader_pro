@@ -28,7 +28,7 @@ def parse_timecode(value):
 def format_timecode(total_seconds):
     try:
         total_seconds = max(0, int(total_seconds))
-    except TypeError, ValueError:
+    except (TypeError, ValueError):
         total_seconds = 0
 
     hours, remainder = divmod(total_seconds, 3600)
