@@ -685,18 +685,33 @@ class SettingsDialog(wx.Dialog):
             page, -1, _("استيراد كوكيز المتصفح لتسجيل الدخول"), name="youtube_music"
         )
         sizer.Add(self.youtubeMusicImportButton, 0, wx.ALL, 5)
+        self.youtubeMusicCookiesFileButton = wx.Button(
+            page, -1, _("اختيار ملف كوكيز لتسجيل الدخول"), name="youtube_music"
+        )
+        sizer.Add(self.youtubeMusicCookiesFileButton, 0, wx.ALL, 5)
         page.SetSizer(sizer)
 
     def _music_auth_status_text(self):
+        # Prefer a pending (not-yet-saved) cookies path so the label reflects a
+        # just-chosen file or import immediately.
+        path = None
+        if hasattr(self, "preferences") and "cookiespath" in self.preferences:
+            path = self.preferences["cookiespath"]
+        else:
+            path = config_get("cookiespath")
         try:
             from youtube_music import auth_bridge
 
-            signed_in = auth_bridge.is_authenticated(config_get("cookiespath"))
+            signed_in = auth_bridge.is_authenticated(path)
         except Exception:
             signed_in = False
         if signed_in:
             return _("الحالة: مسجّل الدخول (البيانات الشخصية متاحة).")
         return _("الحالة: غير مسجّل الدخول (البحث والتصفح العام فقط).")
+
+    def onChooseMusicCookies(self, event):
+        self.onChangeCookies(event)
+        self._refresh_music_auth_status()
 
     def _update_youtube_music_controls(self):
         enabled = self._checkbox_value(self.youtubeMusicEnabled)
@@ -705,6 +720,7 @@ class SettingsDialog(wx.Dialog):
             self.youtubeMusicExplicit,
             self.youtubeMusicQuality,
             self.youtubeMusicImportButton,
+            self.youtubeMusicCookiesFileButton,
         ):
             control.Enable(enabled)
 
@@ -861,6 +877,9 @@ class SettingsDialog(wx.Dialog):
         self.sponsorBlock.Bind(wx.EVT_CHECKBOX, self.onSponsorBlockToggle)
         self.youtubeMusicEnabled.Bind(wx.EVT_CHECKBOX, self.onYouTubeMusicToggle)
         self.youtubeMusicImportButton.Bind(wx.EVT_BUTTON, self.onImportMusicCookies)
+        self.youtubeMusicCookiesFileButton.Bind(
+            wx.EVT_BUTTON, self.onChooseMusicCookies
+        )
         self.eqButton.Bind(wx.EVT_BUTTON, self.onEqualizer)
         self.themeBox.Bind(wx.EVT_CHOICE, self.onThemeChange)
         okButton.Bind(wx.EVT_BUTTON, self.onOk)

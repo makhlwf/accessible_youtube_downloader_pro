@@ -62,3 +62,19 @@ def test_refresh_music_auth_status_reloads_service():
         dialog._refresh_music_auth_status()
     reload_auth.assert_called_once()
     dialog.Destroy()
+
+
+def test_choose_cookies_file_button_exists():
+    dialog = _dialog()
+    assert dialog.youtubeMusicCookiesFileButton is not None
+    dialog.Destroy()
+
+
+def test_auth_status_prefers_pending_cookies_path():
+    dialog = _dialog()
+    dialog.preferences["cookiespath"] = "C:/some/new/cookies.txt"
+    with patch("youtube_music.auth_bridge.is_authenticated") as is_auth:
+        is_auth.return_value = True
+        dialog._music_auth_status_text()
+    is_auth.assert_called_once_with("C:/some/new/cookies.txt")
+    dialog.Destroy()

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-10 21:23+0200\n"
+"POT-Creation-Date: 2026-10-11 03:58+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -192,7 +192,7 @@ msgstr ""
 
 #: src/accessible_youtube_downloader_pro.py:678 src/gui/comments_dialog.py:127
 #: src/gui/comments_dialog.py:349 src/gui/comments_dialog.py:565
-#: src/gui/settings_dialog.py:1126 src/gui/settings_dialog.py:1170
+#: src/gui/settings_dialog.py:1145 src/gui/settings_dialog.py:1189
 #: src/utils.py:3463
 msgid "خطأ"
 msgstr ""
@@ -233,7 +233,7 @@ msgstr ""
 
 #: src/accessible_youtube_downloader_pro.py:728
 #: src/accessible_youtube_downloader_pro.py:1290 src/gui/history.py:105
-#: src/gui/settings_dialog.py:1013 src/gui/settings_dialog.py:1246
+#: src/gui/settings_dialog.py:1032 src/gui/settings_dialog.py:1265
 #: src/utils.py:1381 src/utils.py:1398 src/utils.py:1455 src/utils.py:1476
 #: src/utils.py:1503
 msgid "تنبيه"
@@ -2177,7 +2177,7 @@ msgstr ""
 msgid "مسار مجلد التنزيل: "
 msgstr ""
 
-#: src/gui/download_dialog.py:80 src/gui/settings_dialog.py:998
+#: src/gui/download_dialog.py:80 src/gui/settings_dialog.py:1017
 msgid "اختر مجلد التنزيل"
 msgstr ""
 
@@ -2877,93 +2877,97 @@ msgstr ""
 msgid "استيراد كوكيز المتصفح لتسجيل الدخول"
 msgstr ""
 
-#: src/gui/settings_dialog.py:698
+#: src/gui/settings_dialog.py:689
+msgid "اختيار ملف كوكيز لتسجيل الدخول"
+msgstr ""
+
+#: src/gui/settings_dialog.py:709
 msgid "الحالة: مسجّل الدخول (البيانات الشخصية متاحة)."
 msgstr ""
 
-#: src/gui/settings_dialog.py:699
+#: src/gui/settings_dialog.py:710
 msgid "الحالة: غير مسجّل الدخول (البحث والتصفح العام فقط)."
 msgstr ""
 
-#: src/gui/settings_dialog.py:738
+#: src/gui/settings_dialog.py:754
 msgid "متقدم"
 msgstr ""
 
-#: src/gui/settings_dialog.py:742
+#: src/gui/settings_dialog.py:758
 msgid "عميل مشغل يوتيوب: "
 msgstr ""
 
-#: src/gui/settings_dialog.py:760
+#: src/gui/settings_dialog.py:776
 msgid "التشغيل في الخلفية ومراقبة الحافظة عند بدء تشغيل النظام"
 msgstr ""
 
-#: src/gui/settings_dialog.py:767
+#: src/gui/settings_dialog.py:783
 msgid "تفعيل التكامل الآمن مع إضافة المتصفح"
 msgstr ""
 
-#: src/gui/settings_dialog.py:776
+#: src/gui/settings_dialog.py:792
 msgid "تفعيل مولد رموز POT لتجاوز قيود يوتيوب (bgutil-pot)"
 msgstr ""
 
-#: src/gui/settings_dialog.py:783
+#: src/gui/settings_dialog.py:799
 msgid "تفعيل رسائل تصحيح الأخطاء للمطورين فقط"
 msgstr ""
 
-#: src/gui/settings_dialog.py:790
+#: src/gui/settings_dialog.py:806
 msgid "تفعيل التواجد الغني في ديسكورد (Discord Rich Presence)"
 msgstr ""
 
-#: src/gui/settings_dialog.py:797
+#: src/gui/settings_dialog.py:813
 msgid "عرض اسم المقطع والقناة في ديسكورد"
 msgstr ""
 
-#: src/gui/settings_dialog.py:804
+#: src/gui/settings_dialog.py:820
 msgid "إظهار أزرار المقطع في ديسكورد"
 msgstr ""
 
-#: src/gui/settings_dialog.py:809
+#: src/gui/settings_dialog.py:825
 msgid "معرف تطبيق ديسكورد المخصص (Client ID): "
 msgstr ""
 
-#: src/gui/settings_dialog.py:1012
+#: src/gui/settings_dialog.py:1031
 msgid "ملف الكوكيز المختار غير موجود."
 msgstr ""
 
-#: src/gui/settings_dialog.py:1021
+#: src/gui/settings_dialog.py:1040
 msgid "ملفات نصية (*.txt)|*.txt"
 msgstr ""
 
-#: src/gui/settings_dialog.py:1024
+#: src/gui/settings_dialog.py:1043
 msgid "اختر ملف الكوكيز"
 msgstr ""
 
-#: src/gui/settings_dialog.py:1093
+#: src/gui/settings_dialog.py:1112
 #, python-brace-format
 msgid "تم استيراد {count} من الكوكيز بنجاح من متصفح {browser}."
 msgstr ""
 
-#: src/gui/settings_dialog.py:1097
+#: src/gui/settings_dialog.py:1116
 #, python-brace-format
 msgid ""
 "تم استيراد {count} من الكوكيز من متصفح {browser}، ولكن يبدو أنه لم يتم "
 "العثور على جلسة تسجيل دخول نشطة لحساب يوتيوب."
 msgstr ""
 
-#: src/gui/settings_dialog.py:1101 src/gui/update_dialog.py:175
+#: src/gui/settings_dialog.py:1120 src/gui/update_dialog.py:175
 #: src/gui/update_dialog.py:214
 msgid "نجاح"
 msgstr ""
 
-#: src/gui/settings_dialog.py:1109
+#: src/gui/settings_dialog.py:1128
 #, python-brace-format
 msgid "متصفح {browser} مفتوح حاليًا. يرجى إغلاق المتصفح وإعادة المحاولة."
 msgstr ""
 
-#: src/gui/settings_dialog.py:1111
+#: src/gui/settings_dialog.py:1130
 msgid "المتصفح مفتوح"
 msgstr ""
 
-#: src/gui/settings_dialog.py:1114
+#: src/gui/settings_dialog.py:1133
 #, python-brace-format
 msgid ""
 "تعذر فك تشفير كوكيز متصفح {browser} مباشرة بسبب نظام الحماية (App-Bound "
@@ -2971,29 +2975,29 @@ msgid ""
 "للمتصفح (HexPlayer Link Helper) أو باستخدام متصفح Firefox."
 msgstr ""
 
-#: src/gui/settings_dialog.py:1116
+#: src/gui/settings_dialog.py:1135
 msgid "خطأ في فك التشفير"
 msgstr ""
 
-#: src/gui/settings_dialog.py:1118
+#: src/gui/settings_dialog.py:1137
 #, python-brace-format
 msgid "لم يتم العثور على كوكيز في متصفح {browser}."
 msgstr ""
 
-#: src/gui/settings_dialog.py:1121
+#: src/gui/settings_dialog.py:1140
 msgid "لا توجد كوكيز"
 msgstr ""
 
-#: src/gui/settings_dialog.py:1123
+#: src/gui/settings_dialog.py:1142
 #, python-brace-format
 msgid "فشل استيراد الكوكيز من متصفح {browser}: {error}"
 msgstr ""
 
-#: src/gui/settings_dialog.py:1169
+#: src/gui/settings_dialog.py:1188
 msgid "Unable to update browser integration."
 msgstr ""
 
-#: src/gui/settings_dialog.py:1244
+#: src/gui/settings_dialog.py:1263
 #, python-brace-format
 msgid ""
 "لقد قمت بتغيير لغة البرنامج إلى {}, مما يعني أنه ينبغي عليك إعادة تشغيل "

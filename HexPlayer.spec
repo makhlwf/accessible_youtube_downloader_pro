@@ -253,6 +253,19 @@ try:
 except Exception:
     pass
 
+# ytmusicapi ships gettext locale catalogs (locales/<lang>/LC_MESSAGES/base.mo)
+# that YTMusic.__init__ loads via gettext.translation("base", ...). Without
+# them the frozen build raises FileNotFoundError: No translation file found for
+# domain 'base'. collect_all bundles those data files plus any lazily-imported
+# parser/model submodules.
+try:
+    ret_ytm = collect_all("ytmusicapi")
+    datas += ret_ytm[0]
+    binaries += ret_ytm[1]
+    hiddenimports += ret_ytm[2]
+except Exception:
+    pass
+
 # Analysis and EXE for HexPlayer (GUI)
 a_main = Analysis(
     [os.path.join(SRC_DIR, "accessible_youtube_downloader_pro.py")],
