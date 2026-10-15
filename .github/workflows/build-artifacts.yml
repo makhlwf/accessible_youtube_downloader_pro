@@ -90,14 +90,21 @@ jobs:
       - name: Compile Windows installer
         if: runner.os == 'Windows'
         run: iscc "packaging\windows\inno.iss"
+      - name: Stage Windows release assets
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist-windows
+          Copy-Item HexPlayer/HexPlayer.exe dist-windows/
+          if (Test-Path src/youtube_service.exe) {
+            Copy-Item src/youtube_service.exe dist-windows/
+          }
       - name: Upload Windows installer and standalone service
         if: runner.os == 'Windows'
         uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.artifact }}
-          path: |
-            HexPlayer/HexPlayer.exe
-            src/youtube_service.exe
+          path: dist-windows/*
           if-no-files-found: error
       - name: Upload Linux packages
         if: runner.os == 'Linux'

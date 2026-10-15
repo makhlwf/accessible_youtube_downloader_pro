@@ -160,6 +160,9 @@ jobs:
         run: |
           set -euo pipefail
           test -s artifacts/windows/HexPlayer.exe
+          if [ -f artifacts/windows/youtube_service.exe ]; then
+            test -s artifacts/windows/youtube_service.exe
+          fi
           test -s "artifacts/linux/HexPlayer-$VERSION-linux-x86_64.tar.xz"
           test -s "artifacts/linux/HexPlayer-$VERSION-linux-amd64.deb"
           test -s "artifacts/linux/HexPlayer-$VERSION-1.x86_64.rpm"
