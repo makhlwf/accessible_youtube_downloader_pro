@@ -278,7 +278,7 @@ class Downloader:
                     "js_variant": "main",
                 }
             },
-            "js_runtimes": {"deno": {"path": paths.get_deno_path()}},
+            "js_runtimes": utils.get_configured_js_runtimes(),
             "quiet": False,
             "verbose": True,
             "no_warnings": False,

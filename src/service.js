@@ -1,15 +1,34 @@
 import { Innertube, UniversalCache, YTNodes, YT } from 'youtubei.js';
-import { readFileSync } from 'node:fs';
-import { TextLineStream } from "https://deno.land/std@0.224.0/streams/text_line_stream.ts";
+
+/**
+ * Reads text content from a file across different JS runtimes (txiki.js, Deno, Node).
+ * @param {string} filePath
+ * @returns {Promise<string>}
+ */
+async function readTextFile(filePath) {
+  if (typeof tjs !== 'undefined' && tjs.readFile) {
+    const data = await tjs.readFile(filePath);
+    return new TextDecoder().decode(data);
+  }
+  if (typeof Deno !== 'undefined' && Deno.readTextFileSync) {
+    return Deno.readTextFileSync(filePath);
+  }
+  try {
+    const fs = await import('node:fs');
+    return fs.readFileSync(filePath, 'utf8');
+  } catch (e) {
+    return '';
+  }
+}
 
 /**
  * Parses cookies from a Netscape cookie file.
  * @param {string} filePath Path to the cookie file.
- * @returns {string | null}
+ * @returns {Promise<string | null>}
  */
-function parseCookies(filePath) {
+async function parseCookies(filePath) {
   try {
-    const text = readFileSync(filePath, 'utf8');
+    const text = await readTextFile(filePath);
     const cookieMap = new Map();
     const lines = text.split('\n').filter(line => line.trim() && !line.startsWith('#'));
 
@@ -275,7 +294,7 @@ async function getYT(cookiesPath, location) {
     
     let cookieString = null;
     if (cookiesPath) {
-        cookieString = parseCookies(cookiesPath);
+        cookieString = await parseCookies(cookiesPath);
     }
     
     const options = {
@@ -1105,12 +1124,38 @@ async function handleUpdateWatchHistory(params) {
     return { success: true };
 }
 
-async function main() {
-    const lines = Deno.stdin.readable
-        .pipeThrough(new TextDecoderStream())
-        .pipeThrough(new TextLineStream());
+async function* getStdinLines() {
+    if (typeof tjs !== 'undefined' && tjs.stdin) {
+        const reader = tjs.stdin.getReader();
+        const decoder = new TextDecoder();
+        let buf = '';
+        while (true) {
+            const { value, done } = await reader.read();
+            if (done) break;
+            buf += decoder.decode(value, { stream: true });
+            const parts = buf.split('\n');
+            buf = parts.pop();
+            for (const p of parts) yield p;
+        }
+        if (buf.trim()) yield buf;
+    } else if (typeof Deno !== 'undefined' && Deno.stdin) {
+        const reader = Deno.stdin.readable.getReader();
+        const decoder = new TextDecoder();
+        let buf = '';
+        while (true) {
+            const { value, done } = await reader.read();
+            if (done) break;
+            buf += decoder.decode(value, { stream: true });
+            const parts = buf.split('\n');
+            buf = parts.pop();
+            for (const p of parts) yield p;
+        }
+        if (buf.trim()) yield buf;
+    }
+}
 
-    for await (const line of lines) {
+async function main() {
+    for await (const line of getStdinLines()) {
         if (!line.trim()) continue;
         let request;
         try {
@@ -1177,11 +1222,33 @@ export {
     parseCount
 };
 
-if (import.meta.main) {
-    main().catch(err => {
-        console.error(JSON.stringify({ error: err.message }));
-        Deno.exit(1);
-    });
+const SERVICE_VERSION = "1.0.0";
+
+const exitService = (code = 0) => {
+    if (typeof Deno !== 'undefined' && Deno.exit) {
+        Deno.exit(code);
+    } else if (typeof tjs !== 'undefined' && tjs.exit) {
+        tjs.exit(code);
+    } else if (typeof process !== 'undefined' && process.exit) {
+        process.exit(code);
+    }
+};
+
+const isMainExecution = (typeof Deno !== 'undefined' && import.meta.main) || (typeof tjs !== 'undefined');
+if (isMainExecution) {
+    const rawArgs = typeof Deno !== 'undefined' ? (Deno.args || []) : (typeof tjs !== 'undefined' ? (tjs.args || []) : (typeof process !== 'undefined' ? process.argv.slice(2) : []));
+    if (rawArgs.some(arg => arg === '--version' || arg === '-v')) {
+        console.log(`youtube_service ${SERVICE_VERSION}`);
+        exitService(0);
+    } else if (rawArgs.some(arg => arg === '--help' || arg === '-h')) {
+        console.log(`HexPlayer YouTube Service v${SERVICE_VERSION}\nUsage: youtube_service [options]\n\nOptions:\n  -v, --version  Show version\n  -h, --help     Show help`);
+        exitService(0);
+    } else {
+        main().catch(err => {
+            console.error(JSON.stringify({ error: err.message }));
+            exitService(1);
+        });
+    }
 }
 
 

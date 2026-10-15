@@ -832,12 +832,20 @@ class SettingsDialog(wx.Dialog):
             value=str(config_get("discord_client_id") or ""),
             name="discord_client_id",
         )
+        self.useDenoBackend = SettingsCheckBox(
+            page,
+            -1,
+            _("استخدام Deno كمحرك JavaScript بديل"),
+            name="use_deno_backend",
+        )
+        self.useDenoBackend.SetValue(bool(config_get("use_deno_backend")))
         _set_accessible_name(self.discordClientId, discord_client_id_label_text)
         _add_row(discord_grid, self.discordClientIdLabel, self.discordClientId)
         for checkbox in (
             self.potProvider,
             self.backgroundMonitoring,
             self.browserIntegration,
+            self.useDenoBackend,
             self.debugMode,
             self.discordPresence,
             self.discordShowDetails,
@@ -873,6 +881,7 @@ class SettingsDialog(wx.Dialog):
             self.youtubeMusicExplicit,
         ):
             checkbox.Bind(wx.EVT_CHECKBOX, self.onCheck)
+        self.useDenoBackend.Bind(wx.EVT_CHECKBOX, self.onUseDenoToggle)
         self.discordPresence.Bind(wx.EVT_CHECKBOX, self.onDiscordPresenceToggle)
         self.sponsorBlock.Bind(wx.EVT_CHECKBOX, self.onSponsorBlockToggle)
         self.youtubeMusicEnabled.Bind(wx.EVT_CHECKBOX, self.onYouTubeMusicToggle)
@@ -944,6 +953,37 @@ class SettingsDialog(wx.Dialog):
     def onDiscordPresenceToggle(self, event):
         self.onCheck(event)
         self._update_discord_controls()
+
+    def onUseDenoToggle(self, event):
+        checkbox = event.GetEventObject()
+        if checkbox.GetValue():
+            if not os.path.exists(paths.get_deno_path()):
+                checkbox.SetValue(False)
+                msg = wx.MessageBox(
+                    _(
+                        "لم يتم العثور على أداة deno.exe, وهي مطلوبة لتفعيل محرك Deno. هل تريد تنزيلها الآن؟"
+                    ),
+                    _("تنبيه"),
+                    style=wx.YES_NO | wx.ICON_INFORMATION,
+                    parent=self,
+                )
+                if msg == wx.YES:
+                    utils.download_deno(parent=self)
+                    if os.path.exists(paths.get_deno_path()):
+                        checkbox.SetValue(True)
+                        self.preferences["use_deno_backend"] = True
+                    else:
+                        checkbox.SetValue(False)
+                        self.preferences["use_deno_backend"] = False
+                else:
+                    checkbox.SetValue(False)
+                    self.preferences["use_deno_backend"] = False
+            else:
+                checkbox.SetValue(True)
+                self.preferences["use_deno_backend"] = True
+        else:
+            checkbox.SetValue(False)
+            self.preferences["use_deno_backend"] = False
 
     def _update_discord_controls(self):
         enabled = hasattr(self, "discordPresence") and self._checkbox_value(
@@ -1166,8 +1206,22 @@ class SettingsDialog(wx.Dialog):
             return
         old_browser_integration = config_get("browser_integration")
         old_pot_provider = config_get("pot_provider_enabled")
+        old_use_deno = config_get("use_deno_backend")
         for key, item in self.preferences.items():
             config_set(key, item)
+        if hasattr(self, "useDenoBackend"):
+            new_use_deno = bool(self.useDenoBackend.GetValue())
+            config_set("use_deno_backend", new_use_deno)
+            if new_use_deno != old_use_deno:
+                try:
+                    from deno_service import deno_service
+
+                    deno_service.stop()
+                except Exception:
+                    pass
+                parent = self.GetParent()
+                if parent and hasattr(parent, "update_deno_tools_visibility"):
+                    parent.update_deno_tools_visibility()
         new_pot_provider = config_get("pot_provider_enabled")
         if new_pot_provider != old_pot_provider:
             from pot_provider_service import pot_service

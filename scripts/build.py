@@ -263,6 +263,11 @@ def package_linux():
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument(
+        "--build-youtube-service",
+        action="store_true",
+        help="Compile standalone youtube_service executable before packaging",
+    )
     args = parser.parse_args()
     if sys.platform not in {"win32", "linux"}:
         parser.error("Only native Windows and Linux builds are supported.")
@@ -286,6 +291,16 @@ def main():
         return 0
     try:
         ensure_mpv_runtime()
+        should_build_service = args.build_youtube_service or (
+            sys.platform == "win32" and not (SRC_DIR / "youtube_service.exe").is_file()
+        )
+        if should_build_service:
+            build_script = ROOT / "scripts" / "build_youtube_service.py"
+            if build_script.is_file():
+                print("Building standalone youtube_service executable...")
+                subprocess.run(
+                    [sys.executable, str(build_script)], cwd=ROOT, check=True
+                )
         for output_dir in (DIST_DIR, BUILD_DIR):
             if output_dir.exists():
                 shutil.rmtree(output_dir)

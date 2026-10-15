@@ -7,8 +7,9 @@ from utils import (
 
 
 @patch("utils.paths.deno_path", "non_existent_deno.exe")
+@patch("utils.paths.get_youtube_service_path", return_value=None)
 @patch("utils.wx.MessageBox")
-def test_ensure_deno_installed_missing(mock_msgbox):
+def test_ensure_deno_installed_missing(mock_msgbox, mock_service):
     mock_msgbox.return_value = 5  # wx.NO
     result = ensure_deno_installed(feature_name="الإعجاب")
     assert result is False

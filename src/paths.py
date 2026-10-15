@@ -145,6 +145,43 @@ def get_deno_path():
     return deno_path
 
 
+youtube_service_install_path = os.path.join(
+    main_path if sys.platform == "win32" else js_runtime_path,
+    "youtube_service.exe" if sys.platform == "win32" else "youtube_service",
+)
+youtube_service_path = youtube_service_install_path
+
+
+def get_youtube_service_path():
+    exe_name = "youtube_service.exe" if sys.platform == "win32" else "youtube_service"
+    candidates = [
+        os.path.join(settings_path, exe_name),
+        os.path.join(main_path, exe_name),
+        os.path.join(get_bundled_data_path(), exe_name),
+        os.path.join(os.path.dirname(__file__), exe_name),
+        youtube_service_path,
+    ]
+    for candidate in candidates:
+        if candidate and os.path.isfile(candidate):
+            return candidate
+    return None
+
+
+def get_quickjs_path():
+    exe_name = "qjs.exe" if sys.platform == "win32" else "qjs"
+    candidates = [
+        os.path.join(settings_path, exe_name),
+        os.path.join(main_path, exe_name),
+        os.path.join(get_bundled_data_path(), exe_name),
+        shutil.which("qjs"),
+        shutil.which("quickjs"),
+    ]
+    for candidate in candidates:
+        if candidate and os.path.isfile(candidate):
+            return candidate
+    return None
+
+
 ffmpeg_path = os.path.join(
     get_bundled_data_path(), "ffmpeg.exe" if sys.platform == "win32" else "ffmpeg"
 )

@@ -556,3 +556,48 @@ def test_language_normalization_in_settings():
 
     settings_handler.config_set("lang", "ar_EG")
     assert settings_handler.config_get("lang") == "ar"
+
+
+def test_use_deno_backend_default_setting_exists():
+    assert defaults["use_deno_backend"] is False
+
+
+def test_settings_dialog_use_deno_toggle(monkeypatch):
+    import paths
+    from gui import settings_dialog
+
+    settings_handler.config_initialization()
+    settings_handler.config_set("use_deno_backend", False)
+
+    frame = wx.Frame(None)
+    dialog = settings_dialog.SettingsDialog(frame)
+
+    assert hasattr(dialog, "useDenoBackend")
+    assert dialog.useDenoBackend.GetValue() is False
+
+    # Simulate checking when Deno is missing and user clicks No
+    monkeypatch.setattr(paths, "get_deno_path", lambda: "/nonexistent/deno")
+    monkeypatch.setattr(dialog, "preferences", {})
+    monkeypatch.setattr(wx, "MessageBox", lambda *a, **k: wx.NO)
+
+    from types import SimpleNamespace
+
+    dialog.useDenoBackend.SetValue(True)
+    evt = SimpleNamespace(GetEventObject=lambda: dialog.useDenoBackend)
+    dialog.onUseDenoToggle(evt)
+
+    assert dialog.useDenoBackend.GetValue() is False
+    assert dialog.preferences.get("use_deno_backend") is False
+
+    # Simulate checking when Deno is installed
+    monkeypatch.setattr(paths, "get_deno_path", lambda: "/installed/deno")
+    monkeypatch.setattr(os.path, "exists", lambda p: p == "/installed/deno")
+
+    dialog.useDenoBackend.SetValue(True)
+    dialog.onUseDenoToggle(evt)
+
+    assert dialog.useDenoBackend.GetValue() is True
+    assert dialog.preferences.get("use_deno_backend") is True
+
+    dialog.Destroy()
+    frame.Destroy()

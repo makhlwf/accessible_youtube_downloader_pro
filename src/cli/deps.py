@@ -144,9 +144,49 @@ def _install_youtubei(version):
         return False, str(error)
 
 
+def update_youtube_service():
+    """Download the latest standalone youtube_service release headlessly. Returns ``(ok, message)``."""
+    current = utils.get_youtube_service_version()
+    latest = utils.get_latest_github_release(
+        "makhlwf/accessible_youtube_downloader_pro"
+    )
+    if not latest:
+        return False, _("تعذر الحصول على معلومات التحديث من غيت هاب")
+    if current and (current.lstrip("v") == latest.lstrip("v")):
+        return True, _(
+            "أنت تستخدم بالفعل أحدث إصدار من خدمة يوتيوب المدمجة ({version})"
+        ).format(version=current)
+
+    binary_name = (
+        "youtube_service.exe" if sys.platform == "win32" else "youtube_service"
+    )
+    url = f"https://github.com/makhlwf/accessible_youtube_downloader_pro/releases/latest/download/{binary_name}"
+    target = paths.youtube_service_install_path
+    os.makedirs(os.path.dirname(target), exist_ok=True)
+    download = f"{target}.download"
+    try:
+        _http_download(url, download)
+    except Exception as error:
+        return False, _("فشل تنزيل خدمة يوتيوب المدمجة: {error}").format(error=error)
+
+    if sys.platform != "win32":
+        try:
+            os.chmod(download, 0o755)
+        except OSError:
+            pass
+
+    os.replace(download, target)
+    new = utils.get_youtube_service_version()
+    return True, _("تم تحديث خدمة يوتيوب المدمجة إلى الإصدار {version}").format(
+        version=new or latest
+    )
+
+
 def update_youtubei():
-    """Update the youtubei.js (InnerTube) library via Deno. Returns ``(ok, message)``."""
+    """Update the youtubei.js (InnerTube) library via Deno or standalone service. Returns ``(ok, message)``."""
     if not os.path.exists(paths.get_deno_path()):
+        if paths.get_youtube_service_path():
+            return update_youtube_service()
         return False, _("تحديث مكتبة YouTube.js (Innertube) يتطلب تثبيت دينو أولاً")
 
     current = utils.get_youtubei_version()

@@ -225,6 +225,8 @@ __marimo__/
 src/yt-dlp.exe
 src/cookies.txt
 src/deno.exe
+src/youtube_service.exe
+src/youtube_service
 src/libmpv-2.dll
 HexPlayer/
 manifests/

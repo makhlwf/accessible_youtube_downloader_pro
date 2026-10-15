@@ -13,6 +13,7 @@ def test_deno_service_platform_runtime(monkeypatch, system):
     import deno_service
 
     monkeypatch.setattr(deno_service.sys, "platform", system)
+    monkeypatch.setattr(paths, "get_youtube_service_path", lambda: None, raising=False)
     monkeypatch.setattr(paths, "get_deno_path", lambda: "/runtime/deno", raising=False)
     monkeypatch.setattr(
         deno_service.subprocess, "CREATE_NO_WINDOW", 0x08000000, raising=False
@@ -24,6 +25,33 @@ def test_deno_service_platform_runtime(monkeypatch, system):
     service = deno_service.DenoService()
     service._ensure_process()
     assert popen.call_args.args[0][0] == "/runtime/deno"
+    assert popen.call_args.kwargs["creationflags"] == (
+        0 if system == "linux" else 0x08000000
+    )
+    service.stop()
+
+
+@pytest.mark.parametrize("system", ["linux", "win32"])
+def test_youtube_service_platform_runtime(monkeypatch, system):
+    import deno_service
+
+    monkeypatch.setattr(deno_service.sys, "platform", system)
+    monkeypatch.setattr(
+        paths,
+        "get_youtube_service_path",
+        lambda: "/runtime/youtube_service",
+        raising=False,
+    )
+    monkeypatch.setattr(
+        deno_service.subprocess, "CREATE_NO_WINDOW", 0x08000000, raising=False
+    )
+    process = Mock()
+    popen = Mock(return_value=process)
+    monkeypatch.setattr(deno_service.subprocess, "Popen", popen)
+    monkeypatch.setattr(deno_service.threading, "Thread", Mock())
+    service = deno_service.DenoService()
+    service._ensure_process()
+    assert popen.call_args.args[0][0] == "/runtime/youtube_service"
     assert popen.call_args.kwargs["creationflags"] == (
         0 if system == "linux" else 0x08000000
     )

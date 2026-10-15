@@ -178,11 +178,11 @@ jobs:
                 gh api --method DELETE "repos/$GITHUB_REPOSITORY/git/refs/tags/beta"
               fi
             fi
-            gh release create "$TAG" artifacts/windows/HexPlayer.exe artifacts/linux/* \
+            gh release create "$TAG" artifacts/windows/* artifacts/linux/* \
               --target "$SOURCE_SHA" --title "Beta: $VERSION" \
               --notes-file "$RUNNER_TEMP/release-notes.txt" --prerelease --latest=false --draft
           else
-            gh release create "$TAG" artifacts/windows/HexPlayer.exe artifacts/linux/* \
+            gh release create "$TAG" artifacts/windows/* artifacts/linux/* \
               --target "$SOURCE_SHA" --title "Version $VERSION" \
               --notes-file "$RUNNER_TEMP/release-notes.txt" --latest --draft
           fi

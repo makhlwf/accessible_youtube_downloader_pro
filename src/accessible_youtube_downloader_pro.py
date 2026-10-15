@@ -465,6 +465,7 @@ class HomeScreen(wx.Frame):
 
         menuBar.Append(aboutMenu, _("حول"))
         self.SetMenuBar(menuBar)
+        self.update_deno_tools_visibility()
 
         # Accelerator Table
         accel = wx.AcceleratorTable(
@@ -1051,6 +1052,16 @@ class HomeScreen(wx.Frame):
             self.load_more_home_button.Hide()
             self.Layout()
         self.update_shorts_button_visibility()
+        self.update_deno_tools_visibility()
+
+    def update_deno_tools_visibility(self):
+        use_deno = bool(settings_handler.config_get("use_deno_backend"))
+        if hasattr(self, "showDenoVer"):
+            self.showDenoVer.Enable(use_deno)
+        if hasattr(self, "updateDeno"):
+            self.updateDeno.Enable(use_deno)
+        if hasattr(self, "refreshYoutubeiCache"):
+            self.refreshYoutubeiCache.Enable(use_deno)
 
     def update_shorts_button_visibility(self):
         has_cookies = utils.has_cookies_file()

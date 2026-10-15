@@ -58,6 +58,7 @@ defaults = {
     "youtube_music_filter_explicit": False,
     "youtube_music_lyrics": True,
     "youtube_music_home_sections": 5,
+    "use_deno_backend": False,
 }
 
 _cache = {}

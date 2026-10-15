@@ -283,12 +283,45 @@ Settings are stored in INI format. Modifications call `config_set(key, value)`, 
 
 ---
 
-## 5. Deno & YouTube.js Innertube JS Bridge (RPC Protocol)
+## 5. JavaScript Runtime & YouTube.js Innertube JS Bridge (RPC Protocol)
 
-HexPlayer relies on a high-performance Deno process executing `src/service.js` to communicate with YouTube's Innertube API without breaking due to Web UI changes.
+HexPlayer relies on an isolated JavaScript subprocess executing `src/service.js` to communicate with YouTube's Innertube API without breaking due to Web UI changes.
 
-### A. Stdio RPC Protocol
-The Python `deno_service.py` module spawns Deno and streams JSON objects over `stdin`/`stdout`.
+> Detailed architecture, build instructions, and polyfill guides are documented in [docs/YOUTUBE_SERVICE.md](docs/YOUTUBE_SERVICE.md).
+
+### A. Dual-Runtime Subsystem
+
+HexPlayer uses an adaptive runtime strategy:
+1. **Primary: Standalone Native Binary (`youtube_service.exe`)**:
+   - Compiled via QuickJS-ng + txiki.js into a single **6.18 MB native binary** (`src/youtube_service.exe`).
+   - Bundles `youtubei.js`, `service.js`, and runtime polyfills into a single file with zero external dependencies.
+   - Reduces disk space by **93.5%** compared to Deno (6.18 MB vs 94.55 MB).
+   - Bundled automatically into PyInstaller distribution (`dist/HexPlayer/_internal/youtube_service.exe`).
+2. **Fallback: Legacy Deno Engine (`deno.exe`)**:
+   - If `youtube_service.exe` is absent, `src/deno_service.py` automatically falls back to `deno.exe` executing `src/service.js`.
+
+### B. Building the Standalone Executable
+
+To compile `youtube_service.exe`:
+```bash
+# Compile standalone service binary (6.18 MB)
+uv run python scripts/build_youtube_service.py
+
+# Or compile entire application with standalone service
+uv run python scripts/build.py --build-youtube-service
+```
+Prerequisites: Node.js & npm (for package resolution via `esbuild`), Python 3.11+, and internet access on initial run.
+
+### C. Updating YouTube.js
+
+1. **For End Users (Runtime)**:
+   - GUI: `utils.update_youtube_service()` downloads the latest `youtube_service.exe` from GitHub releases to `%APPDATA%\HexPlayer\`, overriding the bundled binary without admin rights.
+   - CLI: `hexplayer-cli deps update --youtubei` updates the standalone binary headlessly (or updates Deno cache if Deno is used).
+2. **For Developers (Build-time)**:
+   - Run `uv run python scripts/build_youtube_service.py` to pull the latest `youtubei.js` npm package and compile a new executable.
+
+### D. Stdio RPC Protocol
+The Python `deno_service.py` module spawns the runtime and streams JSON objects over `stdin`/`stdout`.
 
 #### Request Schema:
 ```json
@@ -322,7 +355,29 @@ The Python `deno_service.py` module spawns Deno and streams JSON objects over `s
 }
 ```
 
-### B. Supported RPC Commands in `service.js`:
+### E. Adding New Features from YouTube.js
+
+Any feature supported by `youtubei.js` can be exposed to Python in two steps:
+1. In `src/service.js`, add a new case to `handleCommand(command, params)`:
+   ```javascript
+   case "get_transcript": {
+       const info = await yt.getInfo(params.videoId);
+       const transcript = await info.getTranscript();
+       return transcript?.transcript?.content?.body?.initial_segments?.map(s => ({
+           text: s.snippet.text,
+           start_ms: s.start_ms,
+           end_ms: s.end_ms
+       })) || [];
+   }
+   ```
+2. In `src/deno_service.py`, add a helper method:
+   ```python
+   def get_transcript(self, video_id: str) -> list[dict]:
+       return self.send_command("get_transcript", {"videoId": video_id})
+   ```
+3. Recompile via `uv run python scripts/build_youtube_service.py`.
+
+### F. Supported RPC Commands in `service.js`:
 - `get_home_feed`: Fetches home feed recommendations (requires `cookiesPath` for personalized feed).
 - `get_watch_history`: Retrieves YouTube account watch history.
 - `like_video`: Sends `like`, `dislike`, or `remove_like` interaction.

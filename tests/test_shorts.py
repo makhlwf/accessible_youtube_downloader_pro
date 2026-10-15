@@ -87,6 +87,32 @@ def test_home_screen_shorts_button_visibility(tmp_path):
             home.shortsItem.Enable.assert_called_with(False)
 
 
+def test_home_screen_update_deno_tools_visibility():
+    with (
+        patch(
+            "accessible_youtube_downloader_pro.browser_extension_manager.sync_browser_extension_files"
+        ),
+        patch("accessible_youtube_downloader_pro.TaskBarIcon"),
+        patch(
+            "accessible_youtube_downloader_pro.settings_handler.config_get",
+            return_value=False,
+        ),
+    ):
+        home = HomeScreen(start_hidden=True)
+        home.showDenoVer.Enable.assert_called_with(False)
+        home.updateDeno.Enable.assert_called_with(False)
+        home.refreshYoutubeiCache.Enable.assert_called_with(False)
+
+        with patch(
+            "accessible_youtube_downloader_pro.settings_handler.config_get",
+            return_value=True,
+        ):
+            home.update_deno_tools_visibility()
+            home.showDenoVer.Enable.assert_called_with(True)
+            home.updateDeno.Enable.assert_called_with(True)
+            home.refreshYoutubeiCache.Enable.assert_called_with(True)
+
+
 def test_media_gui_shorts_mode_key_events():
     mock_stream = MagicMock()
     mock_stream.url = "http://fake.stream/url"

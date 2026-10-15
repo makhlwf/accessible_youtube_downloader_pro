@@ -812,6 +812,19 @@ def get_configured_player_clients(client_override=None, has_cookies=None):
     return clients
 
 
+def get_configured_js_runtimes():
+    runtimes = {}
+    qjs_path = paths.get_quickjs_path()
+    if qjs_path and os.path.exists(qjs_path):
+        runtimes["quickjs"] = {"path": qjs_path}
+    deno_path = paths.get_deno_path()
+    if deno_path:
+        runtimes["deno"] = {"path": deno_path}
+    elif not runtimes:
+        runtimes["deno"] = {}
+    return runtimes
+
+
 def get_ydl_instance(client=None, cookies_path=None):
     """Returns a fresh YoutubeDL instance for thread-safe extraction."""
     if not YoutubeDL:
@@ -822,7 +835,7 @@ def get_ydl_instance(client=None, cookies_path=None):
     has_cookies = bool(cookies_path and os.path.exists(cookies_path))
     clients = get_configured_player_clients(client, has_cookies=has_cookies)
     opts = PLAYER_OPTS.copy()
-    opts["js_runtimes"] = {"deno": {"path": paths.get_deno_path()}}
+    opts["js_runtimes"] = get_configured_js_runtimes()
     opts["extractor_args"] = {
         "youtube": {"player_client": clients, "js_variant": "main"}
     }
@@ -1165,6 +1178,8 @@ def _run_deno_cache(config_path, lock_path, reload_package=False):
 
 def install_youtubei_version(version, parent=None, success_message=None):
     if not os.path.exists(paths.get_deno_path()):
+        if paths.get_youtube_service_path():
+            return update_youtube_service(parent=parent)
         show_error(
             _(
                 "لم يتم العثور على أداة deno.exe, وهي مطلوبة لتحديث مكتبة YouTube.js (Innertube)."
@@ -1370,6 +1385,84 @@ def update_deno():
             download_deno()
 
 
+def download_youtube_service(parent=None):
+    from gui.update_dialog import UpdateDialog
+
+    binary_name = (
+        "youtube_service.exe" if sys.platform == "win32" else "youtube_service"
+    )
+    url = f"https://github.com/makhlwf/accessible_youtube_downloader_pro/releases/latest/download/{binary_name}"
+    install_target = paths.youtube_service_install_path
+    os.makedirs(os.path.dirname(install_target), exist_ok=True)
+    UpdateDialog(
+        parent or (wx.GetApp().GetTopWindow() if wx.GetApp() else None),
+        url,
+        install_target,
+        _("جاري تنزيل خدمة يوتيوب المدمجة"),
+        is_zip=False,
+    )
+    return os.path.exists(install_target)
+
+
+def get_youtube_service_version():
+    exe_path = paths.get_youtube_service_path()
+    if not exe_path or not os.path.exists(exe_path):
+        return None
+    try:
+        result = subprocess.run(
+            [exe_path, "--version"],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0,
+            timeout=5,
+            check=False,
+        )
+        if result.returncode == 0:
+            line = result.stdout.strip().splitlines()[0]
+            parts = line.split(" ")
+            version = parts[1] if len(parts) >= 2 else line
+            if not version.startswith("v"):
+                version = "v" + version
+            return version
+    except Exception:
+        pass
+    return None
+
+
+def update_youtube_service(parent=None):
+    current = get_youtube_service_version()
+    latest = get_latest_github_release("makhlwf/accessible_youtube_downloader_pro")
+    if not latest:
+        show_error(
+            _("تعذر الحصول على معلومات التحديث من غيت هاب"),
+            parent=parent,
+        )
+        return False
+
+    if (current or "").lstrip("v") == (latest or "").lstrip("v"):
+        wx.MessageBox(
+            _("أنت تستخدم بالفعل أحدث إصدار من خدمة يوتيوب المدمجة ({})").format(
+                current or latest
+            ),
+            _("لا يوجد تحديث"),
+            parent=parent or (wx.GetApp().GetTopWindow() if wx.GetApp() else None),
+        )
+        return True
+    else:
+        msg = wx.MessageBox(
+            _(
+                "هناك إصدار جديد متوفر من خدمة يوتيوب المدمجة\nالإصدار الحالي: {}\nالإصدار الأحدث: {}\nهل تريد التحديث الآن؟"
+            ).format(current or _("غير معروف"), latest),
+            _("تحديث متوفر"),
+            style=wx.YES_NO | wx.ICON_INFORMATION,
+            parent=parent or (wx.GetApp().GetTopWindow() if wx.GetApp() else None),
+        )
+        if msg == wx.YES:
+            return download_youtube_service(parent=parent)
+        return False
+
+
 def check_yt_dlp(parent=None):
     if not YoutubeDL:
         # yt-dlp is loaded lazily now; try to bring it in before concluding it
@@ -1390,6 +1483,9 @@ def check_yt_dlp(parent=None):
 
 
 def check_deno(parent=None):
+    yt_service = paths.get_youtube_service_path()
+    if yt_service and os.path.exists(yt_service):
+        return True
     if not os.path.exists(paths.get_deno_path()):
         msg = wx.MessageBox(
             _(
@@ -1465,9 +1561,12 @@ def check_pot_provider(parent=None):
 
 def ensure_deno_installed(parent=None, feature_name=None, **kwargs):
     """
-    Checks if deno.exe is installed. If missing, prompts the user to download Deno.
-    Returns True if Deno is available or installed, False otherwise.
+    Checks if the JS runtime (youtube_service.exe or deno.exe) is installed.
+    Returns True if available or installed, False otherwise.
     """
+    yt_service = paths.get_youtube_service_path()
+    if yt_service and os.path.exists(yt_service):
+        return True
     if not os.path.exists(paths.get_deno_path()):
         feature = feature_name or kwargs.get("feature_name_ar") or _("هذه الميزة")
         msg_text = _(

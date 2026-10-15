@@ -21,23 +21,32 @@ class DenoService:
             return
 
         try:
-            service_script = paths.get_js_runtime_service_script()
-            config_path = paths.get_js_runtime_config_path()
-            lock_path = paths.get_js_runtime_lock_path()
+            from settings_handler import config_get
+
+            use_deno = bool(config_get("use_deno_backend"))
+            yt_service_bin = paths.get_youtube_service_path()
+            if not use_deno and yt_service_bin:
+                command = [yt_service_bin]
+                runtime_name = "Standalone YouTube service"
+            else:
+                service_script = paths.get_js_runtime_service_script()
+                config_path = paths.get_js_runtime_config_path()
+                lock_path = paths.get_js_runtime_lock_path()
+
+                command = [
+                    paths.get_deno_path(),
+                    "run",
+                    "--allow-all",
+                    "--config",
+                    config_path,
+                ]
+                if os.path.exists(lock_path):
+                    command.extend(["--lock", lock_path])
+                command.append(service_script)
+                runtime_name = "Deno service"
 
             env = os.environ.copy()
             env["PATH"] = paths.main_path + os.pathsep + env.get("PATH", "")
-
-            command = [
-                paths.get_deno_path(),
-                "run",
-                "--allow-all",
-                "--config",
-                config_path,
-            ]
-            if os.path.exists(lock_path):
-                command.extend(["--lock", lock_path])
-            command.append(service_script)
 
             self.process = subprocess.Popen(
                 command,
@@ -56,9 +65,9 @@ class DenoService:
             # Start a thread to log stderr
             threading.Thread(target=self._log_stderr, daemon=True).start()
 
-            logger.info("Deno service started.")
+            logger.info(f"{runtime_name} started: {command[0]}")
         except Exception as e:
-            logger.error(f"Failed to start Deno service: {e}")
+            logger.error(f"Failed to start JS service: {e}")
             self.process = None
 
     def stop(self):

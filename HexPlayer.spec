@@ -45,6 +45,7 @@ binary_files = [
     "swscale-10.dll",
     "ffmpeg.exe",
     "libmpv-2.dll",
+    "youtube_service.exe",
 ]
 
 if sys.platform != "win32":

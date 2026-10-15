@@ -49,9 +49,14 @@ jobs:
         with:
           path: ${{ runner.temp }}/setup-uv-cache
           key: ${{ steps.setup-uv.outputs.cache-key }}
+      - name: Setup Node.js for YouTube service builder
+        if: runner.os == 'Windows'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
       - name: Build Windows application
         if: runner.os == 'Windows'
-        run: uv run --no-sync python scripts/build.py
+        run: uv run --no-sync python scripts/build.py --build-youtube-service
       - name: Build Linux application and packages
         if: runner.os == 'Linux'
         run: xvfb-run -a uv run --no-sync python scripts/build.py
@@ -85,12 +90,14 @@ jobs:
       - name: Compile Windows installer
         if: runner.os == 'Windows'
         run: iscc "packaging\windows\inno.iss"
-      - name: Upload Windows installer
+      - name: Upload Windows installer and standalone service
         if: runner.os == 'Windows'
         uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.artifact }}
-          path: HexPlayer/HexPlayer.exe
+          path: |
+            HexPlayer/HexPlayer.exe
+            src/youtube_service.exe
           if-no-files-found: error
       - name: Upload Linux packages
         if: runner.os == 'Linux'
