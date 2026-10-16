@@ -1,5 +1,5 @@
 version = 1
-revision = 5
+revision = 3
 requires-python = ">=3.14"
 
 [[package]]
@@ -688,7 +688,7 @@ wheels = [
 
 [[package]]
 name = "pre-commit"
-version = "4.6.2"
+version = "4.7.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cfgv" },
@@ -697,9 +697,9 @@ dependencies = [
     { name = "pyyaml" },
     { name = "virtualenv" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/74/89/1f3e8e1fc3e97de0fa963495832f581f025f29471602a309e48808244292/pre_commit-4.6.2.tar.gz", hash = "sha256:8f5d7bfb021ecdbcd9d49d89847082dd24172ccde534390081a679ad046e2441", size = 198670, upload-time = "2026-08-10T22:07:18.421Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/3a/c3/6965c2690ddce885ec75121572d065a5b94c5a5d8d3e657927ecda9fd715/pre_commit-4.7.0.tar.gz", hash = "sha256:1f3deee12b914c8fa184bd2b5953391c2e4f36763e403d4a23dc9983fa7c6e86", size = 198120, upload-time = "2026-10-12T20:45:40.32Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/45/e2/bbb7129c9e7999a6b8ee9cca3b66486c25c423ab5a75f34071798b74ce94/pre_commit-4.6.2-py2.py3-none-any.whl", hash = "sha256:e2dde9a75d3bce11bd3831c26d134df00a2803c1d818be6a0383c3dcda25dc4e", size = 226202, upload-time = "2026-08-10T22:07:16.942Z" },
+    { url = "https://files.pythonhosted.org/packages/eb/83/ce0a196e4f7b20b11ce3aa1fc72fb973f64b7628d51c1b8aebad37fb7f81/pre_commit-4.7.0-py2.py3-none-any.whl", hash = "sha256:2e229038ad3656081b70c27913157e4b636ef306f643f024a8a8e3f0f7b2f877", size = 226261, upload-time = "2026-10-12T20:45:38.858Z" },
 ]
 
 [[package]]
@@ -1055,10 +1055,12 @@ sdist = { url = "https://files.pythonhosted.org/packages/0b/a7/da0cde189c0764e33
 wheels = [
     { url = "https://files.pythonhosted.org/packages/a3/ad/3ae59c7a1bc8a42d1be1891d029871933b04e35668e5636e23094c84d425/wxpython-4.3.2-cp314-cp314-macosx_10_15_x86_64.whl", hash = "sha256:2c60d38f3d4ee79b753805a66aa62cbde721f8a12aea20747508500e41939751", size = 20364802, upload-time = "2026-10-13T22:48:37.748Z" },
     { url = "https://files.pythonhosted.org/packages/35/92/fe5f32a1fe3e449cf26035c68e212897391a1ce86721e2aa0a222771f3d1/wxpython-4.3.2-cp314-cp314-macosx_11_0_arm64.whl", hash = "sha256:f333fb08b738721ecc8ed69d2aea296875a9ff2991febcc8c06c0b8236f48067", size = 19079177, upload-time = "2026-10-13T22:48:41.696Z" },
+    { url = "https://files.pythonhosted.org/packages/75/e4/2c9ff9a45b5f6d5ad17c4d4995bdba63e827db891496d3c3cdcd7b78be59/wxpython-4.3.2-cp314-cp314-win32.whl", hash = "sha256:71db87ca19d0c629f407431387044d56d227d62335d21f9c1ecd38a1000ebda9", size = 17155979, upload-time = "2026-10-16T00:49:27.44Z" },
     { url = "https://files.pythonhosted.org/packages/06/29/b381fe93b9d8fa9d431f3eb6bd18706f3eac1cf2cab41ac05d81bdc185b2/wxpython-4.3.2-cp314-cp314-win_amd64.whl", hash = "sha256:03c20c625acd9bc97f1fbe12db8ba74c35a20306c1ae04480d4c4c2af62ca499", size = 19663848, upload-time = "2026-10-13T22:46:50.129Z" },
     { url = "https://files.pythonhosted.org/packages/36/cb/1205b96a2c73a6422f4e0963ad05b1e143d68d2829742115b8cd18869475/wxpython-4.3.2-cp314-cp314-win_arm64.whl", hash = "sha256:8ef1bca30118e11926f3e19d5fab9f9720b795bf674cf5482989bca5399fc736", size = 17479249, upload-time = "2026-10-13T22:46:53.427Z" },
     { url = "https://files.pythonhosted.org/packages/e0/65/d02fff9a60e660bf2052ddb0093acbb81ae2b6e0f44f31553bac339e8b83/wxpython-4.3.2-cp315-cp315-macosx_10_15_x86_64.whl", hash = "sha256:93eb66ade8a8da17009cd48b336ac3900c892047a051b8bdbc97a686a1fe7f4a", size = 20365407, upload-time = "2026-10-13T22:48:45.232Z" },
     { url = "https://files.pythonhosted.org/packages/6b/3b/bb8ce39e582d88d5a489421199420d3fa19c525fe425c8ef962bd28aec24/wxpython-4.3.2-cp315-cp315-macosx_11_0_arm64.whl", hash = "sha256:5ce08b7086957d5d70abcf36544427be2b92003181811ea8737d428aa3c321d4", size = 19098302, upload-time = "2026-10-13T22:48:48.999Z" },
+    { url = "https://files.pythonhosted.org/packages/23/48/80610d2a4666a18a00d135fd6507519e4c09dbe22107f4b048936de90bec/wxpython-4.3.2-cp315-cp315-win32.whl", hash = "sha256:ee020117de744d57c125cad214debfc1fe91fec659b9a259676a948c004d1637", size = 17157207, upload-time = "2026-10-16T00:49:30.976Z" },
     { url = "https://files.pythonhosted.org/packages/23/1b/021cca42b0e35df1b686a65aefc4f8a4575b14053a1181188ce70ca2e570/wxpython-4.3.2-cp315-cp315-win_amd64.whl", hash = "sha256:e9c5bedb76ca280cfc568d657e0daadfbb9a0151022db5e430bcddd291f39069", size = 19665207, upload-time = "2026-10-13T22:46:57.088Z" },
     { url = "https://files.pythonhosted.org/packages/c7/d4/5ae91a15db8131479f7630902a71b1ecee9f8003692a098783a993889772/wxpython-4.3.2-cp315-cp315-win_arm64.whl", hash = "sha256:7d9be0748e5c10fae1db10ee910fa594e6d5db1fac406c008f566e13ea89e92c", size = 17477984, upload-time = "2026-10-13T22:47:03.079Z" },
 ]
