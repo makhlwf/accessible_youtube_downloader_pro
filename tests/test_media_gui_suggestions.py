@@ -811,3 +811,103 @@ def test_fetch_suggestions_load_more_appends_and_preserves_selection(wx_app):
             assert len(frame.suggestions_list.Items) == 2
             assert frame.suggestions_list.GetSelection() == 0
         frame.Destroy()
+
+
+class MockActivateEvent:
+    """Mock activate event for testing window activation hooks."""
+
+    def __init__(self, active=True):
+        self._active = active
+        self.skipped = None
+
+    def GetActive(self):
+        return self._active
+
+    def Skip(self, val=True):
+        self.skipped = bool(val)
+
+
+def test_activate_event_returns_focus_to_canvas_instead_of_suggestions(wx_app):
+    with (
+        patch("media_player.media_gui.Player"),
+        patch("media_player.media_gui.Thread"),
+    ):
+        frame = MediaGui(
+            parent=None,
+            title="Test",
+            stream=MagicMock(url="http://fake.stream"),
+            url="https://www.youtube.com/watch?v=dummy123",
+            can_download=True,
+        )
+        # Put focus on suggestions list
+        frame.suggestions_list.SetFocus()
+        assert frame.FindFocus() == frame.suggestions_list
+
+        # Simulate activation event (such as Alt+Tabbing back to the window)
+        act_event = MockActivateEvent(active=True)
+        frame.onActivate(act_event)
+
+        # Focus must return to the video canvas (frame), not on suggestions_list
+        assert frame.FindFocus() == frame
+        assert frame.FindFocus() != frame.suggestions_list
+        frame.Destroy()
+
+
+def test_deactivate_event_skips_normally(wx_app):
+    with (
+        patch("media_player.media_gui.Player"),
+        patch("media_player.media_gui.Thread"),
+    ):
+        frame = MediaGui(
+            parent=None,
+            title="Test",
+            stream=MagicMock(url="http://fake.stream"),
+            url="https://www.youtube.com/watch?v=dummy123",
+            can_download=True,
+        )
+        deact_event = MockActivateEvent(active=False)
+        frame.onActivate(deact_event)
+        assert deact_event.skipped is True
+        frame.Destroy()
+
+
+def test_activate_when_closing_skips(wx_app):
+    with (
+        patch("media_player.media_gui.Player"),
+        patch("media_player.media_gui.Thread"),
+    ):
+        frame = MediaGui(
+            parent=None,
+            title="Test",
+            stream=MagicMock(url="http://fake.stream"),
+            url="https://www.youtube.com/watch?v=dummy123",
+            can_download=True,
+        )
+        frame._closing = True
+        act_event = MockActivateEvent(active=True)
+        frame.onActivate(act_event)
+        assert act_event.skipped is True
+        frame.Destroy()
+
+
+def test_ensure_canvas_focus_handles_destroyed_or_closing(wx_app):
+    with (
+        patch("media_player.media_gui.Player"),
+        patch("media_player.media_gui.Thread"),
+    ):
+        frame = MediaGui(
+            parent=None,
+            title="Test",
+            stream=MagicMock(url="http://fake.stream"),
+            url="https://www.youtube.com/watch?v=dummy123",
+            can_download=True,
+        )
+        frame._closing = True
+        frame.SetFocus.reset_mock()
+        frame._ensure_canvas_focus()
+        frame.SetFocus.assert_not_called()
+
+        frame._closing = False
+        frame._ensure_canvas_focus()
+        frame.SetFocus.assert_called()
+        frame.Destroy()

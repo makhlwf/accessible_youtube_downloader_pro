@@ -372,6 +372,7 @@ class MediaGui(wx.Frame):
         forwardButton.Bind(wx.EVT_BUTTON, lambda event: self.forwardAction())
         nextButton.Bind(wx.EVT_BUTTON, lambda event: self.next())
         self.Bind(wx.EVT_CLOSE, self.onClose)
+        self.Bind(wx.EVT_ACTIVATE, self.onActivate)
         self.Show()
         # Focus the frame, not a control button: a focused wx.Button consumes the
         # space bar to activate itself, which toggles playback a second time on top
@@ -1459,6 +1460,27 @@ class MediaGui(wx.Frame):
             self.seek_to_timecode(dlg.GetValue())
         finally:
             dlg.Destroy()
+
+    def onActivate(self, event):
+        if getattr(self, "_closing", False):
+            event.Skip()
+            return
+        if event.GetActive():
+            # Return focus to the video canvas (the frame itself) on window activation
+            # (such as when switching back via Alt+Tab) instead of wxWidgets defaulting
+            # to focusing the first focusable child control (self.suggestions_list).
+            self.SetFocus()
+            wx.CallAfter(self._ensure_canvas_focus)
+            return
+        event.Skip()
+
+    def _ensure_canvas_focus(self):
+        try:
+            if not self or getattr(self, "_closing", False):
+                return
+            self.SetFocus()
+        except RuntimeError:
+            pass
 
     def onClose(self, event):
         self.closeAction()
