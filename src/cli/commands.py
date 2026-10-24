@@ -64,7 +64,16 @@ def _display_lines(result):
 
 
 def cmd_search(args, emitter):
-    filter_map = {"video": 0, "playlist": 4, "channel": 5}
+    filter_map = {
+        "video": 0,
+        "live": 1,
+        "upload_date": 2,
+        "date": 2,
+        "view_count": 3,
+        "views": 3,
+        "playlist": 4,
+        "channel": 5,
+    }
     search = Search(args.query, filter=filter_map.get(args.type, 0))
     run_async(search.init_async())
     for _page in range(max(0, args.pages - 1)):

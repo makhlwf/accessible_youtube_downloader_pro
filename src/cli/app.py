@@ -71,7 +71,7 @@ def build_parser():
     search.add_argument("query", help=_("عبارة البحث."))
     search.add_argument(
         "--type",
-        choices=["video", "playlist", "channel"],
+        choices=["video", "live", "upload_date", "view_count", "playlist", "channel"],
         default="video",
         help=_("نوع النتائج."),
     )

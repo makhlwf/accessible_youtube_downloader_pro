@@ -5,11 +5,27 @@ from urllib.parse import urlsplit, urlunsplit
 
 from py_yt import (
     ChannelsSearch,
+    CustomSearch,
     Playlist,
     PlaylistsSearch,
     Suggestions,
     VideosSearch,
 )
+
+try:
+    from py_yt.core.constants import SearchMode, VideoSortOrder
+except (ImportError, AttributeError):
+    class SearchMode:
+        videos: str = "EgIQAQ%3D%3D"
+        channels: str = "EgIQAg%3D%3D"
+        playlists: str = "EgIQAw%3D%3D"
+        livestreams: str = "EgJAAQ%3D%3D"
+
+    class VideoSortOrder:
+        relevance: str = "CAASAhAB"
+        uploadDate: str = "CAISAhAB"
+        viewCount: str = "CAMSAhAB"
+        rating: str = "CAESAhAB" 
 
 import utils
 from language_handler import _, normalize_language_code
@@ -17,6 +33,37 @@ from settings_handler import config_get
 from utils import format_duration, time_to_seconds
 
 logger = logging.getLogger(__name__)
+
+
+SEARCH_FILTER_ALL = 0
+SEARCH_FILTER_LIVE = 1
+SEARCH_FILTER_UPLOAD_DATE = 2
+SEARCH_FILTER_VIEW_COUNT = 3
+SEARCH_FILTER_PLAYLIST = 4
+SEARCH_FILTER_CHANNEL = 5
+
+FILTER_STRING_MAP = {
+    "all": SEARCH_FILTER_ALL,
+    "none": SEARCH_FILTER_ALL,
+    "no_filter": SEARCH_FILTER_ALL,
+    "video": SEARCH_FILTER_ALL,
+    "videos": SEARCH_FILTER_ALL,
+    "live": SEARCH_FILTER_LIVE,
+    "livestream": SEARCH_FILTER_LIVE,
+    "livestreams": SEARCH_FILTER_LIVE,
+    "stream": SEARCH_FILTER_LIVE,
+    "streams": SEARCH_FILTER_LIVE,
+    "upload_date": SEARCH_FILTER_UPLOAD_DATE,
+    "date": SEARCH_FILTER_UPLOAD_DATE,
+    "newest": SEARCH_FILTER_UPLOAD_DATE,
+    "view_count": SEARCH_FILTER_VIEW_COUNT,
+    "views": SEARCH_FILTER_VIEW_COUNT,
+    "popular": SEARCH_FILTER_VIEW_COUNT,
+    "playlist": SEARCH_FILTER_PLAYLIST,
+    "playlists": SEARCH_FILTER_PLAYLIST,
+    "channel": SEARCH_FILTER_CHANNEL,
+    "channels": SEARCH_FILTER_CHANNEL,
+}
 
 
 CHANNEL_TAB_SUFFIXES = {
@@ -554,9 +601,20 @@ class ChannelTabResult:
 
 
 class Search:
+    @staticmethod
+    def normalize_filter(filter_val):
+        if isinstance(filter_val, int):
+            return filter_val
+        if isinstance(filter_val, str):
+            clean = filter_val.strip().lower()
+            if clean.isdigit():
+                return int(clean)
+            return FILTER_STRING_MAP.get(clean, SEARCH_FILTER_ALL)
+        return SEARCH_FILTER_ALL
+
     def __init__(self, query, filter=0):
         self.query = query
-        self.filter = filter
+        self.filter = self.normalize_filter(filter)
         self.results = {}
         self.count = 0
         self.new_videos = 0
@@ -566,15 +624,42 @@ class Search:
         if not region or not isinstance(region, str) or len(region) != 2:
             region = "US"
 
-        if self.filter == 0:  # Videos
+        if self.filter == SEARCH_FILTER_ALL:  # Videos / No filter
             self.search = VideosSearch(
                 self.query, limit=20, language=lang, region=region
             )
-        elif self.filter == 4:  # Playlists
+        elif self.filter == SEARCH_FILTER_LIVE:  # Live Stream
+            self.search = CustomSearch(
+                self.query,
+                SearchMode.livestreams,
+                limit=20,
+                language=lang,
+                region=region,
+            )
+            self.search.searchMode = (True, False, False)
+        elif self.filter == SEARCH_FILTER_UPLOAD_DATE:  # Upload Date
+            self.search = CustomSearch(
+                self.query,
+                VideoSortOrder.uploadDate,
+                limit=20,
+                language=lang,
+                region=region,
+            )
+            self.search.searchMode = (True, False, False)
+        elif self.filter == SEARCH_FILTER_VIEW_COUNT:  # View Count
+            self.search = CustomSearch(
+                self.query,
+                VideoSortOrder.viewCount,
+                limit=20,
+                language=lang,
+                region=region,
+            )
+            self.search.searchMode = (True, False, False)
+        elif self.filter == SEARCH_FILTER_PLAYLIST:  # Playlists
             self.search = PlaylistsSearch(
                 self.query, limit=20, language=lang, region=region
             )
-        elif self.filter == 5:  # Channels
+        elif self.filter == SEARCH_FILTER_CHANNEL:  # Channels
             self.search = ChannelsSearch(
                 self.query, limit=20, language=lang, region=region
             )
@@ -593,12 +678,12 @@ class Search:
 
     async def parse_results(self, result):
         items = result.get("result", [])
-        if self.filter == 4:
+        if self.filter == SEARCH_FILTER_PLAYLIST:
             for item in items:
                 video_count_str = item.get("videoCount", "0")
                 try:
                     video_count = int(video_count_str.split(" ")[0])
-                except ValueError, IndexError:
+                except (ValueError, IndexError):
                     video_count = 0
                 self.count += 1
                 self.results[self.count] = {
@@ -613,7 +698,7 @@ class Search:
                     },
                     "views": None,
                 }
-        elif self.filter == 5:
+        elif self.filter == SEARCH_FILTER_CHANNEL:
             for item in items:
                 self.count += 1
                 title = (
@@ -638,32 +723,77 @@ class Search:
                     },
                     "views": None,
                 }
-        else:  # VideosSearch, CustomSearch (assuming it returns videos)
+        else:  # VideosSearch, CustomSearch (filters 0, 1, 2, 3)
             for item in items:
-                self.count += 1
-                view_count = item.get("viewCount")
-                if isinstance(view_count, dict):
-                    views = view_count.get("short") or view_count.get("text")
-                else:
-                    views = (
-                        view_count if view_count is not None else item.get("view_count")
+                item_type = item.get("type", "video")
+                if item_type == "playlist":
+                    video_count_str = item.get("videoCount", "0")
+                    try:
+                        video_count = int(video_count_str.split(" ")[0])
+                    except (ValueError, IndexError):
+                        video_count = 0
+                    self.count += 1
+                    self.results[self.count] = {
+                        "type": "playlist",
+                        "title": item.get("title"),
+                        "url": item.get("link"),
+                        "duration": None,
+                        "elements": video_count,
+                        "channel": {
+                            "name": item.get("channel", {}).get("name"),
+                            "url": item.get("channel", {}).get("link"),
+                        },
+                        "views": None,
+                    }
+                elif item_type == "channel":
+                    self.count += 1
+                    title = (
+                        item.get("title")
+                        or item.get("channel", {}).get("name")
+                        or _("غير معروف")
                     )
+                    channel_url = item.get("link")
+                    channel_id = item.get("id")
+                    if not channel_url and channel_id:
+                        channel_url = f"https://www.youtube.com/channel/{channel_id}"
+                    self.results[self.count] = {
+                        "type": "channel",
+                        "title": title,
+                        "url": channel_url,
+                        "duration": None,
+                        "elements": item.get("videoCount"),
+                        "subscribers": item.get("subscribers"),
+                        "channel": {
+                            "name": title,
+                            "url": channel_url,
+                        },
+                        "views": None,
+                    }
+                else:
+                    self.count += 1
+                    view_count = item.get("viewCount")
+                    if isinstance(view_count, dict):
+                        views = view_count.get("short") or view_count.get("text")
+                    else:
+                        views = (
+                            view_count if view_count is not None else item.get("view_count")
+                        )
 
-                self.results[self.count] = {
-                    "type": "video",
-                    "title": item.get("title"),
-                    "url": item.get("link"),
-                    "duration": item.get("duration"),  # in seconds
-                    "uploadDate": item.get("publishedTime"),
-                    "elements": None,
-                    "channel": {
-                        "name": item.get("channel", {}).get("name"),
-                        "url": item.get("channel", {}).get("link"),
-                    },
-                    "views": views,
-                    "audio_stream": None,
-                    "video_stream": None,
-                }
+                    self.results[self.count] = {
+                        "type": "video",
+                        "title": item.get("title"),
+                        "url": item.get("link"),
+                        "duration": item.get("duration"),  # in seconds or formatted string
+                        "uploadDate": item.get("publishedTime"),
+                        "elements": None,
+                        "channel": {
+                            "name": item.get("channel", {}).get("name"),
+                            "url": item.get("channel", {}).get("link"),
+                        },
+                        "views": views,
+                        "audio_stream": None,
+                        "video_stream": None,
+                    }
 
     def _format_item_title(self, data):
         cached = data.get("_display_title")
@@ -671,16 +801,23 @@ class Search:
             return cached
         title = [data["title"]]
         if data["type"] == "video":
+            channel_name = data.get("channel", {}).get("name") or _("غير معروف")
+            duration_part = self.get_duration(data.get("duration"))
+            views_part = self.views_part(data.get("views"))
+            upload_date = str(data["uploadDate"]) if data.get("uploadDate") else ""
+            if data.get("duration") is None and views_part == _("بث مباشر"):
+                views_part = ""
             title += [
-                self.get_duration(data["duration"]),
-                f"{_('بواسطة')} {data['channel']['name']}",
-                self.views_part(data["views"]),
-                str(data.get("uploadDate", "")),
+                duration_part,
+                f"{_('بواسطة')} {channel_name}",
+                views_part,
+                upload_date,
             ]
         elif data["type"] == "playlist":
+            channel_name = data.get("channel", {}).get("name") or _("غير معروف")
             title += [
                 _("قائمة تشغيل"),
-                f"{_('بواسطة')} {data['channel']['name']}",
+                f"{_('بواسطة')} {channel_name}",
                 _("تحتوي على {} من الفيديوهات").format(data["elements"]),
             ]
         elif data["type"] == "channel":

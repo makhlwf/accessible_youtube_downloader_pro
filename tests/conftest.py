@@ -405,10 +405,28 @@ class ChannelsSearch(metaclass=MockType):
     pass
 
 
+class CustomSearch(metaclass=MockType):
+    pass
+
+
 class Suggestions(metaclass=MockType):
     @staticmethod
     async def get(query, language="en", region="US"):
         return {"result": []}
+
+
+class SearchMode:
+    videos: str = "EgIQAQ%3D%3D"
+    channels: str = "EgIQAg%3D%3D"
+    playlists: str = "EgIQAw%3D%3D"
+    livestreams: str = "EgJAAQ%3D%3D"
+
+
+class VideoSortOrder:
+    relevance: str = "CAASAhAB"
+    uploadDate: str = "CAISAhAB"
+    viewCount: str = "CAMSAhAB"
+    rating: str = "CAESAhAB"
 
 
 mock_py_yt = MagicMock()
@@ -416,8 +434,12 @@ mock_py_yt.Playlist = Playlist
 mock_py_yt.VideosSearch = VideosSearch
 mock_py_yt.PlaylistsSearch = PlaylistsSearch
 mock_py_yt.ChannelsSearch = ChannelsSearch
+mock_py_yt.CustomSearch = CustomSearch
 mock_py_yt.Suggestions = Suggestions
+mock_py_yt.SearchMode = SearchMode
+mock_py_yt.VideoSortOrder = VideoSortOrder
 sys.modules["py_yt"] = mock_py_yt
+
 sys.modules["pyperclip"] = MagicMock()
 
 

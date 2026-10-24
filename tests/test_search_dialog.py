@@ -297,3 +297,20 @@ class TestSearchDialog(unittest.TestCase):
 
         # When hidden, event is skipped so dialog can close
         assert event.skipped is True
+
+    def test_filter_box_options_and_selection(self):
+        assert self.dialog.filterBox.GetCount() == 6
+        strings = self.dialog.filterBox.GetStrings()
+        assert strings[0] == _("بلا فلتر")
+        assert strings[1] == _("بث مباشر")
+        assert strings[2] == _("تاريخ الرفع")
+        assert strings[3] == _("عدد المشاهدات")
+        assert strings[4] == _("قائمة تشغيل")
+        assert strings[5] == _("قنوات")
+
+        for idx in range(6):
+            self.dialog.filterBox.SetSelection(idx)
+            self.dialog.searchField.SetValue("test")
+            self.dialog.onSearch()
+            assert self.dialog.filter == idx
+            self.dialog._closing = False

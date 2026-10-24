@@ -449,3 +449,260 @@ async def test_fetch_search_suggestions_normalizes_unrecognized_language():
         )
         assert res == ["suggestion 1"]
         mock_get.assert_awaited_once_with("test", language="en", region="US")
+
+
+@pytest.mark.asyncio
+async def test_search_filters_livestream():
+    from youtube_browser.search_handler import (
+        SEARCH_FILTER_LIVE,
+        Search,
+        SearchMode,
+    )
+
+    fake_result = {
+        "result": [
+            {
+                "type": "video",
+                "id": "live123",
+                "title": "Live News Stream",
+                "link": "https://www.youtube.com/watch?v=live123",
+                "duration": None,
+                "publishedTime": None,
+                "viewCount": {"short": None, "text": None},
+                "channel": {
+                    "name": "News Channel",
+                    "link": "https://www.youtube.com/channel/c123",
+                },
+            }
+        ]
+    }
+
+    with (
+        patch("youtube_browser.search_handler.config_get", return_value="ar"),
+        patch("youtube_browser.search_handler.utils.get_windows_region", return_value="US"),
+        patch("youtube_browser.search_handler.CustomSearch") as MockCustomSearch,
+    ):
+        mock_instance = MockCustomSearch.return_value
+        mock_instance.next = AsyncMock(return_value=fake_result)
+        mock_instance.continuationKey = "cont_live"
+
+        search = Search("news", filter=SEARCH_FILTER_LIVE)
+        MockCustomSearch.assert_called_once_with(
+            "news", SearchMode.livestreams, limit=20, language="ar", region="US"
+        )
+        assert mock_instance.searchMode == (True, False, False)
+
+        await search.init_async()
+        assert search.count == 1
+        assert search.get_title(0) == "Live News Stream"
+        assert search.get_url(0) == "https://www.youtube.com/watch?v=live123"
+        assert search.get_type(0) == "video"
+        assert search.get_views(0) is None
+        titles = search.get_titles()
+        assert len(titles) == 1
+        assert "None" not in titles[0]
+        assert "Live News Stream" in titles[0]
+
+
+@pytest.mark.asyncio
+async def test_search_filters_upload_date():
+    from youtube_browser.search_handler import (
+        SEARCH_FILTER_UPLOAD_DATE,
+        Search,
+        VideoSortOrder,
+    )
+
+    fake_result = {
+        "result": [
+            {
+                "type": "video",
+                "id": "new123",
+                "title": "Recent Video",
+                "link": "https://www.youtube.com/watch?v=new123",
+                "duration": "10:30",
+                "publishedTime": "2 hours ago",
+                "viewCount": {"short": "500 views"},
+                "channel": {
+                    "name": "Creator",
+                    "link": "https://www.youtube.com/channel/cCreator",
+                },
+            }
+        ]
+    }
+
+    with (
+        patch("youtube_browser.search_handler.config_get", return_value="ar"),
+        patch("youtube_browser.search_handler.utils.get_windows_region", return_value="US"),
+        patch("youtube_browser.search_handler.CustomSearch") as MockCustomSearch,
+    ):
+        mock_instance = MockCustomSearch.return_value
+        mock_instance.next = AsyncMock(return_value=fake_result)
+
+        search = Search("minecraft", filter=SEARCH_FILTER_UPLOAD_DATE)
+        MockCustomSearch.assert_called_once_with(
+            "minecraft", VideoSortOrder.uploadDate, limit=20, language="ar", region="US"
+        )
+        assert mock_instance.searchMode == (True, False, False)
+
+        await search.init_async()
+        assert search.count == 1
+        assert search.get_title(0) == "Recent Video"
+        titles = search.get_titles()
+        assert "2 hours ago" in titles[0]
+        assert "None" not in titles[0]
+
+
+@pytest.mark.asyncio
+async def test_search_filters_view_count():
+    from youtube_browser.search_handler import (
+        SEARCH_FILTER_VIEW_COUNT,
+        Search,
+        VideoSortOrder,
+    )
+
+    fake_result = {
+        "result": [
+            {
+                "type": "video",
+                "id": "top123",
+                "title": "Viral Video",
+                "link": "https://www.youtube.com/watch?v=top123",
+                "duration": "05:00",
+                "publishedTime": "1 year ago",
+                "viewCount": {"short": "50M views"},
+                "channel": {
+                    "name": "Famous Channel",
+                    "link": "https://www.youtube.com/channel/cFamous",
+                },
+            }
+        ]
+    }
+
+    with (
+        patch("youtube_browser.search_handler.config_get", return_value="ar"),
+        patch("youtube_browser.search_handler.utils.get_windows_region", return_value="US"),
+        patch("youtube_browser.search_handler.CustomSearch") as MockCustomSearch,
+    ):
+        mock_instance = MockCustomSearch.return_value
+        mock_instance.next = AsyncMock(return_value=fake_result)
+
+        search = Search("python tutorial", filter=SEARCH_FILTER_VIEW_COUNT)
+        MockCustomSearch.assert_called_once_with(
+            "python tutorial", VideoSortOrder.viewCount, limit=20, language="ar", region="US"
+        )
+        assert mock_instance.searchMode == (True, False, False)
+
+        await search.init_async()
+        assert search.count == 1
+        assert search.get_title(0) == "Viral Video"
+        assert search.get_views(0) == "50M views"
+        titles = search.get_titles()
+        assert "50M views" in titles[0]
+
+
+def test_search_filter_normalization():
+    from youtube_browser.search_handler import (
+        SEARCH_FILTER_ALL,
+        SEARCH_FILTER_CHANNEL,
+        SEARCH_FILTER_LIVE,
+        SEARCH_FILTER_PLAYLIST,
+        SEARCH_FILTER_UPLOAD_DATE,
+        SEARCH_FILTER_VIEW_COUNT,
+        Search,
+    )
+
+    assert Search.normalize_filter(0) == SEARCH_FILTER_ALL
+    assert Search.normalize_filter(1) == SEARCH_FILTER_LIVE
+    assert Search.normalize_filter(2) == SEARCH_FILTER_UPLOAD_DATE
+    assert Search.normalize_filter(3) == SEARCH_FILTER_VIEW_COUNT
+    assert Search.normalize_filter(4) == SEARCH_FILTER_PLAYLIST
+    assert Search.normalize_filter(5) == SEARCH_FILTER_CHANNEL
+
+    assert Search.normalize_filter("live") == SEARCH_FILTER_LIVE
+    assert Search.normalize_filter("livestream") == SEARCH_FILTER_LIVE
+    assert Search.normalize_filter("date") == SEARCH_FILTER_UPLOAD_DATE
+    assert Search.normalize_filter("upload_date") == SEARCH_FILTER_UPLOAD_DATE
+    assert Search.normalize_filter("views") == SEARCH_FILTER_VIEW_COUNT
+    assert Search.normalize_filter("view_count") == SEARCH_FILTER_VIEW_COUNT
+    assert Search.normalize_filter("playlist") == SEARCH_FILTER_PLAYLIST
+    assert Search.normalize_filter("channel") == SEARCH_FILTER_CHANNEL
+    assert Search.normalize_filter("1") == SEARCH_FILTER_LIVE
+    assert Search.normalize_filter("unknown") == SEARCH_FILTER_ALL
+
+
+@pytest.mark.asyncio
+async def test_search_custom_filter_polymorphic_parsing():
+    from youtube_browser.search_handler import SEARCH_FILTER_VIEW_COUNT, Search
+
+    fake_result = {
+        "result": [
+            {
+                "type": "playlist",
+                "id": "pl1",
+                "title": "Top Playlist",
+                "link": "https://www.youtube.com/playlist?list=pl1",
+                "videoCount": "42 videos",
+                "channel": {"name": "Mix Channel", "link": ""},
+            },
+            {
+                "type": "channel",
+                "id": "ch1",
+                "title": "Top Channel",
+                "link": "https://www.youtube.com/channel/ch1",
+                "videoCount": "100",
+                "subscribers": "10M",
+            },
+            {
+                "type": "video",
+                "id": "v1",
+                "title": "Top Video",
+                "link": "https://www.youtube.com/watch?v=v1",
+                "duration": "02:00",
+                "publishedTime": "1 day ago",
+                "viewCount": {"short": "1M views"},
+                "channel": {"name": "Video Creator", "link": ""},
+            },
+        ]
+    }
+
+    with patch("youtube_browser.search_handler.CustomSearch") as MockCustomSearch:
+        mock_instance = MockCustomSearch.return_value
+        mock_instance.next = AsyncMock(return_value=fake_result)
+
+        search = Search("popular", filter=SEARCH_FILTER_VIEW_COUNT)
+        await search.init_async()
+
+        assert search.count == 3
+        assert search.get_type(0) == "playlist"
+        assert search.get_type(1) == "channel"
+        assert search.get_type(2) == "video"
+
+
+def test_cli_cmd_search_filters():
+    from unittest.mock import MagicMock
+
+    from cli.commands import cmd_search
+
+    args = MagicMock()
+    args.query = "python"
+    args.pages = 1
+    emitter = MagicMock()
+
+    for type_name, expected_filter in [
+        ("video", 0),
+        ("live", 1),
+        ("upload_date", 2),
+        ("view_count", 3),
+        ("playlist", 4),
+        ("channel", 5),
+    ]:
+        args.type = type_name
+        with patch("cli.commands.Search") as MockSearch, patch("cli.commands.run_async"):
+            mock_inst = MockSearch.return_value
+            mock_inst.count = 1
+            mock_inst.get_display_titles.return_value = ["Item 1"]
+            mock_inst.get_items.return_value = [{"title": "Item 1"}]
+
+            res = cmd_search(args, emitter)
+            assert res == 0
+            MockSearch.assert_called_once_with("python", filter=expected_filter)

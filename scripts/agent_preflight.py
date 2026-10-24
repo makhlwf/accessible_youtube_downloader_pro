@@ -41,12 +41,12 @@ def main() -> int:
             "Skills Specification Validator",
             [sys.executable, "scripts/verify_skills.py"],
         ),
-        ("Ruff Linter", ["uv", "run", "ruff", "check", "."]),
+        ("Ruff Linter", ["uv", "run", "--no-sync", "ruff", "check", "."]),
         (
             "Translation Catalog Freshness",
-            ["uv", "run", "python", "scripts/check_translations.py"],
+            ["uv", "run", "--no-sync", "python", "scripts/check_translations.py"],
         ),
-        ("Pytest Test Suite", ["uv", "run", "pytest", "tests/"]),
+        ("Pytest Test Suite", ["uv", "run", "--no-sync", "pytest", "tests/"]),
     ]
 
     failed = []
