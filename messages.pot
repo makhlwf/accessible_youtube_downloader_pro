@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-26 15:17+0200\n"
+"POT-Creation-Date: 2026-10-26 16:11+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -145,7 +145,7 @@ msgid "البحث عن التحديثات"
 msgstr ""
 
 #: src/accessible_youtube_downloader_pro.py:464
-#: src/accessible_youtube_downloader_pro.py:1230
+#: src/accessible_youtube_downloader_pro.py:1228
 msgid "سياسة الخصوصية"
 msgstr ""
 
@@ -166,7 +166,7 @@ msgid "تواصل معي"
 msgstr ""
 
 #: src/accessible_youtube_downloader_pro.py:472
-#: src/accessible_youtube_downloader_pro.py:1245
+#: src/accessible_youtube_downloader_pro.py:1243
 #: src/youtube_browser/search_handler.py:89
 msgid "حول"
 msgstr ""
@@ -237,9 +237,9 @@ msgid "جاري تحميل الاقتراحات... يرجى الانتظار"
 msgstr ""
 
 #: src/accessible_youtube_downloader_pro.py:742
-#: src/accessible_youtube_downloader_pro.py:1332 src/gui/history.py:105
+#: src/accessible_youtube_downloader_pro.py:1330 src/gui/history.py:105
 #: src/gui/settings_dialog.py:966 src/gui/settings_dialog.py:1072
-#: src/gui/settings_dialog.py:1319 src/gui/subscriptions_dialog.py:84
+#: src/gui/settings_dialog.py:1319 src/gui/subscriptions_dialog.py:80
 #: src/utils.py:1474 src/utils.py:1494 src/utils.py:1551 src/utils.py:1575
 #: src/utils.py:1602
 msgid "تنبيه"
@@ -304,63 +304,63 @@ msgstr ""
 msgid "يوتيوب"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:1098
+#: src/accessible_youtube_downloader_pro.py:1097
 msgid "يجب تحديد ملف الكوكيز من الإعدادات لعرض القنوات المشترك بها."
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:1111
+#: src/accessible_youtube_downloader_pro.py:1109
 msgid "يجب تحديد ملف الكوكيز من الإعدادات لاستخدام ميزة Shorts."
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:1118
+#: src/accessible_youtube_downloader_pro.py:1116
 msgid "جاري تحميل فيديوهات Shorts المقترحة..."
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:1125
+#: src/accessible_youtube_downloader_pro.py:1123
 msgid "تعذر تحميل فيديوهات Shorts. يرجى التحقق من ملف الكوكيز والاتصال بالإنترنت."
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:1137
+#: src/accessible_youtube_downloader_pro.py:1135
 msgid "جاري جلب رابط التشغيل..."
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:1144
+#: src/accessible_youtube_downloader_pro.py:1142
 msgid "تعذر استخراج رابط تشغيل الفيديو."
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:1170 src/gui/update_dialog.py:207
+#: src/accessible_youtube_downloader_pro.py:1168 src/gui/update_dialog.py:207
 msgid "Unable to open the download folder."
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:1215
+#: src/accessible_youtube_downloader_pro.py:1213
 msgid "دليل استخدام برنامج HexPlayer"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:1232
+#: src/accessible_youtube_downloader_pro.py:1230
 msgid "تعذر العثور على ملف سياسة الخصوصية"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:1236
+#: src/accessible_youtube_downloader_pro.py:1234
 msgid "جاري البحث عن التحديثات. يرجى الانتظار"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:1241
+#: src/accessible_youtube_downloader_pro.py:1239
 msgid "اسم البرنامج"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:1242
+#: src/accessible_youtube_downloader_pro.py:1240
 msgid "الإصدار"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:1243
+#: src/accessible_youtube_downloader_pro.py:1241
 msgid "طُوِر بواسطة"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:1244 src/gui/description.py:21
+#: src/accessible_youtube_downloader_pro.py:1242 src/gui/description.py:21
 msgid "الوصف: "
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:1331
+#: src/accessible_youtube_downloader_pro.py:1329
 msgid "البرنامج قيد التشغيل بالفعل."
 msgstr ""
 
@@ -662,7 +662,7 @@ msgid ""
 msgstr ""
 
 #: src/gui/comments_dialog.py:13 src/gui/comments_dialog.py:47
-#: src/gui/subscriptions_dialog.py:102 src/utils.py:1242 src/utils.py:1297
+#: src/gui/subscriptions_dialog.py:98 src/utils.py:1242 src/utils.py:1297
 #: src/utils.py:1379 src/utils.py:1456 src/utils.py:1532 src/utils.py:2863
 #: src/utils.py:3226 src/youtube_browser/search_handler.py:159
 #: src/youtube_browser/search_handler.py:259
@@ -1010,7 +1010,7 @@ msgstr ""
 msgid "مشاهدة Shorts"
 msgstr ""
 
-#: src/gui/subscriptions_dialog.py:22 src/gui/subscriptions_dialog.py:32
+#: src/gui/subscriptions_dialog.py:22 src/gui/subscriptions_dialog.py:29
 #: src/utils.py:3711
 msgid "القنوات المشترك بها"
 msgstr ""
@@ -1798,7 +1798,7 @@ msgid "قائمة تشغيل"
 msgstr ""
 
 #: src/gui/auto_detect_dialog.py:21 src/gui/channel_dialog.py:25
-#: src/gui/subscriptions_dialog.py:124 src/media_player/media_gui.py:500
+#: src/gui/subscriptions_dialog.py:120 src/media_player/media_gui.py:500
 #: src/media_player/media_gui.py:511 src/media_player/media_gui.py:517
 #: src/media_player/media_gui.py:1624 src/media_player/media_gui.py:2412
 #: src/media_player/media_gui.py:2423 src/media_player/media_gui.py:2773
@@ -2461,7 +2461,7 @@ msgid "إلغاء التفضيل"
 msgstr ""
 
 #: src/gui/favorites.py:31 src/gui/history.py:36
-#: src/gui/subscriptions_dialog.py:39 src/youtube_browser/browser.py:68
+#: src/gui/subscriptions_dialog.py:34 src/youtube_browser/browser.py:68
 msgid "العودة إلى النافذة الرئيسية"
 msgstr ""
 
@@ -3077,31 +3077,31 @@ msgstr ""
 msgid "عدد الدقائق:"
 msgstr ""
 
-#: src/gui/subscriptions_dialog.py:29
+#: src/gui/subscriptions_dialog.py:28
 msgid "القنوات التي تشترك بها في يوتيوب:"
 msgstr ""
 
-#: src/gui/subscriptions_dialog.py:36
+#: src/gui/subscriptions_dialog.py:32
 msgid "فتح القناة\tenter"
 msgstr ""
 
-#: src/gui/subscriptions_dialog.py:70
+#: src/gui/subscriptions_dialog.py:66
 msgid "جاري تحميل قائمة القنوات... يرجى الانتظار"
 msgstr ""
 
-#: src/gui/subscriptions_dialog.py:71
+#: src/gui/subscriptions_dialog.py:67
 msgid "جاري تحميل قائمة القنوات المشترك بها"
 msgstr ""
 
-#: src/gui/subscriptions_dialog.py:89
+#: src/gui/subscriptions_dialog.py:85
 msgid "تعذر تحميل قائمة القنوات"
 msgstr ""
 
-#: src/gui/subscriptions_dialog.py:95 src/gui/subscriptions_dialog.py:96
+#: src/gui/subscriptions_dialog.py:91 src/gui/subscriptions_dialog.py:92
 msgid "لا توجد قنوات مشترك بها"
 msgstr ""
 
-#: src/gui/subscriptions_dialog.py:111
+#: src/gui/subscriptions_dialog.py:107
 #, python-brace-format
 msgid "تم تحميل {count} قناة"
 msgstr ""
