@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-26 16:11+0200\n"
+"POT-Creation-Date: 2026-10-26 16:12+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -167,7 +167,7 @@ msgstr ""
 
 #: src/accessible_youtube_downloader_pro.py:472
 #: src/accessible_youtube_downloader_pro.py:1243
-#: src/youtube_browser/search_handler.py:89
+#: src/youtube_browser/search_handler.py:91
 msgid "حول"
 msgstr ""
 
@@ -664,13 +664,13 @@ msgstr ""
 #: src/gui/comments_dialog.py:13 src/gui/comments_dialog.py:47
 #: src/gui/subscriptions_dialog.py:98 src/utils.py:1242 src/utils.py:1297
 #: src/utils.py:1379 src/utils.py:1456 src/utils.py:1532 src/utils.py:2863
-#: src/utils.py:3226 src/youtube_browser/search_handler.py:159
-#: src/youtube_browser/search_handler.py:259
-#: src/youtube_browser/search_handler.py:494
-#: src/youtube_browser/search_handler.py:707
-#: src/youtube_browser/search_handler.py:753
-#: src/youtube_browser/search_handler.py:804
-#: src/youtube_browser/search_handler.py:817
+#: src/utils.py:3226 src/youtube_browser/search_handler.py:161
+#: src/youtube_browser/search_handler.py:261
+#: src/youtube_browser/search_handler.py:496
+#: src/youtube_browser/search_handler.py:709
+#: src/youtube_browser/search_handler.py:755
+#: src/youtube_browser/search_handler.py:810
+#: src/youtube_browser/search_handler.py:823
 msgid "غير معروف"
 msgstr ""
 
@@ -1791,9 +1791,9 @@ msgstr ""
 
 #: src/gui/auto_detect_dialog.py:19 src/gui/auto_detect_dialog.py:57
 #: src/gui/auto_detect_dialog.py:105 src/gui/search_dialog.py:80
-#: src/youtube_browser/search_handler.py:234
-#: src/youtube_browser/search_handler.py:546
-#: src/youtube_browser/search_handler.py:819
+#: src/youtube_browser/search_handler.py:236
+#: src/youtube_browser/search_handler.py:548
+#: src/youtube_browser/search_handler.py:825
 msgid "قائمة تشغيل"
 msgstr ""
 
@@ -1802,11 +1802,11 @@ msgstr ""
 #: src/media_player/media_gui.py:511 src/media_player/media_gui.py:517
 #: src/media_player/media_gui.py:1624 src/media_player/media_gui.py:2412
 #: src/media_player/media_gui.py:2423 src/media_player/media_gui.py:2773
-#: src/youtube_browser/search_handler.py:408
-#: src/youtube_browser/search_handler.py:418
-#: src/youtube_browser/search_handler.py:452
-#: src/youtube_browser/search_handler.py:553
-#: src/youtube_browser/search_handler.py:825
+#: src/youtube_browser/search_handler.py:410
+#: src/youtube_browser/search_handler.py:420
+#: src/youtube_browser/search_handler.py:454
+#: src/youtube_browser/search_handler.py:555
+#: src/youtube_browser/search_handler.py:831
 msgid "قناة"
 msgstr ""
 
@@ -2609,8 +2609,8 @@ msgstr ""
 msgid "بلا فلتر"
 msgstr ""
 
-#: src/gui/search_dialog.py:77 src/youtube_browser/search_handler.py:808
-#: src/youtube_browser/search_handler.py:885
+#: src/gui/search_dialog.py:77 src/youtube_browser/search_handler.py:814
+#: src/youtube_browser/search_handler.py:891
 msgid "بث مباشر"
 msgstr ""
 
@@ -3664,11 +3664,11 @@ msgstr ""
 msgid "تم تخطي مقطع SponsorBlock"
 msgstr ""
 
-#: src/media_player/media_gui.py:994 src/youtube_browser/search_handler.py:300
-#: src/youtube_browser/search_handler.py:539
-#: src/youtube_browser/search_handler.py:547
-#: src/youtube_browser/search_handler.py:812
-#: src/youtube_browser/search_handler.py:820
+#: src/media_player/media_gui.py:994 src/youtube_browser/search_handler.py:302
+#: src/youtube_browser/search_handler.py:541
+#: src/youtube_browser/search_handler.py:549
+#: src/youtube_browser/search_handler.py:818
+#: src/youtube_browser/search_handler.py:826
 msgid "بواسطة"
 msgstr ""
 
@@ -3957,72 +3957,72 @@ msgstr ""
 msgid "لم يتمكن البرنامج من تحميل المزيد من النتائج"
 msgstr ""
 
-#: src/youtube_browser/search_handler.py:82 src/youtube_music/views.py:24
+#: src/youtube_browser/search_handler.py:84 src/youtube_music/views.py:24
 msgid "الرئيسية"
 msgstr ""
 
-#: src/youtube_browser/search_handler.py:83
+#: src/youtube_browser/search_handler.py:85
 msgid "الفيديوهات"
 msgstr ""
 
-#: src/youtube_browser/search_handler.py:84
+#: src/youtube_browser/search_handler.py:86
 msgid "المقاطع القصيرة"
 msgstr ""
 
-#: src/youtube_browser/search_handler.py:85
+#: src/youtube_browser/search_handler.py:87
 msgid "البث المباشر"
 msgstr ""
 
-#: src/youtube_browser/search_handler.py:86 src/youtube_music/music_panel.py:29
+#: src/youtube_browser/search_handler.py:88 src/youtube_music/music_panel.py:29
 msgid "قوائم التشغيل"
 msgstr ""
 
-#: src/youtube_browser/search_handler.py:87
+#: src/youtube_browser/search_handler.py:89
 msgid "المجتمع"
 msgstr ""
 
-#: src/youtube_browser/search_handler.py:88
+#: src/youtube_browser/search_handler.py:90
 msgid "القنوات"
 msgstr ""
 
-#: src/youtube_browser/search_handler.py:400
+#: src/youtube_browser/search_handler.py:402
 msgid "yt-dlp is not installed"
 msgstr ""
 
-#: src/youtube_browser/search_handler.py:455
+#: src/youtube_browser/search_handler.py:457
 #, python-brace-format
 msgid "القناة: {}"
 msgstr ""
 
-#: src/youtube_browser/search_handler.py:456
+#: src/youtube_browser/search_handler.py:458
 #, python-brace-format
 msgid "الرابط: {}"
 msgstr ""
 
-#: src/youtube_browser/search_handler.py:459
+#: src/youtube_browser/search_handler.py:461
 #, python-brace-format
 msgid "عدد المشتركين: {}"
 msgstr ""
 
-#: src/youtube_browser/search_handler.py:460
+#: src/youtube_browser/search_handler.py:462
 #, python-brace-format
 msgid "عدد المشاهدات: {}"
 msgstr ""
 
-#: src/youtube_browser/search_handler.py:461
+#: src/youtube_browser/search_handler.py:463
 #, python-brace-format
 msgid "الوصف: {}"
 msgstr ""
 
-#: src/youtube_browser/search_handler.py:548
-#: src/youtube_browser/search_handler.py:821
+#: src/youtube_browser/search_handler.py:550
 #: src/youtube_browser/search_handler.py:827
+#: src/youtube_browser/search_handler.py:833
 #, python-brace-format
 msgid "تحتوي على {} من الفيديوهات"
 msgstr ""
 
-#: src/youtube_browser/search_handler.py:599
-#: src/youtube_browser/search_handler.py:883
+#: src/youtube_browser/search_handler.py:601
+#: src/youtube_browser/search_handler.py:889
 #, python-brace-format
 msgid "عدد المشاهدات {}"
 msgstr ""

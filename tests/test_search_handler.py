@@ -479,7 +479,9 @@ async def test_search_filters_livestream():
 
     with (
         patch("youtube_browser.search_handler.config_get", return_value="ar"),
-        patch("youtube_browser.search_handler.utils.get_windows_region", return_value="US"),
+        patch(
+            "youtube_browser.search_handler.utils.get_windows_region", return_value="US"
+        ),
         patch("youtube_browser.search_handler.CustomSearch") as MockCustomSearch,
     ):
         mock_instance = MockCustomSearch.return_value
@@ -532,7 +534,9 @@ async def test_search_filters_upload_date():
 
     with (
         patch("youtube_browser.search_handler.config_get", return_value="ar"),
-        patch("youtube_browser.search_handler.utils.get_windows_region", return_value="US"),
+        patch(
+            "youtube_browser.search_handler.utils.get_windows_region", return_value="US"
+        ),
         patch("youtube_browser.search_handler.CustomSearch") as MockCustomSearch,
     ):
         mock_instance = MockCustomSearch.return_value
@@ -580,7 +584,9 @@ async def test_search_filters_view_count():
 
     with (
         patch("youtube_browser.search_handler.config_get", return_value="ar"),
-        patch("youtube_browser.search_handler.utils.get_windows_region", return_value="US"),
+        patch(
+            "youtube_browser.search_handler.utils.get_windows_region", return_value="US"
+        ),
         patch("youtube_browser.search_handler.CustomSearch") as MockCustomSearch,
     ):
         mock_instance = MockCustomSearch.return_value
@@ -588,7 +594,11 @@ async def test_search_filters_view_count():
 
         search = Search("python tutorial", filter=SEARCH_FILTER_VIEW_COUNT)
         MockCustomSearch.assert_called_once_with(
-            "python tutorial", VideoSortOrder.viewCount, limit=20, language="ar", region="US"
+            "python tutorial",
+            VideoSortOrder.viewCount,
+            limit=20,
+            language="ar",
+            region="US",
         )
         assert mock_instance.searchMode == (True, False, False)
 
@@ -697,7 +707,10 @@ def test_cli_cmd_search_filters():
         ("channel", 5),
     ]:
         args.type = type_name
-        with patch("cli.commands.Search") as MockSearch, patch("cli.commands.run_async"):
+        with (
+            patch("cli.commands.Search") as MockSearch,
+            patch("cli.commands.run_async"),
+        ):
             mock_inst = MockSearch.return_value
             mock_inst.count = 1
             mock_inst.get_display_titles.return_value = ["Item 1"]

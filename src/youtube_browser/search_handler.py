@@ -14,7 +14,8 @@ from py_yt import (
 
 try:
     from py_yt.core.constants import SearchMode, VideoSortOrder
-except (ImportError, AttributeError):
+except ImportError, AttributeError:
+
     class SearchMode:
         videos: str = "EgIQAQ%3D%3D"
         channels: str = "EgIQAg%3D%3D"
@@ -25,7 +26,8 @@ except (ImportError, AttributeError):
         relevance: str = "CAASAhAB"
         uploadDate: str = "CAISAhAB"
         viewCount: str = "CAMSAhAB"
-        rating: str = "CAESAhAB" 
+        rating: str = "CAESAhAB"
+
 
 import utils
 from language_handler import _, normalize_language_code
@@ -683,7 +685,7 @@ class Search:
                 video_count_str = item.get("videoCount", "0")
                 try:
                     video_count = int(video_count_str.split(" ")[0])
-                except (ValueError, IndexError):
+                except ValueError, IndexError:
                     video_count = 0
                 self.count += 1
                 self.results[self.count] = {
@@ -730,7 +732,7 @@ class Search:
                     video_count_str = item.get("videoCount", "0")
                     try:
                         video_count = int(video_count_str.split(" ")[0])
-                    except (ValueError, IndexError):
+                    except ValueError, IndexError:
                         video_count = 0
                     self.count += 1
                     self.results[self.count] = {
@@ -776,14 +778,18 @@ class Search:
                         views = view_count.get("short") or view_count.get("text")
                     else:
                         views = (
-                            view_count if view_count is not None else item.get("view_count")
+                            view_count
+                            if view_count is not None
+                            else item.get("view_count")
                         )
 
                     self.results[self.count] = {
                         "type": "video",
                         "title": item.get("title"),
                         "url": item.get("link"),
-                        "duration": item.get("duration"),  # in seconds or formatted string
+                        "duration": item.get(
+                            "duration"
+                        ),  # in seconds or formatted string
                         "uploadDate": item.get("publishedTime"),
                         "elements": None,
                         "channel": {
