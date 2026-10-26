@@ -3699,3 +3699,39 @@ def get_shorts_feed(seed_video_id=None, parent=None):
     except Exception as e:
         logger.error(f"Error fetching Shorts feed: {e}")
         return []
+
+
+def get_subscribed_channels(parent=None):
+    """Fetch the channels the logged-in user is subscribed to via Deno service.
+
+    Requires a valid cookies file. Returns a dict ``{"channels": [...],
+    "error": optional}`` where each channel has ``name``, ``subscribers`` and
+    ``url`` keys.
+    """
+    feature_name = _("القنوات المشترك بها")
+    result = {"channels": []}
+    if not ensure_deno_installed(parent=parent, feature_name=feature_name):
+        return result
+    if not ensure_cookies_configured(parent=parent, feature_name=feature_name):
+        return result
+
+    cookies_path = config_get("cookiespath")
+    try:
+        response = deno_service.send_command(
+            "get_subscribed_channels",
+            {
+                "cookiesPath": cookies_path,
+                "location": get_windows_region(),
+            },
+        )
+        if isinstance(response, dict) and "channels" in response:
+            result["channels"] = response.get("channels") or []
+            return result
+        if isinstance(response, dict) and "error" in response:
+            logger.error(f"Failed to fetch subscribed channels: {response['error']}")
+            result["error"] = response["error"]
+            return result
+    except Exception as e:
+        logger.error(f"Error fetching subscribed channels: {e}")
+        result["error"] = str(e)
+    return result

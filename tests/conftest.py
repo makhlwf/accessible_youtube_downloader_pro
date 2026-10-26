@@ -376,7 +376,26 @@ mock_wx.Point = Point
 mock_wx.Size = Size
 
 sys.modules["wx"] = mock_wx
-sys.modules["wx.adv"] = MagicMock()
+mock_adv = MagicMock()
+
+
+class _MockTaskBarIcon:
+    def __init__(self, *args, **kwargs):
+        pass
+
+    def SetIcon(self, *args, **kwargs):
+        pass
+
+    def Bind(self, *args, **kwargs):
+        pass
+
+    def Destroy(self, *args, **kwargs):
+        pass
+
+
+mock_adv.TaskBarIcon = _MockTaskBarIcon
+mock_wx.adv = mock_adv
+sys.modules["wx.adv"] = mock_adv
 sys.modules["wx.lib"] = MagicMock()
 mock_newevent = MagicMock()
 mock_newevent.NewEvent.return_value = (MagicMock(), MagicMock())

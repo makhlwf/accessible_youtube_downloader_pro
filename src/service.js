@@ -1010,6 +1010,86 @@ async function handleGetShortsFeed(params) {
     }
 }
 
+async function handleGetSubscribedChannels(params) {
+    if (!params.cookiesPath) {
+        throw new Error("Cookies path is required for subscriptions");
+    }
+    const yt = await getYT(params.cookiesPath, params.location);
+    if (!yt.session.logged_in) {
+        throw new Error("Not logged in with provided cookies");
+    }
+
+    const channels = [];
+    const seen = new Set();
+
+    const push = (id, name, subscribers) => {
+        if (!id || !name) return;
+        if (seen.has(id)) return;
+        seen.add(id);
+        const url = String(id).startsWith('@')
+            ? `https://www.youtube.com/${id}`
+            : `https://www.youtube.com/channel/${id}`;
+        channels.push({ id, name, subscribers: subscribers || '', url });
+    };
+
+    const extractFromFeed = (feed) => {
+        if (!feed) return;
+        // Classic responses carry GridChannel renderers.
+        const gridChannels = feed.memo?.getType ? feed.memo.getType(YTNodes.GridChannel) : [];
+        for (const c of gridChannels) {
+            push(c.id || c.author?.id, textValue(c.author?.name), textValue(c.subscribers));
+        }
+
+        // Direct channel renderers if present
+        if (YTNodes.Channel) {
+            const direct = feed.memo?.getType ? feed.memo.getType(YTNodes.Channel) : [];
+            for (const c of direct) {
+                push(c.id || c.author?.id, textValue(c.author?.name || c.title), textValue(c.subscribers || c.subscriber_count));
+            }
+        }
+
+        // Newer responses use lockup view models for channel entries.
+        const lockups = feed.memo?.getType ? feed.memo.getType(YTNodes.LockupView) : [];
+        for (const l of lockups) {
+            const id = l.contentId;
+            const meta = l.metadata?.lockupMetadataViewModel;
+            const name = textValue(meta?.title);
+            let subscribers = '';
+            const rows = meta?.metadata?.contentMetadataViewModel?.metadataRows || [];
+            for (const row of rows) {
+                for (const part of (row.metadataParts || [])) {
+                    const t = textValue(part?.text);
+                    if (t && /subscribers|subscribes|مشترك/i.test(t)) {
+                        subscribers = t;
+                    }
+                }
+            }
+            push(id, name, subscribers);
+        }
+    };
+
+    let feed = null;
+    if (typeof yt.getChannelsFeed === 'function') {
+        try {
+            feed = await yt.getChannelsFeed();
+            extractFromFeed(feed);
+        } catch {
+            // fallback
+        }
+    }
+
+    if (channels.length === 0) {
+        try {
+            feed = await yt.getSubscriptionsFeed();
+            extractFromFeed(feed);
+        } catch {
+            // ignore
+        }
+    }
+
+    return { channels };
+}
+
 async function handleGetMix(params) {
     if (!params.cookiesPath) {
         throw new Error("Cookies path is required for Mixes");
@@ -1194,6 +1274,8 @@ async function main() {
                 result = await handleGetPlaylist(params);
             } else if (command === 'get_shorts_feed') {
                 result = await handleGetShortsFeed(params);
+            } else if (command === 'get_subscribed_channels') {
+                result = await handleGetSubscribedChannels(params);
             } else if (command === 'get_mix') {
                 result = await handleGetMix(params);
             } else {
@@ -1211,6 +1293,7 @@ export {
     extractChapters,
     extractLikeInfo,
     handleGetShortsFeed,
+    handleGetSubscribedChannels,
     handleLikeComment,
     handleLikeInteraction,
     handleReplyComment,

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-24 20:48+0200\n"
+"POT-Creation-Date: 2026-10-26 15:17+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -24,234 +24,240 @@ msgid ""
 msgstr ""
 
 #: src/accessible_youtube_downloader_pro.py:356
-#: src/accessible_youtube_downloader_pro.py:409
+#: src/accessible_youtube_downloader_pro.py:412
 msgid "البحث في يوتيوب\tctrl+f"
 msgstr ""
 
 #: src/accessible_youtube_downloader_pro.py:358
-#: src/accessible_youtube_downloader_pro.py:410
+#: src/accessible_youtube_downloader_pro.py:413
 msgid "التنزيل من خلال رابط\tctrl+d"
 msgstr ""
 
 #: src/accessible_youtube_downloader_pro.py:361
-#: src/accessible_youtube_downloader_pro.py:412
+#: src/accessible_youtube_downloader_pro.py:415
 msgid "تشغيل فيديو يوتيوب من خلال الرابط\tctrl+y"
 msgstr ""
 
 #: src/accessible_youtube_downloader_pro.py:364
-#: src/accessible_youtube_downloader_pro.py:414
+#: src/accessible_youtube_downloader_pro.py:417
 msgid "مشاهدة Shorts\tctrl+shift+s"
 msgstr ""
 
 #: src/accessible_youtube_downloader_pro.py:367
-#: src/accessible_youtube_downloader_pro.py:415
-msgid "الفيديوهات المفضلة\tctrl+shift+f"
-msgstr ""
-
-#: src/accessible_youtube_downloader_pro.py:369
-#: src/accessible_youtube_downloader_pro.py:416
-msgid "سجل المشاهدة\tctrl+h"
+#: src/accessible_youtube_downloader_pro.py:419
+msgid "القنوات المشترك بها\tctrl+shift+u"
 msgstr ""
 
 #: src/accessible_youtube_downloader_pro.py:370
-#: src/accessible_youtube_downloader_pro.py:417
+#: src/accessible_youtube_downloader_pro.py:421
+msgid "الفيديوهات المفضلة\tctrl+shift+f"
+msgstr ""
+
+#: src/accessible_youtube_downloader_pro.py:372
+#: src/accessible_youtube_downloader_pro.py:422
+msgid "سجل المشاهدة\tctrl+h"
+msgstr ""
+
+#: src/accessible_youtube_downloader_pro.py:373
+#: src/accessible_youtube_downloader_pro.py:423
 msgid "يوتيوب ميوزك\tctrl+m"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:376
+#: src/accessible_youtube_downloader_pro.py:379
 msgid "تحميل المزيد من الفيديوهات المقترحة"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:418
+#: src/accessible_youtube_downloader_pro.py:424
 msgid "فتح مجلد التنزيل\tctrl+p"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:419
+#: src/accessible_youtube_downloader_pro.py:425
 #: src/media_player/media_gui.py:301 src/youtube_browser/browser.py:99
 msgid "الإعدادات...\talt+s"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:420
+#: src/accessible_youtube_downloader_pro.py:426
 msgid "خروج\tctrl+w"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:422
+#: src/accessible_youtube_downloader_pro.py:428
 msgid "القائمة الرئيسية"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:426
+#: src/accessible_youtube_downloader_pro.py:432
 msgid "عرض إصدار واي تي دي إل بي"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:428
+#: src/accessible_youtube_downloader_pro.py:434
 msgid "التحقق من وجود تحديث لـ واي تي دي إل بي"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:430
+#: src/accessible_youtube_downloader_pro.py:436
 msgid "عرض إصدار دينو"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:431
+#: src/accessible_youtube_downloader_pro.py:437
 msgid "التحقق من وجود تحديث لـ دينو"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:433
+#: src/accessible_youtube_downloader_pro.py:439
 msgid "عرض إصدار YouTube.js (Innertube)"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:436
+#: src/accessible_youtube_downloader_pro.py:442
 msgid "التحقق من وجود تحديث لـ YouTube.js (Innertube)"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:439
+#: src/accessible_youtube_downloader_pro.py:445
 msgid "تحديث ذاكرة YouTube.js (Innertube) المؤقتة"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:441
+#: src/accessible_youtube_downloader_pro.py:447
 msgid "عرض إصدار مولد رموز POT"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:443
+#: src/accessible_youtube_downloader_pro.py:449
 msgid "التحقق من وجود تحديث لـ مولد رموز POT"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:446
+#: src/accessible_youtube_downloader_pro.py:452
 msgid "فتح مجلد إضافة المتصفح"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:449
+#: src/accessible_youtube_downloader_pro.py:455
 msgid "فتح ملف السجلات (hexplayer.log)"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:451
+#: src/accessible_youtube_downloader_pro.py:457
 msgid "قائمة الأدوات الخارجية"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:455
+#: src/accessible_youtube_downloader_pro.py:461
 msgid "شاشة الترحيب وجولة الميزات..."
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:456
+#: src/accessible_youtube_downloader_pro.py:462
 msgid "دليل المستخدم...\tf1"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:457
+#: src/accessible_youtube_downloader_pro.py:463
 msgid "البحث عن التحديثات"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:458
-#: src/accessible_youtube_downloader_pro.py:1199
+#: src/accessible_youtube_downloader_pro.py:464
+#: src/accessible_youtube_downloader_pro.py:1230
 msgid "سياسة الخصوصية"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:459
+#: src/accessible_youtube_downloader_pro.py:465
 msgid "عن البرنامج..."
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:462
+#: src/accessible_youtube_downloader_pro.py:468
 msgid "البريد الالكتروني..."
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:463
+#: src/accessible_youtube_downloader_pro.py:469
 msgid "تلجرام..."
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:464
+#: src/accessible_youtube_downloader_pro.py:470
 msgid "تواصل معي"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:466
-#: src/accessible_youtube_downloader_pro.py:1214
+#: src/accessible_youtube_downloader_pro.py:472
+#: src/accessible_youtube_downloader_pro.py:1245
 #: src/youtube_browser/search_handler.py:89
 msgid "حول"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:582
+#: src/accessible_youtube_downloader_pro.py:595
 msgid "Unable to open the log file."
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:658
+#: src/accessible_youtube_downloader_pro.py:671
 msgid "لم يتم العثور على مكتبة واي تي دي إل بي أو تعذر الحصول على إصدارها"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:662
+#: src/accessible_youtube_downloader_pro.py:675
 msgid "إصدار واي تي دي إل بي"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:668
+#: src/accessible_youtube_downloader_pro.py:681
 msgid "لم يتم العثور على أداة دينو أو تعذر الحصول على إصدارها"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:672
+#: src/accessible_youtube_downloader_pro.py:685
 msgid "إصدار دينو"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:678
+#: src/accessible_youtube_downloader_pro.py:691
 msgid "تعذر جلب إصدار YouTube.js (Innertube)"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:679 src/gui/comments_dialog.py:127
+#: src/accessible_youtube_downloader_pro.py:692 src/gui/comments_dialog.py:127
 #: src/gui/comments_dialog.py:349 src/gui/comments_dialog.py:565
 #: src/gui/settings_dialog.py:1185 src/gui/settings_dialog.py:1243
 #: src/utils.py:3562
 msgid "خطأ"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:683
+#: src/accessible_youtube_downloader_pro.py:696
 msgid "إصدار YouTube.js (Innertube)"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:689
+#: src/accessible_youtube_downloader_pro.py:702
 msgid "أداة مولد رموز POT غير مثبتة حالياً."
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:690
-#: src/accessible_youtube_downloader_pro.py:700
+#: src/accessible_youtube_downloader_pro.py:703
+#: src/accessible_youtube_downloader_pro.py:713
 msgid "معلومات الإصدار"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:695 src/discord_presence.py:327
+#: src/accessible_youtube_downloader_pro.py:708 src/discord_presence.py:327
 #: src/discord_presence.py:334 src/discord_presence.py:355
 msgid "قيد التشغيل"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:695
+#: src/accessible_youtube_downloader_pro.py:708
 msgid "متوقف"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:697
+#: src/accessible_youtube_downloader_pro.py:710
 #, python-brace-format
 msgid ""
 "إصدار مولد رموز POT: {}\n"
 "حالة الخادم المحلي: {}"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:706
+#: src/accessible_youtube_downloader_pro.py:719
 #: src/media_player/media_gui.py:1009
 msgid "جاري تحميل الاقتراحات... يرجى الانتظار"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:729
-#: src/accessible_youtube_downloader_pro.py:1301 src/gui/history.py:105
+#: src/accessible_youtube_downloader_pro.py:742
+#: src/accessible_youtube_downloader_pro.py:1332 src/gui/history.py:105
 #: src/gui/settings_dialog.py:966 src/gui/settings_dialog.py:1072
-#: src/gui/settings_dialog.py:1319 src/utils.py:1474 src/utils.py:1494
-#: src/utils.py:1551 src/utils.py:1575 src/utils.py:1602
+#: src/gui/settings_dialog.py:1319 src/gui/subscriptions_dialog.py:84
+#: src/utils.py:1474 src/utils.py:1494 src/utils.py:1551 src/utils.py:1575
+#: src/utils.py:1602
 msgid "تنبيه"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:754
+#: src/accessible_youtube_downloader_pro.py:767
 msgid ""
 "لا توجد اقتراحات متاحة حاليًا في حسابك (قد يكون سجل المشاهدة متوقفًا في "
 "إعدادات YouTube)."
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:765
+#: src/accessible_youtube_downloader_pro.py:778
 #, python-brace-format
 msgid "قائمة تشغيل مختلطة: {title}"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:818
-#: src/accessible_youtube_downloader_pro.py:897
+#: src/accessible_youtube_downloader_pro.py:831
+#: src/accessible_youtube_downloader_pro.py:910
 #: src/gui/auto_detect_dialog.py:115 src/gui/channel_dialog.py:380
 #: src/gui/channel_dialog.py:403 src/gui/favorites.py:113
 #: src/gui/favorites.py:130 src/gui/history.py:165
@@ -262,95 +268,99 @@ msgstr ""
 msgid "جاري التشغيل"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:821
-#: src/accessible_youtube_downloader_pro.py:900 src/gui/channel_dialog.py:383
+#: src/accessible_youtube_downloader_pro.py:834
+#: src/accessible_youtube_downloader_pro.py:913 src/gui/channel_dialog.py:383
 #: src/gui/channel_dialog.py:406 src/gui/history.py:172
 #: src/media_player/media_gui.py:2911
 msgid "لا يمكن تشغيل الرابط"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:872
+#: src/accessible_youtube_downloader_pro.py:885
 msgid "تعذر العثور على مجلد إضافة المتصفح"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:876
+#: src/accessible_youtube_downloader_pro.py:889
 msgid "Unable to open the browser extension folder."
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:935
+#: src/accessible_youtube_downloader_pro.py:948
 msgid "يوتيوب ميوزك معطّل من الإعدادات"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:941
+#: src/accessible_youtube_downloader_pro.py:954
 msgid "تعذر فتح يوتيوب ميوزك"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:942
+#: src/accessible_youtube_downloader_pro.py:955
 msgid "تعذر فتح يوتيوب ميوزك."
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:952 src/gui/settings_dialog.py:635
+#: src/accessible_youtube_downloader_pro.py:965 src/gui/settings_dialog.py:635
 #: src/youtube_music/music_panel.py:58
 msgid "يوتيوب ميوزك"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:966
+#: src/accessible_youtube_downloader_pro.py:979
 msgid "يوتيوب"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:1080
+#: src/accessible_youtube_downloader_pro.py:1098
+msgid "يجب تحديد ملف الكوكيز من الإعدادات لعرض القنوات المشترك بها."
+msgstr ""
+
+#: src/accessible_youtube_downloader_pro.py:1111
 msgid "يجب تحديد ملف الكوكيز من الإعدادات لاستخدام ميزة Shorts."
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:1087
+#: src/accessible_youtube_downloader_pro.py:1118
 msgid "جاري تحميل فيديوهات Shorts المقترحة..."
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:1094
+#: src/accessible_youtube_downloader_pro.py:1125
 msgid "تعذر تحميل فيديوهات Shorts. يرجى التحقق من ملف الكوكيز والاتصال بالإنترنت."
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:1106
+#: src/accessible_youtube_downloader_pro.py:1137
 msgid "جاري جلب رابط التشغيل..."
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:1113
+#: src/accessible_youtube_downloader_pro.py:1144
 msgid "تعذر استخراج رابط تشغيل الفيديو."
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:1139 src/gui/update_dialog.py:207
+#: src/accessible_youtube_downloader_pro.py:1170 src/gui/update_dialog.py:207
 msgid "Unable to open the download folder."
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:1184
+#: src/accessible_youtube_downloader_pro.py:1215
 msgid "دليل استخدام برنامج HexPlayer"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:1201
+#: src/accessible_youtube_downloader_pro.py:1232
 msgid "تعذر العثور على ملف سياسة الخصوصية"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:1205
+#: src/accessible_youtube_downloader_pro.py:1236
 msgid "جاري البحث عن التحديثات. يرجى الانتظار"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:1210
+#: src/accessible_youtube_downloader_pro.py:1241
 msgid "اسم البرنامج"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:1211
+#: src/accessible_youtube_downloader_pro.py:1242
 msgid "الإصدار"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:1212
+#: src/accessible_youtube_downloader_pro.py:1243
 msgid "طُوِر بواسطة"
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:1213 src/gui/description.py:21
+#: src/accessible_youtube_downloader_pro.py:1244 src/gui/description.py:21
 msgid "الوصف: "
 msgstr ""
 
-#: src/accessible_youtube_downloader_pro.py:1300
+#: src/accessible_youtube_downloader_pro.py:1331
 msgid "البرنامج قيد التشغيل بالفعل."
 msgstr ""
 
@@ -652,9 +662,9 @@ msgid ""
 msgstr ""
 
 #: src/gui/comments_dialog.py:13 src/gui/comments_dialog.py:47
-#: src/utils.py:1242 src/utils.py:1297 src/utils.py:1379 src/utils.py:1456
-#: src/utils.py:1532 src/utils.py:2863 src/utils.py:3226
-#: src/youtube_browser/search_handler.py:159
+#: src/gui/subscriptions_dialog.py:102 src/utils.py:1242 src/utils.py:1297
+#: src/utils.py:1379 src/utils.py:1456 src/utils.py:1532 src/utils.py:2863
+#: src/utils.py:3226 src/youtube_browser/search_handler.py:159
 #: src/youtube_browser/search_handler.py:259
 #: src/youtube_browser/search_handler.py:494
 #: src/youtube_browser/search_handler.py:707
@@ -998,6 +1008,11 @@ msgstr ""
 
 #: src/utils.py:3677
 msgid "مشاهدة Shorts"
+msgstr ""
+
+#: src/gui/subscriptions_dialog.py:22 src/gui/subscriptions_dialog.py:32
+#: src/utils.py:3711
+msgid "القنوات المشترك بها"
 msgstr ""
 
 #: src/cli/app.py:45
@@ -1783,10 +1798,11 @@ msgid "قائمة تشغيل"
 msgstr ""
 
 #: src/gui/auto_detect_dialog.py:21 src/gui/channel_dialog.py:25
-#: src/media_player/media_gui.py:500 src/media_player/media_gui.py:511
-#: src/media_player/media_gui.py:517 src/media_player/media_gui.py:1624
-#: src/media_player/media_gui.py:2412 src/media_player/media_gui.py:2423
-#: src/media_player/media_gui.py:2773 src/youtube_browser/search_handler.py:408
+#: src/gui/subscriptions_dialog.py:124 src/media_player/media_gui.py:500
+#: src/media_player/media_gui.py:511 src/media_player/media_gui.py:517
+#: src/media_player/media_gui.py:1624 src/media_player/media_gui.py:2412
+#: src/media_player/media_gui.py:2423 src/media_player/media_gui.py:2773
+#: src/youtube_browser/search_handler.py:408
 #: src/youtube_browser/search_handler.py:418
 #: src/youtube_browser/search_handler.py:452
 #: src/youtube_browser/search_handler.py:553
@@ -2445,7 +2461,7 @@ msgid "إلغاء التفضيل"
 msgstr ""
 
 #: src/gui/favorites.py:31 src/gui/history.py:36
-#: src/youtube_browser/browser.py:68
+#: src/gui/subscriptions_dialog.py:39 src/youtube_browser/browser.py:68
 msgid "العودة إلى النافذة الرئيسية"
 msgstr ""
 
@@ -3059,6 +3075,35 @@ msgstr ""
 
 #: src/gui/sleep_timer_dialog.py:13
 msgid "عدد الدقائق:"
+msgstr ""
+
+#: src/gui/subscriptions_dialog.py:29
+msgid "القنوات التي تشترك بها في يوتيوب:"
+msgstr ""
+
+#: src/gui/subscriptions_dialog.py:36
+msgid "فتح القناة\tenter"
+msgstr ""
+
+#: src/gui/subscriptions_dialog.py:70
+msgid "جاري تحميل قائمة القنوات... يرجى الانتظار"
+msgstr ""
+
+#: src/gui/subscriptions_dialog.py:71
+msgid "جاري تحميل قائمة القنوات المشترك بها"
+msgstr ""
+
+#: src/gui/subscriptions_dialog.py:89
+msgid "تعذر تحميل قائمة القنوات"
+msgstr ""
+
+#: src/gui/subscriptions_dialog.py:95 src/gui/subscriptions_dialog.py:96
+msgid "لا توجد قنوات مشترك بها"
+msgstr ""
+
+#: src/gui/subscriptions_dialog.py:111
+#, python-brace-format
+msgid "تم تحميل {count} قناة"
 msgstr ""
 
 #: src/gui/tray_icon.py:12

@@ -3,6 +3,7 @@ import {
     extractChapters,
     extractLikeInfo,
     handleGetShortsFeed,
+    handleGetSubscribedChannels,
     handleLikeComment,
     handleReplyComment,
     handleUpdateWatchHistory,
@@ -300,6 +301,17 @@ Deno.test('handleGetShortsFeed throws error if cookies path is missing', async (
     } catch (e) {
         threw = true;
         assertEquals(e.message, 'Cookies path is required for Shorts');
+    }
+    assertEquals(threw, true);
+});
+
+Deno.test('handleGetSubscribedChannels throws error if cookies path is missing', async () => {
+    let threw = false;
+    try {
+        await handleGetSubscribedChannels({});
+    } catch (e) {
+        threw = true;
+        assertEquals(e.message, 'Cookies path is required for subscriptions');
     }
     assertEquals(threw, true);
 });

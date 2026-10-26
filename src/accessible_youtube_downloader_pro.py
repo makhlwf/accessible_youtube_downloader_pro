@@ -363,6 +363,9 @@ class HomeScreen(wx.Frame):
         self.shortsBtn = wx.Button(
             panel, -1, _("مشاهدة Shorts\tctrl+shift+s"), name="tab"
         )
+        self.subscriptionsBtn = wx.Button(
+            panel, -1, _("القنوات المشترك بها\tctrl+shift+u"), name="tab"
+        )
         self.favBtn = wx.Button(
             panel, -1, _("الفيديوهات المفضلة	ctrl+shift+f"), name="tab"
         )
@@ -412,6 +415,9 @@ class HomeScreen(wx.Frame):
             -1, _("تشغيل فيديو يوتيوب من خلال الرابط\tctrl+y")
         )
         self.shortsItem = mainMenu.Append(-1, _("مشاهدة Shorts\tctrl+shift+s"))
+        self.subscriptionsItem = mainMenu.Append(
+            -1, _("القنوات المشترك بها\tctrl+shift+u")
+        )
         self.favItem = mainMenu.Append(-1, _("الفيديوهات المفضلة	ctrl+shift+f"))
         self.historyItem = mainMenu.Append(-1, _("سجل المشاهدة\tctrl+h"))
         self.musicItem = mainMenu.Append(-1, _("يوتيوب ميوزك\tctrl+m"))
@@ -474,6 +480,11 @@ class HomeScreen(wx.Frame):
                 (wx.ACCEL_CTRL, ord("D"), self.downloadItem.GetId()),
                 (wx.ACCEL_CTRL, ord("Y"), self.playItem.GetId()),
                 (wx.ACCEL_CTRL | wx.ACCEL_SHIFT, ord("S"), self.shortsItem.GetId()),
+                (
+                    wx.ACCEL_CTRL | wx.ACCEL_SHIFT,
+                    ord("U"),
+                    self.subscriptionsItem.GetId(),
+                ),
                 (wx.ACCEL_CTRL | wx.ACCEL_SHIFT, ord("F"), self.favItem.GetId()),
                 (wx.ACCEL_CTRL, ord("H"), self.historyItem.GetId()),
                 (wx.ACCEL_CTRL, ord("M"), self.musicItem.GetId()),
@@ -492,6 +503,7 @@ class HomeScreen(wx.Frame):
         self.Bind(wx.EVT_MENU, self.onDownload, self.downloadItem)
         self.Bind(wx.EVT_MENU, self.onPlay, self.playItem)
         self.Bind(wx.EVT_MENU, self.on_open_shorts, self.shortsItem)
+        self.Bind(wx.EVT_MENU, self.on_open_subscriptions, self.subscriptionsItem)
         self.Bind(wx.EVT_MENU, self.onFavorite, self.favItem)
         self.Bind(wx.EVT_MENU, self.onHistory, self.historyItem)
         self.Bind(wx.EVT_MENU, self.onMusic, self.musicItem)
@@ -548,6 +560,7 @@ class HomeScreen(wx.Frame):
         self.downloadBtn.Bind(wx.EVT_BUTTON, self.onDownload)
         self.playBtn.Bind(wx.EVT_BUTTON, self.onPlay)
         self.shortsBtn.Bind(wx.EVT_BUTTON, self.on_open_shorts)
+        self.subscriptionsBtn.Bind(wx.EVT_BUTTON, self.on_open_subscriptions)
         self.favBtn.Bind(wx.EVT_BUTTON, self.onFavorite)
         self.historyBtn.Bind(wx.EVT_BUTTON, self.onHistory)
         self.musicBtn.Bind(wx.EVT_BUTTON, self.onMusic)
@@ -1069,8 +1082,24 @@ class HomeScreen(wx.Frame):
             self.shortsBtn.Show(has_cookies)
         if hasattr(self, "shortsItem"):
             self.shortsItem.Enable(has_cookies)
+        if hasattr(self, "subscriptionsBtn"):
+            self.subscriptionsBtn.Show(has_cookies)
+        if hasattr(self, "subscriptionsItem"):
+            self.subscriptionsItem.Enable(has_cookies)
         if hasattr(self, "panel"):
             self.panel.Layout()
+
+    def on_open_subscriptions(self, event=None):
+        from gui.subscriptions_dialog import SubscriptionsDialog
+
+        if not utils.has_cookies_file():
+            utils.show_error(
+                _("يجب تحديد ملف الكوكيز من الإعدادات لعرض القنوات المشترك بها."),
+                parent=self,
+            )
+            return
+
+        SubscriptionsDialog(self)
 
     def on_open_shorts(self, event=None):
         from media_player.media_gui import MediaGui
