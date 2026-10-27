@@ -12,7 +12,7 @@ from youtube_browser.search_handler import fetch_search_suggestions
 
 logger = logging.getLogger(__name__)
 
-SEARCH_SUGGESTIONS_DELAY_MS = 750
+SEARCH_SUGGESTIONS_DELAY_MS = 350
 
 
 class SearchDialog(wx.Dialog):
@@ -22,6 +22,8 @@ class SearchDialog(wx.Dialog):
         self._closing = False
         self._ignore_text_event = False
         self._request_counter = 0
+        self._suggestions_inflight = False
+        self._pending_suggestion = None
         self.query = None
         self.filter = None
 
@@ -153,6 +155,7 @@ class SearchDialog(wx.Dialog):
         if index == wx.NOT_FOUND:
             return False
         self._request_counter += 1
+        self._pending_suggestion = None
         self.debounceTimer.Stop()
         self._ignore_text_event = True
         self.searchField.SetValue(self.historyList.GetString(index))
@@ -191,6 +194,8 @@ class SearchDialog(wx.Dialog):
         if self._ignore_text_event or self._closing:
             return
 
+        self._request_counter += 1
+        self._pending_suggestion = None
         val = self.searchField.Value.strip()
         self.searchButton.Enable(val != "")
 
@@ -216,6 +221,14 @@ class SearchDialog(wx.Dialog):
 
         self._request_counter += 1
         req_id = self._request_counter
+        if self._suggestions_inflight:
+            # Keep only the latest debounced query, not a worker per keystroke.
+            self._pending_suggestion = (query, req_id)
+            return
+        self._start_suggestions(query, req_id)
+
+    def _start_suggestions(self, query, req_id):
+        self._suggestions_inflight = True
         threading.Thread(
             target=self._fetch_suggestions_worker,
             args=(query, req_id),
@@ -229,7 +242,23 @@ class SearchDialog(wx.Dialog):
             logger.debug(f"Failed to fetch search suggestions for '{query}': {e}")
             items = []
 
-        wx.CallAfter(self._on_suggestions_loaded, query, items, req_id)
+        wx.CallAfter(self._on_suggestions_finished, query, items, req_id)
+
+    def _on_suggestions_finished(self, query, items, req_id):
+        self._suggestions_inflight = False
+        if self._closing or not self:
+            self._pending_suggestion = None
+            return
+        self._on_suggestions_loaded(query, items, req_id)
+        pending, self._pending_suggestion = self._pending_suggestion, None
+        if pending is not None:
+            next_query, next_id = pending
+            if (
+                next_id == self._request_counter
+                and self.searchField.Value.strip() == next_query
+                and config_get("search_suggestions")
+            ):
+                self._start_suggestions(next_query, next_id)
 
     def _on_suggestions_loaded(self, query, items, req_id):
         if self._closing or not self or not bool(self):
@@ -339,6 +368,9 @@ class SearchDialog(wx.Dialog):
             self.onSearch(None)
 
     def onRefineSuggestion(self):
+        self._request_counter += 1
+        self._pending_suggestion = None
+        self.debounceTimer.Stop()
         idx = self.suggestionsList.GetSelection()
         if idx != wx.NOT_FOUND:
             suggestion = self.suggestionsList.GetString(idx)
@@ -365,6 +397,7 @@ class SearchDialog(wx.Dialog):
         if not SearchHistory.add(val):
             speak(_("Unable to save search history"), interrupt=True)
         self._closing = True
+        self._pending_suggestion = None
         if hasattr(self, "debounceTimer") and self.debounceTimer.IsRunning():
             self.debounceTimer.Stop()
         val = self.searchField.Value.strip()
@@ -374,6 +407,7 @@ class SearchDialog(wx.Dialog):
 
     def onClose(self, event=None):
         self._closing = True
+        self._pending_suggestion = None
         if hasattr(self, "debounceTimer") and self.debounceTimer.IsRunning():
             self.debounceTimer.Stop()
         self.query = None

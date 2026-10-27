@@ -719,3 +719,27 @@ def test_cli_cmd_search_filters():
             res = cmd_search(args, emitter)
             assert res == 0
             MockSearch.assert_called_once_with("python", filter=expected_filter)
+
+
+@pytest.mark.asyncio
+async def test_suggestion_timeout_cancels_stalled_request(monkeypatch):
+    import asyncio
+
+    from youtube_browser import search_handler
+
+    cancelled = False
+
+    async def stalled(*args, **kwargs):
+        nonlocal cancelled
+        try:
+            await asyncio.Event().wait()
+        finally:
+            cancelled = True
+
+    monkeypatch.setattr(search_handler.Suggestions, "get", stalled)
+    monkeypatch.setattr(search_handler, "SEARCH_SUGGESTIONS_TIMEOUT_SECONDS", 0.01)
+    result = await asyncio.wait_for(
+        fetch_search_suggestions_async("query", language="en", region="GB"), timeout=2
+    )
+    assert result == []
+    assert cancelled

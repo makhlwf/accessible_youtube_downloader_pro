@@ -1,5 +1,6 @@
 import os
 
+import pytest
 import wx
 
 _app = wx.App.GetInstance() or wx.App()
@@ -10,11 +11,31 @@ from settings_handler import config_get, config_initialization, config_set, defa
 
 
 def _reset_settings_module(settings_handler):
-    if settings_handler._save_timer:
-        settings_handler._save_timer.cancel()
-        settings_handler._save_timer = None
-    settings_handler._cache = {}
-    settings_handler._config = settings_handler._new_config()
+    with settings_handler._save_condition:
+        settings_handler._save_deadline = None
+        worker = settings_handler._save_thread
+        settings_handler._save_condition.notify_all()
+    if worker is not None:
+        worker.join(timeout=5)
+        assert not worker.is_alive()
+    with settings_handler._io_lock, settings_handler._lock:
+        settings_handler._cache = {}
+        settings_handler._config = settings_handler._new_config()
+        settings_handler._dirty = False
+        settings_handler._revision = 0
+
+
+@pytest.fixture(autouse=True)
+def isolated_settings(monkeypatch, tmp_path):
+    # These dialog/default tests must never remove a user's actual settings.
+    # Real persistence workers are covered in test_settings_persistence.py.
+    _reset_settings_module(settings_handler)
+    monkeypatch.setattr(settings_handler, "settings_path", str(tmp_path))
+    monkeypatch.setattr(settings_handler, "legacy_settings_paths", [])
+    monkeypatch.setitem(globals(), "settings_path", str(tmp_path))
+    monkeypatch.setattr(settings_handler, "_schedule_save_locked", lambda: None)
+    yield
+    _reset_settings_module(settings_handler)
 
 
 def test_eq_settings():

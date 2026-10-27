@@ -1,25 +1,153 @@
+import atexit
 import json
 import logging
 import os
+import queue
 import subprocess
 import sys
 import threading
+import time
 
 import paths
 
 logger = logging.getLogger(__name__)
 
 
+class _ProcessIO:
+    """One serialized pipe worker and stderr reader, bound to one process."""
+
+    def __init__(self, process):
+        self.process = process
+        self.requests = queue.Queue()
+        self.responses = queue.Queue()
+        self.stopped = threading.Event()
+        self._stop_lock = threading.Lock()
+        self.worker = None
+        self.stderr_reader = None
+
+    def start(self):
+        worker_started = False
+        try:
+            self.worker = threading.Thread(target=self._exchange, daemon=True)
+            self.stderr_reader = threading.Thread(target=self._log_stderr, daemon=True)
+            self.worker.start()
+            worker_started = True
+            self.stderr_reader.start()
+        except Exception:
+            self.stop()
+            if not worker_started:
+                self._reap()
+                self._close(self.process.stdin, self.process.stdout)
+            self._close(self.process.stderr)
+            raise
+
+    def stop(self):
+        with self._stop_lock:
+            if self.stopped.is_set():
+                return
+            self.stopped.set()
+            # Wake an idle worker and the active caller before killing the child.
+            self.requests.put(None)
+            self.responses.put(None)
+        try:
+            self.process.kill()
+        except Exception:
+            pass
+
+    @staticmethod
+    def _close(*streams):
+        for stream in streams:
+            try:
+                stream.close()
+            except Exception:
+                pass
+
+    def _reap(self):
+        try:
+            self.process.wait(timeout=1.0)
+        except Exception:
+            logger.warning("Could not reap stopped JS service", exc_info=True)
+
+    def _exchange(self):
+        proc = self.process
+        try:
+            while not self.stopped.is_set():
+                payload = self.requests.get()
+                if payload is None or self.stopped.is_set():
+                    break
+                # Both writing a full pipe and readline can block. Only this
+                # process's worker does pipe I/O, never the waiting caller.
+                proc.stdin.write(payload)
+                proc.stdin.flush()
+                line = proc.stdout.readline()
+                self.responses.put(line)
+                if not line:
+                    break
+        except Exception as error:
+            self.responses.put(error)
+        finally:
+            self.stop()
+            self._reap()
+            # Closing a buffered pipe from another thread can itself deadlock.
+            # Each reader owns closing its streams after kill releases its I/O.
+            self._close(proc.stdin, proc.stdout)
+
+    def _log_stderr(self):
+        proc = self.process
+        try:
+            for line in proc.stderr:
+                if line:
+                    clean_line = line.strip()
+                    if clean_line.startswith("[YOUTUBEJS]"):
+                        logger.debug(f"Deno service stderr: {clean_line}")
+                    else:
+                        logger.error(f"Deno service stderr: {clean_line}")
+        except Exception:
+            pass
+        finally:
+            self._close(proc.stderr)
+
+
 class DenoService:
-    def __init__(self):
+    def __init__(self, request_timeout=30.0):
+        if not 0 < request_timeout <= threading.TIMEOUT_MAX:
+            raise ValueError("request_timeout must be positive and finite")
         self.process = None
+        # Keep the sequential JS protocol, but never use this lock in stop().
         self.lock = threading.Lock()
         self.request_id = 0
+        self._request_timeout = request_timeout
+        self._state_lock = threading.Lock()
+        self._io = None
+        self._generation = 0
 
-    def _ensure_process(self):
-        if self.process and self.process.poll() is None:
-            return
+    def _discard_process(self, io):
+        with self._state_lock:
+            if self._io is io:
+                self._io = None
+                self.process = None
+        io.stop()
 
+    def _ensure_process(self, generation=None):
+        """Get a live process; send_command serializes calls to this method."""
+        with self._state_lock:
+            if generation is None:
+                generation = self._generation
+            if generation != self._generation:
+                return None
+            old_io = self._io
+            if (
+                old_io is not None
+                and not old_io.stopped.is_set()
+                and old_io.process.poll() is None
+            ):
+                return old_io
+            self._io = None
+            self.process = None
+        if old_io is not None:
+            old_io.stop()
+
+        io = None
         try:
             from settings_handler import config_get
 
@@ -48,7 +176,7 @@ class DenoService:
             env = os.environ.copy()
             env["PATH"] = paths.main_path + os.pathsep + env.get("PATH", "")
 
-            self.process = subprocess.Popen(
+            process = subprocess.Popen(
                 command,
                 stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
@@ -61,98 +189,107 @@ class DenoService:
                 cwd=paths.main_path,
                 env=env,
             )
-
-            # Start a thread to log stderr
-            threading.Thread(target=self._log_stderr, daemon=True).start()
-
-            logger.info(f"{runtime_name} started: {command[0]}")
+            io = _ProcessIO(process)
+            io.start()
+            # Starting a process must not hold the lifecycle lock. If stop()
+            # raced with startup, retire this child rather than publishing it.
+            with self._state_lock:
+                if generation == self._generation:
+                    self._io = io
+                    self.process = process
+                    logger.info(f"{runtime_name} started: {command[0]}")
+                    return io
+            io.stop()
         except Exception as e:
             logger.error(f"Failed to start JS service: {e}")
-            self.process = None
+            if io is not None:
+                io.stop()
+        return None
 
     def stop(self):
-        with self.lock:
-            if not self.process:
-                return
-            try:
-                self.process.kill()
-            except Exception:
-                pass
+        with self._state_lock:
+            # Invalidate queued requests too: they must not resurrect the
+            # service during shutdown. A later, new call may start it again.
+            self._generation += 1
+            io = self._io
+            self._io = None
             self.process = None
-
-    def _log_stderr(self):
-        proc = self.process
-        if not proc:
-            return
-        try:
-            for line in proc.stderr:
-                if line:
-                    clean_line = line.strip()
-                    if clean_line.startswith("[YOUTUBEJS]"):
-                        logger.debug(f"Deno service stderr: {clean_line}")
-                    else:
-                        logger.error(f"Deno service stderr: {clean_line}")
-        except Exception:
-            pass
+        if io is not None:
+            io.stop()
 
     def send_command(self, command, params=None):
-        with self.lock:
+        # One deadline covers queueing, writing and waiting for the response.
+        deadline = time.monotonic() + self._request_timeout
+        with self._state_lock:
+            generation = self._generation
+        if not self.lock.acquire(timeout=max(0, deadline - time.monotonic())):
+            logger.warning("JS service request timed out while queued: %s", command)
+            return {"error": "Deno service not available"}
+
+        io = None
+        try:
+            if time.monotonic() >= deadline:
+                raise queue.Empty
             self.request_id += 1
             request_id = self.request_id
+            payload = (
+                json.dumps(
+                    {"id": request_id, "command": command, "params": params or {}}
+                )
+                + "\n"
+            )
 
-            payload = {"id": request_id, "command": command, "params": params or {}}
-
-            try:
-                self._ensure_process()
-                if not self.process:
+            io = self._ensure_process(generation)
+            if io is None:
+                return {"error": "Deno service not available"}
+            if time.monotonic() >= deadline:
+                raise queue.Empty
+            with self._state_lock:
+                if generation != self._generation or self._io is not io:
                     return {"error": "Deno service not available"}
+                io.requests.put(payload)
 
-                self.process.stdin.write(json.dumps(payload) + "\n")
-                self.process.stdin.flush()
+            line = io.responses.get(timeout=max(0, deadline - time.monotonic()))
+            with self._state_lock:
+                if generation != self._generation:
+                    return {"error": "Deno service not available"}
+            if isinstance(line, Exception):
+                raise line
+            if not line:
+                logger.warning("Deno service pipe broken; restart on next command")
+                self._discard_process(io)
+                return {"error": "Deno service not available"}
 
-                line = self.process.stdout.readline()
-                if not line:
-                    logger.warning("Deno service pipe broken, attempting restart...")
-                    self.process = None
-                    self._ensure_process()
-                    if not self.process:
-                        return {"error": "Deno service crashed and failed to restart"}
+            response = json.loads(line)
+            if not isinstance(response, dict):
+                logger.error("JS service response is not a JSON object")
+                self._discard_process(io)
+                return {"error": "Deno service not available"}
+            response_id = response.get("id")
+            if type(response_id) is not int or response_id != request_id:
+                logger.error(
+                    "Request ID mismatch: expected %s, got %s", request_id, response_id
+                )
+                self._discard_process(io)
+                return {"error": "Request ID mismatch"}
 
-                    self.process.stdin.write(json.dumps(payload) + "\n")
-                    self.process.stdin.flush()
-                    line = self.process.stdout.readline()
-                    if not line:
-                        return {"error": "Deno service failed to respond after restart"}
-
-                response = json.loads(line)
-                if response.get("id") != request_id:
-                    logger.error(
-                        f"Request ID mismatch: expected {request_id}, got {response.get('id')}"
-                    )
-                    # Force restart on next call if out of sync
-                    try:
-                        self.process.kill()
-                    except Exception:
-                        pass
-                    self.process = None
-                    return {"error": "Request ID mismatch"}
-
-                if "error" in response:
-                    return {"error": response["error"]}
-
-                return response.get("result")
-            except Exception as e:
-                logger.exception("Error in Deno service send_command")
-                if self.process:
-                    try:
-                        self.process.kill()
-                    except Exception:
-                        pass
-                self.process = None
-                return {"error": str(e)}
+            if "error" in response:
+                return {"error": response["error"]}
+            return response.get("result")
+        except queue.Empty:
+            logger.warning("JS service request timed out: %s", command)
+            if io is not None:
+                self._discard_process(io)
+            return {"error": "Deno service not available"}
+        except Exception as e:
+            logger.exception("Error in Deno service send_command")
+            if io is not None:
+                self._discard_process(io)
+            return {"error": str(e)}
+        finally:
+            # Never replay a failed command: writes may already have succeeded.
+            self.lock.release()
 
 
 deno_service = DenoService()
-import atexit
-
 atexit.register(deno_service.stop)

@@ -894,6 +894,9 @@ class Search:
         return format_duration(data)
 
 
+SEARCH_SUGGESTIONS_TIMEOUT_SECONDS = 5.0
+
+
 async def fetch_search_suggestions_async(
     query: str, language: str | None = None, region: str | None = None
 ) -> list[str]:
@@ -911,7 +914,10 @@ async def fetch_search_suggestions_async(
         region = "US"
 
     try:
-        data = await Suggestions.get(clean_query, language=language, region=region)
+        data = await asyncio.wait_for(
+            Suggestions.get(clean_query, language=language, region=region),
+            timeout=SEARCH_SUGGESTIONS_TIMEOUT_SECONDS,
+        )
         if isinstance(data, dict):
             res = data.get("result", [])
             if isinstance(res, list):

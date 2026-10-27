@@ -297,7 +297,7 @@ class HomeScreen(wx.Frame):
         self.checked = False
         self.home_feed_data = []
         self.home_feed_results = None
-        self.scraper = Scraper()
+        self.scraper = Scraper(owner=self)
         self.home_feed_continuation = None
         self.last_clip_content = ""
         self.pending_launch_url = launch_url

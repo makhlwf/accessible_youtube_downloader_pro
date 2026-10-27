@@ -5,7 +5,7 @@ from threading import Thread
 import wx
 
 import utils
-from async_utils import run_in_async_loop
+from async_utils import submit_async
 from database import Favorite
 from gui.activity_dialog import LoadingDialog
 from gui.channel_dialog import ChannelDialog
@@ -31,8 +31,14 @@ class YoutubeBrowser(wx.Frame):
     def __init__(self, parent):
         wx.Frame.__init__(self, parent=parent, title=parent.Title)
         self.favorites = Favorite()
-        self.scraper = Scraper()
+        self.scraper = Scraper(owner=self)
         self.search = None
+        self._closing = False
+        self._request_generation = 0
+        self._search_future = None
+        self._load_more_future = None
+        self._loading_more = False
+        self._has_more = True
         # ...
         self._init_ui()
         apply_theme(self)
@@ -206,7 +212,8 @@ class YoutubeBrowser(wx.Frame):
 
         self.Bind(wx.EVT_CHAR_HOOK, self.onHook)
         self.Bind(wx.EVT_SHOW, self.onShow)
-        self.Bind(wx.EVT_CLOSE, lambda e: wx.Exit())
+        self.Bind(wx.EVT_CLOSE, self.onClose)
+        self.Bind(wx.EVT_WINDOW_DESTROY, self._on_destroy)
 
     def onSettings(self, event):
         SettingsDialog(self)
@@ -239,6 +246,42 @@ class YoutubeBrowser(wx.Frame):
             folder=folder,
         )
 
+    def _cancel_requests(self):
+        self._request_generation += 1
+        for name in ("_search_future", "_load_more_future"):
+            future = getattr(self, name)
+            if future is not None:
+                future.cancel()
+                setattr(self, name, None)
+        self._loading_more = False
+
+    def _on_destroy(self, event):
+        if event.GetEventObject() is self:
+            self._close_requests()
+        event.Skip()
+
+    def _close_requests(self):
+        if not self._closing:
+            self._closing = True
+            self._cancel_requests()
+            self.scraper.close()
+
+    def onClose(self, event):
+        self._close_requests()
+        wx.Exit()
+
+    def _dispatch_result(self, future, callback, *args):
+        # Future callbacks can run on the asyncio thread. Result data is passed
+        # to wx; no controls or current selection are read here.
+        if future.cancelled():
+            return
+        try:
+            result = future.result()
+        except Exception as error:
+            wx.CallAfter(callback, *args, None, error)
+        else:
+            wx.CallAfter(callback, *args, result, None)
+
     def searchAction(self, value=""):
         dialog = SearchDialog(self, value=value)
         query = dialog.query
@@ -247,27 +290,49 @@ class YoutubeBrowser(wx.Frame):
             self.toggleControls()
             return False
 
-        speak(_("جاري البحث..."))
+        self._cancel_requests()
+        request_id = self._request_generation
+        self.search = None
+        self._has_more = True
+        self.scraper.set_results(None)
+        speak(_("جاري البحث..."), interrupt=True)
         self.searchResults.Clear()
+        self.loadMoreButton.Enabled = False
+        self.favCheck.Enabled = False
         self.toggleControls()
 
-        def search_thread():
-            search_obj = Search(query, filter_val)
-            try:
-                self.search = run_in_async_loop(search_obj.init_async())
-                if self.search is None:
-                    raise RuntimeError("Search returned no results")
-                wx.CallAfter(self.on_search_complete)
-            except Exception as e:
-                logger.error(f"Search failed: {e}")
-                wx.CallAfter(
-                    utils.show_error,
-                    _("تعذر إجراء عملية البحث بسبب وجود خلل ما في الاتصال بالشبكة."),
-                    e,
-                )
+        async def search_task():
+            search = await Search(query, filter_val).init_async()
+            if search is None:
+                raise RuntimeError("Search returned no results")
+            return search
 
-        Thread(target=search_thread, daemon=True).start()
+        try:
+            self._search_future = submit_async(search_task())
+        except Exception as error:
+            self._apply_search_result(request_id, None, error)
+        else:
+            self._search_future.add_done_callback(
+                lambda future: self._dispatch_result(
+                    future, self._apply_search_result, request_id
+                )
+            )
         return True
+
+    def _apply_search_result(self, request_id, result, error):
+        if self._closing or not self or request_id != self._request_generation:
+            return
+        self._search_future = None
+        if error is not None:
+            logger.error("Search failed: %s", error)
+            utils.show_error(
+                _("تعذر إجراء عملية البحث بسبب وجود خلل ما في الاتصال بالشبكة."),
+                error,
+                parent=self,
+            )
+            return
+        self.search = result
+        self.on_search_complete()
 
     def on_search_complete(self):
         titles = self.search.get_titles()
@@ -279,7 +344,8 @@ class YoutubeBrowser(wx.Frame):
         self.toggleDownload()
         self.togglePlay()
         self.toggleChannelActions()
-        speak(_("اكتمل البحث"))
+        self.toggleFavorite()
+        speak(_("اكتمل البحث"), interrupt=True)
 
         # Clear queue and add new videos for scraping
         self.scraper.set_results(self.search)
@@ -490,34 +556,57 @@ class YoutubeBrowser(wx.Frame):
             wx.MessageBox(_("تم نسخ رابط المقطع بنجاح"), _("اكتمال"), parent=self)
 
     def loadMore(self):
-        if not self.search:
+        if self._closing or not self.search or self._loading_more or not self._has_more:
             return
-        speak(_("جاري تحميل المزيد من النتائج"))
-
-        def load_more_thread():
-            try:
-                result = run_in_async_loop(self.search.load_more())
-                wx.CallAfter(self.on_load_more_complete, result)
-            except Exception as e:
-                logger.error(f"Load more failed: {e}")
-                wx.CallAfter(
-                    utils.show_error,
-                    _("لم يتمكن البرنامج من تحميل المزيد من النتائج."),
-                    e,
+        self._loading_more = True
+        self.loadMoreButton.Enabled = False
+        search = self.search
+        request_id = self._request_generation
+        speak(_("جاري تحميل المزيد من النتائج"), interrupt=True)
+        try:
+            self._load_more_future = submit_async(search.load_more())
+        except Exception as error:
+            self._apply_load_more_result(request_id, search, None, error)
+        else:
+            self._load_more_future.add_done_callback(
+                lambda future: self._dispatch_result(
+                    future, self._apply_load_more_result, request_id, search
                 )
-                speak(_("لم يتمكن البرنامج من تحميل المزيد من النتائج"))
+            )
 
-        Thread(target=load_more_thread, daemon=True).start()
+    def _apply_load_more_result(self, request_id, search, result, error):
+        if (
+            self._closing
+            or not self
+            or request_id != self._request_generation
+            or search is not self.search
+        ):
+            return
+        self._loading_more = False
+        self._load_more_future = None
+        if error is not None:
+            logger.error("Load more failed: %s", error)
+            self.loadMoreButton.Enabled = True
+            utils.show_error(
+                _("لم يتمكن البرنامج من تحميل المزيد من النتائج."), error, parent=self
+            )
+            speak(_("لم يتمكن البرنامج من تحميل المزيد من النتائج"), interrupt=True)
+            return
+        self.on_load_more_complete(result)
 
     def on_load_more_complete(self, result):
         if not result:
-            speak(_("لم يتمكن البرنامج من تحميل المزيد من النتائج"))
+            self._has_more = False
+            self.loadMoreButton.Enabled = False
+            speak(_("لم يتمكن البرنامج من تحميل المزيد من النتائج"), interrupt=True)
             return
         self.searchResults.Append(self.search.get_last_titles())
         for i in range(self.search.count - self.search.new_videos, self.search.count):
             self.scraper.add_item(i, priority=10)
-        speak(_("تم تحميل المزيد من نتائج البحث"))
-        self.searchResults.SetFocus()
+        self.loadMoreButton.Enabled = True
+        # Appending preserves selection. Do not steal focus if the user moved
+        # to another control while the network request was in flight.
+        speak(_("تم تحميل المزيد من نتائج البحث"), interrupt=True)
 
     def onListBox(self, event):
         self.toggleDownload()
@@ -533,7 +622,7 @@ class YoutubeBrowser(wx.Frame):
 
         if self.searchResults.Selection == self.searchResults.GetCount() - 1:
             if not config_get("autoload"):
-                self.loadMoreButton.Enabled = True
+                self.loadMoreButton.Enabled = self._has_more and not self._loading_more
                 return
             self.loadMore()
         else:
@@ -543,8 +632,10 @@ class YoutubeBrowser(wx.Frame):
         self.loadMore()
 
     def backAction(self, event):
+        parent = self.Parent
+        self._close_requests()
         self.Destroy()
-        self.Parent.Show()
+        parent.Show()
 
     def toggleControls(self):
         show = self.searchResults.GetCount() > 0
@@ -619,13 +710,19 @@ class YoutubeBrowser(wx.Frame):
         if not self.favCheck.Enabled:
             return
 
-        url = self.search.get_url(n)
+        search = self.search
+        url = search.get_url(n)
 
         def check_url(target_url):
             found = self.favorites.is_favorite(target_url)
 
             def update():
-                if self:
+                if (
+                    not self._closing
+                    and self
+                    and self.search is search
+                    and self.searchResults.Selection == n
+                ):
                     self.favCheck.SetValue(found)
 
             wx.CallAfter(update)

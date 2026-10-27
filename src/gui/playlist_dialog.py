@@ -23,7 +23,7 @@ class PlaylistDialog(wx.Dialog):
         super().__init__(parent, title=application.name)
         self.CenterOnParent()
         self.url = url
-        self.scraper = Scraper()
+        self.scraper = Scraper(owner=self)
         self.Maximize(True)
         p = wx.Panel(self)
         l1 = wx.StaticText(p, -1, _("قائمة الفيديوهات: "))

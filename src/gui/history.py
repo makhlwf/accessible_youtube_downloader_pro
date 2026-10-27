@@ -23,7 +23,7 @@ class HistoryDialog(wx.Frame):
         self.SetSize(wx.DisplaySize())
         self.Maximize(True)
         self.panel = wx.Panel(self)
-        self.scraper = Scraper()
+        self.scraper = Scraper(owner=self)
         lbl = wx.StaticText(self.panel, -1, _("الفيديوهات التي شاهدتها مؤخرًا: "))
         self.historyList = wx.ListBox(self.panel, -1)
         self.loadMoreButton = wx.Button(self.panel, -1, _("تحميل المزيد من السجل"))

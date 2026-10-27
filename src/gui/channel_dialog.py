@@ -25,7 +25,7 @@ class ChannelDialog(wx.Dialog):
         self.title = title or _("قناة")
         self.results_by_tab = {}
         self.current_result = None
-        self.scraper = Scraper()
+        self.scraper = Scraper(owner=self)
         self.item_boxes = {}
 
         self.CenterOnParent()

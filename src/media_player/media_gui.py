@@ -148,6 +148,7 @@ class MediaGui(wx.Frame):
         self.SetBackgroundColour(wx.BLACK)
         self.player = None
         self._closing = False
+        self._track_request_id = 0
         self.extracting_description = False
         self.url = url
         self.current_channel = self._resolve_channel(stream, url)
@@ -2475,6 +2476,8 @@ class MediaGui(wx.Frame):
     def changeTrack(self, index):
         if self._closing or self.player is None:
             return
+        self._track_request_id += 1
+        request_id = self._track_request_id
         self.current_index = index
         if getattr(self.results, "scraper", None):
             self.results.scraper.add_item(index, priority=0)
@@ -2506,46 +2509,64 @@ class MediaGui(wx.Frame):
                 self._perform_track_change(stream, url, title, index)
                 return
 
+        # Snapshot the requested queue/mode; do not read changing GUI state in
+        # a worker or let an older extraction stop a newly started track.
+        results = self.results
+        audio_mode = self.audio_mode
+        self.player.media.stop()
+
         def _task():
             try:
-                if self._closing or self.player is None:
+                if self._closing or request_id != self._track_request_id:
                     return
-                self.player.media.stop()
                 stream = None
                 if getattr(self, "shorts_mode", False) and url in getattr(
                     self, "preloaded_streams", {}
                 ):
                     stream = self.preloaded_streams.get(url)
 
-                if stream is None and hasattr(self.results, "get_stream"):
-                    stream = self.results.get_stream(index, audio_mode=self.audio_mode)
+                if stream is None and hasattr(results, "get_stream"):
+                    stream = results.get_stream(index, audio_mode=audio_mode)
 
                 if stream is None:
-                    stream = get_playable_stream(url, audio_mode=self.audio_mode)
+                    stream = get_playable_stream(url, audio_mode=audio_mode)
 
-                if stream:
-                    if self._closing:
-                        return
-                    wx.CallAfter(self._perform_track_change, stream, url, title, index)
-                else:
-                    wx.CallAfter(
-                        utils.show_error,
-                        diagnose_extraction_error("No playable stream URL returned"),
-                        parent=self,
-                    )
-            except Exception as e:
-                import logging
-
-                logging.getLogger(__name__).debug(
-                    f"Background stream extraction failed: {e}"
-                )
+                error = None if stream else "No playable stream URL returned"
                 wx.CallAfter(
-                    utils.show_error,
-                    diagnose_extraction_error(str(e)),
-                    parent=self,
+                    self._on_track_resolved,
+                    request_id,
+                    stream,
+                    url,
+                    title,
+                    index,
+                    error,
+                )
+            except Exception as error:
+                logger.debug("Background stream extraction failed: %s", error)
+                wx.CallAfter(
+                    self._on_track_resolved,
+                    request_id,
+                    None,
+                    url,
+                    title,
+                    index,
+                    str(error),
                 )
 
         Thread(target=_task, daemon=True).start()
+
+    def _on_track_resolved(self, request_id, stream, url, title, index, error):
+        if (
+            self._closing
+            or not self
+            or self.player is None
+            or request_id != self._track_request_id
+        ):
+            return
+        if stream:
+            self._perform_track_change(stream, url, title, index)
+        else:
+            utils.show_error(diagnose_extraction_error(error), parent=self)
 
     def _perform_track_change(self, stream, url, title, index=None):
         if self._closing or self.player is None:

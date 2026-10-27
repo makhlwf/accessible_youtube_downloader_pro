@@ -1,8 +1,9 @@
 import logging
+import math
 import os
 import re
 import time
-from threading import Thread
+from threading import Event, Lock, Thread
 
 import wx
 from wx.lib.newevent import NewEvent
@@ -23,6 +24,8 @@ FORMAT_AUDIO_MP3 = "mp3"
 FORMAT_AUDIO_WAV = "wav"
 FORMAT_AUDIO_FLAC = "flac"
 
+_PROGRESS_INTERVAL = 0.1
+
 
 class DownloadCancelled(Exception):
     pass
@@ -35,6 +38,15 @@ def clean_progress_text(value):
     if value is None:
         return ""
     return ANSI_RE.sub("", str(value)).replace("\r", "").strip()
+
+
+def _window_is_alive(window):
+    """Check wx window lifetime only from a GUI-thread callback."""
+    try:
+        return window is not None and bool(window) and not window.IsBeingDeleted()
+    except RuntimeError:
+        # A Python wrapper can outlive the native window during shutdown.
+        return False
 
 
 AUDIO_KBPS_FORMAT_MAP = {
@@ -109,27 +121,46 @@ class Downloader:
         self.status_label = status_label
         self.convert = convert
         self.folder = folder
-        self.cancelled = False
+        self._cancel_event = Event()
+        # External checkers must be thread-safe and must not access wx widgets.
         self.cancel_checker = cancel_checker
         self.last_file = None
         self.started_at = None
         self.kbps = kbps
         self.audio_format = audio_format
         self.video_format = video_format
-        self._last_progress_time = 0.0
-        self._last_progress_percent = -1.0
+        self._progress_lock = Lock()
+        self._latest_progress = None
+        self._progress_pending = False
+        self._last_progress_time = None
+        self._progress_timer = None  # Created/stopped only on the GUI thread.
 
     def get_quality(self):
         qualities = {0: "96", 1: "128", 2: "192", 3: "320"}
         return qualities[int(config_get("conversion"))]
 
+    @property
+    def cancelled(self):
+        return self._cancel_event.is_set()
+
+    @cancelled.setter
+    def cancelled(self, value):
+        if value:
+            self._cancel_event.set()
+        else:
+            self._cancel_event.clear()
+
     def cancel(self):
-        self.cancelled = True
+        self._cancel_event.set()
 
     def _is_cancelled(self):
-        return self.cancelled or (
-            self.cancel_checker is not None and self.cancel_checker()
-        )
+        if (
+            not self.cancelled
+            and self.cancel_checker is not None
+            and self.cancel_checker()
+        ):
+            self.cancel()
+        return self.cancelled
 
     def _remember_file(self, path):
         if path and os.path.exists(path):
@@ -149,9 +180,13 @@ class Downloader:
         )
 
     def _after_move_hook(self, data):
+        if self._is_cancelled():
+            raise DownloadCancelled()
         self._remember_file(self._hook_file(data))
 
     def _postprocessor_hook(self, data):
+        if self._is_cancelled():
+            raise DownloadCancelled()
         if isinstance(data, dict) and data.get("status") not in (None, "finished"):
             return
         self._remember_file(self._hook_file(data))
@@ -199,45 +234,83 @@ class Downloader:
     def _progress_hook(self, d):
         if self._is_cancelled():
             raise DownloadCancelled()
-        if not self.monitor:
+        # Do not invoke wx.Window.__bool__ on the download thread.
+        if self.monitor is None:
             return
 
         status = d.get("status")
-        if status == "downloading":
+        if status not in ("downloading", "finished"):
+            return
+        if status == "finished":
+            percent = 100
+        else:
             percent_str = clean_progress_text(d.get("_percent_str", "0%")).replace(
                 "%", ""
             )
             try:
-                percent = float(percent_str)
-            except ValueError:
-                percent = 0.0
+                percent = max(0, min(100, int(float(percent_str))))
+            except ValueError, OverflowError:
+                percent = 0
 
-            now = time.time()
-            if (
-                now - self._last_progress_time >= 0.08
-                or abs(percent - self._last_progress_percent) >= 1.0
-                or percent >= 99.9
-            ):
-                self._last_progress_time = now
-                self._last_progress_percent = percent
+        progress = {
+            "value": percent,
+            "total": clean_progress_text(
+                d.get("_total_bytes_str") or d.get("_total_bytes_estimate_str", "")
+            ),
+            "downloaded": clean_progress_text(d.get("_downloaded_bytes_str", "")),
+            "speed": clean_progress_text(d.get("_speed_str", "")),
+            "eta": clean_progress_text(d.get("_eta_str", "")),
+        }
+        with self._progress_lock:
+            if status == "finished" and self._latest_progress is not None:
+                for field in ("total", "downloaded", "speed", "eta"):
+                    if not progress[field]:
+                        progress[field] = self._latest_progress[field]
+            self._latest_progress = progress
+            if self._progress_pending:
+                return
+            self._progress_pending = True
+        wx.CallAfter(self._dispatch_progress)
 
-                total = clean_progress_text(
-                    d.get("_total_bytes_str") or d.get("_total_bytes_estimate_str", "")
-                )
-                downloaded = clean_progress_text(d.get("_downloaded_bytes_str", ""))
-                speed = clean_progress_text(d.get("_speed_str", ""))
-                eta = clean_progress_text(d.get("_eta_str", ""))
+    def _dispatch_progress(self, force=False):
+        """Deliver the latest snapshot on the GUI thread, with one pending wakeup."""
+        if self._progress_timer is not None:
+            self._progress_timer.Stop()
+            self._progress_timer = None
+        if self._is_cancelled() or not _window_is_alive(self.monitor):
+            self.cancel()
+            with self._progress_lock:
+                self._progress_pending = False
+                self._latest_progress = None
+            return
 
-                wx.PostEvent(
-                    self.monitor,
-                    ProgressChangedEvent(
-                        value=int(percent),
-                        total=total,
-                        downloaded=downloaded,
-                        speed=speed,
-                        eta=eta,
-                    ),
-                )
+        now = time.monotonic()
+        delay = (
+            0.0
+            if self._last_progress_time is None
+            else _PROGRESS_INTERVAL - (now - self._last_progress_time)
+        )
+        with self._progress_lock:
+            if not self._progress_pending:
+                return
+            if not force and delay > 0:
+                progress = None
+            else:
+                progress = self._latest_progress
+                self._progress_pending = False
+
+        if progress is None:
+            # Keep the pending flag set: bursts only replace the snapshot, and
+            # the trailing update is delivered even if no further hooks fire.
+            self._progress_timer = wx.CallLater(
+                max(1, math.ceil(delay * 1000)), self._dispatch_progress
+            )
+            return
+
+        self._last_progress_time = now
+        # Already on the GUI thread. Avoid a second queued event that could
+        # outlive the window or apply stale progress after completion.
+        self.monitor.GetEventHandler().ProcessEvent(ProgressChangedEvent(**progress))
 
     def _base_options(self, use_cookies=True):
         abs_ffmpeg_dir = os.path.abspath(paths.ffmpeg_dir)
@@ -382,12 +455,12 @@ class Downloader:
         )
 
     def download(self, use_cookies=True):
+        if self._is_cancelled():
+            return DownloadCancelled()
+
         if not utils.YoutubeDL:
             logger.error("YoutubeDL library not loaded")
             return RuntimeError("missing yt-dlp binary")
-
-        if self._is_cancelled():
-            return DownloadCancelled()
 
         os.makedirs(self.path, exist_ok=True)
         self.started_at = time.time()
@@ -396,6 +469,8 @@ class Downloader:
         try:
             with utils.YoutubeDL(ydl_opts) as ydl:
                 ydl.download([self.url])
+            if self._is_cancelled():
+                raise DownloadCancelled()
             if not self.last_file or not os.path.exists(self.last_file):
                 self.last_file = self._find_latest_downloaded_file()
             return 0
@@ -403,6 +478,9 @@ class Downloader:
             logger.info("Download cancelled")
             return e
         except Exception as e:
+            if self._is_cancelled():
+                logger.info("Download cancelled")
+                return DownloadCancelled()
             logger.error(f"Download failed: {e}")
             return e
 
@@ -487,15 +565,28 @@ def downloadAction(
         status_label,
         convert=convert,
         folder=folder,
-        cancel_checker=dlg.is_cancelled if hasattr(dlg, "is_cancelled") else None,
         kbps=kbps,
         audio_format=audio_format,
         video_format=video_format,
     )
     if hasattr(dlg, "set_cancel_callback"):
         dlg.set_cancel_callback(downloader.cancel)
+    if hasattr(dlg, "is_cancelled") and dlg.is_cancelled():
+        downloader.cancel()
+
+    def on_destroy(event):
+        if event.GetEventObject() is dlg:
+            downloader.cancel()
+        event.Skip()
+
+    dlg.Bind(wx.EVT_WINDOW_DESTROY, on_destroy)
 
     def on_progress(event):
+        if downloader._is_cancelled():
+            return
+        if not all(_window_is_alive(window) for window in (dlg, monitor, status_label)):
+            downloader.cancel()
+            return
         monitor.SetValue(event.value)
         status_label.SetString(0, _("نسبة التنزيل: {}%").format(event.value))
         if hasattr(event, "total") and event.total:
@@ -524,14 +615,23 @@ def downloadAction(
         result = None
         for attempt in range(3):
             result = downloader.download_with_cookie_fallback()
+            if downloader._is_cancelled():
+                result = DownloadCancelled()
             if result == 0 or isinstance(result, DownloadCancelled):
                 break
             logger.warning("Download attempt %s failed for %s", attempt + 1, url)
 
         def finish_download():
+            if not _window_is_alive(dlg):
+                downloader.cancel()
+                return
+            # Completion must not discard a throttled final update or leave a
+            # timer to overwrite the cancellation/completion UI later.
+            downloader._dispatch_progress(force=True)
+            final_result = DownloadCancelled() if downloader._is_cancelled() else result
             if hasattr(dlg, "mark_finished"):
                 dlg.mark_finished()
-            if result == 0:
+            if final_result == 0:
                 parent = (
                     dlg.GetParent() if dlg is not None else wx.GetApp().GetTopWindow()
                 )
@@ -543,14 +643,14 @@ def downloadAction(
                 show_download_complete(
                     parent, file_path=file_path, folder_path=folder_path
                 )
-            elif isinstance(result, DownloadCancelled):
+            elif isinstance(final_result, DownloadCancelled):
                 wx.MessageBox(_("تم إلغاء التنزيل"), _("إلغاء"), parent=dlg)
                 dlg.Destroy()
             else:
-                err_msg = diagnose_download_error(result)
+                err_msg = diagnose_download_error(final_result)
                 utils.show_error(
                     err_msg,
-                    result if isinstance(result, Exception) else None,
+                    final_result if isinstance(final_result, Exception) else None,
                     parent=dlg,
                 )
                 dlg.Destroy()
