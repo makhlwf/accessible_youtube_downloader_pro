@@ -36,7 +36,7 @@ requires-dist = [
     { name = "beautifulsoup4", specifier = "==4.15.0" },
     { name = "httpx", specifier = "==0.28.1" },
     { name = "prismatoid", specifier = ">=0.17.3" },
-    { name = "py-yt-search", specifier = "==0.8.0" },
+    { name = "py-yt-search", specifier = "==0.8.1" },
     { name = "pyperclip", specifier = "==1.11.0" },
     { name = "requests", specifier = "==2.34.2" },
     { name = "secretstorage", marker = "sys_platform == 'linux'", specifier = ">=3.3.3,<4" },
@@ -818,14 +818,14 @@ wheels = [
 
 [[package]]
 name = "py-yt-search"
-version = "0.8.0"
+version = "0.8.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiohttp" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/39/29/6c4270fc835f1aefd8428ba148b61f555d461a519a5901b9966ea9773b3e/py_yt_search-0.8.0.tar.gz", hash = "sha256:4fe95b366c5b800a4b85385b457b136cdf51ec6f6bc871fddf1fea74e4635b2a", size = 671030, upload-time = "2026-08-30T05:34:08.526Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/34/a0/f86a181a7f3ec714d44242839ee6db92c96ef8223c6caa304e6f66f89861/py_yt_search-0.8.1.tar.gz", hash = "sha256:d64c326629315be4c67fcdb9c8a7211c3c6c1ca7308e7329463dc94a5e846b4d", size = 739344, upload-time = "2026-10-25T17:45:28.644Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/36/c9/a36dae5d0ecb2763752a39cb53cb4e3e0a074e2b66ddbfad0bf666274817/py_yt_search-0.8.0-py3-none-any.whl", hash = "sha256:c8f1ef45f5637b952e018438df183e77919a43125b13b648bf506668a2e35a9f", size = 684928, upload-time = "2026-08-30T05:34:06.672Z" },
+    { url = "https://files.pythonhosted.org/packages/2b/52/318ffd1a05c1ba025ab8540b026741ad9145b40f302dda9b0d21d3200858/py_yt_search-0.8.1-py3-none-any.whl", hash = "sha256:5a186b9302f6b8d3f9b600aed39b0d2eed5993e0e01658d02e19838b6bb21e9e", size = 753113, upload-time = "2026-10-25T17:45:26.909Z" },
 ]
 
 [[package]]
