@@ -68,3 +68,17 @@ Detailed procedures, edge-case playbooks, and runbooks are available in `.agents
 When working on any area of the codebase, consult the corresponding skill:
 - Review `.agents/skills/<skill-name>/SKILL.md` before making modifications.
 - Reference `.agents/ORCHESTRATION.md` for agent collaboration protocols.
+
+## Agent skills
+
+### Issue tracker
+
+Work is tracked in GitHub Issues. Before issue operations, read `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Use the five canonical triage labels. Before triaging, read `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Use a single-context layout. Before exploring the codebase, read `docs/agents/domain.md`.
