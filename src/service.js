@@ -1010,6 +1010,181 @@ async function handleGetShortsFeed(params) {
     }
 }
 
+function subscriptionsPublishedTime(video) {
+    if (video.is_upcoming) return '';
+    const clean = (value) => {
+        const text = textValue(value).trim();
+        // A malformed slot must not announce a view count, duration, live badge,
+        // or future premiere as a publication time. Preserve actual localized
+        // publication text verbatim; never derive timestamps from relative ages.
+        if (/^[\p{N}\s.,:]+[KMB]?$/iu.test(text) ||
+            /(?:\bviews?\b|\bwatching\b|\bsubscribers?\b|\bAufrufe?\b|مشاهد|مشترك)/iu.test(text) ||
+            /^(?:live|4K|8K|HD|SD|members only|بث مباشر)$/iu.test(text) ||
+            /^(?:premieres?|scheduled for|starts in)\b/iu.test(text) ||
+            /^(?:سيبدأ العرض|سيتم العرض|سيُعرض|العرض الأول بعد|يبدأ العرض الأول)/u.test(text)) return '';
+        return text;
+    };
+    for (const value of [video.published, video.published_time, video.publishedTimeText]) {
+        const text = clean(value);
+        if (text) return text;
+    }
+    if (video.type !== 'LockupView') return '';
+    const rows = video.metadata?.metadata?.metadata_rows || [];
+    let publication;
+    // FEsubscriptions' list layout places author, views, publication in ONE row.
+    // Card layouts place the author in row 0 and views/publication in row 1.
+    // Accept only these known shapes, not an arbitrary last metadata string.
+    if (rows.length === 1 && rows[0].metadata_parts?.length === 3) {
+        publication = rows[0].metadata_parts[2];
+    } else if (rows.length === 2 && rows[0].metadata_parts?.length === 1 &&
+               rows[1].metadata_parts?.length === 2) {
+        publication = rows[1].metadata_parts[1];
+    }
+    const text = publication?.text;
+    // Channel links are not publication text even if a malformed layout moves one.
+    if (text?.endpoint || text?.runs?.some(run => run.endpoint)) return '';
+    return clean(text);
+}
+
+/**
+ * Read only the main subscriptions timeline, in renderer order. In youtubei.js 18.x,
+ * Feed.videos uses Memo.getType(), which groups by type (Video before LockupView)
+ * and loses chronology on mixed pages. Never sort localized publication text.
+ */
+function subscriptionsPageResponse(page) {
+    const videos = [];
+    const seen = new Set();
+    let continuation = null;
+    let hasBody = false;
+    const containers = new Set([
+        'RichGrid', 'RichItem', 'RichSection', 'Shelf',
+        'SectionList', 'ItemSection', 'Grid', 'HorizontalList', 'VerticalList',
+        'ExpandedShelfContents', 'AppendContinuationItemsAction',
+        'reloadContinuationItemsCommand', 'sectionListContinuation',
+        'itemSectionContinuation', 'gridContinuation'
+    ]);
+
+    const visit = (node) => {
+        if (!node || typeof node !== 'object') return;
+        if (Array.isArray(node)) {
+            node.forEach(visit);
+            return;
+        }
+        // Parser.SuperParsedResult wraps the initial body and some continuations.
+        if (node.is_array && typeof node.array === 'function') {
+            visit(node.array());
+            return;
+        }
+        if (node.is_node && typeof node.item === 'function') {
+            visit(node.item());
+            return;
+        }
+        if (node.type === 'TwoColumnBrowseResults' || node.type === 'SingleColumnBrowseResults') {
+            const tabs = node.tabs || [];
+            visit(tabs.find(tab => tab.selected) || tabs[0]);
+            return;
+        }
+        if (node.type === 'Tab') {
+            visit(node.content);
+            return;
+        }
+        if (node.type === 'ContinuationItem' || node.type === 'ContinuationItemView') {
+            const token = node.endpoint?.payload?.token || node.endpoint?.payload?.continuation;
+            if (typeof token === 'string' && token) continuation = token;
+            return;
+        }
+        if (node.type === 'Message') {
+            // YouTube can return an explicit empty-feed message without a grid.
+            // Do not return its arbitrary upstream text across the RPC boundary.
+            hasBody = true;
+            return;
+        }
+        // RichShelf modules (e.g. Most relevant) are ranked recommendations,
+        // not timeline entries. Exclude the entire module before it can claim
+        // a video's ID or replace the main continuation with its own token.
+        // Do not match its localized title or sort relative publication labels.
+        if (node.type === 'RichShelf') return;
+        if (containers.has(node.type)) {
+            hasBody = true;
+            // Do not descend into Shorts shelves, menus, headers, sidebars or
+            // community posts with embedded videos/independent continuations.
+            if (String(node.icon_type || '').includes('SHORTS')) return;
+            visit(node.contents || node.content || node.items);
+            if (typeof node.continuation === 'string' && node.continuation) {
+                continuation = node.continuation;
+            }
+            return;
+        }
+        const isLockup = node.type === 'LockupView';
+        if (!isLockup && !['Video', 'GridVideo', 'CompactVideo'].includes(node.type)) return;
+        if (isLockup && !['VIDEO', 'MOVIE'].includes(node.content_type)) return;
+        try {
+            if (isHistoryShort(node) || node.endpoint?.metadata?.url?.startsWith('/shorts/')) return;
+            const id = historyVideoId(node);
+            const title = historyVideoTitle(node);
+            if (typeof id !== 'string' || !/^[A-Za-z0-9_-]{11}$/.test(id) || !title || seen.has(id)) return;
+            const metadataRows = node.metadata?.metadata?.metadata_rows || [];
+            const metadataText = metadataRows.flatMap(row =>
+                (row.metadata_parts || []).map(part => textValue(part.text)).filter(Boolean)
+            );
+            const published = subscriptionsPublishedTime(node);
+            const author = textValue(node.author?.name) ||
+                textValue(node.short_byline_text || node.long_byline_text || node.byline_text) ||
+                (isLockup ? historyMetadataText(node, 0, 0) : '');
+            seen.add(id);
+            videos.push({
+                id,
+                title,
+                author,
+                url: `https://www.youtube.com/watch?v=${id}`,
+                published_time: published,
+                is_live: isHistoryLive(node),
+                metadata_text: metadataText
+            });
+        } catch {
+            // A malformed entry must not discard otherwise usable page entries.
+        }
+    };
+
+    visit(page?.contents);
+    visit(page?.continuation_contents);
+    visit(page?.on_response_received_actions);
+    visit(page?.on_response_received_commands);
+    visit(page?.on_response_received_endpoints);
+    if (!hasBody) throw new Error('Invalid subscriptions response');
+    return { videos, continuation };
+}
+
+async function handleGetSubscriptionsFeed(params, client = null) {
+    // The optional client is an offline-test seam, not a JSON-RPC parameter.
+    // Every failure crossing the RPC boundary is generic: upstream exceptions
+    // can contain request headers, cookie values or private response bodies.
+    try {
+        if (typeof params?.cookiesPath !== 'string' || !params.cookiesPath.trim()) {
+            throw new Error('Cookies required');
+        }
+        const token = params.continuationToken;
+        if (token != null && (typeof token !== 'string' || !token.trim())) {
+            throw new Error('Invalid continuation');
+        }
+        const yt = client || await getYT(params.cookiesPath, params.location);
+        if (yt.session?.logged_in !== true) throw new Error('Authentication required');
+        let page;
+        if (token) {
+            page = await yt.actions.execute('/browse', { continuation: token, parse: true });
+        } else {
+            // getSubscriptionsFeed targets FEsubscriptions (not FEwhat_to_watch).
+            // Its main timeline is the ordering authority; embedded ranked
+            // shelves are excluded by subscriptionsPageResponse.
+            const feed = await yt.getSubscriptionsFeed();
+            page = feed.page;
+        }
+        return subscriptionsPageResponse(page);
+    } catch {
+        throw new Error('Unable to fetch subscriptions feed');
+    }
+}
+
 async function handleGetSubscribedChannels(params) {
     if (!params.cookiesPath) {
         throw new Error("Cookies path is required for subscriptions");
@@ -1274,6 +1449,8 @@ async function main() {
                 result = await handleGetPlaylist(params);
             } else if (command === 'get_shorts_feed') {
                 result = await handleGetShortsFeed(params);
+            } else if (command === 'get_subscriptions_feed') {
+                result = await handleGetSubscriptionsFeed(params);
             } else if (command === 'get_subscribed_channels') {
                 result = await handleGetSubscribedChannels(params);
             } else if (command === 'get_mix') {
@@ -1294,6 +1471,7 @@ export {
     extractLikeInfo,
     handleGetShortsFeed,
     handleGetSubscribedChannels,
+    handleGetSubscriptionsFeed,
     handleLikeComment,
     handleLikeInteraction,
     handleReplyComment,

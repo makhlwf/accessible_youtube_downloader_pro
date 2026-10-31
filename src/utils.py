@@ -3701,6 +3701,96 @@ def get_shorts_feed(seed_video_id=None, parent=None):
         return []
 
 
+def get_subscriptions_feed(continuation=None):
+    """Fetch one authenticated subscriptions VIDEO page; safe on worker threads.
+
+    No GUI, installation or cookie prompts are invoked. The JS service preserves
+    FEsubscriptions' upstream newest-posted order, not a localized-date sort.
+    Continuations are opaque upstream tokens, not local list offsets.
+    """
+    failure = {
+        "videos": [],
+        "continuation": None,
+        "error": _(
+            "Could not load subscriptions. Check your YouTube cookies and try again."
+        ),
+    }
+    try:
+        cookies_path = config_get("cookiespath")
+        if not cookies_path or not os.path.isfile(cookies_path):
+            return {
+                **failure,
+                "error": _(
+                    "A valid YouTube cookies file is required for subscriptions."
+                ),
+            }
+        if continuation is not None and (
+            not isinstance(continuation, str) or not continuation.strip()
+        ):
+            return failure
+        response = deno_service.send_command(
+            "get_subscriptions_feed",
+            {
+                "cookiesPath": cookies_path,
+                "location": get_windows_region(),
+                "continuationToken": continuation,
+            },
+        )
+        if (
+            not isinstance(response, dict)
+            or "error" in response
+            or not isinstance(response.get("videos"), list)
+        ):
+            return failure
+        next_token = response.get("continuation")
+        if next_token is not None and (
+            not isinstance(next_token, str) or not next_token.strip()
+        ):
+            return failure
+        videos = []
+        seen = set()
+        for item in response["videos"]:
+            if not isinstance(item, dict):
+                continue
+            video_id = item.get("id")
+            title = item.get("title")
+            if (
+                not isinstance(video_id, str)
+                or not re.fullmatch(r"[A-Za-z0-9_-]{11}", video_id)
+                or not isinstance(title, str)
+                or not title.strip()
+                or video_id in seen
+            ):
+                continue
+            # Copy only public display fields, never an upstream error object or
+            # arbitrary service keys. Build the playable URL from the validated ID.
+            video = {
+                "id": video_id,
+                "title": title,
+                "url": f"https://www.youtube.com/watch?v={video_id}",
+                "author": item.get("author")
+                if isinstance(item.get("author"), str)
+                else "",
+                "published_time": item.get("published_time")
+                if isinstance(item.get("published_time"), str)
+                else "",
+                "is_live": item.get("is_live") is True,
+            }
+            metadata = item.get("metadata_text")
+            if isinstance(metadata, list) and all(
+                isinstance(text, str) for text in metadata
+            ):
+                video["metadata_text"] = metadata.copy()
+            videos.append(video)
+            seen.add(video_id)
+        if response["videos"] and not videos:
+            return failure
+        return {"videos": videos, "continuation": next_token}
+    except Exception:
+        # Do not log exception messages: they may carry cookies or response data.
+        return failure
+
+
 def get_subscribed_channels(parent=None):
     """Fetch the channels the logged-in user is subscribed to via Deno service.
 

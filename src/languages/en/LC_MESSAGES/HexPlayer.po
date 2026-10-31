@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: HexPlayer 2.0.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-31 05:29+0200\n"
+"POT-Creation-Date: 2026-10-31 05:58+0200\n"
 "PO-Revision-Date: 2026-10-31 05:30+0200\n"
 "Last-Translator: makhlwf <altrhwnyashrf1@gmail.com>\n"
 "Language: en\n"
@@ -26,207 +26,218 @@ msgstr ""
 "quickly navigate through the main options."
 
 #: src/accessible_youtube_downloader_pro.py:356
-#: src/accessible_youtube_downloader_pro.py:412
+#: src/accessible_youtube_downloader_pro.py:417
 msgid "البحث في يوتيوب\tctrl+f"
 msgstr "Search in YouTube\tctrl+f"
 
 #: src/accessible_youtube_downloader_pro.py:358
-#: src/accessible_youtube_downloader_pro.py:413
+#: src/accessible_youtube_downloader_pro.py:418
 msgid "التنزيل من خلال رابط\tctrl+d"
 msgstr "Download from link\tctrl+d"
 
 #: src/accessible_youtube_downloader_pro.py:361
-#: src/accessible_youtube_downloader_pro.py:415
+#: src/accessible_youtube_downloader_pro.py:420
 msgid "تشغيل فيديو يوتيوب من خلال الرابط\tctrl+y"
 msgstr "Play YouTube video from link\tctrl+y"
 
 #: src/accessible_youtube_downloader_pro.py:364
-#: src/accessible_youtube_downloader_pro.py:417
+#: src/accessible_youtube_downloader_pro.py:422
 msgid "مشاهدة Shorts\tctrl+shift+s"
 msgstr "Watch Shorts\tctrl+shift+s"
 
 #: src/accessible_youtube_downloader_pro.py:367
-#: src/accessible_youtube_downloader_pro.py:419
+#: src/accessible_youtube_downloader_pro.py:424
 msgid "القنوات المشترك بها\tctrl+shift+u"
 msgstr "Subscribed channels\tctrl+shift+u"
 
 #: src/accessible_youtube_downloader_pro.py:370
-#: src/accessible_youtube_downloader_pro.py:421
+#: src/accessible_youtube_downloader_pro.py:427
+msgid "Subscriptions feed\tctrl+shift+n"
+msgstr "Subscriptions feed\tctrl+shift+n"
+
+#: src/accessible_youtube_downloader_pro.py:373
+#: src/accessible_youtube_downloader_pro.py:429
 msgid "الفيديوهات المفضلة\tctrl+shift+f"
 msgstr "Favorite videos\tctrl+shift+f"
 
-#: src/accessible_youtube_downloader_pro.py:372
-#: src/accessible_youtube_downloader_pro.py:422
+#: src/accessible_youtube_downloader_pro.py:375
+#: src/accessible_youtube_downloader_pro.py:430
 msgid "سجل المشاهدة\tctrl+h"
 msgstr "Watch History\tctrl+h"
 
-#: src/accessible_youtube_downloader_pro.py:373
-#: src/accessible_youtube_downloader_pro.py:423
+#: src/accessible_youtube_downloader_pro.py:376
+#: src/accessible_youtube_downloader_pro.py:431
 msgid "يوتيوب ميوزك\tctrl+m"
 msgstr "YouTube Music\tctrl+m"
 
-#: src/accessible_youtube_downloader_pro.py:379
+#: src/accessible_youtube_downloader_pro.py:382
 msgid "تحميل المزيد من الفيديوهات المقترحة"
 msgstr "Load more suggested videos"
 
-#: src/accessible_youtube_downloader_pro.py:424
+#: src/accessible_youtube_downloader_pro.py:394
+#: src/accessible_youtube_downloader_pro.py:1125
+#: src/gui/subscriptions_feed.py:18
+msgid "Subscriptions feed"
+msgstr "Subscriptions feed"
+
+#: src/accessible_youtube_downloader_pro.py:432
 msgid "فتح مجلد التنزيل\tctrl+p"
 msgstr "Open download folder\tctrl+p"
 
-#: src/accessible_youtube_downloader_pro.py:425
+#: src/accessible_youtube_downloader_pro.py:433
 #: src/media_player/media_gui.py:302 src/youtube_browser/browser.py:105
 msgid "الإعدادات...\talt+s"
 msgstr "Settings...\talt+s"
 
-#: src/accessible_youtube_downloader_pro.py:426
+#: src/accessible_youtube_downloader_pro.py:434
 msgid "خروج\tctrl+w"
 msgstr "Exit\tctrl+w"
 
-#: src/accessible_youtube_downloader_pro.py:428
+#: src/accessible_youtube_downloader_pro.py:436
 msgid "القائمة الرئيسية"
 msgstr "Main Menu"
 
-#: src/accessible_youtube_downloader_pro.py:432
+#: src/accessible_youtube_downloader_pro.py:440
 msgid "عرض إصدار واي تي دي إل بي"
 msgstr "View YT-DLP version"
 
-#: src/accessible_youtube_downloader_pro.py:434
+#: src/accessible_youtube_downloader_pro.py:442
 msgid "التحقق من وجود تحديث لـ واي تي دي إل بي"
 msgstr "Check for YT-DLP update"
 
-#: src/accessible_youtube_downloader_pro.py:436
+#: src/accessible_youtube_downloader_pro.py:444
 msgid "عرض إصدار دينو"
 msgstr "View Deno version"
 
-#: src/accessible_youtube_downloader_pro.py:437
+#: src/accessible_youtube_downloader_pro.py:445
 msgid "التحقق من وجود تحديث لـ دينو"
 msgstr "Check for Deno update"
 
-#: src/accessible_youtube_downloader_pro.py:439
+#: src/accessible_youtube_downloader_pro.py:447
 msgid "عرض إصدار YouTube.js (Innertube)"
 msgstr "View YouTube.js (Innertube) version"
 
-#: src/accessible_youtube_downloader_pro.py:442
+#: src/accessible_youtube_downloader_pro.py:450
 msgid "التحقق من وجود تحديث لـ YouTube.js (Innertube)"
 msgstr "Check for YouTube.js (Innertube) update"
 
-#: src/accessible_youtube_downloader_pro.py:445
+#: src/accessible_youtube_downloader_pro.py:453
 msgid "تحديث ذاكرة YouTube.js (Innertube) المؤقتة"
 msgstr "Refresh YouTube.js (Innertube) cache"
 
-#: src/accessible_youtube_downloader_pro.py:447
+#: src/accessible_youtube_downloader_pro.py:455
 msgid "عرض إصدار مولد رموز POT"
 msgstr "View POT Provider version"
 
-#: src/accessible_youtube_downloader_pro.py:449
+#: src/accessible_youtube_downloader_pro.py:457
 msgid "التحقق من وجود تحديث لـ مولد رموز POT"
 msgstr "Check for POT Provider update"
 
-#: src/accessible_youtube_downloader_pro.py:452
+#: src/accessible_youtube_downloader_pro.py:460
 msgid "فتح مجلد إضافة المتصفح"
 msgstr "Open Browser Extension Folder"
 
-#: src/accessible_youtube_downloader_pro.py:455
+#: src/accessible_youtube_downloader_pro.py:463
 msgid "فتح ملف السجلات (hexplayer.log)"
 msgstr "Open log file (hexplayer.log)"
 
-#: src/accessible_youtube_downloader_pro.py:457
+#: src/accessible_youtube_downloader_pro.py:465
 msgid "قائمة الأدوات الخارجية"
 msgstr "External tools list"
 
-#: src/accessible_youtube_downloader_pro.py:461
+#: src/accessible_youtube_downloader_pro.py:469
 msgid "شاشة الترحيب وجولة الميزات..."
 msgstr "Welcome Screen & Feature Tour..."
 
-#: src/accessible_youtube_downloader_pro.py:462
+#: src/accessible_youtube_downloader_pro.py:470
 msgid "دليل المستخدم...\tf1"
 msgstr "User Guide...\tf1"
 
-#: src/accessible_youtube_downloader_pro.py:463
+#: src/accessible_youtube_downloader_pro.py:471
 msgid "البحث عن التحديثات"
 msgstr "Check for updates"
 
-#: src/accessible_youtube_downloader_pro.py:464
-#: src/accessible_youtube_downloader_pro.py:1228
+#: src/accessible_youtube_downloader_pro.py:472
+#: src/accessible_youtube_downloader_pro.py:1266
 msgid "سياسة الخصوصية"
 msgstr "Privacy Policy"
 
-#: src/accessible_youtube_downloader_pro.py:465
+#: src/accessible_youtube_downloader_pro.py:473
 msgid "عن البرنامج..."
 msgstr "About..."
 
-#: src/accessible_youtube_downloader_pro.py:468
+#: src/accessible_youtube_downloader_pro.py:476
 msgid "البريد الالكتروني..."
 msgstr "Email..."
 
-#: src/accessible_youtube_downloader_pro.py:469
+#: src/accessible_youtube_downloader_pro.py:477
 msgid "تلجرام..."
 msgstr "Telegram..."
 
-#: src/accessible_youtube_downloader_pro.py:470
+#: src/accessible_youtube_downloader_pro.py:478
 msgid "تواصل معي"
 msgstr "Contact me"
 
-#: src/accessible_youtube_downloader_pro.py:472
-#: src/accessible_youtube_downloader_pro.py:1243
+#: src/accessible_youtube_downloader_pro.py:480
+#: src/accessible_youtube_downloader_pro.py:1281
 #: src/youtube_browser/search_handler.py:91
 msgid "حول"
 msgstr "About"
 
-#: src/accessible_youtube_downloader_pro.py:595
+#: src/accessible_youtube_downloader_pro.py:612
 msgid "Unable to open the log file."
 msgstr "Unable to open the log file."
 
-#: src/accessible_youtube_downloader_pro.py:671
+#: src/accessible_youtube_downloader_pro.py:688
 msgid "لم يتم العثور على مكتبة واي تي دي إل بي أو تعذر الحصول على إصدارها"
 msgstr "YT-DLP library not found or version could not be retrieved"
 
-#: src/accessible_youtube_downloader_pro.py:675
+#: src/accessible_youtube_downloader_pro.py:692
 msgid "إصدار واي تي دي إل بي"
 msgstr "YT-DLP version"
 
-#: src/accessible_youtube_downloader_pro.py:681
+#: src/accessible_youtube_downloader_pro.py:698
 msgid "لم يتم العثور على أداة دينو أو تعذر الحصول على إصدارها"
 msgstr "Deno tool not found or version could not be retrieved"
 
-#: src/accessible_youtube_downloader_pro.py:685
+#: src/accessible_youtube_downloader_pro.py:702
 msgid "إصدار دينو"
 msgstr "Deno version"
 
-#: src/accessible_youtube_downloader_pro.py:691
+#: src/accessible_youtube_downloader_pro.py:708
 msgid "تعذر جلب إصدار YouTube.js (Innertube)"
 msgstr "Could not retrieve YouTube.js (Innertube) version"
 
-#: src/accessible_youtube_downloader_pro.py:692 src/gui/comments_dialog.py:127
+#: src/accessible_youtube_downloader_pro.py:709 src/gui/comments_dialog.py:127
 #: src/gui/comments_dialog.py:349 src/gui/comments_dialog.py:565
 #: src/gui/settings_dialog.py:1185 src/gui/settings_dialog.py:1243
 #: src/utils.py:3562
 msgid "خطأ"
 msgstr "Error"
 
-#: src/accessible_youtube_downloader_pro.py:696
+#: src/accessible_youtube_downloader_pro.py:713
 msgid "إصدار YouTube.js (Innertube)"
 msgstr "YouTube.js (Innertube) version"
 
-#: src/accessible_youtube_downloader_pro.py:702
+#: src/accessible_youtube_downloader_pro.py:719
 msgid "أداة مولد رموز POT غير مثبتة حالياً."
 msgstr "POT Provider tool is not currently installed."
 
-#: src/accessible_youtube_downloader_pro.py:703
-#: src/accessible_youtube_downloader_pro.py:713
+#: src/accessible_youtube_downloader_pro.py:720
+#: src/accessible_youtube_downloader_pro.py:730
 msgid "معلومات الإصدار"
 msgstr "Version Information"
 
-#: src/accessible_youtube_downloader_pro.py:708 src/discord_presence.py:327
+#: src/accessible_youtube_downloader_pro.py:725 src/discord_presence.py:327
 #: src/discord_presence.py:334 src/discord_presence.py:355
 msgid "قيد التشغيل"
 msgstr "Running"
 
-#: src/accessible_youtube_downloader_pro.py:708
+#: src/accessible_youtube_downloader_pro.py:725
 msgid "متوقف"
 msgstr "Stopped"
 
-#: src/accessible_youtube_downloader_pro.py:710
+#: src/accessible_youtube_downloader_pro.py:727
 #, python-brace-format
 msgid ""
 "إصدار مولد رموز POT: {}\n"
@@ -235,13 +246,13 @@ msgstr ""
 "POT Provider version: {}\n"
 "Local server status: {}"
 
-#: src/accessible_youtube_downloader_pro.py:719
+#: src/accessible_youtube_downloader_pro.py:736
 #: src/media_player/media_gui.py:1010
 msgid "جاري تحميل الاقتراحات... يرجى الانتظار"
 msgstr "Loading suggestions... Please wait"
 
-#: src/accessible_youtube_downloader_pro.py:742
-#: src/accessible_youtube_downloader_pro.py:1330 src/gui/history.py:105
+#: src/accessible_youtube_downloader_pro.py:759
+#: src/accessible_youtube_downloader_pro.py:1368 src/gui/history.py:105
 #: src/gui/settings_dialog.py:966 src/gui/settings_dialog.py:1072
 #: src/gui/settings_dialog.py:1319 src/gui/subscriptions_dialog.py:80
 #: src/utils.py:1474 src/utils.py:1494 src/utils.py:1551 src/utils.py:1575
@@ -249,7 +260,7 @@ msgstr "Loading suggestions... Please wait"
 msgid "تنبيه"
 msgstr "Warning"
 
-#: src/accessible_youtube_downloader_pro.py:767
+#: src/accessible_youtube_downloader_pro.py:784
 msgid ""
 "لا توجد اقتراحات متاحة حاليًا في حسابك (قد يكون سجل المشاهدة متوقفًا في "
 "إعدادات YouTube)."
@@ -257,13 +268,13 @@ msgstr ""
 "No recommendations currently available in your account (watch history "
 "might be paused in YouTube settings)."
 
-#: src/accessible_youtube_downloader_pro.py:778
+#: src/accessible_youtube_downloader_pro.py:795
 #, python-brace-format
 msgid "قائمة تشغيل مختلطة: {title}"
 msgstr "Mix playlist: {title}"
 
-#: src/accessible_youtube_downloader_pro.py:831
-#: src/accessible_youtube_downloader_pro.py:910
+#: src/accessible_youtube_downloader_pro.py:848
+#: src/accessible_youtube_downloader_pro.py:927
 #: src/gui/auto_detect_dialog.py:115 src/gui/channel_dialog.py:380
 #: src/gui/channel_dialog.py:403 src/gui/favorites.py:113
 #: src/gui/favorites.py:130 src/gui/history.py:165
@@ -274,101 +285,105 @@ msgstr "Mix playlist: {title}"
 msgid "جاري التشغيل"
 msgstr "Playing"
 
-#: src/accessible_youtube_downloader_pro.py:834
-#: src/accessible_youtube_downloader_pro.py:913 src/gui/channel_dialog.py:383
+#: src/accessible_youtube_downloader_pro.py:851
+#: src/accessible_youtube_downloader_pro.py:930 src/gui/channel_dialog.py:383
 #: src/gui/channel_dialog.py:406 src/gui/history.py:172
 #: src/media_player/media_gui.py:2932
 msgid "لا يمكن تشغيل الرابط"
 msgstr "Cannot play the link"
 
-#: src/accessible_youtube_downloader_pro.py:885
+#: src/accessible_youtube_downloader_pro.py:902
 msgid "تعذر العثور على مجلد إضافة المتصفح"
 msgstr "Couldn't find the browser extension folder."
 
-#: src/accessible_youtube_downloader_pro.py:889
+#: src/accessible_youtube_downloader_pro.py:906
 msgid "Unable to open the browser extension folder."
 msgstr "Unable to open the browser extension folder."
 
-#: src/accessible_youtube_downloader_pro.py:948
+#: src/accessible_youtube_downloader_pro.py:965
 msgid "يوتيوب ميوزك معطّل من الإعدادات"
 msgstr "YouTube Music is disabled in settings"
 
-#: src/accessible_youtube_downloader_pro.py:954
+#: src/accessible_youtube_downloader_pro.py:971
 msgid "تعذر فتح يوتيوب ميوزك"
 msgstr "Could not open YouTube Music"
 
-#: src/accessible_youtube_downloader_pro.py:955
+#: src/accessible_youtube_downloader_pro.py:972
 msgid "تعذر فتح يوتيوب ميوزك."
 msgstr "Could not open YouTube Music."
 
-#: src/accessible_youtube_downloader_pro.py:965 src/gui/settings_dialog.py:635
+#: src/accessible_youtube_downloader_pro.py:982 src/gui/settings_dialog.py:635
 #: src/youtube_music/music_panel.py:58
 msgid "يوتيوب ميوزك"
 msgstr "YouTube Music"
 
-#: src/accessible_youtube_downloader_pro.py:979
+#: src/accessible_youtube_downloader_pro.py:996
 msgid "يوتيوب"
 msgstr "YouTube"
 
-#: src/accessible_youtube_downloader_pro.py:1097
+#: src/accessible_youtube_downloader_pro.py:1118
+msgid "Import YouTube cookies in Settings to view your subscriptions feed."
+msgstr "Import YouTube cookies in Settings to view your subscriptions feed."
+
+#: src/accessible_youtube_downloader_pro.py:1135
 msgid "يجب تحديد ملف الكوكيز من الإعدادات لعرض القنوات المشترك بها."
 msgstr "You must set a cookies file in settings to view your subscribed channels."
 
-#: src/accessible_youtube_downloader_pro.py:1109
+#: src/accessible_youtube_downloader_pro.py:1147
 msgid "يجب تحديد ملف الكوكيز من الإعدادات لاستخدام ميزة Shorts."
 msgstr "You must set a cookies file in settings to use the Shorts feature."
 
-#: src/accessible_youtube_downloader_pro.py:1116
+#: src/accessible_youtube_downloader_pro.py:1154
 msgid "جاري تحميل فيديوهات Shorts المقترحة..."
 msgstr "Loading suggested Shorts videos..."
 
-#: src/accessible_youtube_downloader_pro.py:1123
+#: src/accessible_youtube_downloader_pro.py:1161
 msgid "تعذر تحميل فيديوهات Shorts. يرجى التحقق من ملف الكوكيز والاتصال بالإنترنت."
 msgstr ""
 "Failed to load Shorts videos. Please check your cookies file and internet"
 " connection."
 
-#: src/accessible_youtube_downloader_pro.py:1135
+#: src/accessible_youtube_downloader_pro.py:1173
 msgid "جاري جلب رابط التشغيل..."
 msgstr "Fetching playable stream URL..."
 
-#: src/accessible_youtube_downloader_pro.py:1142
+#: src/accessible_youtube_downloader_pro.py:1180
 msgid "تعذر استخراج رابط تشغيل الفيديو."
 msgstr "Failed to extract playable stream URL."
 
-#: src/accessible_youtube_downloader_pro.py:1168 src/gui/update_dialog.py:207
+#: src/accessible_youtube_downloader_pro.py:1206 src/gui/update_dialog.py:207
 msgid "Unable to open the download folder."
 msgstr "Unable to open the download folder."
 
-#: src/accessible_youtube_downloader_pro.py:1213
+#: src/accessible_youtube_downloader_pro.py:1251
 msgid "دليل استخدام برنامج HexPlayer"
 msgstr "HexPlayer User Guide"
 
-#: src/accessible_youtube_downloader_pro.py:1230
+#: src/accessible_youtube_downloader_pro.py:1268
 msgid "تعذر العثور على ملف سياسة الخصوصية"
 msgstr "Couldn't find the Privacy Policy file."
 
-#: src/accessible_youtube_downloader_pro.py:1234
+#: src/accessible_youtube_downloader_pro.py:1272
 msgid "جاري البحث عن التحديثات. يرجى الانتظار"
 msgstr "Checking for updates. Please wait..."
 
-#: src/accessible_youtube_downloader_pro.py:1239
+#: src/accessible_youtube_downloader_pro.py:1277
 msgid "اسم البرنامج"
 msgstr "Software Name"
 
-#: src/accessible_youtube_downloader_pro.py:1240
+#: src/accessible_youtube_downloader_pro.py:1278
 msgid "الإصدار"
 msgstr "Version"
 
-#: src/accessible_youtube_downloader_pro.py:1241
+#: src/accessible_youtube_downloader_pro.py:1279
 msgid "طُوِر بواسطة"
 msgstr "Developed by"
 
-#: src/accessible_youtube_downloader_pro.py:1242 src/gui/description.py:21
+#: src/accessible_youtube_downloader_pro.py:1280 src/gui/description.py:21
 msgid "الوصف: "
 msgstr "Description: "
 
-#: src/accessible_youtube_downloader_pro.py:1329
+#: src/accessible_youtube_downloader_pro.py:1367
 msgid "البرنامج قيد التشغيل بالفعل."
 msgstr "The program is already running."
 
@@ -1055,8 +1070,16 @@ msgstr "You are using the latest version of the application."
 msgid "مشاهدة Shorts"
 msgstr "Watch Shorts"
 
+#: src/utils.py:3715
+msgid "Could not load subscriptions. Check your YouTube cookies and try again."
+msgstr "Could not load subscriptions. Check your YouTube cookies and try again."
+
+#: src/utils.py:3723
+msgid "A valid YouTube cookies file is required for subscriptions."
+msgstr "A valid YouTube cookies file is required for subscriptions."
+
 #: src/gui/subscriptions_dialog.py:22 src/gui/subscriptions_dialog.py:29
-#: src/utils.py:3711
+#: src/utils.py:3797
 msgid "القنوات المشترك بها"
 msgstr "Subscribed channels"
 
@@ -3179,6 +3202,98 @@ msgstr "No subscribed channels"
 #, python-brace-format
 msgid "تم تحميل {count} قناة"
 msgstr "Loaded {count} channels"
+
+#: src/gui/subscriptions_feed.py:30
+msgid "Videos from subscribed channels, newest first"
+msgstr "Videos from subscribed channels, newest first"
+
+#: src/gui/subscriptions_feed.py:32
+msgid "Subscription videos, newest first"
+msgstr "Subscription videos, newest first"
+
+#: src/gui/subscriptions_feed.py:34
+msgid "Refresh subscriptions feed"
+msgstr "Refresh subscriptions feed"
+
+#: src/gui/subscriptions_feed.py:35
+msgid "Load more videos"
+msgstr "Load more videos"
+
+#: src/gui/subscriptions_feed.py:36
+msgid "Play audio (Enter)"
+msgstr "Play audio (Enter)"
+
+#: src/gui/subscriptions_feed.py:37
+msgid "Play video (Ctrl+Enter)"
+msgstr "Play video (Ctrl+Enter)"
+
+#: src/gui/subscriptions_feed.py:38
+msgid "Back to home"
+msgstr "Back to home"
+
+#: src/gui/subscriptions_feed.py:114
+msgid "Loading more subscription videos..."
+msgstr "Loading more subscription videos..."
+
+#: src/gui/subscriptions_feed.py:116
+msgid "Loading subscriptions feed..."
+msgstr "Loading subscriptions feed..."
+
+#: src/gui/subscriptions_feed.py:125 src/gui/subscriptions_feed.py:144
+msgid "Could not load subscriptions feed. Please try again."
+msgstr "Could not load subscriptions feed. Please try again."
+
+#: src/gui/subscriptions_feed.py:188
+msgid "No videos on this page. Load more to continue."
+msgstr "No videos on this page. Load more to continue."
+
+#: src/gui/subscriptions_feed.py:190
+msgid "No videos from subscribed channels are available."
+msgstr "No videos from subscribed channels are available."
+
+#: src/gui/subscriptions_feed.py:193
+#, python-brace-format
+msgid "Loaded {count} more subscription videos."
+msgstr "Loaded {count} more subscription videos."
+
+#: src/gui/subscriptions_feed.py:197
+#, python-brace-format
+msgid "Loaded {count} subscription videos, newest first."
+msgstr "Loaded {count} subscription videos, newest first."
+
+#: src/gui/subscriptions_feed.py:201
+#, python-brace-format
+msgid "{message} End of subscriptions feed."
+msgstr "{message} End of subscriptions feed."
+
+#: src/gui/subscriptions_feed.py:208
+#, python-brace-format
+msgid "{title}, channel: {channel}, published: {published}"
+msgstr "{title}, channel: {channel}, published: {published}"
+
+#: src/gui/subscriptions_feed.py:209
+msgid "Untitled video"
+msgstr "Untitled video"
+
+#: src/gui/subscriptions_feed.py:210
+msgid "Unknown channel"
+msgstr "Unknown channel"
+
+#: src/gui/subscriptions_feed.py:211
+msgid "Publication time unavailable"
+msgstr "Publication time unavailable"
+
+#: src/gui/subscriptions_feed.py:225 src/gui/subscriptions_feed.py:234
+msgid "Starting playback..."
+msgstr "Starting playback..."
+
+#: src/gui/subscriptions_feed.py:229
+msgid "Playback was not started."
+msgstr "Playback was not started."
+
+#: src/gui/subscriptions_feed.py:242
+msgid "Could not play this video. Please try again."
+msgstr "Could not play this video. Please try again."
 
 #: src/gui/tray_icon.py:12
 msgid "HexPlayer"

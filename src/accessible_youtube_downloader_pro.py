@@ -340,7 +340,7 @@ class HomeScreen(wx.Frame):
         self.Centre()
         self.SetSize(wx.DisplaySize())
         self.Maximize(True)
-        panel = wx.Panel(self)
+        panel = wx.Panel(self, style=wx.TAB_TRAVERSAL)
         self.panel = panel
 
         # Instruction label
@@ -366,6 +366,9 @@ class HomeScreen(wx.Frame):
         self.subscriptionsBtn = wx.Button(
             panel, -1, _("القنوات المشترك بها\tctrl+shift+u"), name="tab"
         )
+        self.subscriptionsFeedBtn = wx.Button(
+            panel, -1, _("Subscriptions feed\tctrl+shift+n"), name="tab"
+        )
         self.favBtn = wx.Button(
             panel, -1, _("الفيديوهات المفضلة	ctrl+shift+f"), name="tab"
         )
@@ -387,6 +390,8 @@ class HomeScreen(wx.Frame):
         for child in panel.GetChildren():
             if child.Name == "tab":
                 btnSizer.Add(child, 0, wx.EXPAND | wx.ALL, 5)
+
+        self.subscriptionsFeedBtn.SetName(_("Subscriptions feed"))
 
         sizer.Add(self.instruction, 0, wx.ALL, 10)
         sizer.Add(self.home_feed_list, 1, wx.EXPAND | wx.ALL, 5)
@@ -417,6 +422,9 @@ class HomeScreen(wx.Frame):
         self.shortsItem = mainMenu.Append(-1, _("مشاهدة Shorts\tctrl+shift+s"))
         self.subscriptionsItem = mainMenu.Append(
             -1, _("القنوات المشترك بها\tctrl+shift+u")
+        )
+        self.subscriptionsFeedItem = mainMenu.Append(
+            -1, _("Subscriptions feed\tctrl+shift+n")
         )
         self.favItem = mainMenu.Append(-1, _("الفيديوهات المفضلة	ctrl+shift+f"))
         self.historyItem = mainMenu.Append(-1, _("سجل المشاهدة\tctrl+h"))
@@ -485,6 +493,11 @@ class HomeScreen(wx.Frame):
                     ord("U"),
                     self.subscriptionsItem.GetId(),
                 ),
+                (
+                    wx.ACCEL_CTRL | wx.ACCEL_SHIFT,
+                    ord("N"),
+                    self.subscriptionsFeedItem.GetId(),
+                ),
                 (wx.ACCEL_CTRL | wx.ACCEL_SHIFT, ord("F"), self.favItem.GetId()),
                 (wx.ACCEL_CTRL, ord("H"), self.historyItem.GetId()),
                 (wx.ACCEL_CTRL, ord("M"), self.musicItem.GetId()),
@@ -504,6 +517,9 @@ class HomeScreen(wx.Frame):
         self.Bind(wx.EVT_MENU, self.onPlay, self.playItem)
         self.Bind(wx.EVT_MENU, self.on_open_shorts, self.shortsItem)
         self.Bind(wx.EVT_MENU, self.on_open_subscriptions, self.subscriptionsItem)
+        self.Bind(
+            wx.EVT_MENU, self.on_open_subscriptions_feed, self.subscriptionsFeedItem
+        )
         self.Bind(wx.EVT_MENU, self.onFavorite, self.favItem)
         self.Bind(wx.EVT_MENU, self.onHistory, self.historyItem)
         self.Bind(wx.EVT_MENU, self.onMusic, self.musicItem)
@@ -561,6 +577,7 @@ class HomeScreen(wx.Frame):
         self.playBtn.Bind(wx.EVT_BUTTON, self.onPlay)
         self.shortsBtn.Bind(wx.EVT_BUTTON, self.on_open_shorts)
         self.subscriptionsBtn.Bind(wx.EVT_BUTTON, self.on_open_subscriptions)
+        self.subscriptionsFeedBtn.Bind(wx.EVT_BUTTON, self.on_open_subscriptions_feed)
         self.favBtn.Bind(wx.EVT_BUTTON, self.onFavorite)
         self.historyBtn.Bind(wx.EVT_BUTTON, self.onHistory)
         self.musicBtn.Bind(wx.EVT_BUTTON, self.onMusic)
@@ -1086,8 +1103,29 @@ class HomeScreen(wx.Frame):
             self.subscriptionsBtn.Show(has_cookies)
         if hasattr(self, "subscriptionsItem"):
             self.subscriptionsItem.Enable(has_cookies)
+        if hasattr(self, "subscriptionsFeedBtn"):
+            self.subscriptionsFeedBtn.Show(has_cookies)
+        if hasattr(self, "subscriptionsFeedItem"):
+            self.subscriptionsFeedItem.Enable(has_cookies)
         if hasattr(self, "panel"):
             self.panel.Layout()
+
+    def on_open_subscriptions_feed(self, event=None):
+        from gui.subscriptions_feed import SubscriptionsFeed
+
+        if not utils.has_cookies_file():
+            message = _(
+                "Import YouTube cookies in Settings to view your subscriptions feed."
+            )
+            speak(message, interrupt=True)
+            utils.show_error(message, parent=self)
+            return
+        # Dependency prompts belong on the GUI thread, never in the feed worker.
+        if not utils.ensure_deno_installed(
+            parent=self, feature_name=_("Subscriptions feed")
+        ):
+            return
+        SubscriptionsFeed(self, return_focus=self.subscriptionsFeedBtn)
 
     def on_open_subscriptions(self, event=None):
         from gui.subscriptions_dialog import SubscriptionsDialog
