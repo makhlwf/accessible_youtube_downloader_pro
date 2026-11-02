@@ -139,9 +139,6 @@ class TextCtrl(wxWindow):
     def SetInsertionPointEnd(self):
         pass
 
-    def SelectAll(self):
-        pass
-
 
 class ListBox(wxWindow):
     def __init__(self, *args, **kwargs):
@@ -273,29 +270,6 @@ class StaticBox(wxWindow):
     pass
 
 
-class RadioBox(wxWindow):
-    def __init__(self, *args, choices=None, **kwargs):
-        super().__init__(*args, **kwargs)
-        if choices is None and len(args) >= 4 and isinstance(args[3], (list, tuple)):
-            choices = args[3]
-        self._choices = list(choices or [])
-        self._selection = 0
-        self.GetSelection = MagicMock(return_value=0)
-        self.SetSelection = MagicMock(side_effect=self._set_selection)
-        self.GetStringSelection = MagicMock(side_effect=self._get_string_selection)
-        self.GetCount = MagicMock(side_effect=lambda: len(self._choices))
-
-    def _set_selection(self, n):
-        self._selection = n
-        self.GetSelection.return_value = n
-
-    def _get_string_selection(self):
-        sel = self.GetSelection()
-        if 0 <= sel < len(self._choices):
-            return self._choices[sel]
-        return ""
-
-
 class CommandEvent:
     def __init__(self, *args, **kwargs):
         self._int = 0
@@ -307,34 +281,7 @@ class CommandEvent:
         return self._int
 
 
-class Notebook(wxWindow):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._pages = []
-        self._selection = 0
-
-    def AddPage(self, page, text, select=False, imageId=-1):
-        self._pages.append((page, text))
-        if select:
-            self._selection = len(self._pages) - 1
-
-    def SetSelection(self, n):
-        self._selection = n
-
-    def GetSelection(self):
-        return self._selection
-
-    def GetPageCount(self):
-        return len(self._pages)
-
-    def GetPage(self, n):
-        if 0 <= n < len(self._pages):
-            return self._pages[n][0]
-        return None
-
-
 mock_wx = MagicMock()
-mock_wx.Notebook = Notebook
 mock_wx.Frame = Frame
 mock_wx.Panel = Panel
 mock_wx.Dialog = Dialog
@@ -348,7 +295,6 @@ mock_wx.SpinCtrl = SpinCtrl
 mock_wx.SpinCtrlDouble = SpinCtrlDouble
 mock_wx.CheckBox = CheckBox
 mock_wx.RadioButton = RadioButton
-mock_wx.RadioBox = RadioBox
 mock_wx.StaticBox = StaticBox
 mock_wx.CommandEvent = CommandEvent
 mock_wx.Colour = lambda value: value
