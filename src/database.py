@@ -1,4 +1,5 @@
 import logging
+import os
 import sqlite3 as sql
 import threading
 import time
@@ -11,6 +12,7 @@ _db_lock = threading.RLock()
 
 def db_init():
     try:
+        os.makedirs(os.path.dirname(db_path), exist_ok=True)
         connection = sql.connect(db_path, check_same_thread=False)
         connection.row_factory = sql.Row
         try:
