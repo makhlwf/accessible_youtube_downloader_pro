@@ -18,7 +18,10 @@ from download_handler.downloader import (
 
 def test_base_options_use_resolved_deno_and_ffmpeg(monkeypatch, tmp_path):
     ffmpeg_dir = tmp_path / "system-bin"
-    deno_path = str(tmp_path / "updated-runtime" / "deno")
+    deno_file = tmp_path / "updated-runtime" / "deno"
+    deno_file.parent.mkdir(parents=True)
+    deno_file.write_text("runtime")
+    deno_path = str(deno_file)
     monkeypatch.setattr(paths, "ffmpeg_dir", str(ffmpeg_dir))
     monkeypatch.setattr(paths, "get_deno_path", lambda: deno_path, raising=False)
     monkeypatch.setattr(downloader_module, "config_get", lambda key: "")

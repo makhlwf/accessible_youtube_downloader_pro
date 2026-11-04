@@ -818,7 +818,7 @@ def get_configured_js_runtimes():
     if qjs_path and os.path.exists(qjs_path):
         runtimes["quickjs"] = {"path": qjs_path}
     deno_path = paths.get_deno_path()
-    if deno_path:
+    if deno_path and os.path.isfile(deno_path):
         runtimes["deno"] = {"path": deno_path}
     elif not runtimes:
         runtimes["deno"] = {}
