@@ -581,13 +581,14 @@ class CommentsDialog(wx.Dialog):
         if key == wx.WXK_ESCAPE:
             self.Destroy()
             return
-        if self.commentTextCtrl and wx.Window.FindFocus() == self.commentTextCtrl:
+        focused = wx.Window.FindFocus()
+        if self.commentTextCtrl and focused == self.commentTextCtrl:
             if key == wx.WXK_RETURN and event.ControlDown():
                 self.onPostComment()
                 return
             event.Skip()
             return
-        if key == wx.WXK_RETURN:
+        if key == wx.WXK_RETURN and focused == self.commentsList:
             self.onActivateComment()
             return
         event.Skip()
