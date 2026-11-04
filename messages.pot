@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-31 07:12+0200\n"
+"POT-Creation-Date: 2026-11-05 01:41+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -209,7 +209,7 @@ msgstr ""
 #: src/accessible_youtube_downloader_pro.py:709 src/gui/comments_dialog.py:127
 #: src/gui/comments_dialog.py:349 src/gui/comments_dialog.py:565
 #: src/gui/settings_dialog.py:1185 src/gui/settings_dialog.py:1243
-#: src/utils.py:3562
+#: src/utils.py:3579
 msgid "خطأ"
 msgstr ""
 
@@ -251,8 +251,8 @@ msgstr ""
 #: src/accessible_youtube_downloader_pro.py:1368 src/gui/history.py:105
 #: src/gui/settings_dialog.py:966 src/gui/settings_dialog.py:1072
 #: src/gui/settings_dialog.py:1319 src/gui/subscriptions_dialog.py:80
-#: src/utils.py:1474 src/utils.py:1494 src/utils.py:1551 src/utils.py:1575
-#: src/utils.py:1602
+#: src/utils.py:1483 src/utils.py:1503 src/utils.py:1560 src/utils.py:1584
+#: src/utils.py:1611
 msgid "تنبيه"
 msgstr ""
 
@@ -497,177 +497,177 @@ msgstr ""
 msgid "سفاري الويب (Web Safari)"
 msgstr ""
 
-#: src/utils.py:870
+#: src/utils.py:879
 msgid "144ب (جودة منخفضة جدًا)"
 msgstr ""
 
-#: src/utils.py:871
+#: src/utils.py:880
 msgid "240ب (جودة منخفضة)"
 msgstr ""
 
-#: src/utils.py:872
+#: src/utils.py:881
 msgid "360ب (جودة متوسطة)"
 msgstr ""
 
-#: src/utils.py:873
+#: src/utils.py:882
 msgid "480ب (جودة متوسطة)"
 msgstr ""
 
-#: src/utils.py:874
+#: src/utils.py:883
 msgid "720ب (جودة عالية عالية الدقة)"
 msgstr ""
 
-#: src/utils.py:875
+#: src/utils.py:884
 msgid "1080ب (جودة عالية جدًا عالية الدقة الكاملة)"
 msgstr ""
 
-#: src/utils.py:876
+#: src/utils.py:885
 msgid "1440ب (جودة فائقة 2 كي)"
 msgstr ""
 
-#: src/utils.py:877
+#: src/utils.py:886
 msgid "2160ب (جودة فائقة 4 كي)"
 msgstr ""
 
-#: src/utils.py:883
+#: src/utils.py:892
 #, python-brace-format
 msgid "{}ب (جودة غير معروفة)"
 msgstr ""
 
-#: src/utils.py:889
+#: src/utils.py:898
 msgid "العربية"
 msgstr ""
 
-#: src/utils.py:890
+#: src/utils.py:899
 msgid "الإنجليزية"
 msgstr ""
 
-#: src/utils.py:891
+#: src/utils.py:900
 msgid "الإسبانية"
 msgstr ""
 
-#: src/utils.py:892
+#: src/utils.py:901
 msgid "الفرنسية"
 msgstr ""
 
-#: src/utils.py:893
+#: src/utils.py:902
 msgid "الألمانية"
 msgstr ""
 
-#: src/utils.py:894
+#: src/utils.py:903
 msgid "الإيطالية"
 msgstr ""
 
-#: src/utils.py:895
+#: src/utils.py:904
 msgid "البرتغالية"
 msgstr ""
 
-#: src/utils.py:896
+#: src/utils.py:905
 msgid "الروسية"
 msgstr ""
 
-#: src/utils.py:897
+#: src/utils.py:906
 msgid "اليابانية"
 msgstr ""
 
-#: src/utils.py:898
+#: src/utils.py:907
 msgid "الكورية"
 msgstr ""
 
-#: src/utils.py:899
+#: src/utils.py:908
 msgid "الهندية"
 msgstr ""
 
-#: src/utils.py:900
+#: src/utils.py:909
 msgid "التركية"
 msgstr ""
 
-#: src/utils.py:901
+#: src/utils.py:910
 msgid "الإندونيسية"
 msgstr ""
 
-#: src/utils.py:902
+#: src/utils.py:911
 msgid "الصينية"
 msgstr ""
 
-#: src/utils.py:903
+#: src/utils.py:912
 msgid "الفيتنامية"
 msgstr ""
 
-#: src/utils.py:904
+#: src/utils.py:913
 msgid "البنغالية"
 msgstr ""
 
-#: src/utils.py:905
+#: src/utils.py:914
 msgid "البولندية"
 msgstr ""
 
-#: src/utils.py:906
+#: src/utils.py:915
 msgid "التايلاندية"
 msgstr ""
 
-#: src/utils.py:907
+#: src/utils.py:916
 msgid "الهولندية"
 msgstr ""
 
-#: src/utils.py:908
+#: src/utils.py:917
 msgid "السويدية"
 msgstr ""
 
-#: src/utils.py:909
+#: src/utils.py:918
 msgid "الفارسية"
 msgstr ""
 
-#: src/utils.py:910
+#: src/utils.py:919
 msgid "الأردية"
 msgstr ""
 
-#: src/utils.py:996 src/utils.py:1724 src/utils.py:1727
+#: src/utils.py:1005 src/utils.py:1733 src/utils.py:1736
 msgid "الصوت الأصلي"
 msgstr ""
 
-#: src/utils.py:1016
+#: src/utils.py:1025
 msgid "جاري تنزيل واي تي دي إل بي"
 msgstr ""
 
-#: src/cli/deps.py:71 src/utils.py:1027
+#: src/cli/deps.py:71 src/utils.py:1036
 msgid "ملف واي تي دي إل بي الذي تم تنزيله غير صالح"
 msgstr ""
 
-#: src/utils.py:1185
+#: src/utils.py:1194
 msgid ""
 "لم يتم العثور على أداة deno.exe, وهي مطلوبة لتحديث مكتبة YouTube.js "
 "(Innertube)."
 msgstr ""
 
-#: src/utils.py:1198 src/utils.py:1215
+#: src/utils.py:1207 src/utils.py:1224
 msgid "تعذر تحديث مكتبة YouTube.js (Innertube)"
 msgstr ""
 
-#: src/utils.py:1207
+#: src/utils.py:1216
 #, python-brace-format
 msgid "تم تحديث مكتبة YouTube.js (Innertube) إلى الإصدار {}"
 msgstr ""
 
-#: src/utils.py:1210
+#: src/utils.py:1219
 msgid "اكتمل التحديث"
 msgstr ""
 
-#: src/cli/deps.py:196 src/utils.py:1224
+#: src/cli/deps.py:196 src/utils.py:1233
 msgid "تعذر الحصول على معلومات تحديث مكتبة YouTube.js (Innertube) من npm"
 msgstr ""
 
-#: src/utils.py:1232
+#: src/utils.py:1241
 #, python-brace-format
 msgid "أنت تستخدم بالفعل أحدث إصدار من مكتبة YouTube.js (Innertube) ({})"
 msgstr ""
 
-#: src/utils.py:1234 src/utils.py:1290 src/utils.py:1372 src/utils.py:1448
-#: src/utils.py:1524 src/utils.py:3540
+#: src/utils.py:1243 src/utils.py:1299 src/utils.py:1381 src/utils.py:1457
+#: src/utils.py:1533 src/utils.py:3557
 msgid "لا يوجد تحديث"
 msgstr ""
 
-#: src/utils.py:1241
+#: src/utils.py:1250
 #, python-brace-format
 msgid ""
 "هناك إصدار جديد متوفر من مكتبة YouTube.js (Innertube)\n"
@@ -677,9 +677,9 @@ msgid ""
 msgstr ""
 
 #: src/gui/comments_dialog.py:13 src/gui/comments_dialog.py:47
-#: src/gui/subscriptions_dialog.py:98 src/utils.py:1242 src/utils.py:1297
-#: src/utils.py:1379 src/utils.py:1456 src/utils.py:1532 src/utils.py:2863
-#: src/utils.py:3226 src/youtube_browser/search_handler.py:161
+#: src/gui/subscriptions_dialog.py:98 src/utils.py:1251 src/utils.py:1306
+#: src/utils.py:1388 src/utils.py:1465 src/utils.py:1541 src/utils.py:2880
+#: src/utils.py:3243 src/youtube_browser/search_handler.py:161
 #: src/youtube_browser/search_handler.py:261
 #: src/youtube_browser/search_handler.py:496
 #: src/youtube_browser/search_handler.py:709
@@ -689,31 +689,31 @@ msgstr ""
 msgid "غير معروف"
 msgstr ""
 
-#: src/utils.py:1243 src/utils.py:1298 src/utils.py:1380 src/utils.py:1457
-#: src/utils.py:1533
+#: src/utils.py:1252 src/utils.py:1307 src/utils.py:1389 src/utils.py:1466
+#: src/utils.py:1542
 msgid "تحديث متوفر"
 msgstr ""
 
-#: src/cli/deps.py:219 src/utils.py:1256
+#: src/cli/deps.py:219 src/utils.py:1265
 msgid "تعذر تحديد إصدار مكتبة YouTube.js (Innertube) الحالي"
 msgstr ""
 
-#: src/cli/deps.py:222 src/utils.py:1263
+#: src/cli/deps.py:222 src/utils.py:1272
 msgid "تم تحديث ذاكرة مكتبة YouTube.js (Innertube) المؤقتة"
 msgstr ""
 
 #: src/cli/deps.py:51 src/cli/deps.py:87 src/cli/deps.py:154
-#: src/cli/deps.py:233 src/utils.py:1283 src/utils.py:1365 src/utils.py:1438
-#: src/utils.py:1516
+#: src/cli/deps.py:233 src/utils.py:1292 src/utils.py:1374 src/utils.py:1447
+#: src/utils.py:1525
 msgid "تعذر الحصول على معلومات التحديث من غيت هاب"
 msgstr ""
 
-#: src/utils.py:1289
+#: src/utils.py:1298
 #, python-brace-format
 msgid "أنت تستخدم بالفعل أحدث إصدار من واي تي دي إل بي ({})"
 msgstr ""
 
-#: src/utils.py:1296
+#: src/utils.py:1305
 #, python-brace-format
 msgid ""
 "هناك إصدار جديد متوفر من واي تي دي إل بي\n"
@@ -722,16 +722,16 @@ msgid ""
 "هل تريد التحديث الآن؟"
 msgstr ""
 
-#: src/utils.py:1332
+#: src/utils.py:1341
 msgid "جاري تنزيل دينو"
 msgstr ""
 
-#: src/utils.py:1371
+#: src/utils.py:1380
 #, python-brace-format
 msgid "أنت تستخدم بالفعل أحدث إصدار من دينو ({})"
 msgstr ""
 
-#: src/utils.py:1378
+#: src/utils.py:1387
 #, python-brace-format
 msgid ""
 "هناك إصدار جديد متوفر من دينو\n"
@@ -740,16 +740,16 @@ msgid ""
 "هل تريد التحديث الآن؟"
 msgstr ""
 
-#: src/utils.py:1401
+#: src/utils.py:1410
 msgid "جاري تنزيل خدمة يوتيوب المدمجة"
 msgstr ""
 
-#: src/utils.py:1445
+#: src/utils.py:1454
 #, python-brace-format
 msgid "أنت تستخدم بالفعل أحدث إصدار من خدمة يوتيوب المدمجة ({})"
 msgstr ""
 
-#: src/utils.py:1455
+#: src/utils.py:1464
 #, python-brace-format
 msgid ""
 "هناك إصدار جديد متوفر من خدمة يوتيوب المدمجة\n"
@@ -758,22 +758,22 @@ msgid ""
 "هل تريد التحديث الآن؟"
 msgstr ""
 
-#: src/utils.py:1473
+#: src/utils.py:1482
 msgid "لم يتم العثور على مكتبة واي تي دي إل بي, هل تريد تنزيلها الآن؟"
 msgstr ""
 
-#: src/utils.py:1492
+#: src/utils.py:1501
 msgid ""
 "لم يتم العثور على أداة deno.exe, وهي مطلوبة لبعض وظائف اليوتيوب. هل تريد "
 "تنزيلها الآن؟"
 msgstr ""
 
-#: src/utils.py:1523
+#: src/utils.py:1532
 #, python-brace-format
 msgid "أنت تستخدم بالفعل أحدث إصدار من مولد رموز POT ({})"
 msgstr ""
 
-#: src/utils.py:1531
+#: src/utils.py:1540
 #, python-brace-format
 msgid ""
 "هناك إصدار جديد متوفر من مولد رموز POT\n"
@@ -782,24 +782,24 @@ msgid ""
 "هل تريد التحديث الآن؟"
 msgstr ""
 
-#: src/utils.py:1549
+#: src/utils.py:1558
 msgid ""
 "لم يتم العثور على أداة مولد رموز POT (bgutil-pot)، وهي تساعد في حل قيود "
 "يوتيوب وتحسين التنزيل. هل تريد تنزيلها الآن؟"
 msgstr ""
 
-#: src/utils.py:1571 src/utils.py:1598
+#: src/utils.py:1580 src/utils.py:1607
 msgid "هذه الميزة"
 msgstr ""
 
-#: src/utils.py:1573
+#: src/utils.py:1582
 #, python-brace-format
 msgid ""
 "تنبيه: لم يتم تثبيت أداة Deno وهي مطلوبة لـ {}. هل تريد تنزيل وتثبيت Deno"
 " الآن؟"
 msgstr ""
 
-#: src/utils.py:1600
+#: src/utils.py:1609
 #, python-brace-format
 msgid ""
 "تنبيه: لم يتم تحديد ملف الكوكيز الخاص بيوتيوب أو أن الملف غير موجود. "
@@ -807,234 +807,234 @@ msgid ""
 "البرنامج."
 msgstr ""
 
-#: src/utils.py:1725
+#: src/utils.py:1734
 #, python-brace-format
 msgid "{language} (أصلي)"
 msgstr ""
 
-#: src/utils.py:2125
+#: src/utils.py:2142
 msgid "قائمة التشغيل المختلطة"
 msgstr ""
 
-#: src/utils.py:2528
+#: src/utils.py:2545
 msgid "عرض الخلاصة الرئيسية"
 msgstr ""
 
-#: src/utils.py:2533
+#: src/utils.py:2550
 msgid "لم يتم تثبيت Deno."
 msgstr ""
 
-#: src/utils.py:2540
+#: src/utils.py:2557
 msgid "لم يتم ضبط ملف الكوكيز."
 msgstr ""
 
-#: src/utils.py:2564
+#: src/utils.py:2581
 msgid "سجل المشاهدة أونلاين"
 msgstr ""
 
-#: src/utils.py:2569
+#: src/utils.py:2586
 msgid ""
 "عذراً، يتطلب عرض سجل يوتيوب أونلاين وجود Deno وملف كوكيز. يتم عرض السجل "
 "المحلي حالياً."
 msgstr ""
 
-#: src/utils.py:2696
+#: src/utils.py:2713
 msgid "إبداء الإعجاب بالمرئيات"
 msgstr ""
 
-#: src/utils.py:2701
+#: src/utils.py:2718
 msgid "لم يتم تثبيت أداة Deno المطلوبة للإعجاب بالمرئيات."
 msgstr ""
 
-#: src/utils.py:2707
+#: src/utils.py:2724
 msgid "لم يتم ضبط ملف الكوكيز الخاص بيوتيوب."
 msgstr ""
 
-#: src/utils.py:2714
+#: src/utils.py:2731
 msgid "رابط الفيديو غير صالح."
 msgstr ""
 
-#: src/utils.py:2733
+#: src/utils.py:2750
 #, python-brace-format
 msgid "تعذر تحديث تقييم المرئي: {}"
 msgstr ""
 
-#: src/cli/deps.py:209 src/cli/deps.py:225 src/utils.py:2734
+#: src/cli/deps.py:209 src/cli/deps.py:225 src/utils.py:2751
 msgid "خطأ غير معروف"
 msgstr ""
 
-#: src/utils.py:2741
+#: src/utils.py:2758
 #, python-brace-format
 msgid "فشل الاتصال أثناء تحديث التقييم: {}"
 msgstr ""
 
-#: src/gui/comments_dialog.py:316 src/utils.py:3016
+#: src/gui/comments_dialog.py:316 src/utils.py:3033
 msgid "يرجى كتابة تعليق قبل النشر"
 msgstr ""
 
-#: src/utils.py:3018
+#: src/utils.py:3035
 msgid "تحتاج إلى ضبط ملف كوكيز صالح قبل نشر التعليقات"
 msgstr ""
 
-#: src/utils.py:3020
+#: src/utils.py:3037
 msgid "ملف الكوكيز لا يحتوي على جلسة يوتيوب مسجلة الدخول"
 msgstr ""
 
-#: src/gui/comments_dialog.py:345 src/utils.py:3021
+#: src/gui/comments_dialog.py:345 src/utils.py:3038
 msgid "تعذر نشر التعليق"
 msgstr ""
 
-#: src/utils.py:3028
+#: src/utils.py:3045
 msgid "نشر التعليقات"
 msgstr ""
 
-#: src/utils.py:3032
+#: src/utils.py:3049
 msgid "لم يتم تثبيت أداة Deno المطلوبة لنشر التعليقات."
 msgstr ""
 
-#: src/utils.py:3037
+#: src/utils.py:3054
 msgid "تحتاج إلى ضبط ملف كوكيز صالح لنشر التعليقات."
 msgstr ""
 
-#: src/utils.py:3051
+#: src/utils.py:3068
 msgid "رابط الفيديو غير صالح"
 msgstr ""
 
-#: src/utils.py:3081
+#: src/utils.py:3098
 msgid "التفاعل مع التعليقات"
 msgstr ""
 
-#: src/utils.py:3085
+#: src/utils.py:3102
 msgid "لم يتم تثبيت أداة Deno المطلوبة للتفاعل مع التعليقات."
 msgstr ""
 
-#: src/utils.py:3090
+#: src/utils.py:3107
 msgid "تحتاج إلى ضبط ملف كوكيز صالح لاستخدام هذه الميزة"
 msgstr ""
 
-#: src/utils.py:3096 src/utils.py:3139
+#: src/utils.py:3113 src/utils.py:3156
 msgid "معرف التعليق غير موجود"
 msgstr ""
 
-#: src/utils.py:3124
+#: src/utils.py:3141
 msgid "الرد على التعليقات"
 msgstr ""
 
-#: src/utils.py:3128
+#: src/utils.py:3145
 msgid "لم يتم تثبيت أداة Deno المطلوبة للرد على التعليقات."
 msgstr ""
 
-#: src/utils.py:3133
+#: src/utils.py:3150
 msgid "تحتاج إلى ضبط ملف كوكيز صالح للرد على التعليقات."
 msgstr ""
 
-#: src/gui/comments_dialog.py:92 src/utils.py:3146
+#: src/gui/comments_dialog.py:92 src/utils.py:3163
 msgid "يرجى كتابة رد قبل النشر"
 msgstr ""
 
-#: src/utils.py:3184
+#: src/utils.py:3201
 msgid "ساعة واحدة"
 msgstr ""
 
-#: src/utils.py:3186
+#: src/utils.py:3203
 msgid "ساعتان"
 msgstr ""
 
-#: src/utils.py:3188
+#: src/utils.py:3205
 #, python-brace-format
 msgid "{} ساعات"
 msgstr ""
 
-#: src/utils.py:3190
+#: src/utils.py:3207
 #, python-brace-format
 msgid "{} ساعة"
 msgstr ""
 
-#: src/utils.py:3194
+#: src/utils.py:3211
 msgid "دقيقة واحدة"
 msgstr ""
 
-#: src/utils.py:3196
+#: src/utils.py:3213
 msgid "دقيقتان"
 msgstr ""
 
-#: src/utils.py:3198
+#: src/utils.py:3215
 #, python-brace-format
 msgid "{} دقائق"
 msgstr ""
 
-#: src/utils.py:3200
+#: src/utils.py:3217
 #, python-brace-format
 msgid "{} دقيقة"
 msgstr ""
 
-#: src/utils.py:3204
+#: src/utils.py:3221
 msgid "ثانية واحدة"
 msgstr ""
 
-#: src/utils.py:3206
+#: src/utils.py:3223
 msgid "ثانيتين"
 msgstr ""
 
-#: src/utils.py:3208
+#: src/utils.py:3225
 #, python-brace-format
 msgid "{} ثواني"
 msgstr ""
 
-#: src/utils.py:3210
+#: src/utils.py:3227
 #, python-brace-format
 msgid "{} ثانية"
 msgstr ""
 
-#: src/utils.py:3213
+#: src/utils.py:3230
 msgid "0 ثانية"
 msgstr ""
 
-#: src/utils.py:3215
+#: src/utils.py:3232
 msgid " و"
 msgstr ""
 
-#: src/utils.py:3220
+#: src/utils.py:3237
 msgid "مباشر"
 msgstr ""
 
-#: src/media_player/media_gui.py:2226 src/utils.py:3227
+#: src/media_player/media_gui.py:2226 src/utils.py:3244
 #, python-brace-format
 msgid "المدة: {}"
 msgstr ""
 
-#: src/utils.py:3505 src/utils.py:3548
+#: src/utils.py:3522 src/utils.py:3565
 msgid ""
 "حدث خطأ ما أثناء الاتصال بخدمة العثور على التحديثات. تأكد من وجود اتصال "
 "مستقر بالإنترنت ثم عاود المحاولة"
 msgstr ""
 
-#: src/utils.py:3516
+#: src/utils.py:3533
 msgid "لا توجد معلومات حول هذا التحديث"
 msgstr ""
 
-#: src/utils.py:3530
+#: src/utils.py:3547
 msgid "جاري تنزيل التحديث"
 msgstr ""
 
-#: src/utils.py:3539
+#: src/utils.py:3556
 msgid "أنت تعمل الآن على آخر تحديث متوفر من التطبيق"
 msgstr ""
 
-#: src/utils.py:3677
+#: src/utils.py:3694
 msgid "مشاهدة Shorts"
 msgstr ""
 
-#: src/utils.py:3715
+#: src/utils.py:3732
 msgid "Could not load subscriptions. Check your YouTube cookies and try again."
 msgstr ""
 
-#: src/utils.py:3724
+#: src/utils.py:3741
 msgid "A valid YouTube cookies file is required for subscriptions."
 msgstr ""
 
 #: src/gui/subscriptions_dialog.py:22 src/gui/subscriptions_dialog.py:29
-#: src/utils.py:3801
+#: src/utils.py:3818
 msgid "القنوات المشترك بها"
 msgstr ""
 
@@ -1368,258 +1368,263 @@ msgstr ""
 msgid "تحديث كل المكونات."
 msgstr ""
 
-#: src/cli/commands.py:83
+#: src/cli/commands.py:89
 msgid "لا توجد نتائج."
 msgstr ""
 
-#: src/cli/commands.py:98 src/cli/commands.py:129
+#: src/cli/commands.py:104 src/cli/commands.py:135
 msgid "تعذر جلب معلومات المرئي."
 msgstr ""
 
-#: src/cli/commands.py:114 src/cli/commands.py:181
+#: src/cli/commands.py:120 src/cli/commands.py:187
 #, python-brace-format
 msgid "العنوان: {value}"
 msgstr ""
 
-#: src/cli/commands.py:115
+#: src/cli/commands.py:121
 #, python-brace-format
 msgid "القناة: {value}"
 msgstr ""
 
-#: src/cli/commands.py:116
+#: src/cli/commands.py:122
 #, python-brace-format
 msgid "المدة (ثانية): {value}"
 msgstr ""
 
-#: src/cli/commands.py:117
+#: src/cli/commands.py:123
 #, python-brace-format
 msgid "عدد المشاهدات: {value}"
 msgstr ""
 
-#: src/cli/commands.py:118 src/cli/commands.py:366
+#: src/cli/commands.py:124 src/cli/commands.py:372
 #, python-brace-format
 msgid "عدد الإعجابات: {value}"
 msgstr ""
 
-#: src/cli/commands.py:119
+#: src/cli/commands.py:125
 #, python-brace-format
 msgid "تاريخ الرفع: {value}"
 msgstr ""
 
-#: src/cli/commands.py:120
+#: src/cli/commands.py:126
 #, python-brace-format
 msgid "الرابط: {value}"
 msgstr ""
 
-#: src/cli/commands.py:144
+#: src/cli/commands.py:150
 msgid "صوت فقط"
 msgstr ""
 
-#: src/cli/commands.py:146
+#: src/cli/commands.py:152
 #, python-brace-format
 msgid "{fid}: {res}, صيغة {ext}"
 msgstr ""
 
-#: src/cli/commands.py:169
+#: src/cli/commands.py:175
 msgid "تعذر الحصول على رابط البث."
 msgstr ""
 
-#: src/cli/commands.py:182
+#: src/cli/commands.py:188
 #, python-brace-format
 msgid "رابط الفيديو: {value}"
 msgstr ""
 
-#: src/cli/commands.py:185
+#: src/cli/commands.py:191
 #, python-brace-format
 msgid "رابط الصوت: {value}"
 msgstr ""
 
-#: src/cli/commands.py:193
+#: src/cli/commands.py:199
 #, python-brace-format
 msgid "التنزيل: {percent}٪ — السرعة {speed} — المتبقي {eta}"
 msgstr ""
 
-#: src/cli/commands.py:251
+#: src/cli/commands.py:257
 #, python-brace-format
 msgid "اكتمل التنزيل: {file}"
 msgstr ""
 
-#: src/cli/commands.py:262
+#: src/cli/commands.py:268
 #, python-brace-format
 msgid "{code}: {label} ({source})"
 msgstr ""
 
-#: src/cli/commands.py:269
+#: src/cli/commands.py:275
 msgid "لا توجد ترجمات متاحة."
 msgstr ""
 
-#: src/cli/commands.py:298
+#: src/cli/commands.py:304
 msgid "لا توجد ترجمة باللغة المطلوبة."
 msgstr ""
 
-#: src/cli/commands.py:305
+#: src/cli/commands.py:311
 #, python-brace-format
 msgid "تم حفظ الترجمة في: {path}"
 msgstr ""
 
-#: src/cli/commands.py:322 src/cli/commands.py:342
+#: src/cli/commands.py:328 src/cli/commands.py:348
 #, python-brace-format
 msgid "{author}: {content}"
 msgstr ""
 
-#: src/cli/commands.py:328 src/cli/commands.py:433
+#: src/cli/commands.py:334 src/cli/commands.py:439
 #, python-brace-format
 msgid "رمز المتابعة: {token}"
 msgstr ""
 
-#: src/cli/commands.py:329
+#: src/cli/commands.py:335
 msgid "لا توجد تعليقات."
 msgstr ""
 
-#: src/cli/commands.py:347
+#: src/cli/commands.py:353
 msgid "لا توجد ردود."
 msgstr ""
 
-#: src/cli/commands.py:354
+#: src/cli/commands.py:360
 #, python-brace-format
 msgid "{time}ms: {title}"
 msgstr ""
 
-#: src/cli/commands.py:359
+#: src/cli/commands.py:365
 msgid "لا توجد فصول."
 msgstr ""
 
-#: src/cli/commands.py:367
+#: src/cli/commands.py:373
 #, python-brace-format
 msgid "أعجبني: {value}"
 msgstr ""
 
-#: src/cli/commands.py:368
+#: src/cli/commands.py:374
 msgid "نعم"
 msgstr ""
 
-#: src/cli/commands.py:368
+#: src/cli/commands.py:374
 msgid "لا"
 msgstr ""
 
-#: src/cli/commands.py:382 src/youtube_music/base_view.py:58
+#: src/cli/commands.py:388 src/youtube_music/base_view.py:58
 msgid "لا توجد عناصر."
 msgstr ""
 
-#: src/cli/commands.py:392
+#: src/cli/commands.py:398
 msgid "قائمة التشغيل فارغة."
 msgstr ""
 
-#: src/cli/commands.py:416 src/cli/commands.py:458
+#: src/cli/commands.py:422 src/cli/commands.py:464
 #, python-brace-format
 msgid "{title} — {channel}"
 msgstr ""
 
-#: src/cli/commands.py:434
+#: src/cli/commands.py:440
 msgid "الخلاصة فارغة."
 msgstr ""
 
-#: src/cli/commands.py:443
+#: src/cli/commands.py:449
 msgid "لا توجد مقاطع قصيرة."
 msgstr ""
 
-#: src/cli/commands.py:454 src/cli/commands.py:463
+#: src/cli/commands.py:460 src/cli/commands.py:469
 msgid "السجل فارغ."
 msgstr ""
 
-#: src/cli/commands.py:470
+#: src/cli/commands.py:476
 #, python-brace-format
 msgid "{title} — {url}"
 msgstr ""
 
-#: src/cli/commands.py:473
+#: src/cli/commands.py:479
 msgid "لا توجد مفضلات."
 msgstr ""
 
-#: src/cli/commands.py:487
+#: src/cli/commands.py:493
 msgid "تمت الإضافة إلى المفضلة."
 msgstr ""
 
-#: src/cli/commands.py:493
+#: src/cli/commands.py:499
 msgid "تمت الإزالة من المفضلة."
 msgstr ""
 
-#: src/cli/commands.py:499
+#: src/cli/commands.py:505
 msgid "لا يوجد سجل بحث."
 msgstr ""
 
-#: src/cli/commands.py:505
+#: src/cli/commands.py:511
 msgid "تم مسح سجل البحث."
 msgstr ""
 
-#: src/cli/commands.py:513 src/cli/commands.py:537
+#: src/cli/commands.py:519 src/cli/commands.py:554
 #, python-brace-format
 msgid "{key} = {value}"
 msgstr ""
 
-#: src/cli/commands.py:521
+#: src/cli/commands.py:527
 #, python-brace-format
 msgid "مفتاح إعداد غير معروف: {key}"
 msgstr ""
 
-#: src/cli/commands.py:528
+#: src/cli/commands.py:537
+#, python-brace-format
+msgid "قيمة الإعداد غير صالحة: {key}"
+msgstr ""
+
+#: src/cli/commands.py:545
 #, python-brace-format
 msgid "تم ضبط {key} = {value}"
 msgstr ""
 
-#: src/cli/commands.py:560
+#: src/cli/commands.py:577
 msgid "لم يتم ضبط ملف كوكيز."
 msgstr ""
 
-#: src/cli/commands.py:562
+#: src/cli/commands.py:579
 #, python-brace-format
 msgid "ملف الكوكيز مضبوط: {path}"
 msgstr ""
 
-#: src/cli/commands.py:564
+#: src/cli/commands.py:581
 #, python-brace-format
 msgid "ملف الكوكيز مضبوط لكنه غير موجود: {path}"
 msgstr ""
 
-#: src/cli/commands.py:573
+#: src/cli/commands.py:590
 #, python-brace-format
 msgid "ملف الكوكيز غير موجود: {path}"
 msgstr ""
 
-#: src/cli/commands.py:579
+#: src/cli/commands.py:596
 msgid "تم ضبط ملف الكوكيز."
 msgstr ""
 
-#: src/cli/commands.py:586
+#: src/cli/commands.py:603
 msgid "تم مسح ملف الكوكيز."
 msgstr ""
 
-#: src/cli/commands.py:593
+#: src/cli/commands.py:610
 msgid "واي تي دي إل بي"
 msgstr ""
 
-#: src/cli/commands.py:594
+#: src/cli/commands.py:611
 msgid "دينو"
 msgstr ""
 
-#: src/cli/commands.py:595
+#: src/cli/commands.py:612
 msgid "مكتبة YouTube.js"
 msgstr ""
 
-#: src/cli/commands.py:596
+#: src/cli/commands.py:613
 msgid "مولد رموز POT"
 msgstr ""
 
-#: src/cli/commands.py:599
+#: src/cli/commands.py:616
 #, python-brace-format
 msgid "{name}: {version}"
 msgstr ""
 
-#: src/cli/commands.py:600
+#: src/cli/commands.py:617
 msgid "غير مثبت"
 msgstr ""
 
-#: src/cli/commands.py:623
+#: src/cli/commands.py:640
 msgid "حدد مكوناً للتحديث: --ytdlp أو --deno أو --youtubei أو --pot أو --all"
 msgstr ""
 
@@ -1737,73 +1742,73 @@ msgid ""
 "set <المسار>"
 msgstr ""
 
-#: src/download_handler/downloader.py:504
+#: src/download_handler/downloader.py:521
 msgid "لم يتم العثور على مكتبة yt-dlp."
 msgstr ""
 
-#: src/download_handler/downloader.py:519
+#: src/download_handler/downloader.py:536
 msgid "تعذر الكتابة على القرص (تم رفض الوصول أو القرص ممتلئ)."
 msgstr ""
 
-#: src/download_handler/downloader.py:536
+#: src/download_handler/downloader.py:553
 msgid "تعذر الاتصال بالشبكة أو انتهت مهلة الإرسال. يرجى التحقق من اتصال الإنترنت."
 msgstr ""
 
-#: src/download_handler/downloader.py:539
+#: src/download_handler/downloader.py:556
 #, python-brace-format
 msgid "حدث خطأ أثناء التنزيل: {}"
 msgstr ""
 
-#: src/download_handler/downloader.py:540
+#: src/download_handler/downloader.py:557
 msgid "حدث خطأ أثناء التنزيل. يرجى التحقق من الرابط أو اتصالك بالإنترنت."
 msgstr ""
 
-#: src/download_handler/downloader.py:591 src/gui/download_progress.py:22
+#: src/download_handler/downloader.py:608 src/gui/download_progress.py:22
 #, python-brace-format
 msgid "نسبة التنزيل: {}%"
 msgstr ""
 
-#: src/download_handler/downloader.py:593
+#: src/download_handler/downloader.py:610
 #, python-brace-format
 msgid "حجم الملف الإجمالي: {}"
 msgstr ""
 
-#: src/download_handler/downloader.py:595 src/gui/download_progress.py:23
+#: src/download_handler/downloader.py:612 src/gui/download_progress.py:23
 msgid "حجم الملف الإجمالي: غير معروف"
 msgstr ""
 
-#: src/download_handler/downloader.py:598
+#: src/download_handler/downloader.py:615
 #, python-brace-format
 msgid "مقدار الحجم الذي تم تنزيله: {}"
 msgstr ""
 
-#: src/download_handler/downloader.py:601 src/gui/download_progress.py:24
+#: src/download_handler/downloader.py:618 src/gui/download_progress.py:24
 msgid "مقدار الحجم الذي تم تنزيله: غير معروف"
 msgstr ""
 
-#: src/download_handler/downloader.py:603
+#: src/download_handler/downloader.py:620
 #, python-brace-format
 msgid "سرعة التنزيل: {}"
 msgstr ""
 
-#: src/download_handler/downloader.py:605 src/gui/download_progress.py:26
+#: src/download_handler/downloader.py:622 src/gui/download_progress.py:26
 msgid "سرعة التنزيل: غير معروفة"
 msgstr ""
 
-#: src/download_handler/downloader.py:607
+#: src/download_handler/downloader.py:624
 #, python-brace-format
 msgid "الوقت المتبقي: {}"
 msgstr ""
 
-#: src/download_handler/downloader.py:609 src/gui/download_progress.py:25
+#: src/download_handler/downloader.py:626 src/gui/download_progress.py:25
 msgid "الوقت المتبقي: غير معروف"
 msgstr ""
 
-#: src/download_handler/downloader.py:647
+#: src/download_handler/downloader.py:664
 msgid "تم إلغاء التنزيل"
 msgstr ""
 
-#: src/download_handler/downloader.py:647 src/gui/auto_detect_dialog.py:62
+#: src/download_handler/downloader.py:664 src/gui/auto_detect_dialog.py:62
 #: src/gui/comments_dialog.py:67 src/gui/update_check_dialog.py:54
 msgid "إلغاء"
 msgstr ""

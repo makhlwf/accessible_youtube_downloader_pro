@@ -15,7 +15,13 @@ from cli import deps
 from cli.runtime import require_cookies, require_deno, run_async
 from database import Favorite, SearchHistory, WatchHistory
 from language_handler import _
-from settings_handler import config_get, config_set, defaults, save_settings
+from settings_handler import (
+    config_get,
+    config_set,
+    defaults,
+    save_settings,
+    string_to_bool,
+)
 from youtube_browser.search_handler import (
     ChannelTabResult,
     PlaylistResult,
@@ -522,11 +528,22 @@ def cmd_config_set(args, emitter):
             code="unknown_key",
         )
         return 1
-    config_set(args.key, args.value)
+    default_value = defaults[args.key]
+    value = args.value
+    if isinstance(default_value, (bool, int, float)):
+        coerced_value = string_to_bool(args.value)
+        if isinstance(coerced_value, str):
+            emitter.error(
+                _("قيمة الإعداد غير صالحة: {key}").format(key=args.key),
+                code="invalid_value",
+            )
+            return 1
+        value = coerced_value
+    config_set(args.key, value)
     save_settings()
     emitter.message(
-        _("تم ضبط {key} = {value}").format(key=args.key, value=args.value),
-        data={"key": args.key, "value": args.value},
+        _("تم ضبط {key} = {value}").format(key=args.key, value=value),
+        data={"key": args.key, "value": value},
     )
     return 0
 

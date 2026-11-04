@@ -1,5 +1,6 @@
 import configparser
 import io
+import math
 import os
 import tempfile
 import threading
@@ -209,7 +210,10 @@ def string_to_bool(string):
     try:
         if text.isdigit():
             return int(text)
-        return float(text)
+        number = float(text)
+        if not math.isfinite(number):
+            return string
+        return number
     except ValueError:
         return string
 
