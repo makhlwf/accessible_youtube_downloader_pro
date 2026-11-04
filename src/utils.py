@@ -866,6 +866,15 @@ def get_ydl_instance(client=None, cookies_path=None):
 VIDEO_QUALITIES = [144, 240, 360, 480, 720, 1080, 1440, 2160]
 AUDIO_QUALITIES = [64, 128, 256]
 
+
+def _clamp_index(value, length, default=0):
+    try:
+        index = int(float(value)) if isinstance(value, str) else int(value)
+    except TypeError, ValueError, OverflowError:
+        index = default
+    return max(0, min(index, length - 1))
+
+
 VIDEO_QUALITY_DESCRIPTIONS = {
     144: _("144ب (جودة منخفضة جدًا)"),
     240: _("240ب (جودة منخفضة)"),
@@ -1755,7 +1764,9 @@ def select_audio_format(
         except Exception:
             preferred_quality_index = 1
 
-    target_abr = AUDIO_QUALITIES[min(preferred_quality_index, len(AUDIO_QUALITIES) - 1)]
+    target_abr = AUDIO_QUALITIES[
+        _clamp_index(preferred_quality_index, len(AUDIO_QUALITIES), 1)
+    ]
 
     if audio_track_id:
         chosen_track = next((t for t in tracks if t["id"] == audio_track_id), None)
@@ -1813,7 +1824,9 @@ def get_available_audio_tracks(url, audio_mode=False):
         preferred_audio_idx = int(config_get("defaultaudioquality"))
     except Exception:
         preferred_audio_idx = 1
-    target_abr = AUDIO_QUALITIES[min(preferred_audio_idx, len(AUDIO_QUALITIES) - 1)]
+    target_abr = AUDIO_QUALITIES[
+        _clamp_index(preferred_audio_idx, len(AUDIO_QUALITIES), 1)
+    ]
 
     for track in tracks:
         fmts = track["formats"]
@@ -1845,7 +1858,9 @@ def pick_best_format(
         if target_height is not None:
             preferred_val = target_height
         else:
-            preferred_val = target_list[preferred_index]
+            preferred_val = target_list[
+                _clamp_index(preferred_index, len(target_list), 0)
+            ]
 
         available = [
             f
@@ -1876,7 +1891,7 @@ def pick_best_format(
                     )
                 )
             except ValueError, StopIteration:
-                pref_idx = preferred_index
+                pref_idx = _clamp_index(preferred_index, len(target_list), 0)
 
             for i in range(pref_idx, -1, -1):
                 target = target_list[i]
@@ -1943,7 +1958,9 @@ def pick_best_format(
             return None, None, None
 
         available.sort(key=lambda x: x.get("abr") or 0)
-        target_abr = AUDIO_QUALITIES[min(preferred_index, len(AUDIO_QUALITIES) - 1)]
+        target_abr = AUDIO_QUALITIES[
+            _clamp_index(preferred_index, len(AUDIO_QUALITIES), 1)
+        ]
 
         # Find the format with abr closest to target_abr
         fmt = min(available, key=lambda x: abs((x.get("abr") or 0) - target_abr))
