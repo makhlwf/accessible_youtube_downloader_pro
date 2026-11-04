@@ -479,11 +479,11 @@ class Downloader:
             logger.error("YoutubeDL library not loaded")
             return RuntimeError("missing yt-dlp binary")
 
-        os.makedirs(self.path, exist_ok=True)
-        self.started_at = time.time()
-        ydl_opts = self._base_options(use_cookies=use_cookies)
-
         try:
+            os.makedirs(self.path, exist_ok=True)
+            self.started_at = time.time()
+            ydl_opts = self._base_options(use_cookies=use_cookies)
+
             with utils.YoutubeDL(ydl_opts) as ydl:
                 ydl.download([self.url])
             if self._is_cancelled():
