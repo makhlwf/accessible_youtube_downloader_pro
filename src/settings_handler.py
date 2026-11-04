@@ -1,5 +1,6 @@
 import configparser
 import io
+import logging
 import math
 import os
 import tempfile
@@ -8,6 +9,8 @@ from time import monotonic
 
 from language_handler import get_default_language, normalize_language_code
 from paths import get_default_download_dir, legacy_settings_paths, settings_path
+
+logger = logging.getLogger(__name__)
 
 defaults = {
     "path": get_default_download_dir(),
@@ -177,7 +180,15 @@ def _load_cache(*, only_if_empty=False):
         cache = {}
         for settings_file in _candidate_settings_files():
             config = _new_config()
-            config.read(settings_file, encoding="utf-8")
+            try:
+                config.read(settings_file, encoding="utf-8")
+            except (configparser.Error, UnicodeDecodeError, OSError) as exc:
+                logger.warning(
+                    "Skipping unreadable settings file %s (%s)",
+                    settings_file,
+                    exc.__class__.__name__,
+                )
+                continue
             if "settings" not in config:
                 continue
             for key in config["settings"]:
