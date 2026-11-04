@@ -30,7 +30,7 @@ async function parseCookies(filePath) {
   try {
     const text = await readTextFile(filePath);
     const cookieMap = new Map();
-    const lines = text.split('\n').filter(line => line.trim() && !line.startsWith('#'));
+    const lines = text.split('\n').map(line => line.startsWith('#HttpOnly_') ? line.slice('#HttpOnly_'.length) : line).filter(line => line.trim() && !line.startsWith('#'));
 
     // Process lines so that youtube.com lines are sorted last, giving them precedence
     lines.sort((a, b) => {
