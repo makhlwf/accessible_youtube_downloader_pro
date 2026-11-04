@@ -112,6 +112,7 @@ class Downloader:
         kbps=None,
         audio_format=None,
         video_format=None,
+        progress_callback=None,
     ):
         # initializing class properties
         self.url = url
@@ -129,6 +130,9 @@ class Downloader:
         self.kbps = kbps
         self.audio_format = audio_format
         self.video_format = video_format
+        # Called with a progress snapshot from the download thread; callers must
+        # be thread-safe and must not access wx widgets directly.
+        self.progress_callback = progress_callback
         self._progress_lock = Lock()
         self._latest_progress = None
         self._progress_pending = False
@@ -234,9 +238,6 @@ class Downloader:
     def _progress_hook(self, d):
         if self._is_cancelled():
             raise DownloadCancelled()
-        # Do not invoke wx.Window.__bool__ on the download thread.
-        if self.monitor is None:
-            return
 
         status = d.get("status")
         if status not in ("downloading", "finished"):
@@ -253,6 +254,7 @@ class Downloader:
                 percent = 0
 
         progress = {
+            "status": status,
             "value": percent,
             "total": clean_progress_text(
                 d.get("_total_bytes_str") or d.get("_total_bytes_estimate_str", "")
@@ -261,12 +263,27 @@ class Downloader:
             "speed": clean_progress_text(d.get("_speed_str", "")),
             "eta": clean_progress_text(d.get("_eta_str", "")),
         }
+
+        if self.progress_callback is not None:
+            try:
+                self.progress_callback(progress)
+            except Exception:
+                logger.exception("Progress callback failed")
+            return
+
+        # Do not invoke wx.Window.__bool__ on the download thread.
+        if self.monitor is None:
+            return
+
         with self._progress_lock:
             if status == "finished" and self._latest_progress is not None:
                 for field in ("total", "downloaded", "speed", "eta"):
                     if not progress[field]:
                         progress[field] = self._latest_progress[field]
-            self._latest_progress = progress
+            # The wx event does not carry the transient hook status.
+            self._latest_progress = {
+                key: value for key, value in progress.items() if key != "status"
+            }
             if self._progress_pending:
                 return
             self._progress_pending = True
