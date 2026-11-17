@@ -7,8 +7,8 @@
   </a>
 
   <a href="https://www.python.org/" aria-label="Python official website">
-    <img src="https://img.shields.io/badge/Python-3.14+-brightgreen?style=for-the-badge&logo=python"
-         alt="Python version 3.14 or higher" />
+    <img src="https://img.shields.io/badge/Python-3.15+-brightgreen?style=for-the-badge&logo=python"
+         alt="Python version 3.15" />
   </a>
 
   <a href="https://www.microsoft.com/windows" aria-label="Microsoft Windows website">
@@ -35,7 +35,7 @@
 
 ## Overview
 
-HexPlayer is the current continuation of Accessible YouTube Downloader Pro. It is designed for blind and visually impaired Windows and Linux users who want a screen-reader friendly way to use YouTube without relying on the YouTube web interface. On Windows, HexPlayer works with screen readers (NVDA, JAWS, Narrator, System Access, etc.) and Windows speech engines via [Prism](https://github.com/ethindp/prism).
+HexPlayer is designed for blind and visually impaired Windows and Linux users who want a screen-reader friendly way to use YouTube without relying on the YouTube web interface. On Windows, HexPlayer works with screen readers (NVDA, JAWS, Narrator, System Access, etc.) and Windows speech engines via [Prism](https://github.com/ethindp/prism).
 
 The current application version is **7.0.0**.
 
@@ -45,14 +45,12 @@ The current application version is **7.0.0**.
 - **Linux:** Native support for **Fedora 43+ (x86_64)** via RPM packages and **Ubuntu 24.04+ (amd64)** via DEB packages, with glibc 2.39 or newer, in a graphical desktop session. Both distributions are fully natively supported and verified in automated CI and container smoke tests. Portable tarballs are also provided for other compatible x86_64 Linux distributions.
 - **Other platforms:** No macOS packages are provided, and no ARM release support is promised.
 
-Linux speech announcements use Prism with Speech Dispatcher. Orca is the screen reader for desktop navigation; install and enable it separately if needed. Automated checks do not establish screen-reader usability: focus, labels, keyboard navigation, and announcements still require manual Orca validation in a real Linux desktop session.
-
 ---
 
 ## Key Features
 
 - **YouTube search and browsing:** Search videos, playlists, channels, and live content directly inside the app.
-- **YouTube Music:** Flip the main screen in place (no new window) into a full, accessible YouTube Music experience — personalized home feed, search across songs, videos, albums, artists, and playlists, album/artist/playlist browsing, your library (playlists, songs, albums, artists, subscriptions, liked songs, listening history), moods and genres, song radio/watch playlists with auto-advance, and lyrics. Play as audio by default, start a radio, download a track, like/rate songs, add to your library or playlists, create/rename/delete playlists, and subscribe or unsubscribe — with destructive account actions always confirmed and announced. Personalized data reuses the same browser cookies HexPlayer already imports; anonymous search and browsing work without signing in.
+- **YouTube Music:**  a full, accessible YouTube Music experience — personalized home feed, search across songs, videos, albums, artists, and playlists, album/artist/playlist browsing, your library (playlists, songs, albums, artists, subscriptions, liked songs, listening history), moods and genres, song radio/watch playlists with auto-advance, and lyrics. Play as audio by default, start a radio, download a track, like/rate songs, add to your library or playlists, create/rename/delete playlists, and subscribe or unsubscribe — with destructive account actions always confirmed and announced. Personalized data reuses the same browser cookies HexPlayer already imports; anonymous search and browsing work without signing in.
 - **YouTube Shorts Experience:** Browse YouTube Shorts recommendations seamlessly with dedicated `Up`/`Down` navigation, background stream preloading for zero-buffering playback, continuous native looping, and context-aware actions like Liking, Disliking, and Commenting (requires cookies file).
 - **Playlist and channel views:** Open playlists and browse channel tabs such as videos, shorts, live streams, playlists, community, channels, and about.
 - **Accessible media player:** Play content as video or audio-only with keyboard shortcuts, volume boost, playback speed control, chapters, quality switching, equalizer, and audio output device selection.
@@ -64,7 +62,7 @@ Linux speech announcements use Prism with Speech Dispatcher. Orca is the screen 
 - **Clipboard detection:** Detect supported YouTube links at startup or continuously when background monitoring is enabled.
 - **Browser integration:** Use the included Chromium-compatible extension to send supported YouTube links to HexPlayer through Native Messaging, export YouTube cookies with 1 click, or use the `hexplayer://` fallback protocol.
 - **External tools management:** Check and update `yt-dlp`, Deno, and the YouTube.js/Innertube library from the app.
-- **Screen reader support:** Powered by [Prism](https://github.com/ethindp/prism), with Windows screen reader/TTS support and Linux Speech Dispatcher announcements. Linux Orca usability still needs manual desktop validation.
+- **Screen reader support:** Powered by [Prism](https://github.com/ethindp/prism), with Windows screen reader/TTS support and Linux Speech Dispatcher announcements.
 - **Localization and themes:** Arabic and English interfaces, automatic language detection, and system, light, dark, and high contrast dark themes.
 
 ---
@@ -399,20 +397,6 @@ For an in-depth technical overview of the application architecture, Deno RPC pro
 
 ---
 
-## Acknowledgements
-
-- **Original developer:** Suleiman Al Qusaimi.
-- **Maintainer and fork author:** [Makhlwf](https://github.com/makhlwf).
-- **Core tools:** [yt-dlp](https://github.com/yt-dlp/yt-dlp), [YouTube.js](https://ytjs.dev/), [wxPython](https://www.wxpython.org/), [MPV](https://mpv.io/), and [Deno](https://deno.com/).
-
----
-
 ## License
 
 This project is licensed under the **GNU General Public License v3.0**. See [LICENSE](LICENSE) for details.
-
----
-
-## Disclaimer
-
-This project is a fork of the original Accessible YouTube Downloader Pro. It is provided as is, without warranty of any kind. Make sure your use complies with YouTube's Terms of Service and any applicable laws.
