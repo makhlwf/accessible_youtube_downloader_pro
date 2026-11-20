@@ -16,7 +16,7 @@ dependencies = [
     "sponsorblock-py>=1.0.0",
     "secretstorage>=3.3.3,<4; sys_platform == 'linux'",
     "wxpython==4.3.2",
-    "ytmusicapi==1.12.3",
+    "ytmusicapi==1.12.4",
 ]
 
 [dependency-groups]
