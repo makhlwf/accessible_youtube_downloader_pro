@@ -194,3 +194,14 @@ def test_on_browser_opens_url_and_speaks_when_url_present():
         gui.onBrowser()
         mock_speak.assert_called_once()
         mock_open.assert_called_once_with("https://www.youtube.com/watch?v=example")
+
+
+def test_play_retries_after_stream_error():
+    gui = _make_gui()
+    gui.player = MagicMock()
+    gui.player.media.get_state.return_value = media_gui.State.Error
+    gui._update_discord_presence = MagicMock()
+
+    gui.playAction()
+
+    gui.player.media.play.assert_called_once_with()

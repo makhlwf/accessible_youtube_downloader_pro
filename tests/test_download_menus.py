@@ -27,6 +27,7 @@ def test_browser_download_menu_formats(mock_downloader):
         patch("utils.check_yt_dlp", return_value=True),
         patch("youtube_browser.browser.LoadingDialog") as ld,
     ):
+        ld.return_value.cancelled = False
         ld.return_value.res = None
 
         YoutubeBrowser.onDownload(browser, None)
@@ -47,6 +48,7 @@ def test_media_gui_download_menu_formats(mock_downloader):
         patch("utils.check_yt_dlp", return_value=True),
         patch("media_player.media_gui.LoadingDialog") as ld,
     ):
+        ld.return_value.cancelled = False
         ld.return_value.res = None
 
         # media_gui creates its download menu in contextSetup, so no onDownload
@@ -67,6 +69,7 @@ def test_channel_dialog_download_menu_formats(mock_downloader):
         patch("utils.check_yt_dlp", return_value=True),
         patch("gui.channel_dialog.LoadingDialog") as ld,
     ):
+        ld.return_value.cancelled = False
         ld.return_value.res = None
         ChannelDialog.onDownload(dialog, None)
 
@@ -91,6 +94,7 @@ def test_playlist_dialog_download_menu_formats(mock_downloader):
         patch("gui.playlist_dialog.LoadingDialog") as ld,
         patch("gui.playlist_dialog.config_get", return_value="C:\\path"),
     ):
+        ld.return_value.cancelled = False
         ld.return_value.res = None
         PlaylistDialog.onDownload(dialog, None)
 
@@ -112,6 +116,7 @@ def test_history_download_menu_formats(mock_downloader):
         patch("utils.check_yt_dlp", return_value=True),
         patch("gui.history.LoadingDialog") as ld,
     ):
+        ld.return_value.cancelled = False
         ld.return_value.res = None
         HistoryDialog.onDownload(dialog, None)
 
@@ -140,6 +145,7 @@ def test_favorites_download_menu_formats(mock_downloader):
         patch("utils.check_yt_dlp", return_value=True),
         patch("gui.favorites.LoadingDialog") as ld,
     ):
+        ld.return_value.cancelled = False
         ld.return_value.res = None
         Favorites.onDownload(dialog, None)
 
@@ -148,3 +154,15 @@ def test_favorites_download_menu_formats(mock_downloader):
 
         Favorites.onAudioDownload(dialog, MagicMock(), "m4a")
         dialog._download_media.assert_called()
+
+
+def test_cancelling_download_quality_lookup_does_not_start_download():
+    gui = MagicMock()
+    with (
+        patch("utils.check_yt_dlp", return_value=True),
+        patch("media_player.media_gui.LoadingDialog") as loading,
+    ):
+        loading.return_value.cancelled = True
+        loading.return_value.res = None
+        MediaGui.onVideoDownload(gui, MagicMock(), "mkv")
+    gui._download_media.assert_not_called()

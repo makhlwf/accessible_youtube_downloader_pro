@@ -197,6 +197,15 @@ class TestWelcomeDialog(unittest.TestCase):
         home.startup_dependency_checks = MagicMock()
         home.instruction = MagicMock()
         home.checked = False
+        home._shutting_down = MagicMock()
+        home._shutting_down.is_set.return_value = False
+
+        hidden_event = MagicMock()
+        hidden_event.IsShown.return_value = False
+        home.onShow(hidden_event)
+        home.show_welcome_screen.assert_not_called()
+        home.instruction.SetFocus.assert_not_called()
+        self.assertFalse(home.checked)
 
         # 1. When welcome_completed is False:
         with (

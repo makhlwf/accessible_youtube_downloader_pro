@@ -4556,6 +4556,10 @@ msgstr "Library artists"
 msgid "الأجواء"
 msgstr "Moods"
 
+#: src/download_handler/downloader.py:684
+msgid "جاري التنزيل"
+msgstr "Downloading"
+
 #~ msgid "جودة تحويل ملفات mp3: "
 #~ msgstr "MP3 conversion quality: "
 

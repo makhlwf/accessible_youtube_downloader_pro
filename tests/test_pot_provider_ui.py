@@ -106,12 +106,34 @@ def test_home_screen_startup_dependency_checks():
     import accessible_youtube_downloader_pro as main_mod
 
     fake_self = MagicMock()
+    fake_self._shutting_down.is_set.return_value = False
     with (
         patch("utils.check_yt_dlp", return_value=True),
         patch("utils.check_deno", return_value=True),
         patch("utils.ensure_js_dependencies") as mock_ensure,
+        patch.object(main_mod.pot_service, "is_installed", return_value=False),
         patch("utils.check_pot_provider") as mock_check_pot,
     ):
         main_mod.HomeScreen.startup_dependency_checks(fake_self)
         mock_ensure.assert_called_once()
         mock_check_pot.assert_called_once_with(fake_self)
+
+
+def test_home_screen_starts_installed_provider_off_gui_thread():
+    import accessible_youtube_downloader_pro as main_mod
+
+    home = MagicMock()
+    home._shutting_down.is_set.return_value = False
+    with (
+        patch("utils.check_yt_dlp", return_value=False),
+        patch("utils.check_pot_provider") as gui_check,
+        patch.object(main_mod.pot_service, "is_installed", return_value=True),
+        patch.object(main_mod.threading, "Thread") as worker,
+    ):
+        main_mod.HomeScreen.startup_dependency_checks(home)
+
+    gui_check.assert_not_called()
+    worker.assert_called_once_with(
+        target=home._start_installed_pot_provider, daemon=True
+    )
+    worker.return_value.start.assert_called_once()

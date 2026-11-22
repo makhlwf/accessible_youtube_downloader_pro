@@ -13,6 +13,7 @@ import utils
 from language_handler import _
 from pot_provider_service import pot_service
 from settings_handler import config_get
+from speech_client import speak
 
 logger = logging.getLogger(__name__)
 
@@ -447,9 +448,8 @@ class Downloader:
             return get_audio_download_format(
                 kbps=self.kbps, audio_format=self.audio_format
             )
-        if (
-            self.downloading_format == "bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4"
-            or self.video_format
+        if self.downloading_format == "bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4" or (
+            self.video_format and self.downloading_format == "best"
         ):
             return get_video_download_format(
                 container=self.video_format or FORMAT_VIDEO_MP4
@@ -482,12 +482,15 @@ class Downloader:
         try:
             os.makedirs(self.path, exist_ok=True)
             self.started_at = time.time()
+            utils._warm_youtube_extractor()
             ydl_opts = self._base_options(use_cookies=use_cookies)
 
             with utils.YoutubeDL(ydl_opts) as ydl:
-                ydl.download([self.url])
+                result = ydl.download([self.url])
             if self._is_cancelled():
                 raise DownloadCancelled()
+            if isinstance(result, int) and result != 0:
+                return RuntimeError(f"yt-dlp exited with status {result}")
             if not self.last_file or not os.path.exists(self.last_file):
                 self.last_file = self._find_latest_downloaded_file()
             return 0
@@ -677,6 +680,7 @@ def downloadAction(
     thread = Thread(target=download_thread)
     thread.daemon = True
     thread.start()
+    speak(_("جاري التنزيل"), interrupt=True)
     return True
 
 
@@ -687,7 +691,7 @@ def start_media_download(
 
     dlg = DownloadProgress(parent, title or "")
 
-    if path is None:
+    if not path:
         path = config_get("path") or paths.get_default_download_dir()
 
     if folder and title:

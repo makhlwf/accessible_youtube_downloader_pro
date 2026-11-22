@@ -304,13 +304,20 @@ def test_media_gui_context_awareness():
                 return_value={"success": True},
             ) as mock_like,
             patch("media_player.media_gui.speak"),
+            patch(
+                "media_player.media_gui.utils.validate_video_reaction",
+                return_value=None,
+            ),
+            patch("media_player.media_gui.config_get", return_value="cookies.txt"),
         ):
             gui.onLike(None)
             import time
 
             time.sleep(0.1)
             mock_like.assert_called_once_with(
-                "https://www.youtube.com/shorts/short1", "like", parent=gui
+                "https://www.youtube.com/shorts/short1",
+                "like",
+                cookies_path="cookies.txt",
             )
 
         gui.closeAction()

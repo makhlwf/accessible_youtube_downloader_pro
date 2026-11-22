@@ -9,6 +9,7 @@ parse ``"-1"`` as the options string and reject the trailing map with
 pick the command shape from the runtime API version.
 """
 
+import ctypes
 import types
 
 from media_player import mpv_backend
@@ -20,6 +21,7 @@ def _make_player(api_version, options):
     player._lib = types.SimpleNamespace(
         mpv_command_node=lambda *args: 0,
         mpv_error_string=lambda code: b"error",
+        mpv_free_node_contents=lambda *args: None,
     )
     player._handle = 1
     player._api_version = api_version
@@ -32,15 +34,16 @@ def _make_player(api_version, options):
 def _capture_loadfile(player, monkeypatch):
     """Run _load_current and decode the node command it hands to libmpv."""
     captured = {}
-    real_byref = mpv_backend.ctypes.byref
 
-    def spy_byref(obj, *args):
-        captured["root"] = obj  # keeps the node graph alive via ctypes _objects
-        return real_byref(obj, *args)
+    def spy_command(handle, command, result):
+        captured["root"] = mpv_backend._parse_node(
+            ctypes.cast(command, ctypes.POINTER(mpv_backend.MpvNode)).contents
+        )
+        return 0
 
-    monkeypatch.setattr(mpv_backend.ctypes, "byref", spy_byref)
+    monkeypatch.setattr(player._lib, "mpv_command_node", spy_command)
     player._load_current()
-    return mpv_backend._parse_node(captured["root"])
+    return captured["root"]
 
 
 DASH_OPTIONS = [":http-user-agent=HexPlayer/1.0", ":input-slave=https://host/audio.m4a"]

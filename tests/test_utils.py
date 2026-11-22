@@ -1,7 +1,9 @@
 import ctypes
 import os
 import subprocess
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+from threading import Event
 from types import SimpleNamespace
 from unittest.mock import Mock
 
@@ -513,3 +515,53 @@ def test_linux_release_asset_url_rpm():
 
     rpm_linux_arch = "https://github.com/makhlwf/accessible_youtube_downloader_pro/releases/download/v4.8.0/HexPlayer-4.8.0-linux-x86_64.rpm"
     assert utils._linux_release_asset_url(rpm_linux_arch, "x86_64") == rpm_linux_arch
+
+
+def test_concurrent_media_metadata_uses_one_extractor(monkeypatch):
+    extraction_started = Event()
+    follower_registered = Event()
+    release = Event()
+    info = {"title": "Example"}
+    url = "https://www.youtube.com/watch?v=metadata123"
+    begin = utils._begin_stream_extraction
+
+    def begin_and_signal(key):
+        event, owner = begin(key)
+        if not owner:
+            follower_registered.set()
+        return event, owner
+
+    def extract(url, download):
+        extraction_started.set()
+        assert release.wait(5)
+        return info
+
+    class Extractor:
+        def __enter__(self):
+            return SimpleNamespace(extract_info=extract)
+
+        def __exit__(self, *args):
+            pass
+
+    get_extractor = Mock(side_effect=lambda *args: Extractor())
+    monkeypatch.setattr(utils, "YoutubeDL", object())
+    monkeypatch.setattr(utils, "get_ydl_instance", get_extractor)
+    monkeypatch.setattr(
+        utils, "get_configured_player_clients", lambda **kwargs: ["default"]
+    )
+    monkeypatch.setattr(utils, "_begin_stream_extraction", begin_and_signal)
+    monkeypatch.setattr(
+        utils, "_info_cache", utils.InfoCache(maxsize=8, default_ttl=3600)
+    )
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        first = pool.submit(utils.get_media_info, url)
+        try:
+            assert extraction_started.wait(5)
+            second = pool.submit(utils.get_media_info, url)
+            assert follower_registered.wait(5)
+        finally:
+            release.set()
+        assert first.result(timeout=5) is info
+        assert second.result(timeout=5) is info
+    get_extractor.assert_called_once()

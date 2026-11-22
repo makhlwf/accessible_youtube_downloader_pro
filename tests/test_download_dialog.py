@@ -37,7 +37,8 @@ class TestDownloadDialog(unittest.TestCase):
         self.mock_start_media_download = self.patcher_start_media_download.start()
         self.mock_start_media_download.return_value = True
 
-        self.dialog = DownloadDialog(None)
+        self.parent = wx.Frame(None)
+        self.dialog = DownloadDialog(self.parent)
 
     def tearDown(self):
         if self.dialog:
@@ -79,7 +80,7 @@ class TestDownloadDialog(unittest.TestCase):
         self.mock_start_media_download.assert_called_once_with(
             "https://youtube.com/watch?v=123",
             "wav",
-            self.dialog,
+            self.parent,
             path="C:\\test\\path",
             folder=False,
         )
@@ -97,7 +98,7 @@ class TestDownloadDialog(unittest.TestCase):
         self.mock_start_media_download.assert_called_once_with(
             "https://youtube.com/watch?v=456",
             "mkv",
-            self.dialog,
+            self.parent,
             path="C:\\test\\path",
             folder=False,
         )

@@ -128,6 +128,21 @@ class DenoService:
                 self.process = None
         io.stop()
 
+    def _spawn_runtime(self, command):
+        env = os.environ.copy()
+        env["PATH"] = paths.main_path + os.pathsep + env.get("PATH", "")
+        return subprocess.Popen(
+            command,
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            encoding="utf-8",
+            creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0,
+            cwd=paths.main_path,
+            env=env,
+        )
+
     def _ensure_process(self, generation=None):
         """Get a live process; send_command serializes calls to this method."""
         with self._state_lock:
@@ -153,10 +168,20 @@ class DenoService:
 
             use_deno = bool(config_get("use_deno_backend"))
             yt_service_bin = paths.get_youtube_service_path()
+            process = None
             if not use_deno and yt_service_bin:
                 command = [yt_service_bin]
                 runtime_name = "Standalone YouTube service"
-            else:
+                try:
+                    process = self._spawn_runtime(command)
+                except OSError as error:
+                    logger.warning(
+                        "Standalone YouTube service could not start: %s", error
+                    )
+            if process is None:
+                with self._state_lock:
+                    if generation != self._generation:
+                        return None
                 service_script = paths.get_js_runtime_service_script()
                 config_path = paths.get_js_runtime_config_path()
                 lock_path = paths.get_js_runtime_lock_path()
@@ -172,23 +197,7 @@ class DenoService:
                     command.extend(["--lock", lock_path])
                 command.append(service_script)
                 runtime_name = "Deno service"
-
-            env = os.environ.copy()
-            env["PATH"] = paths.main_path + os.pathsep + env.get("PATH", "")
-
-            process = subprocess.Popen(
-                command,
-                stdin=subprocess.PIPE,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True,
-                encoding="utf-8",
-                creationflags=subprocess.CREATE_NO_WINDOW
-                if sys.platform == "win32"
-                else 0,
-                cwd=paths.main_path,
-                env=env,
-            )
+                process = self._spawn_runtime(command)
             io = _ProcessIO(process)
             io.start()
             # Starting a process must not hold the lifecycle lock. If stop()

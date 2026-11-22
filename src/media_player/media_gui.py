@@ -149,10 +149,13 @@ class MediaGui(wx.Frame):
         self.player = None
         self._closing = False
         self._track_request_id = 0
+        self._stream_switch_request = None
+        self._media_token = object()
         self.extracting_description = False
         self.url = url
         self.current_channel = self._resolve_channel(stream, url)
         self.rating = None
+        self._rating_revision = 0
         self.rating_request_pending = False
         self.like_count = None
         self.available_subtitles = []
@@ -386,17 +389,6 @@ class MediaGui(wx.Frame):
             )
             self.closeAction()
             return
-        options = []
-        ua = None
-        if hasattr(stream, "headers") and stream.headers:
-            ua = stream.headers.get("User-Agent")
-            if ua:
-                options.append(f":http-user-agent={ua}")
-        if hasattr(stream, "audio_url") and stream.audio_url:
-            options.append(f":input-slave={stream.audio_url}")
-        if audio_mode:
-            options.append(":no-video")
-
         try:
             # Always register the frame's window handle with mpv, even in audio
             # mode. mpv only reads `wid` at initialization, so if we passed None
@@ -410,7 +402,7 @@ class MediaGui(wx.Frame):
                 stream.url,
                 self.GetHandle(),
                 self,
-                options=options,
+                options=self._stream_options(stream),
             )
         except Exception as e:
             logger.exception("Failed to initialize media player")
@@ -443,44 +435,9 @@ class MediaGui(wx.Frame):
         self.sleep_deadline = None  # time.monotonic() target while armed, else None
         self.sleep_minutes = None  # armed duration in minutes, else None
         self.sleep_finish_current = False  # pause at end of current video, no advance
-        self.sponsorblock_segments = []
-        self._last_sponsorblock_skip_time = 0
-        self._last_sponsorblock_target = None
-        if config_get("sponsorblock"):
-            if (
-                hasattr(stream, "sponsorblock_segments")
-                and stream.sponsorblock_segments is not None
-            ):
-                self.sponsorblock_segments = filter_skippable_segments(
-                    stream.sponsorblock_segments
-                )
-            else:
-                try:
-                    self.sponsorblock_segments = get_sponsorblock_segments(self.url)
-                except Exception:
-                    logger.debug(
-                        "Could not fetch SponsorBlock segments on MediaGui init",
-                        exc_info=True,
-                    )
-            if self.sponsorblock_segments:
-                initial_sec = 0.0
-                if self.url in all_continue and config_get("continue"):
-                    pos = all_continue[self.url]
-                    if pos > 0:
-                        length = self.player.get_length()
-                        if length > 0:
-                            initial_sec = pos * (length / 1000.0)
-                match = find_skip_segment(initial_sec, self.sponsorblock_segments)
-                if match is not None:
-                    self.player.media.set_time(int(match[0] * 1000))
-                    self._last_sponsorblock_skip_time = time.time()
-                    self._last_sponsorblock_target = match[0]
-                    self._announce_sponsorblock_skip(match[1])
-
         self.sponsorblock_timer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.on_sponsorblock_timer, self.sponsorblock_timer)
-        if config_get("sponsorblock"):
-            self.sponsorblock_timer.Start(150)
+        self._load_sponsorblock_segments(stream)
         watched_seconds = (
             self.player.media.get_time() / 1000
             if self.player.media.get_time() != -1
@@ -559,20 +516,32 @@ class MediaGui(wx.Frame):
             pass
 
     def fetch_chapters(self):
+        token = self._media_token
+        url = self.url
         import logging
 
-        logging.getLogger(__name__).debug(f"Fetching chapters for {self.url}")
-        chapters = utils.get_video_chapters(self.url)
+        logging.getLogger(__name__).debug(f"Fetching chapters for {url}")
+        chapters = utils.get_video_chapters(url)
         logging.getLogger(__name__).debug(f"Fetched {len(chapters)} chapters")
         if self._closing:
             return
-        wx.CallAfter(self.populate_chapters_menu, chapters)
+        wx.CallAfter(
+            self._apply_media_metadata, token, self.populate_chapters_menu, chapters
+        )
 
     def fetch_subtitles(self):
-        subtitles = utils.get_available_subtitles(self.url)
+        token = self._media_token
+        url = self.url
+        subtitles = utils.get_available_subtitles(url)
         if self._closing:
             return
-        wx.CallAfter(self.populate_subtitles_menu, subtitles)
+        wx.CallAfter(
+            self._apply_media_metadata, token, self.populate_subtitles_menu, subtitles
+        )
+
+    def _apply_media_metadata(self, token, callback, value):
+        if self.can_update_player_ui() and token is self._media_token:
+            callback(value)
 
     def can_update_player_ui(self):
         try:
@@ -914,6 +883,36 @@ class MediaGui(wx.Frame):
                 "Failed to update discord presence from MediaGui", exc_info=True
             )
 
+    def _load_sponsorblock_segments(self, stream):
+        self.sponsorblock_segments = []
+        self._last_sponsorblock_skip_time = 0
+        self._last_sponsorblock_target = None
+        token = self._sponsorblock_request = object()
+        if not config_get("sponsorblock"):
+            return
+        if not self.sponsorblock_timer.IsRunning():
+            self.sponsorblock_timer.Start(150)
+        segments = getattr(stream, "sponsorblock_segments", None)
+        if segments is not None:
+            self.sponsorblock_segments = filter_skippable_segments(segments)
+            return
+
+        url = self.url
+
+        def apply(segments):
+            if self.can_update_player_ui() and token is self._sponsorblock_request:
+                self.sponsorblock_segments = filter_skippable_segments(segments)
+
+        def fetch():
+            try:
+                segments = get_sponsorblock_segments(url)
+            except Exception:
+                logger.debug("Could not fetch SponsorBlock segments", exc_info=True)
+                return
+            wx.CallAfter(apply, segments)
+
+        Thread(target=fetch, daemon=True).start()
+
     def on_sponsorblock_timer(self, event):
         if (
             not config_get("sponsorblock")
@@ -962,22 +961,28 @@ class MediaGui(wx.Frame):
             self._announce_sponsorblock_skip(category)
 
     def fetch_qualities(self):
-        qualities = utils.get_available_qualities(self.url, audio_mode=self.audio_mode)
+        token = self._media_token
+        url = self.url
+        qualities = utils.get_available_qualities(url, audio_mode=self.audio_mode)
         if self._closing:
             return
-        wx.CallAfter(self.populate_quality_menu, qualities)
+        wx.CallAfter(
+            self._apply_media_metadata, token, self.populate_quality_menu, qualities
+        )
 
     def fetch_audio_tracks(self):
+        token = self._media_token
+        url = self.url
         try:
-            tracks = utils.get_available_audio_tracks(
-                self.url, audio_mode=self.audio_mode
-            )
+            tracks = utils.get_available_audio_tracks(url, audio_mode=self.audio_mode)
         except Exception:
             logger.debug("Failed to fetch audio tracks", exc_info=True)
             tracks = []
         if self._closing:
             return
-        wx.CallAfter(self.populate_audio_tracks_menu, tracks)
+        wx.CallAfter(
+            self._apply_media_metadata, token, self.populate_audio_tracks_menu, tracks
+        )
 
     def _format_suggestion_display(self, v):
         """Build the screen-reader label for one panel item.
@@ -1113,23 +1118,28 @@ class MediaGui(wx.Frame):
         finally:
             self._loading_suggestions = False
 
-    def fetch_like_count(self):
-        def _task():
-            import logging
+    def fetch_like_count(self, *, refresh_rating=True):
+        url = self.url
+        token = self._media_token
+        revision = self._rating_revision
 
-            logger = logging.getLogger(__name__)
-            logger.info(f"Fetching likes for {self.url}")
-            like_info = utils.get_video_like_info(self.url)
-            logger.info(f"Fetched like info: {like_info}")
-            likes = like_info.get("likes")
+        def apply(info):
+            if not self.can_update_player_ui() or token is not self._media_token:
+                return
+            likes = info.get("likes")
             if likes is not None:
                 self.like_count = likes
-                logger.info(f"Updated self.like_count to {self.like_count}")
-            if not self.rating_request_pending:
-                self.rating = like_info.get("rating")
-                logger.info(f"Updated self.rating to {self.rating}")
+            if (
+                refresh_rating
+                and not self.rating_request_pending
+                and revision == self._rating_revision
+            ):
+                self.rating = info.get("rating")
 
-        Thread(target=_task, daemon=True).start()
+        def fetch():
+            wx.CallAfter(apply, utils.get_video_like_info(url))
+
+        Thread(target=fetch, daemon=True).start()
 
     def populate_quality_menu(self, qualities):
         if not self.can_update_player_ui():
@@ -1139,6 +1149,7 @@ class MediaGui(wx.Frame):
             for item in self.qualityMenu.GetMenuItems():
                 self.qualityMenu.DestroyItem(item)
 
+            self.quality_items = {}
             if not qualities:
                 self.qualityMenu.Append(-1, _("لا توجد جودات متاحة")).Enable(False)
                 return
@@ -1146,6 +1157,7 @@ class MediaGui(wx.Frame):
             for q in qualities:
                 label = f"{q}{_('ك.ب/ث')}" if self.audio_mode else f"{q}{_('ب')}"
                 item = self.qualityMenu.AppendCheckItem(-1, label)
+                self.quality_items[q] = item
                 if q == self.current_quality:
                     item.Check(True)
                 self.Bind(
@@ -1159,40 +1171,63 @@ class MediaGui(wx.Frame):
     def on_change_quality(self, height):
         label = f"{height}{_('ك.ب/ث')}" if self.audio_mode else f"{height}{_('ب')}"
         speak(_("جاري تغيير الجودة إلى {}").format(label))
-        position = self.player.media.get_position()
+        token = self._stream_switch_request = object()
+        track_request = self._track_request_id
+        url = self.url
+        audio_mode = self.audio_mode
+        audio_track_id = self.current_audio_track_id
 
-        def reload():
-            self.player.media.stop()
-            time.sleep(0.5)
-            new_stream = utils.get_specific_quality_stream(
-                self.url,
-                height,
-                audio_mode=self.audio_mode,
-                audio_track_id=self.current_audio_track_id,
-            )
-            if new_stream:
-                self.current_quality = height
-
-                def update_player():
-                    options = []
-                    if hasattr(new_stream, "headers") and new_stream.headers:
-                        ua = new_stream.headers.get("User-Agent")
-                        if ua:
-                            options.append(f":http-user-agent={ua}")
-                    if hasattr(new_stream, "audio_url") and new_stream.audio_url:
-                        options.append(f":input-slave={new_stream.audio_url}")
-                    if self.audio_mode:
-                        options.append(":no-video")
-                    self.player.set_media(new_stream.url, options)
-                    self.player.media.play()
-                    self.player.media.set_position(position)
-
-                wx.CallAfter(update_player)
-            else:
+        def update_player(new_stream):
+            if (
+                not self.can_update_player_ui()
+                or self.player is None
+                or token is not self._stream_switch_request
+                or track_request != self._track_request_id
+            ):
+                return
+            if new_stream is None:
                 speak(_("تعذر تغيير الجودة"))
-                wx.CallAfter(self.player.media.play)
+            else:
+                self._replace_stream(new_stream)
+                self.current_quality = height
+            for quality, item in self.quality_items.items():
+                item.Check(quality == self.current_quality)
 
-        Thread(target=reload, daemon=True).start()
+        def resolve():
+            try:
+                stream = utils.get_specific_quality_stream(
+                    url, height, audio_mode=audio_mode, audio_track_id=audio_track_id
+                )
+            except Exception:
+                logger.debug("Could not resolve replacement quality", exc_info=True)
+                stream = None
+            wx.CallAfter(update_player, stream)
+
+        Thread(target=resolve, daemon=True).start()
+
+    def _replace_stream(self, stream):
+        media = self.player.media
+        position = media.get_position()
+        was_paused = media.get_state() == State.Paused
+        self.player.set_media(stream.url, self._stream_options(stream))
+        media.play()
+        if position >= 0:
+            media.set_position(position)
+        if was_paused:
+            media.pause()
+
+    def _stream_options(self, stream):
+        options = []
+        ua = (getattr(stream, "headers", None) or {}).get("User-Agent")
+        if ua:
+            options.append(f":http-user-agent={ua}")
+        if getattr(stream, "audio_url", None):
+            options.append(f":input-slave={stream.audio_url}")
+        if self.audio_mode:
+            options.append(":no-video")
+        if getattr(self, "shorts_mode", False):
+            options.append("loop-file=inf")
+        return options
 
     def populate_audio_tracks_menu(self, tracks):
         if not self.can_update_player_ui():
@@ -1281,77 +1316,67 @@ class MediaGui(wx.Frame):
         speak(_("جاري التبديل إلى المسار الصوتي: {name}").format(name=label))
         track_url = track.get("url")
         lang = track.get("lang") or ""
+        player = self.player
+        token = self._stream_switch_request = object()
+        track_request = self._track_request_id
+        url = self.url
+        quality = self.current_quality
+        audio_mode = self.audio_mode
 
-        def _do_switch():
+        def is_current():
+            return (
+                not self._closing
+                and player is self.player
+                and token is self._stream_switch_request
+                and track_request == self._track_request_id
+            )
+
+        def finish(switched, replacement):
+            if not is_current() or not self.can_update_player_ui():
+                return
+            if replacement is not None:
+                self._replace_stream(replacement)
+                switched = True
+            if switched:
+                self.current_audio_track_id = track_id
+                speak(_("تم التبديل إلى المسار الصوتي: {name}").format(name=label))
+            else:
+                speak(_("تعذر تغيير المسار الصوتي"))
+            for tid, item in self.audio_track_items.items():
+                item.Check(tid == self.current_audio_track_id)
+
+        def switch():
+            if not is_current():
+                return
             switched = False
-            if "mpv_id" in track:
-                switched = self.player.set_audio_track(track["mpv_id"])
-            elif track_url:
-                try:
-                    tracks = self.player.get_audio_tracks()
-                    for mpv_tr in tracks:
-                        if mpv_tr.get("external-filename") == track_url:
-                            switched = self.player.set_audio_track(mpv_tr["id"])
-                            break
-                except Exception:
-                    pass
-
-                if not switched:
-                    switched = self.player.add_audio_track(
-                        track_url, select=True, title=label, lang=lang
+            replacement = None
+            try:
+                if "mpv_id" in track:
+                    switched = player.set_audio_track(track["mpv_id"])
+                elif track_url:
+                    existing = next(
+                        (
+                            item
+                            for item in player.get_audio_tracks()
+                            if item.get("external-filename") == track_url
+                        ),
+                        None,
                     )
+                    if existing and is_current():
+                        switched = player.set_audio_track(existing["id"])
+                    if not switched and is_current():
+                        switched = player.add_audio_track(
+                            track_url, select=True, title=label, lang=lang
+                        )
+                    if not switched and is_current():
+                        replacement = utils.get_specific_quality_stream(
+                            url, quality, audio_mode=audio_mode, audio_track_id=track_id
+                        )
+            except Exception:
+                logger.debug("Could not switch audio track", exc_info=True)
+            wx.CallAfter(finish, switched, replacement)
 
-            if not switched and track_url:
-                position = self.player.media.get_position()
-                self.player.media.stop()
-                time.sleep(0.3)
-                new_stream = utils.get_specific_quality_stream(
-                    self.url,
-                    self.current_quality,
-                    audio_mode=self.audio_mode,
-                    audio_track_id=track_id,
-                )
-                if new_stream:
-
-                    def _update():
-                        options = []
-                        if hasattr(new_stream, "headers") and new_stream.headers:
-                            ua = new_stream.headers.get("User-Agent")
-                            if ua:
-                                options.append(f":http-user-agent={ua}")
-                        if hasattr(new_stream, "audio_url") and new_stream.audio_url:
-                            options.append(f":input-slave={new_stream.audio_url}")
-                        if self.audio_mode:
-                            options.append(":no-video")
-                        self.player.set_media(new_stream.url, options)
-                        self.player.media.play()
-                        self.player.media.set_position(position)
-
-                    wx.CallAfter(_update)
-                    switched = True
-
-            def _finish():
-                if not self.can_update_player_ui():
-                    return
-                if switched:
-                    self.current_audio_track_id = track_id
-                    for tid, item in self.audio_track_items.items():
-                        try:
-                            item.Check(tid == track_id)
-                        except Exception:
-                            pass
-                    speak(_("تم التبديل إلى المسار الصوتي: {name}").format(name=label))
-                else:
-                    speak(_("تعذر تغيير المسار الصوتي"))
-                    for tid, item in self.audio_track_items.items():
-                        try:
-                            item.Check(tid == self.current_audio_track_id)
-                        except Exception:
-                            pass
-
-            wx.CallAfter(_finish)
-
-        Thread(target=_do_switch, daemon=True).start()
+        Thread(target=switch, daemon=True).start()
 
     def _download_media(
         self, format_type, url, dlg, path=None, quality=None, title=None
@@ -1371,7 +1396,7 @@ class MediaGui(wx.Frame):
     @has_player
     def playAction(self):
         state = self.player.media.get_state()
-        if state in (State.NothingSpecial, State.Stopped, State.Ended):
+        if state in (State.NothingSpecial, State.Stopped, State.Ended, State.Error):
             if state == State.Ended:
                 self.player.media.set_position(0.0)
             self.player.media.play()
@@ -1581,12 +1606,15 @@ class MediaGui(wx.Frame):
         def _on_dl_video(fmt):
             if not utils.check_yt_dlp(self):
                 return
-            qualities = LoadingDialog(
+            loading = LoadingDialog(
                 self,
                 _("جاري جلب الجودات المتاحة..."),
                 utils.get_available_qualities,
                 video_url,
-            ).res
+            )
+            if loading.cancelled:
+                return
+            qualities = loading.res
             quality = None
             if qualities:
                 quality_dlg = QualitySelectionDialog(self, qualities)
@@ -2014,25 +2042,39 @@ class MediaGui(wx.Frame):
             speak(_("جاري تحديث التقييم"))
             return
 
-        previous_rating = self.rating
+        if self._closing:
+            return
+        token = self._media_token
+        url = self.url
+        error = utils.validate_video_reaction(self)
+        if self._closing or token is not self._media_token:
+            return
+        if error:
+            speak(error, interrupt=True)
+            return
+
+        cookies_path = config_get("cookiespath") or ""
         self.rating_request_pending = True
+        self._rating_revision += 1
+        speak(_("جاري تحديث التقييم"), interrupt=True)
 
-        def _task():
-            res = utils.like_video(self.url, action, parent=self)
-            self.rating_request_pending = False
-            if res.get("success"):
-                self.rating = new_rating
-                speak(success_message)
-                self.fetch_like_count()
+        def apply(result):
+            if not self.can_update_player_ui() or token is not self._media_token:
                 return
+            self.rating_request_pending = False
+            if result.get("success"):
+                self.rating = new_rating
+                speak(success_message, interrupt=True)
+                self.fetch_like_count(refresh_rating=False)
+            else:
+                speak(result.get("error") or _("تعذر تحديث التقييم"), interrupt=True)
 
-            if self.rating == new_rating:
-                self.rating = previous_rating
+        def submit():
+            wx.CallAfter(
+                apply, utils.like_video(url, action, cookies_path=cookies_path)
+            )
 
-            err = res.get("error") or _("تعذر تحديث التقييم")
-            wx.CallAfter(speak, err)
-
-        Thread(target=_task, daemon=True).start()
+        Thread(target=submit, daemon=True).start()
 
     def onKeyDown(self, event):
         event.Skip()
@@ -2105,8 +2147,10 @@ class MediaGui(wx.Frame):
             event.Skip(False)
             self.onBrowser(event)
         elif event.GetKeyCode() == ord("L") and not event.HasAnyModifiers():
+            event.Skip(False)
             self.onLike()
         elif event.GetKeyCode() == ord("D") and not event.HasAnyModifiers():
+            event.Skip(False)
             self.onDislike()
         elif event.ShiftDown() and (
             event.GetKeyCode() in (ord("."), ord(">"))
@@ -2580,19 +2624,10 @@ class MediaGui(wx.Frame):
                 and 0 <= index < len(self.results)
             ):
                 self.results[index]["title"] = title
-        options = []
-        if hasattr(stream, "headers") and stream.headers:
-            ua = stream.headers.get("User-Agent")
-            if ua:
-                options.append(f":http-user-agent={ua}")
-        if hasattr(stream, "audio_url") and stream.audio_url:
-            options.append(f":input-slave={stream.audio_url}")
-        if self.audio_mode:
-            options.append(":no-video")
-        if getattr(self, "shorts_mode", False):
-            options.append("loop-file=inf")
-
-        self.player.set_media(stream.url, options=options)
+        self.player.set_media(stream.url, options=self._stream_options(stream))
+        self._stream_switch_request = None
+        self._media_token = object()
+        self.current_quality = getattr(stream, "quality", None)
         self.url = url
         self.title = title
         self.current_audio_track_id = getattr(stream, "audio_track_id", None)
@@ -2606,34 +2641,7 @@ class MediaGui(wx.Frame):
         self.player.media.play()
         self.player.media.audio_set_volume(self.player.volume)
         self._update_discord_presence(is_paused=False)
-        self.sponsorblock_segments = []
-        self._last_sponsorblock_skip_time = 0
-        self._last_sponsorblock_target = None
-        if config_get("sponsorblock"):
-            if (
-                hasattr(stream, "sponsorblock_segments")
-                and stream.sponsorblock_segments is not None
-            ):
-                self.sponsorblock_segments = filter_skippable_segments(
-                    stream.sponsorblock_segments
-                )
-            else:
-                try:
-                    self.sponsorblock_segments = get_sponsorblock_segments(url)
-                except Exception:
-                    pass
-            if self.sponsorblock_segments:
-                match = find_skip_segment(0.0, self.sponsorblock_segments)
-                if match is not None:
-                    self.player.media.set_time(int(match[0] * 1000))
-                    self._last_sponsorblock_skip_time = time.time()
-                    self._last_sponsorblock_target = match[0]
-                    self._announce_sponsorblock_skip(match[1])
-            if (
-                hasattr(self, "sponsorblock_timer")
-                and not self.sponsorblock_timer.IsRunning()
-            ):
-                self.sponsorblock_timer.Start(150)
+        self._load_sponsorblock_segments(stream)
         if not getattr(self, "shorts_mode", False):
             Thread(target=self.extract_description, daemon=True).start()
             for item in self.qualityMenu.GetMenuItems():
@@ -2712,25 +2720,13 @@ class MediaGui(wx.Frame):
         box.Selection = index
         self.changeTrack(index)
 
-        # Trigger load more if near end
+        # Reuse the parent list's pagination so its request and selection state
+        # stay synchronized with playback navigation.
         count = (
             self.results.count if hasattr(self.results, "count") else len(self.results)
         )
-        if index >= count - 2:
-
-            def load_more():
-                if hasattr(self.Parent, "searchResults"):
-                    if self.results.load_more():
-                        wx.CallAfter(
-                            self.Parent.searchResults.Append,
-                            self.results.get_last_titles(),
-                        )
-                elif hasattr(self.Parent, "videosBox") and self.results.next():
-                    wx.CallAfter(
-                        self.Parent.videosBox.Append, self.results.get_new_titles()
-                    )
-
-            Thread(target=load_more, daemon=True).start()
+        if index >= count - 2 and self.results is getattr(self.Parent, "search", None):
+            self.Parent.loadMore()
 
     def previous(self):
         if self.results is None:
@@ -2800,12 +2796,15 @@ class MediaGui(wx.Frame):
     def onVideoDownload(self, event, format_type):
         if not utils.check_yt_dlp(self):
             return
-        qualities = LoadingDialog(
+        loading = LoadingDialog(
             self,
             _("جاري جلب الجودات المتاحة..."),
             utils.get_available_qualities,
             self.url,
-        ).res
+        )
+        if loading.cancelled:
+            return
+        qualities = loading.res
         quality = None
         if qualities:
             quality_dlg = QualitySelectionDialog(self, qualities)

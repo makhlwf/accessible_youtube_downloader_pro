@@ -29,7 +29,8 @@ def test_get_quickjs_path_discovery(monkeypatch, tmp_path):
 def test_configured_js_runtimes_prefers_quickjs_and_deno(monkeypatch):
     monkeypatch.setattr(paths, "get_quickjs_path", lambda: "/opt/qjs")
     monkeypatch.setattr(paths, "get_deno_path", lambda: "/opt/deno")
-    monkeypatch.setattr(os.path, "exists", lambda p: True)
+    monkeypatch.setattr(os.path, "exists", lambda p: p == "/opt/qjs")
+    monkeypatch.setattr(os.path, "isfile", lambda p: p == "/opt/deno")
 
     runtimes = utils.get_configured_js_runtimes()
     assert "quickjs" in runtimes

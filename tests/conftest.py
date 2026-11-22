@@ -360,6 +360,10 @@ class Size:
         self.height = height
 
 
+mock_wx.CallAfter = lambda callback, *args, **kwargs: callback(*args, **kwargs)
+mock_wx.CallLater = MagicMock()
+mock_wx.MessageBox = MagicMock()
+mock_wx.PostEvent = MagicMock()
 mock_wx.GetApp = MagicMock()
 mock_wx.GetActiveWindow = MagicMock(return_value=None)
 mock_wx.GetTopLevelWindows = MagicMock(return_value=[])

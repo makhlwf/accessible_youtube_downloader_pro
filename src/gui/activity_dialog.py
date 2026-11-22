@@ -17,6 +17,8 @@ class LoadingDialog(wx.Dialog):
         self.kwargs = kwargs
         self.res = None
         self.error = None
+        self.cancelled = False
+        self._finished = False
         super().__init__(parent)
         self.CenterOnParent()
         p = wx.Panel(self)
@@ -35,27 +37,41 @@ class LoadingDialog(wx.Dialog):
         self.Bind(wx.EVT_CLOSE, self.onClose)
         self.Bind(wx.EVT_CHAR_HOOK, self.onHook)
         Thread(target=self.run, daemon=True).start()
-        self.ShowModal()
+        try:
+            self.ShowModal()
+        finally:
+            self._finished = True
+            self.Destroy()
 
     def run(self):
         try:
-            if inspect.iscoroutinefunction(self.function):
-                # Run async function in the asyncio loop
-                self.res = run_in_async_loop(self.function(*self.args, **self.kwargs))
-            else:
-                # Run synchronous function in the current thread
-                self.res = self.function(*self.args, **self.kwargs)
-            wx.CallAfter(self.Destroy)
-        except Exception as e:
-            self.error = e
+            result = self.function(*self.args, **self.kwargs)
+            if inspect.isawaitable(result):
+                result = run_in_async_loop(result)
+        except Exception as error:
             logger.exception("Loading dialog task failed")
-            wx.CallAfter(self.Destroy)
+            wx.CallAfter(self._finish, None, error)
+        else:
+            wx.CallAfter(self._finish, result, None)
+
+    def _finish(self, result, error):
+        if self._finished:
+            return
+        self._finished = True
+        self.res = result
+        self.error = error
+        self.EndModal(wx.ID_OK if error is None else wx.ID_CANCEL)
 
     def onHook(self, event):
+        if event.KeyCode == wx.WXK_ESCAPE:
+            self.onClose(event)
+            return
         if event.KeyCode in (wx.WXK_DOWN, wx.WXK_UP, wx.WXK_LEFT, wx.WXK_RIGHT):
             self.message.SetFocus()
             return
         event.Skip()
 
     def onClose(self, event):
-        self.Destroy()
+        self.cancelled = True
+        self._finished = True
+        self.EndModal(wx.ID_CANCEL)

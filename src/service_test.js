@@ -5,6 +5,7 @@ import {
     handleGetShortsFeed,
     handleGetSubscribedChannels,
     handleLikeComment,
+    handleLikeInteraction,
     handleReplyComment,
     handleUpdateWatchHistory,
     normalizeComment,
@@ -205,35 +206,22 @@ Deno.test('normalizeReplyComments normalizes reply comments without reply tokens
     );
 });
 
-Deno.test('handleLikeInteraction routes actions to correct Innertube endpoints', async () => {
-    const executed = [];
+Deno.test('video reactions execute the matching YouTube.js action', async () => {
+    const calls = [];
     const fakeYt = {
         session: { logged_in: true },
-        actions: {
-            execute: async (endpoint, payload) => {
-                executed.push({ endpoint, payload });
-                return { success: true, status_code: 200, data: {} };
-            }
-        }
+        getInfo: async videoId => ({
+            like: async () => { calls.push([videoId, 'like']); return { success: true }; },
+            dislike: async () => { calls.push([videoId, 'dislike']); return { success: true }; },
+            removeRating: async () => { calls.push([videoId, 'remove']); return { success: true }; }
+        })
     };
-
-    const actionsMap = {
-        like: 'like/like',
-        dislike: 'like/dislike',
-        remove_like: 'like/removelike'
-    };
-
-    for (const [action, expectedEndpoint] of Object.entries(actionsMap)) {
-        const endpoint = action === 'like' ? 'like/like' : action === 'dislike' ? 'like/dislike' : 'like/removelike';
-        const res = await fakeYt.actions.execute(endpoint, { target: { videoId: 'VIDEO_123' } });
-        assertEquals(res.success, true);
+    for (const action of ['like', 'dislike', 'remove_like']) {
+        assertEquals(await handleLikeInteraction({
+            ytClient: fakeYt, videoId: 'video', action
+        }), { success: true });
     }
-
-    assertEquals(executed, [
-        { endpoint: 'like/like', payload: { target: { videoId: 'VIDEO_123' } } },
-        { endpoint: 'like/dislike', payload: { target: { videoId: 'VIDEO_123' } } },
-        { endpoint: 'like/removelike', payload: { target: { videoId: 'VIDEO_123' } } }
-    ]);
+    assertEquals(calls, [['video', 'like'], ['video', 'dislike'], ['video', 'remove']]);
 });
 
 Deno.test('handleLikeComment calls perform_comment_action with correct endpoint action', async () => {

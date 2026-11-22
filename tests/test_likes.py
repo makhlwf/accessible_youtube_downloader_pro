@@ -6,6 +6,7 @@ def test_get_video_like_info_normalizes_count_and_rating():
 
     with (
         patch("utils.config_get", return_value="cookies.txt"),
+        patch("utils.get_windows_region", return_value="US"),
         patch("utils.deno_service") as mock_deno_service,
     ):
         mock_deno_service.send_command.return_value = {
@@ -24,7 +25,7 @@ def test_get_video_like_info_normalizes_count_and_rating():
     }
     mock_deno_service.send_command.assert_called_once_with(
         "get_video_likes",
-        {"cookiesPath": "cookies.txt", "videoId": "dQw4w9WgXcQ"},
+        {"cookiesPath": "cookies.txt", "videoId": "dQw4w9WgXcQ", "location": "US"},
     )
 
 
@@ -80,6 +81,7 @@ def test_like_video_sends_remove_like_action():
 
     with (
         patch("utils.config_get", return_value="cookies.txt"),
+        patch("utils.get_windows_region", return_value="US"),
         patch("utils.os.path.exists", return_value=True),
         patch("utils.deno_service") as mock_deno_service,
     ):
@@ -95,5 +97,6 @@ def test_like_video_sends_remove_like_action():
             "cookiesPath": "cookies.txt",
             "videoId": "dQw4w9WgXcQ",
             "action": "remove_like",
+            "location": "US",
         },
     )

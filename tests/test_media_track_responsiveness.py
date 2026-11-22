@@ -98,3 +98,44 @@ def test_return_to_same_index_does_not_accept_previous_request(player):
     player._perform_track_change.assert_called_once_with(
         "stream", "second", "Second", 1
     )
+
+
+def test_quality_resolution_keeps_playback_and_uses_latest_result(player, monkeypatch):
+    player.url = "first"
+    player.current_audio_track_id = None
+    player.current_quality = 360
+    player.quality_items = {}
+    player.can_update_player_ui = lambda: True
+    player._replace_stream = Mock()
+    extract = Mock(side_effect=lambda url, height, **kwargs: f"stream-{height}")
+    monkeypatch.setattr(media_gui.utils, "get_specific_quality_stream", extract)
+
+    player.on_change_quality(720)
+    player.on_change_quality(1080)
+    player.workers[1]()
+    player.workers[0]()
+    deliver(player)
+
+    player.player.media.stop.assert_not_called()
+    player._replace_stream.assert_called_once_with("stream-1080")
+    assert player.current_quality == 1080
+
+
+def test_failed_quality_resolution_leaves_current_stream_playing(player, monkeypatch):
+    player.url = "first"
+    player.current_audio_track_id = None
+    player.current_quality = 360
+    player.quality_items = {}
+    player.can_update_player_ui = lambda: True
+    player._replace_stream = Mock()
+    monkeypatch.setattr(
+        media_gui.utils, "get_specific_quality_stream", Mock(return_value=None)
+    )
+
+    player.on_change_quality(720)
+    player.workers[0]()
+    deliver(player)
+
+    player.player.media.stop.assert_not_called()
+    player._replace_stream.assert_not_called()
+    assert player.current_quality == 360

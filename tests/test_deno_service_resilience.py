@@ -525,6 +525,27 @@ def test_worker_start_failure_closes_unused_pipes(make_bridge, monkeypatch):
     assert process.stderr.closed
 
 
+def test_standalone_launch_failure_uses_deno_without_replaying_command(
+    make_bridge, monkeypatch
+):
+    process = _PipeProcess()
+    service, popen = make_bridge(process)
+    monkeypatch.setattr(deno_service.paths, "get_deno_path", lambda: "deno-runtime")
+    popen.side_effect = [OSError("standalone executable cannot start"), process]
+
+    call = _Call(service.send_command, "post_video_comment", {"text": "once"})
+    request = process.requests.get(timeout=2)
+    process.respond(request, {"success": True})
+
+    assert call.result() == {"success": True}
+    assert [attempt.args[0][0] for attempt in popen.call_args_list] == [
+        deno_service.paths.get_youtube_service_path(),
+        "deno-runtime",
+    ]
+    assert request["command"] == "post_video_comment"
+    assert len(process.payloads) == 1
+
+
 @pytest.mark.parametrize("timeout", [0, -1, float("inf"), float("nan")])
 def test_timeout_must_be_positive_and_finite(timeout):
     with pytest.raises(ValueError):

@@ -1,11 +1,12 @@
 import logging
-from threading import Thread
 
 import wx
 
+from language_handler import _
 from media_player.equalizer import EqualizerService
 from media_player.mpv_backend import MpvMedia, MpvMediaPlayer, State
 from settings_handler import config_get, config_set
+from speech_client import speak
 from utils import time_formatting
 
 logger = logging.getLogger(__name__)
@@ -15,7 +16,6 @@ DEFAULT_AUDIO_OUTPUT_DEVICE = ""
 class Player:
     def __init__(self, filename, hwnd, window=None, options=None):
         self.eq = None
-        self.do_reset = False
         self._closing = False
         self.window = window
         self.filename = filename
@@ -27,16 +27,21 @@ class Player:
             self.eq.apply_to_player(self.media)
         self.apply_saved_audio_output_device()
         self.set_media(self.filename, options)
-        self.media.play()
         self.volume = int(config_get("volume"))
         self.media.audio_set_volume(self.volume)
-        self._cached_length = -1
+        self.media.play()
 
-    def onEnd(self, event=None):
-        if self._closing:
+    def onEnd(self, event):
+        wx.CallAfter(self._on_playback_ended, event.media)
+
+    def _on_playback_ended(self, ended_media):
+        if self._closing or ended_media is not self.media.get_media():
             return
-        self.do_reset = True
-        Thread(target=self.reset, daemon=True).start()
+        state = self.media.get_state()
+        if state == State.Ended:
+            self.reset()
+        elif state == State.Error:
+            speak(_("تعذر تشغيل هذا المقطع."), interrupt=True)
 
     def get_length(self):
         if self._cached_length == -1:
@@ -81,7 +86,6 @@ class Player:
     def reset(self):
         if self._closing:
             return
-        self.do_reset = False
         current_media = self.media.get_media()
         if current_media is not None:
             self.media.set_media(current_media)
@@ -89,14 +93,14 @@ class Player:
         window = self.window
         if window is not None and getattr(window, "sleep_finish_current", False):
             # Sleep timer (finish-current): end here without replaying or advancing.
-            wx.CallAfter(window._on_sleep_finish_reached)
+            window._on_sleep_finish_reached()
             return
         if getattr(self.window, "shorts_mode", False) or (
             config_get("repeatTracks") and not config_get("autonext")
         ):
             self.media.play()
         elif config_get("autonext") and not config_get("repeatTracks") and self.window:
-            wx.CallAfter(self.window.next)
+            self.window.next()
 
     def set_media(self, m, options=None):
         media = MpvMedia(m, options)

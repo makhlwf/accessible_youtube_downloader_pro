@@ -29,6 +29,7 @@ from settings_handler import config_get
 from youtube_url_utils import (  # noqa: F401
     extract_launch_youtube_url,
     extract_supported_youtube_url,
+    get_video_id,
     is_supported_youtube_url,
     youtube_regexp,
 )
@@ -1686,26 +1687,29 @@ prefetch_dns()
 def get_audio_tracks_from_formats(formats, entry=None):
     if not formats:
         return []
-    audio_formats = [
-        f for f in formats if f.get("acodec") != "none" and f.get("vcodec") == "none"
-    ]
-    if not audio_formats:
-        audio_formats = [f for f in formats if f.get("acodec") != "none"]
+    audio_formats = [f for f in formats if f.get("acodec") not in (None, "none")]
     if not audio_formats:
         return []
 
+    def marked_original(fmt):
+        return (
+            fmt.get("language_preference") == 10
+            or "original" in str(fmt.get("format_note", "")).lower()
+            or fmt.get("is_original") is True
+        )
+
     tracks_by_key = OrderedDict()
     entry_lang = (entry.get("language") if isinstance(entry, dict) else "") or ""
+    explicit_original = any(marked_original(fmt) for fmt in audio_formats)
 
     for f in audio_formats:
         lang = f.get("language") or ""
         note = str(f.get("format_note", ""))
-        pref = f.get("language_preference")
-        is_orig = (
-            (pref is not None and pref > 0)
-            or "original" in note.lower()
-            or f.get("is_original") is True
-            or (bool(entry_lang) and is_language_match(lang, entry_lang))
+        is_orig = marked_original(f) or (
+            not explicit_original
+            and f.get("language_preference") != 5
+            and bool(entry_lang)
+            and is_language_match(lang, entry_lang)
         )
         key = lang if lang else "default"
         if key not in tracks_by_key:
@@ -1722,12 +1726,18 @@ def get_audio_tracks_from_formats(formats, entry=None):
                 tracks_by_key[key]["is_original"] = True
 
     has_orig = any(tr["is_original"] for tr in tracks_by_key.values())
-    if not has_orig and tracks_by_key:
+    if not has_orig and len(tracks_by_key) == 1:
         first_key = next(iter(tracks_by_key))
         tracks_by_key[first_key]["is_original"] = True
 
     tracks = []
     for key, tr in tracks_by_key.items():
+        if tr["is_original"]:
+            tr["formats"] = [
+                fmt
+                for fmt in tr["formats"]
+                if fmt.get("language_preference") != 5 or marked_original(fmt)
+            ] or tr["formats"]
         name = get_language_display_name(tr["lang"], tr["note"])
         if tr["is_original"]:
             if len(tracks_by_key) > 1 and name != _("الصوت الأصلي"):
@@ -1768,17 +1778,20 @@ def select_audio_format(
         _clamp_index(preferred_quality_index, len(AUDIO_QUALITIES), 1)
     ]
 
+    def pick_track_format(track):
+        fmts = track["formats"]
+        fmts = [fmt for fmt in fmts if fmt.get("vcodec") == "none"] or fmts
+        with_bitrate = [fmt for fmt in fmts if fmt.get("abr") is not None]
+        return (
+            min(with_bitrate, key=lambda fmt: abs(fmt["abr"] - target_abr))
+            if with_bitrate
+            else fmts[-1]
+        )
+
     if audio_track_id:
         chosen_track = next((t for t in tracks if t["id"] == audio_track_id), None)
         if chosen_track:
-            fmts = chosen_track["formats"]
-            fmts_with_abr = [f for f in fmts if f.get("abr") is not None]
-            best_fmt = (
-                min(fmts_with_abr, key=lambda x: abs((x.get("abr") or 0) - target_abr))
-                if fmts_with_abr
-                else fmts[-1]
-            )
-            return best_fmt, chosen_track
+            return pick_track_format(chosen_track), chosen_track
 
     if force_original is None:
         force_original = bool(config_get("force_original_audio"))
@@ -1801,14 +1814,7 @@ def select_audio_format(
     else:
         chosen_track = orig_track
 
-    fmts = chosen_track["formats"]
-    fmts_with_abr = [f for f in fmts if f.get("abr") is not None]
-    best_fmt = (
-        min(fmts_with_abr, key=lambda x: abs((x.get("abr") or 0) - target_abr))
-        if fmts_with_abr
-        else fmts[-1]
-    )
-    return best_fmt, chosen_track
+    return pick_track_format(chosen_track), chosen_track
 
 
 def get_available_audio_tracks(url, audio_mode=False):
@@ -1830,6 +1836,7 @@ def get_available_audio_tracks(url, audio_mode=False):
 
     for track in tracks:
         fmts = track["formats"]
+        fmts = [fmt for fmt in fmts if fmt.get("vcodec") == "none"] or fmts
         fmts_with_abr = [f for f in fmts if f.get("abr") is not None]
         if fmts_with_abr:
             best_fmt = min(
@@ -1868,8 +1875,32 @@ def pick_best_format(
             if f.get("vcodec") != "none" and f.get("height") is not None
         ]
 
+        enforce_original = (
+            config_get("force_original_audio")
+            if force_original is None
+            else force_original
+        )
+        if enforce_original or audio_track_id:
+            track_formats = get_audio_tracks_from_formats(formats)
+            requested = next(
+                (track for track in track_formats if track["id"] == audio_track_id),
+                None,
+            )
+            if requested is None and enforce_original:
+                requested = next(
+                    (track for track in track_formats if track["is_original"]), None
+                )
+            if requested is not None:
+                compatible = [
+                    f
+                    for f in available
+                    if f.get("acodec") == "none" or f in requested["formats"]
+                ]
+                if compatible:
+                    available = compatible
+
         if not available:
-            return None, None
+            return None, None, None
 
         available.sort(key=lambda x: x.get("height", 0))
 
@@ -1929,7 +1960,7 @@ def pick_best_format(
                     audio_formats.sort(key=lambda x: x.get("abr") or 0)
                     audio_fmt = audio_formats[-1]
             elif chosen_track is not None:
-                audio_fmt["_chosen_track"] = chosen_track
+                audio_fmt = {**audio_fmt, "_chosen_track": chosen_track}
 
         return fmt, audio_fmt, fmt.get("height")
     else:
@@ -1942,7 +1973,7 @@ def pick_best_format(
         )
         if fmt is not None:
             if chosen_track is not None:
-                fmt["_chosen_track"] = chosen_track
+                fmt = {**fmt, "_chosen_track": chosen_track}
             return fmt, None, fmt.get("abr")
 
         available = [
@@ -2000,21 +2031,6 @@ class Stream:
         self.audio_track_id = audio_track_id
         self.audio_track_lang = audio_track_lang
         self.audio_track_label = audio_track_label
-
-
-def _attach_sponsorblock_segments(stream, url):
-    if (
-        stream is not None
-        and config_get("sponsorblock")
-        and getattr(stream, "sponsorblock_segments", None) is None
-    ):
-        try:
-            from sponsorblock_handler import get_sponsorblock_segments
-
-            stream.sponsorblock_segments = get_sponsorblock_segments(url)
-        except Exception:
-            logger.debug("Failed to attach SponsorBlock segments", exc_info=True)
-    return stream
 
 
 def _stream_from_info(
@@ -2226,6 +2242,15 @@ def resolve_mix_seed_url(url):
     return url
 
 
+def _playback_stream_key(url, audio_mode):
+    return (
+        url,
+        audio_mode,
+        bool(config_get("force_original_audio")),
+        config_get("preferred_audio_language"),
+    )
+
+
 def get_playable_stream(url, audio_mode=False):
     # A mix id sitting in the video slot must become the mix's first track
     # before any extraction, or yt-dlp truncates it and fails "unavailable".
@@ -2235,17 +2260,17 @@ def get_playable_stream(url, audio_mode=False):
     else:
         url_full = url
 
-    cache_key = f"{url_full}_{'audio' if audio_mode else 'video'}"
+    cache_key = _playback_stream_key(url_full, audio_mode)
     cached = _stream_cache.get(cache_key, ttl=1200)
     if cached:
-        return _attach_sponsorblock_segments(cached, url_full)
+        return cached
 
     cached_info = _info_cache.get(url_full, ttl=1200)
     if cached_info:
         stream = _stream_from_info(cached_info, audio_mode=audio_mode)
         if stream:
             _stream_cache.set(cache_key, stream)
-            return _attach_sponsorblock_segments(stream, url_full)
+            return stream
 
     # Handle finite Playlist URLs via deno service. Mix (RD...) ids are already
     # resolved to a concrete track by resolve_mix_seed_url() above, so anything
@@ -2280,8 +2305,8 @@ def get_playable_stream(url, audio_mode=False):
     if not YoutubeDL:
         logger.error("yt-dlp is not installed")
         if audio_mode:
-            return _attach_sponsorblock_segments(get_audio_stream(url_full), url_full)
-        return _attach_sponsorblock_segments(get_video_stream(url_full), url_full)
+            return get_audio_stream(url_full)
+        return get_video_stream(url_full)
 
     if paths.main_path not in os.environ.get("PATH", ""):
         os.environ["PATH"] = paths.main_path + os.pathsep + os.environ.get("PATH", "")
@@ -2292,13 +2317,13 @@ def get_playable_stream(url, audio_mode=False):
         event.wait(timeout=30)
         cached = _stream_cache.get(cache_key, ttl=1200)
         if cached:
-            return _attach_sponsorblock_segments(cached, url_full)
+            return cached
         cached_info = _info_cache.get(url_full, ttl=1200)
         if cached_info:
             stream = _stream_from_info(cached_info, audio_mode=audio_mode)
             if stream:
                 _stream_cache.set(cache_key, stream)
-                return _attach_sponsorblock_segments(stream, url_full)
+                return stream
         return None
 
     logger.info(f"Extracting URL: {url}")
@@ -2350,7 +2375,7 @@ def get_playable_stream(url, audio_mode=False):
 
         if result:
             _stream_cache.set(cache_key, result)
-            return _attach_sponsorblock_segments(result, url_full)
+            return result
 
         logger.error(f"Extraction failed for {url}")
         return None
@@ -2368,36 +2393,52 @@ def get_media_info(url):
     if not YoutubeDL:
         return None
 
-    cookies_path = config_get("cookiespath")
-    has_cookies = bool(cookies_path and os.path.exists(cookies_path))
+    # Opening a player starts several optional metadata lookups for this URL.
+    # Share their extraction instead of creating one yt-dlp session per lookup.
+    request_key = ("metadata", url)
+    event, owner = _begin_stream_extraction(request_key)
+    if not owner:
+        event.wait(timeout=30)
+        return _info_cache.get(url, ttl=3600)
 
-    def _extract_info_task(client):
-        try:
-            with get_ydl_instance(client, cookies_path) as ydl:
-                return ydl.extract_info(url, download=False)
-        except Exception:
-            logger.exception("get_media_info extraction failed for client %s", client)
-            return None
+    try:
+        cached = _info_cache.get(url, ttl=3600)
+        if cached:
+            return cached
+        cookies_path = config_get("cookiespath")
+        has_cookies = bool(cookies_path and os.path.exists(cookies_path))
 
-    clients = get_configured_player_clients(has_cookies=has_cookies)
-    info = _extract_info_task(clients)
-    if not info and clients != ["default"]:
-        logger.warning(
-            "get_media_info failed for client %s; retrying with 'default' client",
-            clients,
-        )
-        info = _extract_info_task(["default"])
+        def _extract_info_task(client):
+            try:
+                with get_ydl_instance(client, cookies_path) as ydl:
+                    return ydl.extract_info(url, download=False)
+            except Exception:
+                logger.exception(
+                    "get_media_info extraction failed for client %s", client
+                )
+                return None
 
-    if info:
-        _info_cache.set(url, info)
-        return info
+        clients = get_configured_player_clients(has_cookies=has_cookies)
+        info = _extract_info_task(clients)
+        if not info and clients != ["default"]:
+            logger.warning(
+                "get_media_info failed for client %s; retrying with 'default' client",
+                clients,
+            )
+            info = _extract_info_task(["default"])
 
-    logger.error(f"get_media_info failed for {url}")
-    return None
+        if info:
+            _info_cache.set(url, info)
+            return info
+
+        logger.error(f"get_media_info failed for {url}")
+        return None
+    finally:
+        _finish_stream_extraction(request_key, event)
 
 
 def get_audio_stream(url):
-    cache_key = f"{url}_audio"
+    cache_key = _playback_stream_key(url, True)
     cached = _stream_cache.get(cache_key, ttl=1200)
     if cached:
         return cached
@@ -2411,7 +2452,7 @@ def get_audio_stream(url):
 
 
 def get_video_stream(url):
-    cache_key = f"{url}_video"
+    cache_key = _playback_stream_key(url, False)
     cached = _stream_cache.get(cache_key, ttl=1200)
     if cached:
         return cached
@@ -2498,16 +2539,19 @@ def get_specific_quality_stream(url, height, audio_mode=False, audio_track_id=No
         target_height=height if not audio_mode else None,
         audio_track_id=audio_track_id,
     )
-    if audio_mode and isinstance(height, int):
-        for f in formats:
-            if (
-                f.get("acodec") != "none"
-                and f.get("vcodec") == "none"
-                and f.get("abr") == height
-            ):
-                stream = f
-                quality = f.get("abr")
-                break
+    if audio_mode and stream is not None and isinstance(height, (int, float)):
+        track = stream.get("_chosen_track")
+        if track:
+            selected = [
+                fmt
+                for fmt in track["formats"]
+                if fmt.get("abr") is not None
+                and (fmt.get("vcodec") == "none") == (stream.get("vcodec") == "none")
+            ]
+            if selected:
+                stream = min(selected, key=lambda fmt: abs(fmt["abr"] - height))
+                stream = {**stream, "_chosen_track": track}
+                quality = stream["abr"]
 
     if stream:
         audio_url = audio_stream.get("url") if audio_stream else None
@@ -2541,23 +2585,24 @@ def get_specific_quality_stream(url, height, audio_mode=False, audio_track_id=No
     return None
 
 
-def get_home_feed(continuation=None, parent=None):
-    feature_name = _("عرض الخلاصة الرئيسية")
-    if not ensure_deno_installed(parent=parent, feature_name=feature_name):
-        return {
-            "videos": [],
-            "continuation": None,
-            "error": _("لم يتم تثبيت Deno."),
-        }
+def get_home_feed(continuation=None, parent=None, *, cookies_path=None):
+    """Fetch the feed, optionally using a cookie path verified by the caller."""
+    if cookies_path is None:
+        feature_name = _("عرض الخلاصة الرئيسية")
+        if not ensure_deno_installed(parent=parent, feature_name=feature_name):
+            return {
+                "videos": [],
+                "continuation": None,
+                "error": _("لم يتم تثبيت Deno."),
+            }
 
-    if not ensure_cookies_configured(parent=parent, feature_name=feature_name):
-        return {
-            "videos": [],
-            "continuation": None,
-            "error": _("لم يتم ضبط ملف الكوكيز."),
-        }
-
-    cookies_path = config_get("cookiespath")
+        if not ensure_cookies_configured(parent=parent, feature_name=feature_name):
+            return {
+                "videos": [],
+                "continuation": None,
+                "error": _("لم يتم ضبط ملف الكوكيز."),
+            }
+        cookies_path = config_get("cookiespath")
     result = deno_service.send_command(
         "get_home_feed",
         {
@@ -2704,41 +2749,44 @@ def update_watch_history(
         logger.error(f"Error updating watch history: {e}")
 
 
-def like_video(url, action="like", parent=None):
+def validate_video_reaction(parent=None):
+    feature_name = _("إبداء الإعجاب بالمرئيات")
+
+    if not ensure_deno_installed(parent=parent, feature_name=feature_name):
+        return _("لم يتم تثبيت أداة Deno المطلوبة للإعجاب بالمرئيات.")
+
+    if not ensure_cookies_configured(parent=parent, feature_name=feature_name):
+        return _("لم يتم ضبط ملف الكوكيز الخاص بيوتيوب.")
+    return None
+
+
+def like_video(url, action="like", parent=None, *, cookies_path=None):
     """
     Performs a like, dislike, or remove_like interaction on a video.
     Actions: 'like', 'dislike', 'remove_like'
     Returns dict: {"success": bool, "error": str or None}
     """
-    feature_name = _("إبداء الإعجاب بالمرئيات")
+    if cookies_path is None:
+        error = validate_video_reaction(parent)
+        if error:
+            return {"success": False, "error": error}
+        cookies_path = config_get("cookiespath")
 
-    if not ensure_deno_installed(parent=parent, feature_name=feature_name):
-        return {
-            "success": False,
-            "error": _("لم يتم تثبيت أداة Deno المطلوبة للإعجاب بالمرئيات."),
-        }
-
-    if not ensure_cookies_configured(parent=parent, feature_name=feature_name):
-        return {
-            "success": False,
-            "error": _("لم يتم ضبط ملف الكوكيز الخاص بيوتيوب."),
-        }
-
-    match = youtube_regexp(url)
-    if not match:
+    video_id = get_video_id(url)
+    if not video_id:
         return {
             "success": False,
             "error": _("رابط الفيديو غير صالح."),
         }
-    video_id = match.group(5)
 
     try:
         result = deno_service.send_command(
             "like_video",
             {
-                "cookiesPath": config_get("cookiespath"),
+                "cookiesPath": cookies_path,
                 "videoId": video_id,
                 "action": action,
+                "location": get_windows_region(),
             },
         )
         if isinstance(result, dict) and result.get("success"):
@@ -2772,17 +2820,20 @@ def get_video_like_info(url):
     """
     url = resolve_mix_seed_url(url)
     cookies_path = config_get("cookiespath")
-    match = youtube_regexp(url)
-    if not match:
+    video_id = get_video_id(url)
+    if not video_id:
         logger.error(f"Failed to match URL: {url}")
         return _normalize_like_info(None)
-    video_id = match.group(5)
     logger.info(f"Fetching likes for video_id: {video_id} with cookies: {cookies_path}")
 
     try:
         result = deno_service.send_command(
             "get_video_likes",
-            {"cookiesPath": cookies_path, "videoId": video_id},
+            {
+                "cookiesPath": cookies_path,
+                "videoId": video_id,
+                "location": get_windows_region(),
+            },
         )
         logger.info(f"Deno service result for likes: {result}")
         if isinstance(result, dict) and "error" in result:

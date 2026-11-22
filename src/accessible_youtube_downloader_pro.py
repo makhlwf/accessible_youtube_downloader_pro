@@ -16,6 +16,7 @@ configure_linux_display_backend()
 import logging
 import subprocess
 import threading
+import time
 import webbrowser
 
 import pyperclip
@@ -167,6 +168,7 @@ setup_logging()
 logger = logging.getLogger(__name__)
 IPC_HOST = "127.0.0.1"
 IPC_PORT = 57280
+IPC_MAX_MESSAGE_BYTES = 64 * 1024
 
 
 def send_ipc_message(action, url=""):
@@ -295,8 +297,10 @@ class HomeScreen(wx.Frame):
         init_translation("HexPlayer")
 
         self.checked = False
+        self._shutting_down = threading.Event()
         self.home_feed_data = []
         self.home_feed_results = None
+        self._home_feed_request = None
         self.scraper = Scraper(owner=self)
         self.home_feed_continuation = None
         self.last_clip_content = ""
@@ -323,6 +327,8 @@ class HomeScreen(wx.Frame):
         wx.CallAfter(self._deferred_startup)
 
     def _deferred_startup(self):
+        if self._shutting_down.is_set():
+            return
         self._startup_logic()
         try:
             import discord_presence
@@ -333,7 +339,7 @@ class HomeScreen(wx.Frame):
             logger.debug(
                 "Failed to initialize discord presence on startup", exc_info=True
             )
-        if self.pending_launch_url:
+        if self.pending_launch_url and not self._shutting_down.is_set():
             self.handle_external_url(self.pending_launch_url)
 
     def _init_ui(self):
@@ -732,35 +738,77 @@ class HomeScreen(wx.Frame):
         )
 
     def load_home_feed(self, load_more=False):
+        continuation = self.home_feed_continuation if load_more else None
+        if self._shutting_down.is_set() or (load_more and not continuation):
+            return
+        cookies_path = settings_handler.config_get("cookiespath")
+        if self._home_feed_request is not None:
+            pending_cookies, _token = self._home_feed_request
+            if pending_cookies == cookies_path:
+                return
+        token = object()
+        self._home_feed_request = (cookies_path, token)
+        # These checks may open dialogs. The worker receives the cookie path
+        # that was checked here, so it does not consult changing UI settings.
+        feature_name = _("عرض الخلاصة الرئيسية")
+        ready = utils.ensure_deno_installed(
+            parent=self, feature_name=feature_name
+        ) and utils.ensure_cookies_configured(parent=self, feature_name=feature_name)
+        if self._home_feed_request != (cookies_path, token):
+            return
+        if (
+            not ready
+            or self._shutting_down.is_set()
+            or settings_handler.config_get("cookiespath") != cookies_path
+        ):
+            self._home_feed_request = None
+            return
+
         if not load_more:
+            self.home_feed_continuation = None
+            self.home_feed_data = []
+            self.home_feed_results = None
+            self.scraper.set_results(None)
             self.home_feed_list.Set([_("جاري تحميل الاقتراحات... يرجى الانتظار")])
             self.home_feed_list.Show()
+            self.load_more_home_button.Hide()
             self.Layout()
-
-        continuation = self.home_feed_continuation if load_more else None
 
         def _load():
             try:
-                data = utils.get_home_feed(continuation, parent=self)
-                wx.CallAfter(self._update_home_feed, data, load_more)
-            except Exception as e:
-                logger.error(f"Failed to load home feed: {e}")
+                data = utils.get_home_feed(continuation, cookies_path=cookies_path)
+            except Exception:
+                logger.exception("Failed to load home feed")
+                data = None
+            wx.CallAfter(self._finish_home_feed, cookies_path, token, data, load_more)
 
         # Run feed loading in a thread to keep UI responsive
         threading.Thread(target=_load, daemon=True).start()
+
+    def _finish_home_feed(self, cookies_path, token, data, load_more):
+        if self._home_feed_request != (cookies_path, token):
+            return
+        self._home_feed_request = None
+        if (
+            not self._shutting_down.is_set()
+            and settings_handler.config_get("cookiespath") == cookies_path
+        ):
+            self._update_home_feed(data, load_more)
 
     def _update_home_feed(self, data, load_more=False):
         from youtube_browser.search_handler import SimpleResult
 
         if isinstance(data, dict) and data.get("error"):
             err_msg = data["error"]
+            speak(err_msg, interrupt=True)
             wx.MessageBox(
                 err_msg,
                 _("تنبيه"),
                 style=wx.OK | wx.ICON_WARNING,
                 parent=self,
             )
-            speak(err_msg)
+        if load_more and (not isinstance(data, dict) or data.get("error")):
+            return
 
         new_videos = data.get("videos", []) if isinstance(data, dict) else []
         self.home_feed_continuation = (
@@ -819,11 +867,12 @@ class HomeScreen(wx.Frame):
         _add_to_scraper()
 
     def on_home_feed_play(self, event, audio_mode=False):
+        selection = self.home_feed_list.GetSelection()
+        results = self.home_feed_results
+        if results is None or not 0 <= selection < len(self.home_feed_data):
+            return
         from media_player.media_gui import MediaGui, play_mix
 
-        selection = self.home_feed_list.GetSelection()
-        if selection == wx.NOT_FOUND:
-            return
         video_data = self.home_feed_data[selection]
         if video_data.get("type") == "mix":
             logger.info(
@@ -831,16 +880,19 @@ class HomeScreen(wx.Frame):
                 video_data.get("playlistId"),
                 video_data.get("id"),
             )
-            play_mix(
-                self,
-                video_data.get("playlistId"),
-                video_data.get("id"),
-                audio_mode=audio_mode,
-            )
-            self.Hide()
+            if (
+                play_mix(
+                    self,
+                    video_data.get("playlistId"),
+                    video_data.get("id"),
+                    audio_mode=audio_mode,
+                )
+                is not None
+            ):
+                self.Hide()
             return
         url = video_data["url"]
-        stream = self.home_feed_results.get_stream(selection, audio_mode=audio_mode)
+        stream = results.get_stream(selection, audio_mode=audio_mode)
         if stream is None:
             if not utils.check_yt_dlp(self):
                 return
@@ -856,19 +908,19 @@ class HomeScreen(wx.Frame):
             stream,
             url,
             audio_mode=audio_mode,
-            results=self.home_feed_results,
+            results=results,
         )
         self.Hide()
 
     def on_home_feed_list_box(self, event):
         n = self.home_feed_list.Selection
-        if n != wx.NOT_FOUND:
-            if self.home_feed_data[n].get("type") != "mix":
-                self.scraper.add_item(n, priority=0)
-            if n > 0 and n % 10 == 0:
-                for i in range(n, min(n + 10, self.home_feed_results.count)):
-                    if self.home_feed_data[i].get("type") == "mix":
-                        continue
+        if not 0 <= n < len(self.home_feed_data):
+            return
+        if self.home_feed_data[n].get("type") != "mix":
+            self.scraper.add_item(n, priority=0)
+        if n > 0 and n % 10 == 0:
+            for i in range(n, min(n + 10, len(self.home_feed_data))):
+                if self.home_feed_data[i].get("type") != "mix":
                     self.scraper.add_item(i, priority=10)
 
     def on_home_feed_hook(self, event):
@@ -920,8 +972,13 @@ class HomeScreen(wx.Frame):
             return
         mix_id = utils.extract_mix_id(url)
         if mix_id:
-            play_mix(self, mix_id, utils.extract_video_id(url), audio_mode=audio_mode)
-            self.Hide()
+            if (
+                play_mix(
+                    self, mix_id, utils.extract_video_id(url), audio_mode=audio_mode
+                )
+                is not None
+            ):
+                self.Hide()
             return
         stream = LoadingDialog(
             self, _("جاري التشغيل"), utils.get_playable_stream, url, audio_mode
@@ -1059,6 +1116,7 @@ class HomeScreen(wx.Frame):
     def onSettings(self, event):
         from gui.settings_dialog import SettingsDialog
 
+        previous_cookies_path = settings_handler.config_get("cookiespath")
         SettingsDialog(self)
         if settings_handler.config_get("background_monitoring"):
             utils.set_startup(True)
@@ -1075,9 +1133,14 @@ class HomeScreen(wx.Frame):
 
         cookies_path = settings_handler.config_get("cookiespath")
         if cookies_path and os.path.exists(cookies_path):
-            if not self.home_feed_list.IsShown() or not self.home_feed_data:
+            if (
+                cookies_path != previous_cookies_path
+                or not self.home_feed_list.IsShown()
+                or not self.home_feed_data
+            ):
                 self.load_home_feed()
         else:
+            self._home_feed_request = None
             self.home_feed_list.Hide()
             self.load_more_home_button.Hide()
             self.Layout()
@@ -1212,6 +1275,9 @@ class HomeScreen(wx.Frame):
             event.Skip()
 
     def onShow(self, event):
+        if not event.IsShown() or self._shutting_down.is_set():
+            event.Skip()
+            return
         if not self.checked:
             if not settings_handler.config_get("welcome_completed"):
                 wx.CallAfter(self.show_welcome_screen)
@@ -1224,6 +1290,8 @@ class HomeScreen(wx.Frame):
         event.Skip()
 
     def show_welcome_screen(self):
+        if self._shutting_down.is_set():
+            return
         from gui.welcome_dialog import WelcomeDialog
 
         dlg = WelcomeDialog(self)
@@ -1238,9 +1306,29 @@ class HomeScreen(wx.Frame):
         self.show_welcome_screen()
 
     def startup_dependency_checks(self):
+        if self._shutting_down.is_set():
+            return
         if utils.check_yt_dlp(self) and utils.check_deno(self):
             utils.ensure_js_dependencies()
-        utils.check_pot_provider(self)
+        if self._shutting_down.is_set():
+            return
+        if pot_service.is_installed():
+            threading.Thread(
+                target=self._start_installed_pot_provider, daemon=True
+            ).start()
+        else:
+            utils.check_pot_provider(self)
+
+    def _start_installed_pot_provider(self):
+        if self._shutting_down.is_set():
+            return
+        try:
+            pot_service.ensure_started()
+        except Exception:
+            logger.exception("Failed to prepare the POT provider at startup")
+        finally:
+            if self._shutting_down.is_set():
+                pot_service.stop()
 
     def onGuide(self, event):
         from doc_handler import documentation_get
@@ -1281,6 +1369,9 @@ class HomeScreen(wx.Frame):
         wx.MessageBox(about, _("حول"), parent=self)
 
     def onExit(self, event=None):
+        if self._shutting_down.is_set():
+            return
+        self._shutting_down.set()
         self.clip_timer.Stop()
         self.tray_icon.Destroy()
         database.disconnect()
@@ -1305,42 +1396,58 @@ class HomeScreen(wx.Frame):
             self.onExit()
 
     def _start_ipc_server(self):
-        def handle_message(data):
-            try:
-                message = json.loads(data.decode("utf-8"))
-            except Exception:
-                if data == b"SHOW":
-                    wx.CallAfter(self.tray_icon.on_show, None)
-                return
-
-            action = message.get("action")
-            if action == "show":
-                wx.CallAfter(self.tray_icon.on_show, None)
-            elif action == "open_url":
-                wx.CallAfter(self.handle_external_url, message.get("url", ""))
-            elif action == "cookies_updated":
-                wx.CallAfter(self.update_shorts_button_visibility)
-
         def listen():
             try:
-                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                s.bind((IPC_HOST, IPC_PORT))
-                s.listen(1)
-                while True:
-                    conn, _addr = s.accept()
-                    with conn:
-                        chunks = []
-                        while True:
-                            chunk = conn.recv(4096)
-                            if not chunk:
-                                break
-                            chunks.append(chunk)
-                        if chunks:
-                            handle_message(b"".join(chunks))
-            except Exception:
-                pass
+                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server:
+                    server.bind((IPC_HOST, IPC_PORT))
+                    server.listen()
+                    server.settimeout(0.5)
+                    while not self._shutting_down.is_set():
+                        try:
+                            conn, _addr = server.accept()
+                        except TimeoutError:
+                            continue
+                        with conn:
+                            try:
+                                data = bytearray()
+                                deadline = time.monotonic() + 1
+                                while len(data) <= IPC_MAX_MESSAGE_BYTES:
+                                    remaining = deadline - time.monotonic()
+                                    if remaining <= 0:
+                                        raise TimeoutError
+                                    conn.settimeout(remaining)
+                                    chunk = conn.recv(4096)
+                                    if not chunk:
+                                        break
+                                    data.extend(chunk)
+                            except OSError:
+                                logger.debug(
+                                    "Could not read local IPC request", exc_info=True
+                                )
+                                continue
+                        if data and len(data) <= IPC_MAX_MESSAGE_BYTES:
+                            wx.CallAfter(self._handle_ipc_message, bytes(data))
+            except OSError:
+                logger.exception("Local IPC listener stopped")
 
         threading.Thread(target=listen, daemon=True).start()
+
+    def _handle_ipc_message(self, data):
+        if self._shutting_down.is_set():
+            return
+        try:
+            message = {"action": "show"} if data == b"SHOW" else json.loads(data)
+        except ValueError, RecursionError:
+            return
+        if not isinstance(message, dict):
+            return
+        action = message.get("action")
+        if action == "show":
+            self.tray_icon.on_show(None)
+        elif action == "open_url" and isinstance(url := message.get("url"), str):
+            self.handle_external_url(url)
+        elif action == "cookies_updated":
+            self.update_shorts_button_visibility()
 
 
 if __name__ == "__main__":

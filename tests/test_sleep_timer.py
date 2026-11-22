@@ -169,7 +169,6 @@ def test_sync_sleep_menu_checks_matching_radio_item():
 def _make_player(window):
     p = Player.__new__(Player)
     p._closing = False
-    p.do_reset = True
     p.media = MagicMock()
     p.media.get_media.return_value = object()
     p.apply_saved_audio_output_device = MagicMock()
@@ -186,15 +185,12 @@ def test_reset_finish_current_stops_without_advancing_or_replaying():
     # autonext + repeat forced True: without the finish-current guard this would
     # both replay and advance. The guard must pre-empt all of it.
     config = {"repeatTracks": True, "autonext": True}
-    with (
-        patch("media_player.player.wx.CallAfter") as mock_call_after,
-        patch(
-            "media_player.player.config_get", side_effect=lambda k: config.get(k, False)
-        ),
+    with patch(
+        "media_player.player.config_get", side_effect=lambda k: config.get(k, False)
     ):
         p.reset()
 
-    mock_call_after.assert_called_once_with(window._on_sleep_finish_reached)
+    window._on_sleep_finish_reached.assert_called_once_with()
     p.media.play.assert_not_called()
     window.next.assert_not_called()
 
@@ -206,13 +202,23 @@ def test_reset_without_finish_current_still_advances_on_autonext():
     p = _make_player(window)
 
     config = {"repeatTracks": False, "autonext": True}
-    with (
-        patch("media_player.player.wx.CallAfter") as mock_call_after,
-        patch(
-            "media_player.player.config_get", side_effect=lambda k: config.get(k, False)
-        ),
+    with patch(
+        "media_player.player.config_get", side_effect=lambda k: config.get(k, False)
     ):
         p.reset()
 
-    mock_call_after.assert_called_once_with(window.next)
+    window.next.assert_called_once_with()
     p.media.play.assert_not_called()
+
+
+def test_queued_end_event_cannot_advance_replaced_media():
+    window = MagicMock()
+    p = _make_player(window)
+    event = MagicMock(media=p.media.get_media())
+    with patch("media_player.player.wx.CallAfter") as dispatch:
+        p.onEnd(event)
+    callback, *args = dispatch.call_args.args
+    p.media.get_media.return_value = object()
+    callback(*args)
+    window.next.assert_not_called()
+    p.media.set_media.assert_not_called()

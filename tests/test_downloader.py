@@ -423,3 +423,9 @@ def test_start_media_download(monkeypatch):
     _args, kwargs = calls[0]
     assert kwargs.get("video_format") == "mp4"
     assert "test_folder" in _args[1]  # path joined with sanitized title
+
+
+def test_explicit_video_download_quality_reaches_extractor():
+    selector = get_video_download_format(720, container="mp4")
+    downloader = Downloader("url", ".", selector, None, None, video_format="mp4")
+    assert downloader._effective_format() == selector

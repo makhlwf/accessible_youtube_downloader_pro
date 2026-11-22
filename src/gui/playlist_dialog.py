@@ -276,12 +276,15 @@ class PlaylistDialog(wx.Dialog):
 
         if not utils.check_yt_dlp(self):
             return
-        qualities = LoadingDialog(
+        loading = LoadingDialog(
             self,
             _("جاري جلب الجودات المتاحة..."),
             utils.get_available_qualities,
             url,
-        ).res
+        )
+        if loading.cancelled:
+            return
+        qualities = loading.res
         quality = None
         if qualities:
             quality_dlg = QualitySelectionDialog(self, qualities)

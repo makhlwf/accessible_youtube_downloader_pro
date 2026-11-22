@@ -1,14 +1,19 @@
+from __future__ import annotations
+
 import ctypes
 import locale
 import logging
+import os
 import shutil
 import sys
 import threading
 import time
 import zipfile
+from collections.abc import Iterator
 from ctypes.util import find_library
 from enum import IntEnum
 from pathlib import Path
+from tempfile import NamedTemporaryFile
 from typing import Any, ClassVar
 
 from runtime_dlls import (
@@ -41,8 +46,8 @@ MPV_LOADFILE_INDEX_API = 0x00020003
 
 MPV_END_FILE_REASON_EOF = 0
 MPV_END_FILE_REASON_STOP = 2
-MPV_END_FILE_REASON_QUIT = 3
 MPV_END_FILE_REASON_ERROR = 4
+MPV_END_FILE_REASON_REDIRECT = 5
 
 
 class State(IntEnum):
@@ -118,9 +123,13 @@ class MpvEvent(ctypes.Structure):
 
 
 class MpvEndEvent:
-    def __init__(self, reason: int) -> None:
+    def __init__(
+        self, reason: int, media: MpvMedia | None = None, error: int = 0
+    ) -> None:
         self.reason = reason
         self.type = MPV_EVENT_END_FILE
+        self.media = media
+        self.error = error
 
 
 class MpvMedia:
@@ -133,6 +142,7 @@ class MpvMedia:
 
 
 _mpv_lib: ctypes.CDLL | None = None
+_mpv_lib_lock = threading.Lock()
 
 
 def _bundle_root() -> Path:
@@ -150,6 +160,7 @@ def _extract_mpv_dll(root: Path) -> Path | None:
     if not archive_path.exists():
         return None
 
+    temporary_path = None
     try:
         with zipfile.ZipFile(archive_path) as archive:
             member = next(
@@ -162,21 +173,30 @@ def _extract_mpv_dll(root: Path) -> Path | None:
             )
             if member is None:
                 raise MPVError("libmpv-2.dll.zip does not contain libmpv-2.dll.")
-            with archive.open(member) as source, dll_path.open("wb") as target:
+            with (
+                archive.open(member) as source,
+                NamedTemporaryFile(dir=root, suffix=".tmp", delete=False) as target,
+            ):
+                temporary_path = Path(target.name)
                 shutil.copyfileobj(source, target)
+        try:
+            os.replace(temporary_path, dll_path)
+        except PermissionError:
+            # Another instance may have published and loaded the DLL first.
+            if not dll_path.is_file():
+                raise
     except (OSError, zipfile.BadZipFile) as exc:
         raise MPVError("Unable to extract libmpv-2.dll from bundled archive.") from exc
+    finally:
+        if temporary_path is not None:
+            temporary_path.unlink(missing_ok=True)
 
     return dll_path if dll_path.exists() else None
 
 
-def _mpv_candidates() -> list[Path]:
-    roots = runtime_roots([_bundle_root()])
-
-    candidates = []
-    for root in roots:
-        candidates.append(_extract_mpv_dll(root) or root / "libmpv-2.dll")
-    return candidates
+def _mpv_candidates() -> Iterator[Path]:
+    for root in runtime_roots([_bundle_root()]):
+        yield _extract_mpv_dll(root) or root / "libmpv-2.dll"
 
 
 def _diagnose_dependencies(dll_path: Path) -> list[str]:
@@ -212,9 +232,13 @@ def _diagnose_dependencies(dll_path: Path) -> list[str]:
 
 def _load_mpv() -> ctypes.CDLL:
     global _mpv_lib
-    if _mpv_lib is not None:
+    with _mpv_lib_lock:
+        if _mpv_lib is None:
+            _mpv_lib = _initialize_mpv_library()
         return _mpv_lib
 
+
+def _initialize_mpv_library() -> ctypes.CDLL:
     dll_path = (
         next((path for path in _mpv_candidates() if path.exists()), None)
         if sys.platform == "win32"
@@ -322,7 +346,6 @@ def _load_mpv() -> ctypes.CDLL:
     lib.mpv_free.argtypes = [ctypes.c_void_p]
     lib.mpv_free.restype = None
 
-    _mpv_lib = lib
     return lib
 
 
@@ -409,27 +432,36 @@ class MpvMediaPlayer:
         self._lock = threading.RLock()
         self._closed = False
         self._loaded = False
+        self._playlist_entries: range | tuple[int, ...] = ()
+        self._started_current_entry = False
         self._state = State.NothingSpecial
         self._current_media: MpvMedia | None = None
         self._pending_position: float | None = None
         self._pending_time: float | None = None
         self._end_callback = end_callback
 
-        self._set_option("config", "no")
-        self._set_option("terminal", "no")
-        self._set_option("osc", "no")
-        self._set_option("osd-level", "0")
-        self._set_option("osd-on-seek", "no")
-        self._set_option("input-default-bindings", "no")
-        self._set_option("volume-max", "350")
-        self._set_option("keep-open", "no")
-        self._set_option("cache", "yes")
-        if hwnd:
-            self._set_option("wid", int(hwnd))
+        self._event_thread: threading.Thread | None = None
+        try:
+            self._set_option("config", "no")
+            self._set_option("terminal", "no")
+            self._set_option("osc", "no")
+            self._set_option("osd-level", "0")
+            self._set_option("osd-on-seek", "no")
+            self._set_option("input-default-bindings", "no")
+            self._set_option("volume-max", "350")
+            self._set_option("keep-open", "no")
+            self._set_option("cache", "yes")
+            if hwnd:
+                self._set_option("wid", int(hwnd))
 
-        self._check(self._lib.mpv_initialize(self._handle))
-        self._event_thread = threading.Thread(target=self._event_loop, daemon=True)
-        self._event_thread.start()
+            self._check(self._lib.mpv_initialize(self._handle))
+            with self._lock:
+                event_thread = threading.Thread(target=self._event_loop, daemon=True)
+                event_thread.start()
+                self._event_thread = event_thread
+        except Exception:
+            self.close()
+            raise
 
     def _check(self, result: int) -> None:
         if result < 0:
@@ -447,17 +479,18 @@ class MpvMediaPlayer:
         )
 
     def _command(self, *args: Any, check: bool = True) -> int:
-        if self._closed:
-            return -1
-        encoded = [_encode(arg) for arg in args]
-        c_args = (ctypes.c_char_p * (len(encoded) + 1))()
-        for index, arg in enumerate(encoded):
-            c_args[index] = arg
-        c_args[len(encoded)] = None
-        result = self._lib.mpv_command(self._handle, c_args)
-        if check:
-            self._check(result)
-        return result
+        with self._lock:
+            if self._closed:
+                return -1
+            encoded = [_encode(arg) for arg in args]
+            c_args = (ctypes.c_char_p * (len(encoded) + 1))()
+            for index, arg in enumerate(encoded):
+                c_args[index] = arg
+            c_args[len(encoded)] = None
+            result = self._lib.mpv_command(self._handle, c_args)
+            if check:
+                self._check(result)
+            return result
 
     def _string_node(self, value: Any, keepalive: list[bytes]) -> MpvNode:
         data = _encode(value)
@@ -518,137 +551,221 @@ class MpvMediaPlayer:
         root.format = MPV_FORMAT_NODE_ARRAY
         root.u.list = ctypes.pointer(command_list)
 
-        self._check(self._lib.mpv_command_node(self._handle, ctypes.byref(root), None))
+        result = MpvNode()
+        self._check(
+            self._lib.mpv_command_node(
+                self._handle, ctypes.byref(root), ctypes.byref(result)
+            )
+        )
+        try:
+            response = _parse_node(result)
+            entry_id = (
+                response.get("playlist_entry_id")
+                if isinstance(response, dict)
+                else None
+            )
+            self._playlist_entries = (entry_id,) if entry_id is not None else ()
+        finally:
+            self._lib.mpv_free_node_contents(ctypes.byref(result))
+        self._started_current_entry = False
         self._loaded = False
         self._state = State.Opening
 
     def _set_property_string(self, name: str, value: str, check: bool = False) -> int:
-        result = self._lib.mpv_set_property_string(
-            self._handle,
-            _encode(name),
-            _encode(value),
-        )
-        if check:
-            self._check(result)
-        return result
-
-    def _set_property_flag(self, name: str, value: bool) -> None:
-        flag = ctypes.c_int(1 if value else 0)
-        self._check(
-            self._lib.mpv_set_property(
+        with self._lock:
+            if self._closed:
+                return -1
+            result = self._lib.mpv_set_property_string(
                 self._handle,
                 _encode(name),
-                MPV_FORMAT_FLAG,
-                ctypes.byref(flag),
+                _encode(value),
             )
-        )
+            if check:
+                self._check(result)
+            return result
+
+    def _set_property_flag(self, name: str, value: bool) -> None:
+        with self._lock:
+            if self._closed:
+                return
+            flag = ctypes.c_int(1 if value else 0)
+            self._check(
+                self._lib.mpv_set_property(
+                    self._handle,
+                    _encode(name),
+                    MPV_FORMAT_FLAG,
+                    ctypes.byref(flag),
+                )
+            )
 
     def _set_property_double(self, name: str, value: float) -> None:
-        number = ctypes.c_double(float(value))
-        self._check(
-            self._lib.mpv_set_property(
+        with self._lock:
+            if self._closed:
+                return
+            number = ctypes.c_double(float(value))
+            self._check(
+                self._lib.mpv_set_property(
+                    self._handle,
+                    _encode(name),
+                    MPV_FORMAT_DOUBLE,
+                    ctypes.byref(number),
+                )
+            )
+
+    def _get_property_double(self, name: str) -> float | None:
+        with self._lock:
+            if self._closed:
+                return None
+            number = ctypes.c_double()
+            result = self._lib.mpv_get_property(
                 self._handle,
                 _encode(name),
                 MPV_FORMAT_DOUBLE,
                 ctypes.byref(number),
             )
-        )
-
-    def _get_property_double(self, name: str) -> float | None:
-        number = ctypes.c_double()
-        result = self._lib.mpv_get_property(
-            self._handle,
-            _encode(name),
-            MPV_FORMAT_DOUBLE,
-            ctypes.byref(number),
-        )
-        if result < 0:
-            return None
-        return float(number.value)
+            if result < 0:
+                return None
+            return float(number.value)
 
     def _get_property_flag(self, name: str) -> bool | None:
-        flag = ctypes.c_int()
-        result = self._lib.mpv_get_property(
-            self._handle,
-            _encode(name),
-            MPV_FORMAT_FLAG,
-            ctypes.byref(flag),
-        )
-        if result < 0:
-            return None
-        return bool(flag.value)
+        with self._lock:
+            if self._closed:
+                return None
+            flag = ctypes.c_int()
+            result = self._lib.mpv_get_property(
+                self._handle,
+                _encode(name),
+                MPV_FORMAT_FLAG,
+                ctypes.byref(flag),
+            )
+            if result < 0:
+                return None
+            return bool(flag.value)
 
     def _get_property_string(self, name: str) -> str | None:
-        value = self._lib.mpv_get_property_string(self._handle, _encode(name))
-        if not value:
-            return None
-        try:
-            return ctypes.cast(value, ctypes.c_char_p).value.decode(
-                "utf-8", errors="replace"
-            )
-        finally:
-            self._lib.mpv_free(value)
+        with self._lock:
+            if self._closed:
+                return None
+            value = self._lib.mpv_get_property_string(self._handle, _encode(name))
+            if not value:
+                return None
+            try:
+                return ctypes.cast(value, ctypes.c_char_p).value.decode(
+                    "utf-8", errors="replace"
+                )
+            finally:
+                self._lib.mpv_free(value)
 
     def _get_property_node(self, name: str) -> Any:
-        node = MpvNode()
-        result = self._lib.mpv_get_property(
-            self._handle,
-            _encode(name),
-            MPV_FORMAT_NODE,
-            ctypes.byref(node),
-        )
-        if result < 0:
-            return None
-        try:
-            return _parse_node(node)
-        finally:
-            self._lib.mpv_free_node_contents(ctypes.byref(node))
+        with self._lock:
+            if self._closed:
+                return None
+            node = MpvNode()
+            result = self._lib.mpv_get_property(
+                self._handle,
+                _encode(name),
+                MPV_FORMAT_NODE,
+                ctypes.byref(node),
+            )
+            if result < 0:
+                return None
+            try:
+                return _parse_node(node)
+            finally:
+                self._lib.mpv_free_node_contents(ctypes.byref(node))
 
     def _event_loop(self) -> None:
-        while not self._closed:
-            handle = self._handle
-            if not handle or self._closed:
-                break
-            try:
-                event_ptr = self._lib.mpv_wait_event(handle, 0.1)
-            except Exception:
-                break
-            if not event_ptr or self._closed:
-                continue
-            event = event_ptr.contents
-            if event.event_id == MPV_EVENT_NONE:
-                continue
-            if event.event_id == MPV_EVENT_SHUTDOWN:
-                break
-            if event.event_id == MPV_EVENT_START_FILE:
-                self._state = State.Opening
-            elif event.event_id == MPV_EVENT_FILE_LOADED:
-                self._loaded = True
-                self._state = State.Playing
-                self._apply_pending_seek()
-            elif event.event_id == MPV_EVENT_END_FILE:
-                self._handle_end_file(event)
+        try:
+            while not self._closed:
+                event_ptr = self._lib.mpv_wait_event(self._handle, 0.1)
+                if not event_ptr or event_ptr.contents.event_id == MPV_EVENT_NONE:
+                    continue
+                event = event_ptr.contents
+                if event.event_id == MPV_EVENT_SHUTDOWN:
+                    break
+                with self._lock:
+                    if self._closed:
+                        break
+                    end_event = self._handle_event(event)
+                if end_event is not None and self._end_callback:
+                    try:
+                        self._end_callback(end_event)
+                    except Exception:
+                        logger.exception("MPV end-of-file callback failed")
+        except Exception:
+            logger.exception("MPV event loop failed")
+        finally:
+            with self._lock:
+                if not self._closed:
+                    self._state = State.Error
+                self._closed = True
+            self._destroy_handle()
 
-    def _handle_end_file(self, event: MpvEvent) -> None:
+    def _handle_event(self, event: MpvEvent) -> MpvEndEvent | None:
+        if self._state in (
+            State.NothingSpecial,
+            State.Stopped,
+            State.Ended,
+            State.Error,
+        ):
+            return None
+        if event.event_id == MPV_EVENT_START_FILE:
+            entry_id = (
+                ctypes.cast(event.data, ctypes.POINTER(ctypes.c_int64))[0]
+                if event.data
+                else None
+            )
+            self._started_current_entry = (
+                not self._playlist_entries or entry_id in self._playlist_entries
+            )
+            if self._started_current_entry:
+                self._state = State.Opening
+        elif event.event_id == MPV_EVENT_FILE_LOADED and self._started_current_entry:
+            self._loaded = True
+            self._state = (
+                State.Paused if self._get_property_flag("pause") else State.Playing
+            )
+            self._apply_pending_seek()
+        elif event.event_id == MPV_EVENT_END_FILE:
+            return self._handle_end_file(event)
+        return None
+
+    def _handle_end_file(self, event: MpvEvent) -> MpvEndEvent | None:
         reason = MPV_END_FILE_REASON_ERROR
+        error = event.error
         if event.data:
             end_file = ctypes.cast(
                 event.data,
                 ctypes.POINTER(MpvEventEndFile),
             ).contents
+            if (
+                self._playlist_entries
+                and end_file.playlist_entry_id not in self._playlist_entries
+            ):
+                return None
             reason = end_file.reason
+            error = end_file.error
+            if reason == MPV_END_FILE_REASON_REDIRECT:
+                self._playlist_entries = range(
+                    end_file.playlist_insert_id,
+                    end_file.playlist_insert_id + end_file.playlist_insert_num_entries,
+                )
+        elif not self._started_current_entry:
+            return None
 
         self._loaded = False
+        self._started_current_entry = False
         if reason == MPV_END_FILE_REASON_EOF:
             self._state = State.Ended
-            if self._end_callback:
-                self._end_callback(MpvEndEvent(reason))
+            return MpvEndEvent(reason, self._current_media)
         elif reason == MPV_END_FILE_REASON_STOP:
             self._state = State.Stopped
-        elif reason == MPV_END_FILE_REASON_QUIT:
-            self._closed = True
+        elif reason == MPV_END_FILE_REASON_REDIRECT:
+            self._state = State.Opening
         else:
             self._state = State.Error
+            return MpvEndEvent(MPV_END_FILE_REASON_ERROR, self._current_media, error)
+        return None
 
     def _apply_pending_seek(self) -> None:
         if self._pending_time is not None:
@@ -664,6 +781,8 @@ class MpvMediaPlayer:
         with self._lock:
             self._current_media = media
             self._loaded = False
+            self._playlist_entries = ()
+            self._started_current_entry = False
             self._pending_position = None
             self._pending_time = None
             self._state = State.NothingSpecial
@@ -681,16 +800,7 @@ class MpvMediaPlayer:
                 return
             if self._current_media is None:
                 return
-            if self._loaded and self._get_property_flag("pause"):
-                self._set_property_flag("pause", False)
-                self._state = State.Playing
-                return
-            if not self._loaded or self._state in (
-                State.NothingSpecial,
-                State.Stopped,
-                State.Ended,
-                State.Error,
-            ):
+            if not self._loaded and self._state != State.Opening:
                 self._load_current()
             self._set_property_flag("pause", False)
             if self._state != State.Opening:
@@ -702,12 +812,15 @@ class MpvMediaPlayer:
             if paused is None:
                 return
             self._set_property_flag("pause", not paused)
-            self._state = State.Playing if paused else State.Paused
+            if self._loaded:
+                self._state = State.Playing if paused else State.Paused
 
     def stop(self) -> None:
         with self._lock:
             self._command("stop", check=False)
             self._loaded = False
+            self._playlist_entries = ()
+            self._started_current_entry = False
             self._pending_position = None
             self._pending_time = None
             self._state = State.Stopped
@@ -728,9 +841,12 @@ class MpvMediaPlayer:
 
     def set_time(self, milliseconds: int) -> None:
         seconds = max(0.0, float(milliseconds) / 1000)
-        if not self._loaded:
-            self._pending_time = seconds
-        self._command("seek", seconds, "absolute", "exact", check=False)
+        with self._lock:
+            if not self._loaded:
+                self._pending_time = seconds
+                self._pending_position = None
+                return
+            self._command("seek", seconds, "absolute", "exact", check=False)
 
     def get_position(self) -> float:
         percent = self._get_property_double("percent-pos")
@@ -745,22 +861,31 @@ class MpvMediaPlayer:
 
     def set_position(self, position: float) -> None:
         position = max(0.0, min(1.0, float(position)))
-        if not self._loaded:
-            self._pending_position = position
-        self._command("seek", position * 100, "absolute-percent", "exact", check=False)
+        with self._lock:
+            if not self._loaded:
+                self._pending_position = position
+                self._pending_time = None
+                return
+            self._command(
+                "seek", position * 100, "absolute-percent", "exact", check=False
+            )
 
     def get_state(self) -> State:
-        if self._state in (State.Error, State.Ended, State.Stopped):
+        with self._lock:
+            if self._state in (
+                State.NothingSpecial,
+                State.Opening,
+                State.Error,
+                State.Ended,
+                State.Stopped,
+            ):
+                return self._state
+            if self._get_property_flag("idle-active"):
+                return State.Stopped
+            paused = self._get_property_flag("pause")
+            if paused is not None:
+                return State.Paused if paused else State.Playing
             return self._state
-        idle = self._get_property_flag("idle-active")
-        if idle:
-            return State.Stopped if self._state != State.NothingSpecial else self._state
-        paused = self._get_property_flag("pause")
-        if paused is True:
-            return State.Paused
-        if paused is False:
-            return State.Playing
-        return self._state
 
     def get_rate(self) -> float:
         return self._get_property_double("speed") or 1.0
@@ -935,22 +1060,25 @@ class MpvMediaPlayer:
             if self._closed:
                 return
             self._closed = True
-            handle = self._handle
-            try:
-                self._lib.mpv_wakeup(handle)
-            except Exception:
-                pass
-
-        if threading.current_thread() is not self._event_thread:
-            self._event_thread.join(timeout=1)
-
-        with self._lock:
-            if handle:
+            event_thread = self._event_thread
+            if event_thread is not None:
                 try:
-                    self._lib.mpv_terminate_destroy(handle)
+                    self._lib.mpv_wakeup(self._handle)
                 except Exception:
                     pass
-                self._handle = None
+
+        if event_thread is None:
+            self._destroy_handle()
+        elif threading.current_thread() is not event_thread:
+            event_thread.join(timeout=1)
+
+    def _destroy_handle(self) -> None:
+        handle, self._handle = self._handle, None
+        if handle:
+            try:
+                self._lib.mpv_terminate_destroy(handle)
+            except Exception:
+                logger.exception("Could not destroy MPV handle")
 
     def __del__(self) -> None:
         try:

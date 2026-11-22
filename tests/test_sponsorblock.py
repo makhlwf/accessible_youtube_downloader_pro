@@ -22,7 +22,7 @@ from sponsorblock_handler import (
     parse_categories,
     should_announce_skips,
 )
-from utils import Stream, _attach_sponsorblock_segments
+from utils import Stream
 
 
 class FakeSegment:
@@ -247,6 +247,7 @@ def test_mediagui_refilters_segments_attached_to_the_stream(monkeypatch):
         ),
         patch.object(media_gui, "Player") as MockPlayer,
         patch.object(media_gui.MediaGui, "fetch_qualities"),
+        patch.object(media_gui.MediaGui, "fetch_audio_tracks"),
         patch.object(media_gui.MediaGui, "fetch_chapters"),
         patch.object(media_gui.MediaGui, "fetch_subtitles"),
         patch.object(media_gui.MediaGui, "extract_description"),
@@ -434,30 +435,44 @@ def test_find_skip_target_edge_cases():
     assert find_skip_target(5.0, None) is None
 
 
-def test_stream_sponsorblock_segments_attachment():
-    stream = Stream("Test Title", "http://stream.url")
-    assert stream.sponsorblock_segments is None
+def test_sponsorblock_lookup_is_deferred_and_stale_results_are_ignored(monkeypatch):
+    from media_player import media_gui
 
-    # When sponsorblock is disabled
-    with patch("utils.config_get", return_value=False):
-        attached = _attach_sponsorblock_segments(
-            stream, "https://youtube.com/watch?v=12345678901"
-        )
-        assert attached.sponsorblock_segments is None
+    gui = media_gui.MediaGui.__new__(media_gui.MediaGui)
+    gui.url = "first"
+    gui.sponsorblock_timer = MagicMock()
+    gui.can_update_player_ui = lambda: True
+    workers = []
+    callbacks = []
+    segments_by_url = {"first": [FakeSegment(0, 10)], "second": [FakeSegment(5, 20)]}
+    lookup = MagicMock(side_effect=segments_by_url.__getitem__)
+    monkeypatch.setattr(media_gui, "config_get", lambda key: True)
+    monkeypatch.setattr(media_gui, "get_sponsorblock_segments", lookup)
+    monkeypatch.setattr(
+        media_gui, "filter_skippable_segments", lambda segments: segments
+    )
+    monkeypatch.setattr(
+        media_gui,
+        "Thread",
+        lambda target, daemon: MagicMock(start=lambda: workers.append(target)),
+    )
+    monkeypatch.setattr(
+        media_gui.wx, "CallAfter", lambda fn, *args: callbacks.append((fn, args))
+    )
 
-    # When sponsorblock is enabled
-    fake_segs = [FakeSegment(0.0, 10.0)]
-    with (
-        patch("utils.config_get", return_value=True),
-        patch(
-            "sponsorblock_handler.get_sponsorblock_segments",
-            return_value=fake_segs,
-        ),
-    ):
-        attached = _attach_sponsorblock_segments(
-            stream, "https://youtube.com/watch?v=12345678901"
-        )
-        assert attached.sponsorblock_segments == fake_segs
+    gui._load_sponsorblock_segments(Stream("First", "first"))
+    gui.url = "second"
+    gui._load_sponsorblock_segments(Stream("Second", "second"))
+    lookup.assert_not_called()
+    assert gui.sponsorblock_segments == []
+
+    workers[1]()
+    workers[0]()
+    for fn, args in callbacks:
+        fn(*args)
+    assert [(segment.start, segment.end) for segment in gui.sponsorblock_segments] == [
+        (5, 20)
+    ]
 
 
 def test_mediagui_sponsorblock_skipping():
@@ -478,6 +493,7 @@ def test_mediagui_sponsorblock_skipping():
         ),
         patch.object(media_gui, "Player") as MockPlayer,
         patch.object(media_gui.MediaGui, "fetch_qualities"),
+        patch.object(media_gui.MediaGui, "fetch_audio_tracks"),
         patch.object(media_gui.MediaGui, "fetch_chapters"),
         patch.object(media_gui.MediaGui, "fetch_subtitles"),
         patch.object(media_gui.MediaGui, "extract_description"),

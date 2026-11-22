@@ -64,6 +64,7 @@ async function parseCookies(filePath) {
 }
 
 let yt = null;
+let currentCookieString = null;
 let currentCookiesPath = null;
 let currentClientLocation = null;
 let tokenCounter = 0;
@@ -137,9 +138,11 @@ function extractLikeInfo(info) {
         info.actions?.like_button?.status ||
         null;
     const isLiked =
-        basicInfo.is_liked === true || info.is_liked === true || likeStatus === 'LIKE';
+        basicInfo.is_liked === true || info.is_liked === true || likeStatus === 'LIKE' ||
+        segmentedButton?.like_button?.is_toggled === true;
     const isDisliked =
-        basicInfo.is_disliked === true || info.is_disliked === true || likeStatus === 'DISLIKE';
+        basicInfo.is_disliked === true || info.is_disliked === true || likeStatus === 'DISLIKE' ||
+        segmentedButton?.dislike_button?.is_toggled === true;
     const rating = isLiked ? 'like' : isDisliked ? 'dislike' : null;
 
     return {
@@ -288,13 +291,10 @@ function repliesResponse(thread) {
 
 async function getYT(cookiesPath, location) {
     const targetLocation = location || null;
-    if (yt && currentCookiesPath === cookiesPath && currentClientLocation === targetLocation) {
+    const cookieString = cookiesPath ? await parseCookies(cookiesPath) : null;
+    if (yt && currentCookiesPath === cookiesPath && currentClientLocation === targetLocation &&
+        currentCookieString === cookieString) {
         return yt;
-    }
-    
-    let cookieString = null;
-    if (cookiesPath) {
-        cookieString = await parseCookies(cookiesPath);
     }
     
     const options = {
@@ -307,6 +307,7 @@ async function getYT(cookiesPath, location) {
     
     yt = await Innertube.create(options);
     currentCookiesPath = cookiesPath;
+    currentCookieString = cookieString;
     currentClientLocation = targetLocation;
     return yt;
 }
@@ -679,37 +680,35 @@ async function handleGetWatchHistory(params) {
 }
 
 async function handleLikeInteraction(params) {
-    if (!params.cookiesPath) {
+    if (!params.ytClient && !params.cookiesPath) {
         throw new Error("Cookies path is required");
     }
-    const yt = await getYT(params.cookiesPath, params.location);
+    const yt = params.ytClient || await getYT(params.cookiesPath, params.location);
     if (!yt.session.logged_in) {
         throw new Error("Not logged in");
     }
+
     const { videoId, action } = params;
-    let endpoint;
-    if (action === 'like') {
-        endpoint = 'like/like';
-    } else if (action === 'dislike') {
-        endpoint = 'like/dislike';
-    } else if (action === 'remove_like') {
-        endpoint = 'like/removelike';
-    } else {
+    const operations = new Map([
+        ['like', 'like'],
+        ['dislike', 'dislike'],
+        ['remove_like', 'removeRating']
+    ]);
+    const operation = operations.get(action);
+    if (!operation) {
         throw new Error(`Unknown interaction action: ${action}`);
     }
 
-    try {
-        const response = await yt.actions.execute(endpoint, {
-            target: { videoId }
-        });
-        if (response && response.success === false) {
-            const errorMsg = response.data?.error?.message || response.data?.message || `HTTP ${response.status_code || 'error'}`;
-            throw new Error(errorMsg);
-        }
+    const info = await yt.getInfo(videoId);
+    if (action !== 'remove_like' && extractLikeInfo(info).rating === action) {
         return { success: true };
-    } catch (error) {
-        throw new Error(`Interaction failed: ${error.message}`);
     }
+    const response = await info[operation]();
+    if (!response?.success) {
+        const message = response?.data?.error?.message || response?.data?.message;
+        throw new Error(message || `HTTP ${response?.status_code || 'error'}`);
+    }
+    return { success: true };
 }
 
 async function handleGetVideoLikes(params) {

@@ -124,7 +124,7 @@ class DownloadDialog(wx.Frame):
         started = start_media_download(
             url,
             format_str,
-            self,
+            self.GetParent(),
             path=self.path,
             folder=folder,
         )

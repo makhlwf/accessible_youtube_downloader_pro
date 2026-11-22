@@ -336,6 +336,10 @@ def test_media_gui_populate_and_switch_audio_tracks(monkeypatch):
     gui.IsBeingDeleted = lambda: False
     gui.Bind = lambda *args, **kwargs: None
     gui.player = DummyPlayer()
+    gui.url = "test-url"
+    gui.audio_mode = False
+    gui.current_quality = 720
+    gui._track_request_id = 0
     gui.current_audio_track_id = "en"
     gui.audioTracksMenu = MockAudioTracksMenu()
     gui.available_audio_tracks = []
@@ -450,3 +454,42 @@ def test_audio_track_translations_in_po_mo_files():
     for ar_name, en_name in expected_en.items():
         assert en_trans.gettext(ar_name) == en_name
         assert ar_trans.gettext(ar_name) == ar_name
+
+
+def test_original_preference_avoids_default_dub_in_muxed_video(monkeypatch):
+    options = {
+        "force_original_audio": True,
+        "preferred_audio_language": "en",
+        "defaultaudioquality": 1,
+        "defaultvideoquality": 0,
+    }
+    monkeypatch.setattr(utils, "config_get", options.get)
+    dubbed = {
+        "url": "dubbed",
+        "language": "en",
+        "language_preference": 5,
+        "vcodec": "avc1",
+        "acodec": "aac",
+        "height": 720,
+        "abr": 128,
+    }
+    video = {"url": "video-only", "vcodec": "avc1", "acodec": "none", "height": 720}
+    original = {
+        "url": "original",
+        "language": "ar",
+        "language_preference": 10,
+        "vcodec": "none",
+        "acodec": "opus",
+        "abr": 96,
+    }
+    entry = {"title": "Multilingual video", "formats": [dubbed, video, original]}
+    stream = utils._stream_from_info(entry)
+    assert (stream.url, stream.audio_url, stream.audio_track_id) == (
+        "video-only",
+        "original",
+        "ar",
+    )
+
+    monkeypatch.setattr(utils, "get_media_info", lambda url: entry)
+    stream = utils.get_specific_quality_stream("video", 128, audio_mode=True)
+    assert stream.url == "original"

@@ -105,3 +105,22 @@ def extract_launch_youtube_url(value):
         return ""
 
     return extract_supported_youtube_url(value)
+
+
+def get_video_id(value):
+    if isinstance(value, str) and re.fullmatch(r"[A-Za-z0-9_-]{11}", value):
+        return value
+    url = _normalise_url_candidate(value)
+    if not is_supported_youtube_url(url):
+        return None
+    parsed = urlparse(url)
+    parts = parsed.path.strip("/").split("/")
+    if parsed.hostname == "youtu.be":
+        candidate = parts[0]
+    elif parsed.path == "/watch":
+        candidate = next(iter(parse_qs(parsed.query).get("v", [])), "")
+    elif len(parts) == 2 and parts[0] in {"shorts", "embed", "live", "v"}:
+        candidate = parts[1]
+    else:
+        return None
+    return candidate if re.fullmatch(r"[A-Za-z0-9_-]{11}", candidate) else None
