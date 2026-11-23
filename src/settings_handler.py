@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 
 defaults = {
     "path": get_default_download_dir(),
+    "use_aria2c": False,
     "defaultaudio": 0,
     "lang": get_default_language(),
     "autodetect": True,

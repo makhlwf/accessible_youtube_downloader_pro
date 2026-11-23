@@ -10,6 +10,7 @@ from wx.lib.newevent import NewEvent
 
 import paths
 import utils
+from download_handler import aria2
 from language_handler import _
 from pot_provider_service import pot_service
 from settings_handler import config_get
@@ -139,6 +140,7 @@ class Downloader:
         self._progress_pending = False
         self._last_progress_time = None
         self._progress_timer = None  # Created/stopped only on the GUI thread.
+        self._aria2_announcements = set()
 
     def get_quality(self):
         qualities = {0: "96", 1: "128", 2: "192", 3: "320"}
@@ -166,6 +168,21 @@ class Downloader:
         ):
             self.cancel()
         return self.cancelled
+
+    def _check_cancelled(self):
+        if self._is_cancelled():
+            raise DownloadCancelled()
+
+    def _announce_aria2(self, message):
+        if self.monitor is None or message in self._aria2_announcements:
+            return
+        self._aria2_announcements.add(message)
+
+        def announce():
+            if not self.cancelled and _window_is_alive(self.monitor):
+                speak(message, interrupt=True)
+
+        wx.CallAfter(announce)
 
     def _remember_file(self, path):
         if path and os.path.exists(path):
@@ -205,7 +222,10 @@ class Downloader:
             try:
                 with os.scandir(self.path) as it:
                     for entry in it:
-                        if entry.is_file():
+                        if (
+                            not entry.name.endswith(aria2.PART_SUFFIXES)
+                            and entry.is_file()
+                        ):
                             try:
                                 modified = entry.stat().st_mtime
                             except OSError:
@@ -224,6 +244,8 @@ class Downloader:
 
         for root, dirs, files in os.walk(self.path):
             for filename in files:
+                if filename.endswith(aria2.PART_SUFFIXES):
+                    continue
                 path = os.path.join(root, filename)
                 try:
                     modified = os.path.getmtime(path)
@@ -485,7 +507,12 @@ class Downloader:
             utils._warm_youtube_extractor()
             ydl_opts = self._base_options(use_cookies=use_cookies)
 
-            with utils.YoutubeDL(ydl_opts) as ydl:
+            ydl_class = utils.YoutubeDL
+            if config_get("use_aria2c"):
+                ydl_class = aria2.downloader_class(
+                    ydl_class, self._check_cancelled, self._announce_aria2
+                )
+            with ydl_class(ydl_opts) as ydl:
                 result = ydl.download([self.url])
             if self._is_cancelled():
                 raise DownloadCancelled()

@@ -19,6 +19,22 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
+#: src/gui/settings_dialog.py
+msgid "Use aria2c to speed up supported downloads"
+msgstr "استخدام aria2c لتسريع التنزيلات المدعومة"
+
+#: src/download_handler/aria2.py
+msgid "Setting up aria2c for faster downloads."
+msgstr "جارٍ إعداد aria2c لتسريع التنزيلات."
+
+#: src/download_handler/aria2.py
+msgid "aria2c is unavailable. Continuing with the built-in downloader."
+msgstr "أداة aria2c غير متاحة. سيستمر التنزيل باستخدام أداة التنزيل المدمجة."
+
+#: src/download_handler/aria2.py
+msgid "aria2c could not complete the download. Continuing with the built-in downloader."
+msgstr "تعذر على aria2c إكمال التنزيل. سيستمر التنزيل باستخدام أداة التنزيل المدمجة."
+
 #: src/accessible_youtube_downloader_pro.py:351
 msgid ""
 "اضغط على مفتاح القوائم alt للوصول إلى خيارات البرنامج, أو تنقل بزر التاب "

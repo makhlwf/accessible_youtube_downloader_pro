@@ -378,6 +378,14 @@ class SettingsDialog(wx.Dialog):
         _add_row(grid, conversion_label, self.audioQuality2)
 
         sizer.Add(grid, 0, wx.EXPAND | wx.ALL, 8)
+        self.useAria2c = SettingsCheckBox(
+            page,
+            -1,
+            _("Use aria2c to speed up supported downloads"),
+            name="use_aria2c",
+        )
+        self.useAria2c.SetValue(bool(config_get("use_aria2c")))
+        sizer.Add(self.useAria2c, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 8)
         page.SetSizer(sizer)
 
     def _build_player_page(self):
@@ -879,6 +887,7 @@ class SettingsDialog(wx.Dialog):
             self.openPlayerFullscreen,
             self.youtubeMusicLyrics,
             self.youtubeMusicExplicit,
+            self.useAria2c,
         ):
             checkbox.Bind(wx.EVT_CHECKBOX, self.onCheck)
         self.useDenoBackend.Bind(wx.EVT_CHECKBOX, self.onUseDenoToggle)
