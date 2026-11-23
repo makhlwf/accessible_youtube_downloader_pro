@@ -9,7 +9,7 @@ description: >-
 
 ## Overview
 
-HexPlayer uses an isolated JavaScript subprocess executing **YouTube.js (Innertube)** (`src/service.js`) communicating with Python (`src/deno_service.py`) via stdio JSON-RPC. This bridge provides resilient YouTube search, channel browsing, comments, recommendations, and authenticated watch history updates without scraping fragile HTML.
+HexPlayer uses an isolated JavaScript subprocess executing **YouTube.js (Innertube)** (`src/service.js`) communicating with Python (`src/youtube_backend/deno_service.py`) via stdio JSON-RPC. This bridge provides resilient YouTube search, channel browsing, comments, recommendations, and authenticated watch history updates without scraping fragile HTML.
 
 The bridge operates on a **dual-runtime architecture**:
 - **Primary Runtime:** A 6.18 MB standalone native binary (`src/youtube_service.exe`) powered by QuickJS-ng + libuv + curl (txiki.js).
@@ -17,7 +17,7 @@ The bridge operates on a **dual-runtime architecture**:
 
 ## When to Use
 
-- Interacting with YouTube search filters, pagination, or video metadata in `src/youtube_browser/` or `src/deno_service.py`.
+- Interacting with YouTube search filters, pagination, or video metadata in `src/youtube_browser/` or `src/youtube_backend/deno_service.py`.
 - Modifying or debugging `src/service.js`, `src/polyfill.js`, or `scripts/build_youtube_service.py`.
 - Fixing JavaScript subprocess startup failures, pipe communication timeouts, or Windows orphan processes.
 - Compiling or updating the standalone `youtube_service.exe` binary.
@@ -49,7 +49,7 @@ self.process.stdin.flush()
 ```
 
 ### 2. Standalone Service & Deno Fallback Priority
-`src/deno_service.py` checks `paths.get_youtube_service_path()` first:
+`src/youtube_backend/deno_service.py` checks `paths.get_youtube_service_path()` first:
 - If `youtube_service.exe` exists, spawn `[youtube_service_path]`.
 - Otherwise, fall back to `[deno_path, "run", "--allow-net", "--allow-read", "--allow-env", service_script]`.
 
@@ -64,7 +64,7 @@ Never hardcode YouTube search regions or languages to `US`/`en`. Always query th
 
 ```python
 from utils import get_windows_region
-from settings_handler import config_get
+from app_state.settings_handler import config_get
 
 region = get_windows_region()  # Returns ISO 3166-1 (e.g. 'GB', 'EG', 'US')
 language = config_get("lang") or "en"
@@ -93,7 +93,7 @@ language = config_get("lang") or "en"
        };
    }
    ```
-2. Add a corresponding Python method in `src/deno_service.py`:
+2. Add a corresponding Python method in `src/youtube_backend/deno_service.py`:
    ```python
    def get_playlist(self, playlist_id: str) -> dict:
        return self.send_command("get_playlist", {"playlistId": playlist_id})

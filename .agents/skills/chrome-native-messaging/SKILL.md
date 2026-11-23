@@ -46,7 +46,7 @@ sys.stdout.buffer.flush()
 Incoming URLs from `hexplayer://` or native messaging must be validated strictly against YouTube URL patterns before launching player actions, preventing arbitrary command injection:
 
 ```python
-from youtube_url_utils import is_valid_youtube_url
+from youtube_backend.youtube_url_utils import is_valid_youtube_url
 
 if not is_valid_youtube_url(url):
     raise ValueError(f"Untrusted or invalid YouTube URL: {url}")
@@ -112,7 +112,7 @@ uv run pytest tests/test_native_messaging_host.py tests/test_windows_url_associa
 ## Verification & Quality Gates
 
 - **Unit Tests**: Run `uv run pytest tests/test_native_messaging_host.py tests/test_windows_url_association.py`
-- **Lint Check**: Run `uv run ruff check src/native_messaging_host.py src/windows_url_association.py`
+- **Lint Check**: Run `uv run ruff check src/native_messaging_host.py src/app_runtime/windows_url_association.py`
 - **Manual Verification**:
   1. Open Chrome with extension unpacked from `src/browser_extension/`.
   2. Right-click on a YouTube video and choose "Play in HexPlayer".

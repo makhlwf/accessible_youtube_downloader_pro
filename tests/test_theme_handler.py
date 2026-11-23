@@ -10,13 +10,13 @@ import wx
 
 
 def test_theme_handler_import():
-    import theme_handler
+    from gui import theme_handler
 
     assert theme_handler is not None
 
 
 def test_apply_theme_dark():
-    from theme_handler import apply_theme
+    from gui.theme_handler import apply_theme
 
     frame = wx.Frame()
     panel = wx.Panel()
@@ -34,11 +34,11 @@ def test_apply_theme_dark():
 
 
 def test_apply_theme_system_default():
-    from theme_handler import apply_theme
+    from gui.theme_handler import apply_theme
 
     frame = wx.Frame()
 
-    with patch("theme_handler.config_get", return_value="System Default"):
+    with patch("gui.theme_handler.config_get", return_value="System Default"):
         apply_theme(frame)
 
     # Verify SystemSettings was called
@@ -48,11 +48,11 @@ def test_apply_theme_system_default():
 
 
 def test_apply_theme_config_get():
-    from theme_handler import apply_theme
+    from gui.theme_handler import apply_theme
 
     frame = wx.Frame()
 
-    with patch("theme_handler.config_get", return_value="Light"):
+    with patch("gui.theme_handler.config_get", return_value="Light"):
         apply_theme(frame)
 
     frame.SetBackgroundColour.assert_called()
@@ -61,7 +61,7 @@ def test_apply_theme_config_get():
 def test_update_msw_dark_mode():
     from unittest.mock import MagicMock
 
-    from theme_handler import update_msw_dark_mode
+    from gui.theme_handler import update_msw_dark_mode
 
     mock_app = MagicMock()
     mock_app.MSWEnableDarkMode = MagicMock()

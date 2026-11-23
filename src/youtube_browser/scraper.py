@@ -2,7 +2,7 @@ import asyncio
 import logging
 
 import utils
-from async_utils import submit_async
+from app_runtime.async_utils import submit_async
 
 logger = logging.getLogger(__name__)
 

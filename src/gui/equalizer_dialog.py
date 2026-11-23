@@ -1,11 +1,11 @@
 import wx
 
+from app_state.settings_handler import config_get, config_set
+from gui.theme_handler import apply_theme
 from language_handler import _
 from media_player.equalizer import EqualizerService
 from media_player.media_gui import MediaGui
 from media_player.preset_library import BAND_COUNT
-from settings_handler import config_get, config_set
-from theme_handler import apply_theme
 
 CUSTOM_PRESET = "Custom"
 

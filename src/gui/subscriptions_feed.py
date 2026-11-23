@@ -6,9 +6,9 @@ import wx
 
 import utils
 from gui.activity_dialog import LoadingDialog
+from gui.theme_handler import apply_theme
 from language_handler import _
 from speech_client import speak
-from theme_handler import apply_theme
 from youtube_browser.scraper import Scraper
 from youtube_browser.search_handler import SimpleResult
 

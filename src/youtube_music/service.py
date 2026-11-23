@@ -34,7 +34,7 @@ logger = logging.getLogger(__name__)
 
 def _resolve_cookies_path():
     try:
-        from settings_handler import config_get
+        from app_state.settings_handler import config_get
 
         configured = config_get("cookiespath")
     except Exception:
@@ -42,7 +42,7 @@ def _resolve_cookies_path():
     if configured:
         return configured
     try:
-        import cookies_manager
+        from youtube_backend import cookies_manager
 
         return cookies_manager.get_default_browser_cookies_path()
     except Exception:
@@ -51,7 +51,7 @@ def _resolve_cookies_path():
 
 def _resolve_language():
     try:
-        from settings_handler import config_get
+        from app_state.settings_handler import config_get
 
         return config_get("lang") or "en"
     except Exception:

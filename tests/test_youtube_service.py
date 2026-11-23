@@ -1,9 +1,10 @@
 import os
 from unittest.mock import Mock
 
-import deno_service
 import paths
 import utils
+from app_runtime import dependencies as dependency_updates
+from youtube_backend import deno_service
 
 
 def test_youtube_service_path_discovery(monkeypatch, tmp_path):
@@ -77,7 +78,7 @@ def test_get_youtube_service_version(monkeypatch):
         paths, "get_youtube_service_path", lambda: "/bin/youtube_service"
     )
     monkeypatch.setattr(os.path, "exists", lambda p: True)
-    monkeypatch.setattr(utils.subprocess, "run", run)
+    monkeypatch.setattr(dependency_updates.subprocess, "run", run)
 
     version = utils.get_youtube_service_version()
     assert version == "v1.0.0"
@@ -97,10 +98,14 @@ def test_download_youtube_service(tmp_path, monkeypatch):
 
 
 def test_update_youtube_service_skips_when_latest(monkeypatch):
-    monkeypatch.setattr(utils, "get_youtube_service_version", lambda: "v1.0.0")
-    monkeypatch.setattr(utils, "get_latest_github_release", lambda repo: "v1.0.0")
-    message_box = Mock(return_value=utils.wx.OK)
-    monkeypatch.setattr(utils.wx, "MessageBox", message_box)
+    monkeypatch.setattr(
+        dependency_updates, "get_youtube_service_version", lambda: "v1.0.0"
+    )
+    monkeypatch.setattr(
+        dependency_updates, "get_latest_github_release", lambda repo: "v1.0.0"
+    )
+    message_box = Mock(return_value=dependency_updates.wx.OK)
+    monkeypatch.setattr(dependency_updates.wx, "MessageBox", message_box)
 
     assert utils.update_youtube_service() is True
     assert "أحدث إصدار" in message_box.call_args.args[0]
@@ -111,8 +116,12 @@ def test_cli_update_youtube_service(tmp_path, monkeypatch):
 
     target = tmp_path / "youtube_service.exe"
     monkeypatch.setattr(paths, "youtube_service_install_path", str(target))
-    monkeypatch.setattr(utils, "get_youtube_service_version", lambda: "v1.0.0")
-    monkeypatch.setattr(utils, "get_latest_github_release", lambda repo: "v1.0.1")
+    monkeypatch.setattr(
+        dependency_updates, "get_youtube_service_version", lambda: "v1.0.0"
+    )
+    monkeypatch.setattr(
+        dependency_updates, "get_latest_github_release", lambda repo: "v1.0.1"
+    )
 
     def fake_download(url, dest):
         with open(dest, "w", encoding="utf-8") as f:

@@ -6,30 +6,32 @@ from pathlib import Path
 from unittest.mock import Mock
 
 import pytest
+import wx
 
 import utils
+from youtube_backend import feeds as youtube_feeds
 
 
 @pytest.fixture
 def backend(monkeypatch, tmp_path):
     cookies = tmp_path / "cookies.txt"
     cookies.write_text("offline placeholder", encoding="utf-8")
-    monkeypatch.setattr(utils, "config_get", lambda key: str(cookies))
-    monkeypatch.setattr(utils, "get_windows_region", lambda: "LY")
-    monkeypatch.setattr(utils, "_", lambda message: f"localized:{message}")
+    monkeypatch.setattr(youtube_feeds, "config_get", lambda key: str(cookies))
+    monkeypatch.setattr(youtube_feeds, "get_windows_region", lambda: "LY")
+    monkeypatch.setattr(youtube_feeds, "_", lambda message: f"localized:{message}")
     send = Mock(return_value={"videos": [], "continuation": None})
-    monkeypatch.setattr(utils.deno_service, "send_command", send)
+    monkeypatch.setattr(youtube_feeds.deno_service, "send_command", send)
     # Every UI/install/prompt operation is forbidden even on an error path.
     for name in ("ensure_deno_installed", "ensure_cookies_configured"):
-        monkeypatch.setattr(utils, name, Mock(side_effect=AssertionError(name)))
+        monkeypatch.setattr(youtube_feeds, name, Mock(side_effect=AssertionError(name)))
     for name in ("GetApp", "MessageBox", "CallAfter"):
-        monkeypatch.setattr(utils.wx, name, Mock(side_effect=AssertionError(name)))
+        monkeypatch.setattr(wx, name, Mock(side_effect=AssertionError(name)))
     yield send, cookies
-    utils.ensure_deno_installed.assert_not_called()
-    utils.ensure_cookies_configured.assert_not_called()
-    utils.wx.GetApp.assert_not_called()
-    utils.wx.MessageBox.assert_not_called()
-    utils.wx.CallAfter.assert_not_called()
+    youtube_feeds.ensure_deno_installed.assert_not_called()
+    youtube_feeds.ensure_cookies_configured.assert_not_called()
+    wx.GetApp.assert_not_called()
+    wx.MessageBox.assert_not_called()
+    wx.CallAfter.assert_not_called()
 
 
 def assert_failure(result):
@@ -47,7 +49,7 @@ def test_subscriptions_require_existing_cookie_file(backend, monkeypatch, path_k
         "missing": str(cookies.with_suffix(".absent")),
         "directory": str(cookies.parent),
     }[path_kind]
-    monkeypatch.setattr(utils, "config_get", lambda key: value)
+    monkeypatch.setattr(youtube_feeds, "config_get", lambda key: value)
     assert_failure(utils.get_subscriptions_feed())
     send.assert_not_called()
 
@@ -113,9 +115,9 @@ def test_subscriptions_exceptions_are_sanitized(
     send, _ = backend
     failure = Mock(side_effect=RuntimeError("SAPISID=secret"))
     if failure_at == "config":
-        monkeypatch.setattr(utils, "config_get", failure)
+        monkeypatch.setattr(youtube_feeds, "config_get", failure)
     elif failure_at == "filesystem":
-        monkeypatch.setattr(utils.os.path, "isfile", failure)
+        monkeypatch.setattr(youtube_feeds.os.path, "isfile", failure)
     else:
         send.side_effect = failure.side_effect
     assert_failure(utils.get_subscriptions_feed())

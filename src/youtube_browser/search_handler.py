@@ -30,8 +30,8 @@ except ImportError, AttributeError:
 
 
 import utils
+from app_state.settings_handler import config_get
 from language_handler import _, normalize_language_code
-from settings_handler import config_get
 from utils import format_duration, time_to_seconds
 
 logger = logging.getLogger(__name__)

@@ -3,10 +3,10 @@ from threading import Thread
 import wx
 
 import utils
+from gui.theme_handler import apply_theme
 from language_handler import _
 from media_player.timecodes import extract_timecodes
 from speech_client import speak
-from theme_handler import apply_theme
 
 
 def format_comment_item(comment):

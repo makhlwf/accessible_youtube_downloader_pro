@@ -38,16 +38,12 @@ def apply(dialog, videos, continuation=None, load_more=False):
 
 
 def test_home_feed_button_auth_visibility():
-    with patch(
-        "accessible_youtube_downloader_pro.utils.has_cookies_file", return_value=True
-    ):
+    with patch("gui.home_screen.utils.has_cookies_file", return_value=True):
         home = HomeScreen(start_hidden=True)
         assert home.subscriptionsFeedBtn.IsShown()
         assert home.subscriptionsFeedBtn.GetName() == "Subscriptions feed"
         home.subscriptionsFeedItem.Enable.assert_called_with(True)
-    with patch(
-        "accessible_youtube_downloader_pro.utils.has_cookies_file", return_value=False
-    ):
+    with patch("gui.home_screen.utils.has_cookies_file", return_value=False):
         home.update_shorts_button_visibility()
         assert not home.subscriptionsFeedBtn.IsShown()
         home.subscriptionsFeedItem.Enable.assert_called_with(False)
@@ -58,11 +54,11 @@ def test_home_missing_cookies_does_not_open_feed():
     home = MagicMock()
     with (
         patch(
-            "accessible_youtube_downloader_pro.utils.has_cookies_file",
+            "gui.home_screen.utils.has_cookies_file",
             return_value=False,
         ),
-        patch("accessible_youtube_downloader_pro.utils.show_error") as error,
-        patch("accessible_youtube_downloader_pro.speak") as speak,
+        patch("gui.home_screen.utils.show_error") as error,
+        patch("gui.home_screen.speak") as speak,
         patch("gui.subscriptions_feed.SubscriptionsFeed") as constructor,
     ):
         HomeScreen.on_open_subscriptions_feed(home)
@@ -75,11 +71,11 @@ def test_home_opens_feed_with_return_target():
     home = MagicMock()
     with (
         patch(
-            "accessible_youtube_downloader_pro.utils.has_cookies_file",
+            "gui.home_screen.utils.has_cookies_file",
             return_value=True,
         ),
         patch(
-            "accessible_youtube_downloader_pro.utils.ensure_deno_installed",
+            "gui.home_screen.utils.ensure_deno_installed",
             return_value=True,
         ),
         patch("gui.subscriptions_feed.SubscriptionsFeed") as constructor,
@@ -322,9 +318,7 @@ def test_native_destroy_ignores_child_but_cancels_frame(feed):
 
 
 def test_keyboard_shortcut_and_button_menu_bindings():
-    with patch(
-        "accessible_youtube_downloader_pro.utils.has_cookies_file", return_value=True
-    ):
+    with patch("gui.home_screen.utils.has_cookies_file", return_value=True):
         home = HomeScreen(start_hidden=True)
     bindings = home.Bind.call_args_list
     assert any(

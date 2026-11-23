@@ -88,23 +88,21 @@ accessible_youtube_downloader_pro/
 │
 ├── src/                               # Main Application Source Code
 │   ├── accessible_youtube_downloader_pro.py # Main entry point script
-│   ├── application.py                 # Single-instance wx.App container
-│   ├── async_utils.py                 # wxPython async event loop integration helpers
-│   ├── database.py                    # SQLite tables (favorites, history, continue)
-│   ├── settings_handler.py            # Debounced INI configuration manager
-│   ├── paths.py                       # Directory path resolvers (AppData vs Portable)
-│   ├── utils.py                       # General utilities, network, yt-dlp loader, i18n
-│   ├── deno_service.py                # Python RPC wrapper for Deno process
-│   ├── service.js                     # Deno JS script interacting with YouTube.js Innertube
-│   ├── service_test.js                # Integration tests for Deno service.js script
-│   ├── update_history.js              # JS utility for YouTube account watch history updates
-│   ├── language_handler.py            # Translation catalog loader & gettext wrapper
-│   ├── theme_handler.py               # Theme provider (System, Light, Dark, High Contrast with wxPython 4.3.0+ MSWEnableDarkMode native title bar/menu support)
-│   ├── doc_handler.py                 # Local guide document loader
-│   ├── runtime_dlls.py                # Verification for required binary DLL dependencies
-│   ├── native_messaging_host.py       # Stdio Native Messaging host for Chrome extension
-│   ├── windows_url_association.py    # Windows Registry handler for hexplayer:// protocol
-│   ├── browser_extension_manager.py    # UI/System integration for unpacking browser extension
+│   ├── hexplayer_cli.py               # CLI executable entry point
+│   ├── native_messaging_host.py       # Browser native host entry point
+│   ├── application.py                 # App name, version, and release metadata
+│   ├── paths.py                       # Runtime, standalone, and portable paths
+│   ├── runtime_dlls.py                 # Early DLL and display backend setup
+│   ├── utils.py                       # Compatibility imports for shared helpers
+│   ├── language_handler.py            # Translation catalogs and gettext wrapper
+│   ├── service.js                     # JavaScript service entry point
+│   │
+│   ├── app_runtime/                   # Startup, IPC, updates, and desktop integration
+│   ├── app_state/                     # SQLite data and debounced INI settings
+│   ├── integrations/                  # Discord presence, Discord IPC, and SponsorBlock
+│   ├── youtube_backend/               # RPC, cookies, media extraction, and YouTube metadata
+│   ├── youtube_music/                 # YouTube Music browsing and playback
+│   ├── cli/                           # CLI command routing and handlers
 │   │
 │   ├── browser_extension/             # Chromium Extension Manifest V3
 │   │   ├── manifest.json              # Extension manifest & permissions
@@ -126,9 +124,11 @@ accessible_youtube_downloader_pro/
 │   │   └── scraper.py                 # Fallback web scrapers
 │   │
 │   ├── download_handler/              # Media Download Engine
-│   │   └── downloader.py              # yt-dlp execution threads & progress hooks
+│   │   ├── downloader.py              # yt-dlp execution threads and progress hooks
+│   │   └── formats.py                 # Audio and video download format selectors
 │   │
-│   ├── gui/                           # Accessible wxPython UI Dialogs
+│   ├── gui/                           # wxPython home window and dialogs
+│   │   ├── home_screen.py             # Main window and event handlers
 │   │   ├── search_dialog.py           # Video/playlist/channel search dialog
 │   │   ├── channel_dialog.py          # Channel tabs (Videos, Shorts, Playlists, Live, About)
 │   │   ├── playlist_dialog.py         # Playlist tracks dialog
@@ -298,7 +298,7 @@ HexPlayer uses an adaptive runtime strategy:
    - Reduces disk space by **93.5%** compared to Deno (6.18 MB vs 94.55 MB).
    - Bundled automatically into PyInstaller distribution (`dist/HexPlayer/_internal/youtube_service.exe`).
 2. **Fallback: Legacy Deno Engine (`deno.exe`)**:
-   - If `youtube_service.exe` is absent, `src/deno_service.py` automatically falls back to `deno.exe` executing `src/service.js`.
+   - If `youtube_service.exe` is absent, `src/youtube_backend/deno_service.py` automatically falls back to `deno.exe` executing `src/service.js`.
 
 ### B. Building the Standalone Executable
 
@@ -370,7 +370,7 @@ Any feature supported by `youtubei.js` can be exposed to Python in two steps:
        })) || [];
    }
    ```
-2. In `src/deno_service.py`, add a helper method:
+2. In `src/youtube_backend/deno_service.py`, add a helper method:
    ```python
    def get_transcript(self, video_id: str) -> list[dict]:
        return self.send_command("get_transcript", {"videoId": video_id})

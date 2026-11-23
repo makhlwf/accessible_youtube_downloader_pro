@@ -1,8 +1,8 @@
 import wx
 
 import utils
+from gui.theme_handler import apply_theme
 from language_handler import _
-from theme_handler import apply_theme
 
 
 class QualitySelectionDialog(wx.SingleChoiceDialog):

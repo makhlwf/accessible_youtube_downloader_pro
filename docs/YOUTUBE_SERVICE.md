@@ -15,7 +15,7 @@ To run YouTube.js on desktop operating systems, HexPlayer supports a dual-runtim
 ```
                       ┌───────────────────────────────────────┐
                       │    HexPlayer Python Application       │
-                      │       (src/deno_service.py)           │
+                      │ (youtube_backend/deno_service.py)        │
                       └──────────────────┬────────────────────┘
                                          │
                          Stdio JSON-RPC (newline-delimited)
@@ -38,7 +38,7 @@ To run YouTube.js on desktop operating systems, HexPlayer supports a dual-runtim
    - Compresses down to ~1.8 MB inside the Inno Setup Windows installer.
 
 2. **Fallback: Legacy Deno Engine (`deno.exe`)**:
-   - If `youtube_service.exe` is absent or deleted, `src/deno_service.py` automatically falls back to `deno.exe src/service.js`.
+   - If `youtube_service.exe` is absent or deleted, `src/youtube_backend/deno_service.py` automatically falls back to `deno.exe src/service.js`.
    - The user or developer experiences zero downtime or breakage.
 
 ---
@@ -167,9 +167,9 @@ case "get_channel_playlists": {
 }
 ```
 
-### Step 2: Add the Python Wrapper to `src/deno_service.py`
+### Step 2: Add the Python Wrapper to `src/youtube_backend/deno_service.py`
 
-In [`src/deno_service.py`](file:///C:/accessible_youtube_downloader_pro/src/deno_service.py), add a method to `DenoService`:
+In [`src/youtube_backend/deno_service.py`](../src/youtube_backend/deno_service.py), add a method to `DenoService`:
 
 ```python
 def get_channel_playlists(self, channel_id: str) -> dict:

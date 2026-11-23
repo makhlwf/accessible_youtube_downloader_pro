@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import wx
 
-import settings_handler
+from app_state import settings_handler
 from gui import settings_dialog
 
 settings_handler.config_initialization()

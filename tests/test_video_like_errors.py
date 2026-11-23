@@ -5,15 +5,15 @@ import pytest
 from utils import like_video
 
 
-@patch("utils.ensure_deno_installed", return_value=False)
+@patch("youtube_backend.metadata.ensure_deno_installed", return_value=False)
 def test_like_video_missing_deno(mock_deno):
     res = like_video("https://www.youtube.com/watch?v=dQw4w9WgXcQ", "like")
     assert res["success"] is False
     assert "Deno" in res["error"]
 
 
-@patch("utils.ensure_deno_installed", return_value=True)
-@patch("utils.ensure_cookies_configured", return_value=False)
+@patch("youtube_backend.metadata.ensure_deno_installed", return_value=True)
+@patch("youtube_backend.metadata.ensure_cookies_configured", return_value=False)
 def test_like_video_missing_cookies(mock_cookies, mock_deno):
     res = like_video("https://www.youtube.com/watch?v=dQw4w9WgXcQ", "like")
     assert res["success"] is False
@@ -21,8 +21,8 @@ def test_like_video_missing_cookies(mock_cookies, mock_deno):
 
 
 @pytest.mark.parametrize("action", ["like", "dislike", "remove_like"])
-@patch("utils.get_windows_region", return_value="US")
-@patch("utils.deno_service.send_command", return_value={"success": True})
+@patch("youtube_backend.metadata.get_windows_region", return_value="US")
+@patch("youtube_backend.metadata.deno_service.send_command", return_value={"success": True})
 def test_reaction_uses_video_id_even_when_watch_url_contains_playlist(
     send, region, action
 ):

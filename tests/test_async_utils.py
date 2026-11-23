@@ -5,7 +5,7 @@ from unittest.mock import Mock
 
 import pytest
 
-import async_utils
+from app_runtime import async_utils
 
 
 @pytest.fixture

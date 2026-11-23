@@ -4,10 +4,11 @@ import os
 import pytest
 import wx
 
-import settings_handler
 import utils
+from app_state import settings_handler
 from download_handler.downloader import Downloader
 from gui import settings_dialog
+from youtube_backend import ytdlp_runtime
 
 
 @pytest.fixture(autouse=True)
@@ -43,13 +44,15 @@ def test_get_player_client_choices_structure():
 
 def test_get_configured_player_clients_default(monkeypatch):
     monkeypatch.setattr(
-        utils, "config_get", lambda k: "default" if k == "player_client" else None
+        ytdlp_runtime,
+        "config_get",
+        lambda k: "default" if k == "player_client" else None,
     )
     clients = utils.get_configured_player_clients(has_cookies=False)
     assert clients == ["default"]
 
     monkeypatch.setattr(
-        utils, "config_get", lambda k: "" if k == "player_client" else None
+        ytdlp_runtime, "config_get", lambda k: "" if k == "player_client" else None
     )
     clients = utils.get_configured_player_clients(has_cookies=False)
     assert clients == ["default"]
@@ -68,7 +71,9 @@ def test_get_configured_player_clients_specific_settings(monkeypatch):
         "web_safari",
     ]:
         monkeypatch.setattr(
-            utils, "config_get", lambda k, c=client: c if k == "player_client" else None
+            ytdlp_runtime,
+            "config_get",
+            lambda k, c=client: c if k == "player_client" else None,
         )
         clients = utils.get_configured_player_clients(has_cookies=False)
         expected = ["web_embedded"] if client == "tv_embedded" else [client]
@@ -76,7 +81,7 @@ def test_get_configured_player_clients_specific_settings(monkeypatch):
 
 
 def test_get_configured_player_clients_override(monkeypatch):
-    monkeypatch.setattr(utils, "config_get", lambda k: "default")
+    monkeypatch.setattr(ytdlp_runtime, "config_get", lambda k: "default")
     assert utils.get_configured_player_clients("android", has_cookies=False) == [
         "android"
     ]
@@ -93,7 +98,7 @@ def test_get_configured_player_clients_with_cookies(monkeypatch):
     # Incompatible clients fall back to default when cookies are present
     for client in ["android", "ios", "android_vr", "tv_simply", "web", "web_safari"]:
         monkeypatch.setattr(
-            utils,
+            ytdlp_runtime,
             "config_get",
             lambda k, c=client: c if k == "player_client" else "/cookies.txt",
         )
@@ -102,7 +107,7 @@ def test_get_configured_player_clients_with_cookies(monkeypatch):
     # Compatible clients are preserved
     for client in ["web_creator", "mweb", "tv", "tv_downgraded"]:
         monkeypatch.setattr(
-            utils,
+            ytdlp_runtime,
             "config_get",
             lambda k, c=client: c if k == "player_client" else "/cookies.txt",
         )
@@ -120,18 +125,20 @@ def test_get_ydl_instance_uses_configured_client(monkeypatch):
         def __exit__(self, exc_type, exc_val, exc_tb):
             pass
 
-    monkeypatch.setattr(utils, "YoutubeDL", FakeYDL)
+    monkeypatch.setattr(ytdlp_runtime, "YoutubeDL", FakeYDL)
 
     # With default setting
     monkeypatch.setattr(
-        utils, "config_get", lambda k: "default" if k == "player_client" else None
+        ytdlp_runtime,
+        "config_get",
+        lambda k: "default" if k == "player_client" else None,
     )
     ydl = utils.get_ydl_instance()
     assert ydl.opts["extractor_args"]["youtube"]["player_client"] == ["default"]
 
     # With specific setting without cookies
     monkeypatch.setattr(
-        utils, "config_get", lambda k: "ios" if k == "player_client" else None
+        ytdlp_runtime, "config_get", lambda k: "ios" if k == "player_client" else None
     )
     ydl = utils.get_ydl_instance()
     assert ydl.opts["extractor_args"]["youtube"]["player_client"] == ["ios"]
@@ -143,7 +150,7 @@ def test_get_ydl_instance_uses_configured_client(monkeypatch):
 
 def test_downloader_base_options_uses_configured_client(monkeypatch):
     monkeypatch.setattr(
-        utils, "config_get", lambda k: "web" if k == "player_client" else None
+        ytdlp_runtime, "config_get", lambda k: "web" if k == "player_client" else None
     )
     downloader = Downloader(
         "https://www.youtube.com/watch?v=test", "output", "best", None, None
@@ -152,7 +159,9 @@ def test_downloader_base_options_uses_configured_client(monkeypatch):
     assert opts["extractor_args"]["youtube"]["player_client"] == ["web"]
 
     monkeypatch.setattr(
-        utils, "config_get", lambda k: "default" if k == "player_client" else None
+        ytdlp_runtime,
+        "config_get",
+        lambda k: "default" if k == "player_client" else None,
     )
     opts = downloader._base_options(use_cookies=False)
     assert opts["extractor_args"]["youtube"]["player_client"] == ["default"]

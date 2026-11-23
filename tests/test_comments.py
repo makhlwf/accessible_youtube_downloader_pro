@@ -1,12 +1,14 @@
 from unittest.mock import patch
 
+from youtube_backend import ytdlp_runtime
+
 
 def test_get_video_comments_normalizes_response():
     from utils import get_video_comments
 
     with (
-        patch("utils.config_get", return_value="cookies.txt"),
-        patch("utils.deno_service") as mock_deno_service,
+        patch("youtube_backend.comments.config_get", return_value="cookies.txt"),
+        patch("youtube_backend.comments.deno_service") as mock_deno_service,
     ):
         mock_deno_service.send_command.return_value = {
             "comments": [
@@ -60,7 +62,7 @@ def test_get_video_comments_normalizes_response():
 def test_get_comment_replies_sends_reply_token_and_continuation():
     from utils import get_comment_replies
 
-    with patch("utils.deno_service") as mock_deno_service:
+    with patch("youtube_backend.comments.deno_service") as mock_deno_service:
         mock_deno_service.send_command.return_value = {
             "comments": [{"author": "Reply User", "content": "Reply"}],
             "continuation": None,
@@ -84,9 +86,10 @@ def test_post_video_comment_sends_text_with_configured_cookies():
     from utils import post_video_comment
 
     with (
-        patch("utils.config_get", return_value="cookies.txt"),
-        patch("utils.os.path.exists", return_value=True),
-        patch("utils.deno_service") as mock_deno_service,
+        patch("youtube_backend.comments.config_get", return_value="cookies.txt"),
+        patch("youtube_backend.comments.os.path.exists", return_value=True),
+        patch("youtube_backend.session.config_get", return_value="cookies.txt"),
+        patch("youtube_backend.comments.deno_service") as mock_deno_service,
     ):
         mock_deno_service.send_command.return_value = {"success": True}
 
@@ -110,9 +113,9 @@ def test_post_video_comment_requires_valid_cookies():
     from utils import post_video_comment
 
     with (
-        patch("utils.ensure_deno_installed", return_value=True),
-        patch("utils.ensure_cookies_configured", return_value=False),
-        patch("utils.deno_service") as mock_deno_service,
+        patch("youtube_backend.comments.ensure_deno_installed", return_value=True),
+        patch("youtube_backend.comments.ensure_cookies_configured", return_value=False),
+        patch("youtube_backend.comments.deno_service") as mock_deno_service,
     ):
         result = post_video_comment(
             "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
@@ -128,8 +131,8 @@ def test_post_video_comment_requires_deno():
     from utils import post_video_comment
 
     with (
-        patch("utils.ensure_deno_installed", return_value=False),
-        patch("utils.deno_service") as mock_deno_service,
+        patch("youtube_backend.comments.ensure_deno_installed", return_value=False),
+        patch("youtube_backend.comments.deno_service") as mock_deno_service,
     ):
         result = post_video_comment(
             "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
@@ -142,7 +145,6 @@ def test_post_video_comment_requires_deno():
 
 
 def test_get_comment_replies_falls_back_to_yt_dlp_parent_filter(monkeypatch):
-    import utils
     from utils import get_comment_replies
 
     class FakeYoutubeDL:
@@ -175,10 +177,10 @@ def test_get_comment_replies_falls_back_to_yt_dlp_parent_filter(monkeypatch):
                 ]
             }
 
-    monkeypatch.setattr(utils, "YoutubeDL", FakeYoutubeDL)
+    monkeypatch.setattr(ytdlp_runtime, "YoutubeDL", FakeYoutubeDL)
     with (
-        patch("utils.config_get", return_value=""),
-        patch("utils.deno_service") as mock_deno_service,
+        patch("youtube_backend.comments.config_get", return_value=""),
+        patch("youtube_backend.comments.deno_service") as mock_deno_service,
     ):
         mock_deno_service.send_command.return_value = {"comments": []}
 
@@ -309,7 +311,7 @@ def test_activate_comment_with_timestamp_calls_seek_callback():
 
 
 def test_normalize_comment_item_includes_liked_and_disliked_flags():
-    from utils import _normalize_comment_item
+    from youtube_backend.comments import _normalize_comment_item
 
     item = {
         "id": "c123",
@@ -335,7 +337,7 @@ def test_normalize_comment_item_includes_liked_and_disliked_flags():
 
 
 def test_normalize_comments_response_includes_is_disabled_flag():
-    from utils import _normalize_comments_response
+    from youtube_backend.comments import _normalize_comments_response
 
     resp = {
         "comments": [{"id": "c1", "content": "Hi"}],
@@ -355,7 +357,7 @@ def test_like_comment_sends_command_and_validates():
     from utils import like_comment
 
     # Validation: missing Deno
-    with patch("utils.ensure_deno_installed", return_value=False):
+    with patch("youtube_backend.comments.ensure_deno_installed", return_value=False):
         res_no_deno = like_comment(
             "https://www.youtube.com/watch?v=dQw4w9WgXcQ", "c123", action="like"
         )
@@ -364,8 +366,8 @@ def test_like_comment_sends_command_and_validates():
 
     # Validation: missing cookies
     with (
-        patch("utils.ensure_deno_installed", return_value=True),
-        patch("utils.ensure_cookies_configured", return_value=False),
+        patch("youtube_backend.comments.ensure_deno_installed", return_value=True),
+        patch("youtube_backend.comments.ensure_cookies_configured", return_value=False),
     ):
         res_no_cookie = like_comment(
             "https://www.youtube.com/watch?v=dQw4w9WgXcQ", "c123", action="like"
@@ -375,8 +377,8 @@ def test_like_comment_sends_command_and_validates():
 
     # Validation: missing comment_id
     with (
-        patch("utils.ensure_deno_installed", return_value=True),
-        patch("utils.ensure_cookies_configured", return_value=True),
+        patch("youtube_backend.comments.ensure_deno_installed", return_value=True),
+        patch("youtube_backend.comments.ensure_cookies_configured", return_value=True),
     ):
         res_no_id = like_comment(
             "https://www.youtube.com/watch?v=dQw4w9WgXcQ", "", action="like"
@@ -386,10 +388,10 @@ def test_like_comment_sends_command_and_validates():
 
     # Success call
     with (
-        patch("utils.ensure_deno_installed", return_value=True),
-        patch("utils.ensure_cookies_configured", return_value=True),
-        patch("utils.config_get", return_value="cookies.txt"),
-        patch("utils.deno_service") as mock_deno_service,
+        patch("youtube_backend.comments.ensure_deno_installed", return_value=True),
+        patch("youtube_backend.comments.ensure_cookies_configured", return_value=True),
+        patch("youtube_backend.comments.config_get", return_value="cookies.txt"),
+        patch("youtube_backend.comments.deno_service") as mock_deno_service,
     ):
         mock_deno_service.send_command.return_value = {"success": True}
         res = like_comment(
@@ -412,7 +414,7 @@ def test_reply_to_comment_sends_command_and_validates():
     from utils import reply_to_comment
 
     # Validation: missing Deno
-    with patch("utils.ensure_deno_installed", return_value=False):
+    with patch("youtube_backend.comments.ensure_deno_installed", return_value=False):
         res_no_deno = reply_to_comment(
             "https://www.youtube.com/watch?v=dQw4w9WgXcQ", "c123", "My reply"
         )
@@ -421,8 +423,8 @@ def test_reply_to_comment_sends_command_and_validates():
 
     # Validation: missing cookies
     with (
-        patch("utils.ensure_deno_installed", return_value=True),
-        patch("utils.ensure_cookies_configured", return_value=False),
+        patch("youtube_backend.comments.ensure_deno_installed", return_value=True),
+        patch("youtube_backend.comments.ensure_cookies_configured", return_value=False),
     ):
         res_no_cookie = reply_to_comment(
             "https://www.youtube.com/watch?v=dQw4w9WgXcQ", "c123", "My reply"
@@ -432,8 +434,8 @@ def test_reply_to_comment_sends_command_and_validates():
 
     # Validation: missing comment_id
     with (
-        patch("utils.ensure_deno_installed", return_value=True),
-        patch("utils.ensure_cookies_configured", return_value=True),
+        patch("youtube_backend.comments.ensure_deno_installed", return_value=True),
+        patch("youtube_backend.comments.ensure_cookies_configured", return_value=True),
     ):
         res_no_id = reply_to_comment(
             "https://www.youtube.com/watch?v=dQw4w9WgXcQ", "", "My reply"
@@ -443,8 +445,8 @@ def test_reply_to_comment_sends_command_and_validates():
 
     # Validation: empty text
     with (
-        patch("utils.ensure_deno_installed", return_value=True),
-        patch("utils.ensure_cookies_configured", return_value=True),
+        patch("youtube_backend.comments.ensure_deno_installed", return_value=True),
+        patch("youtube_backend.comments.ensure_cookies_configured", return_value=True),
     ):
         res_no_text = reply_to_comment(
             "https://www.youtube.com/watch?v=dQw4w9WgXcQ", "c123", "   "
@@ -454,10 +456,10 @@ def test_reply_to_comment_sends_command_and_validates():
 
     # Success call
     with (
-        patch("utils.ensure_deno_installed", return_value=True),
-        patch("utils.ensure_cookies_configured", return_value=True),
-        patch("utils.config_get", return_value="cookies.txt"),
-        patch("utils.deno_service") as mock_deno_service,
+        patch("youtube_backend.comments.ensure_deno_installed", return_value=True),
+        patch("youtube_backend.comments.ensure_cookies_configured", return_value=True),
+        patch("youtube_backend.comments.config_get", return_value="cookies.txt"),
+        patch("youtube_backend.comments.deno_service") as mock_deno_service,
     ):
         mock_deno_service.send_command.return_value = {"success": True}
         res = reply_to_comment(

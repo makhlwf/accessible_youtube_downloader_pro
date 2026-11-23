@@ -38,7 +38,7 @@ def _resolve_path(cookies_path):
     if cookies_path:
         return cookies_path
     try:
-        import cookies_manager
+        from youtube_backend import cookies_manager
 
         return cookies_manager.get_default_browser_cookies_path()
     except Exception:

@@ -9,7 +9,7 @@ description: >-
 
 ## Overview
 
-HexPlayer features a browser cookie extraction engine (`src/cookies_manager.py`) enabling blind users to access their YouTube account data, subscribed channels, liked videos, private playlists, age-restricted media, and YouTube Premium high-bitrate audio streams without manually managing tokens or typing complex passwords.
+HexPlayer features a browser cookie extraction engine (`src/youtube_backend/cookies_manager.py`) enabling blind users to access their YouTube account data, subscribed channels, liked videos, private playlists, age-restricted media, and YouTube Premium high-bitrate audio streams without manually managing tokens or typing complex passwords.
 
 ## When to Use
 
@@ -100,7 +100,7 @@ Never print decrypted session tokens or cookie values to application log files o
 ## Verification & Quality Gates
 
 - **Unit Tests**: Run `uv run pytest tests/test_cookies_manager.py`
-- **Lint Check**: Run `uv run ruff check src/cookies_manager.py`
+- **Lint Check**: Run `uv run ruff check src/youtube_backend/cookies_manager.py`
 - **Manual Verification**:
   1. Open Settings -> Cookies.
   2. Select installed browser and click "Import Cookies".

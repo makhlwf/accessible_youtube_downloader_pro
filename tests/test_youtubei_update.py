@@ -6,11 +6,12 @@ import pytest
 
 import paths
 import utils
+from app_runtime import dependencies as dependency_updates
 
 
 @pytest.mark.parametrize("system", ["linux", "win32"])
 def test_deno_service_platform_runtime(monkeypatch, system):
-    import deno_service
+    from youtube_backend import deno_service
 
     monkeypatch.setattr(deno_service.sys, "platform", system)
     monkeypatch.setattr(paths, "get_youtube_service_path", lambda: None, raising=False)
@@ -33,7 +34,7 @@ def test_deno_service_platform_runtime(monkeypatch, system):
 
 @pytest.mark.parametrize("system", ["linux", "win32"])
 def test_youtube_service_platform_runtime(monkeypatch, system):
-    import deno_service
+    from youtube_backend import deno_service
 
     monkeypatch.setattr(deno_service.sys, "platform", system)
     monkeypatch.setattr(
@@ -62,8 +63,8 @@ def test_deno_download_uses_writable_install_directory(tmp_path, monkeypatch):
     import sys
 
     install_dir = tmp_path / "runtime"
-    monkeypatch.setattr(utils.sys, "platform", "linux")
-    monkeypatch.setattr(utils.platform, "machine", lambda: "aarch64")
+    monkeypatch.setattr(dependency_updates.sys, "platform", "linux")
+    monkeypatch.setattr(dependency_updates.platform, "machine", lambda: "aarch64")
     monkeypatch.setattr(
         paths, "deno_install_path", str(install_dir / "deno"), raising=False
     )
@@ -155,9 +156,9 @@ def test_install_youtubei_version_writes_runtime_config_and_refreshes_cache(
 
     run = Mock(return_value=SimpleNamespace(returncode=0, stdout="", stderr=""))
     stop = Mock()
-    monkeypatch.setattr(utils.subprocess, "run", run)
-    monkeypatch.setattr(utils.deno_service, "stop", stop)
-    monkeypatch.setattr(utils.wx, "MessageBox", Mock())
+    monkeypatch.setattr(dependency_updates.subprocess, "run", run)
+    monkeypatch.setattr(dependency_updates.deno_service, "stop", stop)
+    monkeypatch.setattr(dependency_updates.wx, "MessageBox", Mock())
 
     assert utils.install_youtubei_version("17.2.0")
 
@@ -175,14 +176,14 @@ def test_install_youtubei_version_writes_runtime_config_and_refreshes_cache(
 
 
 def test_update_youtubei_skips_when_current_is_latest(monkeypatch):
-    message_box = Mock(return_value=utils.wx.OK)
+    message_box = Mock(return_value=dependency_updates.wx.OK)
     install = Mock()
-    monkeypatch.setattr(utils, "get_youtubei_version", lambda: "17.2.0")
+    monkeypatch.setattr(dependency_updates, "get_youtubei_version", lambda: "17.2.0")
     monkeypatch.setattr(
-        utils, "get_latest_npm_package_version", lambda package: "17.2.0"
+        dependency_updates, "get_latest_npm_package_version", lambda package: "17.2.0"
     )
-    monkeypatch.setattr(utils.wx, "MessageBox", message_box)
-    monkeypatch.setattr(utils, "install_youtubei_version", install)
+    monkeypatch.setattr(dependency_updates.wx, "MessageBox", message_box)
+    monkeypatch.setattr(dependency_updates, "install_youtubei_version", install)
 
     assert utils.update_youtubei()
 

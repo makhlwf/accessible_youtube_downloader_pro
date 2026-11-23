@@ -2,10 +2,12 @@ import pytest
 import wx
 
 import utils
+from app_state.settings_handler import config_get, config_set, defaults
 from gui import settings_dialog
 from language_handler import get_default_language
+from media_player import formats as media_formats
 from media_player import media_gui
-from settings_handler import config_get, config_set, defaults
+from youtube_backend import playback as youtube_playback
 
 
 @pytest.fixture(autouse=True)
@@ -463,7 +465,7 @@ def test_original_preference_avoids_default_dub_in_muxed_video(monkeypatch):
         "defaultaudioquality": 1,
         "defaultvideoquality": 0,
     }
-    monkeypatch.setattr(utils, "config_get", options.get)
+    monkeypatch.setattr(media_formats, "config_get", options.get)
     dubbed = {
         "url": "dubbed",
         "language": "en",
@@ -483,13 +485,13 @@ def test_original_preference_avoids_default_dub_in_muxed_video(monkeypatch):
         "abr": 96,
     }
     entry = {"title": "Multilingual video", "formats": [dubbed, video, original]}
-    stream = utils._stream_from_info(entry)
+    stream = youtube_playback._stream_from_info(entry)
     assert (stream.url, stream.audio_url, stream.audio_track_id) == (
         "video-only",
         "original",
         "ar",
     )
 
-    monkeypatch.setattr(utils, "get_media_info", lambda url: entry)
+    monkeypatch.setattr(youtube_playback, "get_media_info", lambda url: entry)
     stream = utils.get_specific_quality_stream("video", 128, audio_mode=True)
     assert stream.url == "original"

@@ -9,7 +9,7 @@ from unittest.mock import Mock
 
 import pytest
 
-import deno_service
+from youtube_backend import deno_service
 
 
 class _InputPipe:
@@ -144,7 +144,7 @@ def make_bridge(monkeypatch, tmp_path):
         original_start(io)
 
     monkeypatch.setattr(deno_service._ProcessIO, "start", record_start)
-    monkeypatch.setattr("settings_handler.config_get", lambda key: False)
+    monkeypatch.setattr("app_state.settings_handler.config_get", lambda key: False)
     monkeypatch.setattr(
         deno_service.paths,
         "get_youtube_service_path",

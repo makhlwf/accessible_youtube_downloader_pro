@@ -209,7 +209,7 @@ class TestWelcomeDialog(unittest.TestCase):
 
         # 1. When welcome_completed is False:
         with (
-            patch("settings_handler.config_get", return_value=False),
+            patch("app_state.settings_handler.config_get", return_value=False),
             patch("wx.CallAfter") as mock_call_after,
         ):
             mock_event = MagicMock()
@@ -223,7 +223,7 @@ class TestWelcomeDialog(unittest.TestCase):
         # first paint), not called inline.
         home.checked = False
         with (
-            patch("settings_handler.config_get", return_value=True),
+            patch("app_state.settings_handler.config_get", return_value=True),
             patch("wx.CallAfter") as mock_call_after,
         ):
             mock_event = MagicMock()

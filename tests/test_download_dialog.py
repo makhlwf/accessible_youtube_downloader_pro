@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import wx
 
-import database
+from app_state import database
 from download_handler.downloader import DownloadCancelled
 from gui.download_dialog import DownloadDialog
 
@@ -15,7 +15,7 @@ class TestDownloadDialog(unittest.TestCase):
         connection = sqlite3.connect(":memory:")
         connection.row_factory = sqlite3.Row
         self.addCleanup(connection.close)
-        database_patch = patch("database.con", connection)
+        database_patch = patch("app_state.database.con", connection)
         database_patch.start()
         self.addCleanup(database_patch.stop)
         database.prepare_tables()

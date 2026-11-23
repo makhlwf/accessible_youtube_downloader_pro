@@ -13,7 +13,7 @@ import zipfile
 import paths
 import utils
 from language_handler import _
-from pot_provider_service import pot_service
+from youtube_backend.pot_provider_service import pot_service
 
 
 def _http_download(url, dest, timeout=60):
@@ -129,7 +129,7 @@ def update_deno():
 
 def _install_youtubei(version):
     """Write the YouTube.js runtime config and warm the Deno cache (headless)."""
-    from deno_service import deno_service
+    from youtube_backend.deno_service import deno_service
 
     try:
         config_path = utils._write_youtubei_runtime_config(version)

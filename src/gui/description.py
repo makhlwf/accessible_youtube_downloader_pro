@@ -4,8 +4,8 @@ import webbrowser
 import wx
 
 import utils
+from gui.theme_handler import apply_theme
 from language_handler import _
-from theme_handler import apply_theme
 
 url = re.compile(
     r"(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))"

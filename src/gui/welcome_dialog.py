@@ -2,10 +2,10 @@ import logging
 
 import wx
 
-import doc_handler
-import settings_handler
 import speech_client
 import utils
+from app_state import settings_handler
+from gui import doc_handler
 from gui.custom_controls import CustomLabel
 from gui.text_viewer import Viewer
 from language_handler import _, normalize_language_code, supported_languages

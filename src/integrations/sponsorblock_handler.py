@@ -4,9 +4,9 @@ from typing import Any
 
 import sponsorblock
 
+from app_state.settings_handler import config_get
 from language_handler import _
-from settings_handler import config_get
-from youtube_url_utils import youtube_regexp
+from youtube_backend.youtube_url_utils import youtube_regexp
 
 logger = logging.getLogger(__name__)
 

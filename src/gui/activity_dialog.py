@@ -4,8 +4,8 @@ from threading import Thread
 
 import wx
 
-from async_utils import run_in_async_loop
-from theme_handler import apply_theme
+from app_runtime.async_utils import run_in_async_loop
+from gui.theme_handler import apply_theme
 
 logger = logging.getLogger(__name__)
 

@@ -86,11 +86,11 @@ graph TD
 - **Skills Used**: `ytdlp-downloader-engine`, `youtube-pot-security`.
 
 ### 7. `InnerTubeAndDenoAgent` (JS Bridge & YouTube API Specialist)
-- **Primary Mission**: Maintain Deno stdio JSON-RPC bridge and YouTube.js interactions in `src/service.js` and `src/deno_service.py`.
+- **Primary Mission**: Maintain Deno stdio JSON-RPC bridge and YouTube.js interactions in `src/service.js` and `src/youtube_backend/deno_service.py`.
 - **Skills Used**: `innertube-rpc-bridge`, `youtube-pot-security`.
 
 ### 8. `PoTokenSecurityAgent` (PO Token & Anti-Bot Specialist)
-- **Primary Mission**: Maintain YouTube Proof of Origin token generation and circumvention of HTTP 403 / bot detection in `src/pot_provider_service.py`.
+- **Primary Mission**: Maintain YouTube Proof of Origin token generation and circumvention of HTTP 403 / bot detection in `src/youtube_backend/pot_provider_service.py`.
 - **Skills Used**: `youtube-pot-security`.
 
 ### 9. `AuthCookiesSpecialist` (Browser Cookies & Authentication Specialist)

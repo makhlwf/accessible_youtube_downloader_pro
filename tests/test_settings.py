@@ -5,9 +5,15 @@ import wx
 
 _app = wx.App.GetInstance() or wx.App()
 
-import settings_handler
+from app_state import settings_handler
+from app_state.settings_handler import (
+    config_get,
+    config_initialization,
+    config_set,
+    defaults,
+)
+from gui import settings_controls
 from paths import settings_path
-from settings_handler import config_get, config_initialization, config_set, defaults
 
 
 def _reset_settings_module(settings_handler):
@@ -101,7 +107,6 @@ def test_sleep_timer_last_minutes_round_trips():
 
 
 def test_settings_checkbox_accessible_role_uses_checkbutton():
-    from gui import settings_dialog
 
     class FakeControl:
         _accessible_label = "Open fullscreen"
@@ -115,7 +120,7 @@ def test_settings_checkbox_accessible_role_uses_checkbutton():
         def HasFocus(self):
             return False
 
-    accessible = settings_dialog.CheckBoxAccessible(FakeControl())
+    accessible = settings_controls.CheckBoxAccessible(FakeControl())
 
     assert accessible.GetName(0) == (0, "Open fullscreen")
     assert accessible.GetRole(0) == (0, 0x2C)
@@ -123,18 +128,16 @@ def test_settings_checkbox_accessible_role_uses_checkbutton():
 
 
 def test_control_accessible_name():
-    from gui import settings_dialog
 
     class FakeControl:
         _accessible_label = "مسار مجلد التنزيل"
         Name = "path"
 
-    accessible = settings_dialog.ControlAccessible(FakeControl())
+    accessible = settings_controls.ControlAccessible(FakeControl())
     assert accessible.GetName(0) == (0, "مسار مجلد التنزيل")
 
 
 def test_set_accessible_name_attaches_accessible():
-    from gui import settings_dialog
 
     class FakeControl:
         def SetName(self, name):
@@ -144,11 +147,11 @@ def test_set_accessible_name_attaches_accessible():
             self._accessible = accessible
 
     ctrl = FakeControl()
-    settings_dialog._set_accessible_name(ctrl, "مسار ملف الكوكيز: ")
+    settings_controls.set_control_accessible_name(ctrl, "مسار ملف الكوكيز: ")
 
     assert ctrl._accessible_label == "مسار ملف الكوكيز"
-    if settings_dialog._WX_ACCESSIBLE_BASE is not object:
-        assert isinstance(ctrl._accessible, settings_dialog.ControlAccessible)
+    if settings_controls._WX_ACCESSIBLE_BASE is not object:
+        assert isinstance(ctrl._accessible, settings_controls.ControlAccessible)
         assert ctrl._accessible.GetName(0) == (0, "مسار ملف الكوكيز")
 
 
@@ -186,7 +189,7 @@ def test_settings_repeat_checkbox_disables_autoplay(monkeypatch):
 
 
 def test_settings_load_legacy_lowercase_keys(monkeypatch, tmp_path):
-    import settings_handler
+    from app_state import settings_handler
 
     current_path = tmp_path / "HexPlayer"
     legacy_path = tmp_path / "accessible youtube downloader pro"
@@ -209,7 +212,7 @@ def test_settings_load_legacy_lowercase_keys(monkeypatch, tmp_path):
 
 
 def test_settings_merge_newest_file_with_missing_keys(monkeypatch, tmp_path):
-    import settings_handler
+    from app_state import settings_handler
 
     current_path = tmp_path / "HexPlayer"
     legacy_path = tmp_path / "accessible youtube downloader pro"
@@ -294,15 +297,15 @@ def test_browser_cookies_source_setting():
 
 
 def test_browser_cookies_controls_created_and_accessible(monkeypatch):
-    import cookies_manager
     from gui import settings_dialog
+    from youtube_backend import cookies_manager
 
     dialog = settings_dialog.SettingsDialog.__new__(settings_dialog.SettingsDialog)
     dialog.installed_browsers = cookies_manager.get_installed_browsers()
     dialog.browserChoice = wx.Choice(
         wx.Frame(None), -1, choices=[b["name"] for b in dialog.installed_browsers]
     )
-    settings_dialog._set_accessible_name(
+    settings_controls.set_control_accessible_name(
         dialog.browserChoice, "المتصفح لاستيراد الكوكيز"
     )
     dialog.importBrowserCookiesButton = wx.Button(
@@ -513,7 +516,7 @@ def test_browser_cookies_imported_reenables_button_on_success_and_failure(
 
 
 def _skip_test():
-    import settings_handler
+    from app_state import settings_handler
     from gui import settings_dialog
 
     settings_handler.config_initialization()
@@ -539,7 +542,7 @@ def _skip_test():
 
 
 def test_settings_dialog_defaultformat_choices_fixed():
-    import settings_handler
+    from app_state import settings_handler
     from gui import settings_dialog
 
     settings_handler.config_initialization()

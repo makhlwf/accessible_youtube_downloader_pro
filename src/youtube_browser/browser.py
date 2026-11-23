@@ -6,8 +6,9 @@ import wx
 
 import paths
 import utils
-from async_utils import submit_async
-from database import DownloadQueue, Favorite, QueuedDownload
+from app_runtime.async_utils import submit_async
+from app_state.database import DownloadQueue, Favorite, QueuedDownload
+from app_state.settings_handler import config_get
 from gui.activity_dialog import LoadingDialog
 from gui.channel_dialog import ChannelDialog
 from gui.download_progress import DownloadProgress
@@ -15,11 +16,10 @@ from gui.playlist_dialog import PlaylistDialog
 from gui.quality_selection import QualitySelectionDialog
 from gui.search_dialog import SearchDialog
 from gui.settings_dialog import SettingsDialog
+from gui.theme_handler import apply_theme
 from language_handler import _
 from media_player.media_gui import MediaGui, play_mix
-from settings_handler import config_get
 from speech_client import speak
-from theme_handler import apply_theme
 from utils import get_playable_stream
 from youtube_browser.scraper import Scraper
 from youtube_browser.search_handler import Search

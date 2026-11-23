@@ -10,7 +10,7 @@ from types import SimpleNamespace
 
 import pytest
 
-import settings_handler
+from app_state import settings_handler
 
 
 def read_settings(path):

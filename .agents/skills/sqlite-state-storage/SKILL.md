@@ -9,13 +9,13 @@ description: >-
 
 ## Overview
 
-HexPlayer maintains user state (favorites, resume positions, watch history) in a local SQLite database (`%APPDATA%\HexPlayer\aHexPlayer.db`) managed by `src/database.py`. It also persists user preferences in `settings.ini` via `src/settings_handler.py`. Because background threads simultaneously read and update playback state, all database and configuration access is thread-safe and debounced.
+HexPlayer maintains user state (favorites, resume positions, watch history) in a local SQLite database (`%APPDATA%\HexPlayer\aHexPlayer.db`) managed by `src/app_state/database.py`. It also persists user preferences in `settings.ini` via `src/app_state/settings_handler.py`. Because background threads simultaneously read and update playback state, all database and configuration access is thread-safe and debounced.
 
 ## When to Use
 
-- Adding or modifying tables, columns, or queries in `src/database.py`.
+- Adding or modifying tables, columns, or queries in `src/app_state/database.py`.
 - Working with user favorites, playback bookmarks (`continue` table), or watch history.
-- Adding new configuration keys in `src/settings_handler.py` or `settings.ini`.
+- Adding new configuration keys in `src/app_state/settings_handler.py` or `settings.ini`.
 - Handling multi-threaded database locking (`sqlite3.OperationalError: database is locked`).
 - Managing portable mode vs standard Windows `%APPDATA%` directory storage in `paths.py`.
 
@@ -104,11 +104,11 @@ def config_set(key, value):
 ### Step 1: Adding a New Field to Favorites
 1. Check if column exists via `PRAGMA table_info(favorite)`.
 2. If missing, execute `ALTER TABLE favorite ADD COLUMN new_field TEXT DEFAULT ''`.
-3. Update insert and fetch helper methods in `src/database.py`.
+3. Update insert and fetch helper methods in `src/app_state/database.py`.
 4. Add unit test in `tests/test_database.py`.
 
 ### Step 2: Adding a New Configuration Setting
-1. Add default fallback value in `src/settings_handler.py` defaults dict.
+1. Add default fallback value in `src/app_state/settings_handler.py` defaults dict.
 2. Read with `config_get("new_setting", default="fallback")`.
 3. Save with `config_set("new_setting", "value")`.
 
@@ -124,7 +124,7 @@ def config_set(key, value):
 ## Verification & Quality Gates
 
 - **Unit Tests**: Run `uv run pytest tests/test_database.py tests/test_settings.py`
-- **Lint Check**: Run `uv run ruff check src/database.py src/settings_handler.py`
+- **Lint Check**: Run `uv run ruff check src/app_state/database.py src/app_state/settings_handler.py`
 - **Manual Verification**:
   1. Add a video to favorites (`Ctrl+B`).
   2. Restart HexPlayer and check Favorites dialog (`Ctrl+Shift+B`).

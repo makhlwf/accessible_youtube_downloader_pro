@@ -11,13 +11,11 @@ from accessible_youtube_downloader_pro import HomeScreen
 def home():
     with (
         patch(
-            "accessible_youtube_downloader_pro.utils.has_cookies_file",
+            "gui.home_screen.utils.has_cookies_file",
             return_value=True,
         ),
-        patch(
-            "accessible_youtube_downloader_pro.browser_extension_manager.sync_browser_extension_files"
-        ),
-        patch("accessible_youtube_downloader_pro.TaskBarIcon"),
+        patch("gui.home_screen.browser_extension_manager.sync_browser_extension_files"),
+        patch("gui.home_screen.TaskBarIcon"),
     ):
         yield HomeScreen(start_hidden=True)
 
@@ -32,7 +30,7 @@ def test_open_music_flips_in_place(home):
     fake_panel = MagicMock()
     with (
         patch("youtube_music.music_panel.YouTubeMusicPanel", return_value=fake_panel),
-        patch("accessible_youtube_downloader_pro.speak"),
+        patch("gui.home_screen.speak"),
     ):
         home.open_music()
     assert home.music_panel is fake_panel
@@ -44,10 +42,10 @@ def test_open_music_flips_in_place(home):
 def test_open_music_respects_disabled_setting(home):
     with (
         patch(
-            "accessible_youtube_downloader_pro.settings_handler.config_get",
+            "gui.home_screen.settings_handler.config_get",
             return_value=False,
         ),
-        patch("accessible_youtube_downloader_pro.speak") as speak,
+        patch("gui.home_screen.speak") as speak,
     ):
         home.open_music()
     assert home.music_panel is None
@@ -58,7 +56,7 @@ def test_close_music_flips_back(home):
     fake_panel = MagicMock()
     with (
         patch("youtube_music.music_panel.YouTubeMusicPanel", return_value=fake_panel),
-        patch("accessible_youtube_downloader_pro.speak"),
+        patch("gui.home_screen.speak"),
     ):
         home.open_music()
         home.close_music()
@@ -73,7 +71,7 @@ def test_open_music_lazy_builds_once(home):
         patch(
             "youtube_music.music_panel.YouTubeMusicPanel", return_value=fake_panel
         ) as ctor,
-        patch("accessible_youtube_downloader_pro.speak"),
+        patch("gui.home_screen.speak"),
     ):
         home.open_music()
         home.close_music()
@@ -85,7 +83,7 @@ def test_open_music_sets_music_mode_flag(home):
     fake_panel = MagicMock()
     with (
         patch("youtube_music.music_panel.YouTubeMusicPanel", return_value=fake_panel),
-        patch("accessible_youtube_downloader_pro.speak"),
+        patch("gui.home_screen.speak"),
     ):
         home.open_music()
     assert home._in_music_mode is True
@@ -95,7 +93,7 @@ def test_close_music_clears_music_mode_flag(home):
     fake_panel = MagicMock()
     with (
         patch("youtube_music.music_panel.YouTubeMusicPanel", return_value=fake_panel),
-        patch("accessible_youtube_downloader_pro.speak"),
+        patch("gui.home_screen.speak"),
     ):
         home.open_music()
         home.close_music()
@@ -106,7 +104,7 @@ def test_restore_after_player_refocuses_music(home):
     fake_panel = MagicMock()
     with (
         patch("youtube_music.music_panel.YouTubeMusicPanel", return_value=fake_panel),
-        patch("accessible_youtube_downloader_pro.speak"),
+        patch("gui.home_screen.speak"),
     ):
         home.open_music()
         # Simulate returning from the media player (frame reshown).

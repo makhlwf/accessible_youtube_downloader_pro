@@ -7,7 +7,8 @@ import wx
 
 import application
 import utils
-from database import Continue
+from app_state.database import Continue
+from app_state.settings_handler import config_get, config_set
 from gui.activity_dialog import LoadingDialog
 from gui.comments_dialog import CommentsDialog
 from gui.custom_controls import CustomButton
@@ -16,67 +17,23 @@ from gui.download_progress import DownloadProgress
 from gui.quality_selection import QualitySelectionDialog
 from gui.settings_dialog import SettingsDialog
 from gui.sleep_timer_dialog import SleepTimerDialog
-from language_handler import _
-from media_player.player import Player, State
-from media_player.suggestions_service import SuggestionsService
-from media_player.timecodes import format_timecode, parse_timecode
-from settings_handler import config_get, config_set
-from speech_client import speak
-from sponsorblock_handler import (
+from gui.theme_handler import apply_theme
+from integrations.sponsorblock_handler import (
     category_label,
     filter_skippable_segments,
     find_skip_segment,
     get_sponsorblock_segments,
     should_announce_skips,
 )
-from theme_handler import apply_theme
+from language_handler import _
+from media_player.audio_output_dialog import AudioOutputDeviceDialog
+from media_player.player import Player, State
+from media_player.suggestions_service import SuggestionsService
+from media_player.timecodes import format_timecode, parse_timecode
+from speech_client import speak
 from utils import get_playable_stream
 
 logger = logging.getLogger(__name__)
-
-
-class AudioOutputDeviceDialog(wx.Dialog):
-    def __init__(self, parent, devices, selected_device):
-        wx.Dialog.__init__(self, parent, title=_("جهاز إخراج الصوت"))
-        self.SetSize(450, 200)
-        self.Centre()
-        self.devices = [{"id": "", "description": _("جهاز إخراج الصوت الافتراضي")}]
-        self.devices.extend(devices)
-
-        panel = wx.Panel(self)
-        label = wx.StaticText(panel, -1, _("جهاز إخراج الصوت: "))
-        self.deviceBox = wx.Choice(
-            panel,
-            -1,
-            choices=[device["description"] for device in self.devices],
-        )
-        self.deviceBox.Selection = self.get_selection_for_device(selected_device)
-        okButton = wx.Button(panel, wx.ID_OK, _("مواف&ق"))
-        okButton.SetDefault()
-        cancelButton = wx.Button(panel, wx.ID_CANCEL, _("إل&غاء"))
-
-        deviceSizer = wx.BoxSizer(wx.HORIZONTAL)
-        deviceSizer.Add(label, 1)
-        deviceSizer.Add(self.deviceBox, 2, wx.EXPAND)
-
-        buttonSizer = wx.BoxSizer(wx.HORIZONTAL)
-        buttonSizer.Add(okButton, 1)
-        buttonSizer.Add(cancelButton, 1)
-
-        sizer = wx.BoxSizer(wx.VERTICAL)
-        sizer.Add(deviceSizer, 1, wx.EXPAND)
-        sizer.Add(buttonSizer, 1, wx.EXPAND)
-        panel.SetSizer(sizer)
-        apply_theme(self)
-
-    def get_selection_for_device(self, selected_device):
-        for index, device in enumerate(self.devices):
-            if device["id"] == selected_device:
-                return index
-        return 0
-
-    def get_selected_device(self):
-        return self.devices[self.deviceBox.Selection]
 
 
 def has_player(method):
@@ -820,7 +777,7 @@ class MediaGui(wx.Frame):
         if not getattr(self, "player", None) or getattr(self, "_closing", False):
             return
         try:
-            import discord_presence
+            from integrations import discord_presence
 
             media = getattr(self.player, "media", None)
             if not media:
@@ -1845,7 +1802,7 @@ class MediaGui(wx.Frame):
                 logger.debug("Could not show parent after media close", exc_info=True)
 
         try:
-            import discord_presence
+            from integrations import discord_presence
 
             discord_presence.update_idle()
         except Exception:

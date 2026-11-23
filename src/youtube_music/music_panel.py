@@ -13,9 +13,9 @@ import threading
 import wx
 
 from gui.custom_controls import CustomLabel
+from gui.theme_handler import apply_theme
 from language_handler import _
 from speech_client import speak
-from theme_handler import apply_theme
 
 from . import actions, adapters, playback, views
 from .base_view import STATUS_AUTH, STATUS_EMPTY, STATUS_ERROR
@@ -257,8 +257,8 @@ class YouTubeMusicPanel(wx.Panel):
             return
         url = adapters.WATCH_URL.format(video_id=video_id)
         try:
+            from app_state.settings_handler import config_get
             from download_handler.downloader import start_media_download
-            from settings_handler import config_get
 
             start_media_download(
                 url,

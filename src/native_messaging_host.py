@@ -1,14 +1,12 @@
 import json
 import os
-import socket
 import struct
 import subprocess
 import sys
 
-from youtube_url_utils import extract_launch_youtube_url
+from app_runtime.ipc import send_ipc_message
+from youtube_backend.youtube_url_utils import extract_launch_youtube_url
 
-IPC_HOST = "127.0.0.1"
-IPC_PORT = 57280
 GUI_EXE_NAME = "HexPlayer.exe"
 MAX_MESSAGE_SIZE = 1024 * 1024
 
@@ -38,14 +36,6 @@ def write_native_message(message, stdout=None):
     stdout.write(struct.pack("<I", len(data)))
     stdout.write(data)
     stdout.flush()
-
-
-def send_ipc_message(action, url=""):
-    payload = json.dumps({"action": action, "url": url}).encode("utf-8")
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-        sock.settimeout(1)
-        sock.connect((IPC_HOST, IPC_PORT))
-        sock.sendall(payload)
 
 
 def get_gui_launch_command(url):
@@ -105,8 +95,8 @@ def handle_message(message):
     elif msg_type == "save_cookies":
         cookies = message.get("cookies", [])
         try:
-            import cookies_manager
-            import settings_handler
+            from app_state import settings_handler
+            from youtube_backend import cookies_manager
 
             result = cookies_manager.save_raw_browser_cookies(cookies)
             if result.get("success"):

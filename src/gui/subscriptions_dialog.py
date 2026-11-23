@@ -4,9 +4,9 @@ import wx
 
 import utils
 from gui.channel_dialog import ChannelDialog
+from gui.theme_handler import apply_theme
 from language_handler import _
 from speech_client import speak
-from theme_handler import apply_theme
 
 
 class SubscriptionsDialog(wx.Frame):

@@ -27,11 +27,11 @@ if hasattr(sys.stdout, "reconfigure"):
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
-from discord_presence import (
+from integrations.discord_presence import (
     DEFAULT_CLIENT_ID,
-    DiscordRPCClient,
     is_valid_button_url,
 )
+from integrations.discord_rpc import DiscordRPCClient
 
 VIDEO_ID = "dQw4w9WgXcQ"
 WATCH_URL = f"https://www.youtube.com/watch?v={VIDEO_ID}"

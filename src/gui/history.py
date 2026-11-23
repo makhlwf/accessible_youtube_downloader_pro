@@ -4,14 +4,14 @@ from threading import Thread
 import wx
 
 import utils
-from database import Favorite
+from app_state.database import Favorite
 from gui.activity_dialog import LoadingDialog
 from gui.download_progress import DownloadProgress
 from gui.quality_selection import QualitySelectionDialog
+from gui.theme_handler import apply_theme
 from language_handler import _
 from media_player.media_gui import MediaGui
 from speech_client import speak
-from theme_handler import apply_theme
 from youtube_browser.scraper import Scraper
 from youtube_browser.search_handler import SimpleResult
 

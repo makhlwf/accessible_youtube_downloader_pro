@@ -9,11 +9,11 @@ description: >-
 
 ## Overview
 
-HexPlayer integrates **SponsorBlock** (`src/sponsorblock_handler.py`) via `sponsorblock-py` to automatically detect and skip sponsor segments, intro animations, outro cards, and self-promotional content during media playback. When MPV's playback cursor crosses into an active sponsor segment, HexPlayer executes an instant seek jump to the segment boundary and announces the skip to the screen reader.
+HexPlayer integrates **SponsorBlock** (`src/integrations/sponsorblock_handler.py`) via `sponsorblock-py` to automatically detect and skip sponsor segments, intro animations, outro cards, and self-promotional content during media playback. When MPV's playback cursor crosses into an active sponsor segment, HexPlayer executes an instant seek jump to the segment boundary and announces the skip to the screen reader.
 
 ## When to Use
 
-- Modifying or debugging SponsorBlock segment fetching in `src/sponsorblock_handler.py`.
+- Modifying or debugging SponsorBlock segment fetching in `src/integrations/sponsorblock_handler.py`.
 - Handling SponsorBlock API network timeouts, caching, or rate limits.
 - Configuring enabled skip categories (sponsor, intro, outro, selfpromo, interaction, music_offtopic).
 - Integrating segment boundaries with MPV playback cursor observation (`time-pos`).
@@ -74,7 +74,7 @@ SponsorBlock API outages or rate limits must NEVER prevent video playback. If Sp
 ## Implementation Procedures
 
 ### Step 1: Adding a New Category Toggle in Settings
-1. Add configuration key in `src/settings_handler.py` defaults.
+1. Add configuration key in `src/app_state/settings_handler.py` defaults.
 2. In `SettingsDialog`, add checkbox for the category.
 3. In `sponsorblock_handler.py`, filter segments based on enabled categories:
    ```python
@@ -100,7 +100,7 @@ uv run pytest tests/test_sponsorblock.py
 ## Verification & Quality Gates
 
 - **Unit Tests**: Run `uv run pytest tests/test_sponsorblock.py`
-- **Lint Check**: Run `uv run ruff check src/sponsorblock_handler.py`
+- **Lint Check**: Run `uv run ruff check src/integrations/sponsorblock_handler.py`
 - **Manual Verification**:
   1. Play a sponsored video in HexPlayer.
   2. Verify that playback jumps across the sponsor read automatically.

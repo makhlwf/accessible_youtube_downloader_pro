@@ -8,8 +8,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-import pot_provider_service as provider
-from pot_provider_service import PotProviderService, pot_service
+from youtube_backend import pot_provider_service as provider
+from youtube_backend.pot_provider_service import PotProviderService, pot_service
 
 
 @pytest.mark.parametrize(
@@ -102,23 +102,23 @@ def test_service_get_port_validation(monkeypatch):
     service = PotProviderService()
 
     # Valid int
-    monkeypatch.setattr("pot_provider_service.config_get", lambda k: 8080)
+    monkeypatch.setattr("youtube_backend.pot_provider_service.config_get", lambda k: 8080)
     assert service.get_port() == 8080
 
     # Valid string
-    monkeypatch.setattr("pot_provider_service.config_get", lambda k: "5000")
+    monkeypatch.setattr("youtube_backend.pot_provider_service.config_get", lambda k: "5000")
     assert service.get_port() == 5000
 
     # Out of range low / high
-    monkeypatch.setattr("pot_provider_service.config_get", lambda k: 0)
+    monkeypatch.setattr("youtube_backend.pot_provider_service.config_get", lambda k: 0)
     assert service.get_port() == 4416
-    monkeypatch.setattr("pot_provider_service.config_get", lambda k: 70000)
+    monkeypatch.setattr("youtube_backend.pot_provider_service.config_get", lambda k: 70000)
     assert service.get_port() == 4416
 
     # Malformed / None
-    monkeypatch.setattr("pot_provider_service.config_get", lambda k: "invalid")
+    monkeypatch.setattr("youtube_backend.pot_provider_service.config_get", lambda k: "invalid")
     assert service.get_port() == 4416
-    monkeypatch.setattr("pot_provider_service.config_get", lambda k: None)
+    monkeypatch.setattr("youtube_backend.pot_provider_service.config_get", lambda k: None)
     assert service.get_port() == 4416
 
 
@@ -274,7 +274,7 @@ def test_service_stop_safe_logger_exception():
     mock_proc = MagicMock()
     service.process = mock_proc
     with patch(
-        "pot_provider_service.logger.info",
+        "youtube_backend.pot_provider_service.logger.info",
         side_effect=ValueError("I/O operation on closed file"),
     ):
         service.stop()
@@ -294,7 +294,7 @@ def test_service_ensure_started(tmp_path, monkeypatch):
 
     # Disabled in settings
     with patch(
-        "pot_provider_service.config_get",
+        "youtube_backend.pot_provider_service.config_get",
         side_effect=lambda k: False if k == "pot_provider_enabled" else None,
     ):
         assert service.ensure_started() is False
@@ -302,7 +302,7 @@ def test_service_ensure_started(tmp_path, monkeypatch):
     # Enabled in settings, starts successfully
     with (
         patch(
-            "pot_provider_service.config_get",
+            "youtube_backend.pot_provider_service.config_get",
             side_effect=lambda k: True if k == "pot_provider_enabled" else None,
         ),
         patch.object(service, "start", return_value=True) as mock_start,
@@ -585,7 +585,7 @@ def test_service_download_and_install_hash_io_error_fails(tmp_path, monkeypatch)
         patch("requests.get", return_value=mock_release),
         patch("gui.update_dialog.UpdateDialog", side_effect=fake_dialog),
         patch(
-            "pot_provider_service._sha256_file",
+            "youtube_backend.pot_provider_service._sha256_file",
             side_effect=OSError("Antivirus lock"),
         ),
     ):

@@ -2,7 +2,7 @@ import os
 
 import application
 import paths
-from settings_handler import config_get
+from app_state.settings_handler import config_get
 
 
 def documentation_get():

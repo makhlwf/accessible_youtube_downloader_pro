@@ -1,6 +1,8 @@
 import ctypes
 import os
+import platform
 import subprocess
+import sys
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from threading import Event
@@ -9,7 +11,11 @@ from unittest.mock import Mock
 
 import pytest
 
+import paths
 import utils
+from app_runtime import dependencies as dependency_updates
+from app_runtime import desktop as desktop_actions
+from app_runtime import updates as app_updates
 from utils import (
     extract_launch_youtube_url,
     extract_supported_youtube_url,
@@ -20,6 +26,10 @@ from utils import (
     time_to_seconds,
     youtube_regexp,
 )
+from youtube_backend import feeds as youtube_feeds
+from youtube_backend import playback as youtube_playback
+from youtube_backend import region as youtube_region
+from youtube_backend import ytdlp_runtime
 
 
 def test_py_yt_subprocess_hides_console_and_preserves_options(monkeypatch):
@@ -31,9 +41,9 @@ def test_py_yt_subprocess_hides_console_and_preserves_options(monkeypatch):
     )
     module = SimpleNamespace(subprocess=original)
     importer = Mock(return_value=module)
-    monkeypatch.setattr(utils.sys, "platform", "win32")
+    monkeypatch.setattr(sys, "platform", "win32")
     monkeypatch.setattr(subprocess, "CREATE_NO_WINDOW", 0x08000000, raising=False)
-    monkeypatch.setattr(utils.importlib, "import_module", importer)
+    monkeypatch.setattr(desktop_actions.importlib, "import_module", importer)
     global_check_output = subprocess.check_output
 
     utils.configure_py_yt_subprocess()
@@ -60,15 +70,15 @@ def test_py_yt_subprocess_preserves_errors(monkeypatch):
     monkeypatch.setattr(subprocess, "CREATE_NO_WINDOW", 0x08000000, raising=False)
 
     with pytest.raises(subprocess.CalledProcessError) as exc:
-        utils._WindowlessSubprocess(original).check_output(["node.exe"])
+        desktop_actions._WindowlessSubprocess(original).check_output(["node.exe"])
 
     assert exc.value is error
 
 
 def test_py_yt_subprocess_unchanged_outside_windows(monkeypatch):
     importer = Mock()
-    monkeypatch.setattr(utils.sys, "platform", "linux")
-    monkeypatch.setattr(utils.importlib, "import_module", importer)
+    monkeypatch.setattr(sys, "platform", "linux")
+    monkeypatch.setattr(desktop_actions.importlib, "import_module", importer)
 
     utils.configure_py_yt_subprocess()
 
@@ -85,25 +95,23 @@ def test_py_yt_subprocess_unchanged_outside_windows(monkeypatch):
     ],
 )
 def test_deno_release_platform(monkeypatch, system, machine, asset):
-    monkeypatch.setattr(utils.sys, "platform", system)
-    monkeypatch.setattr(utils.platform, "machine", lambda: machine)
-    assert utils._deno_release_asset() == asset
+    monkeypatch.setattr(sys, "platform", system)
+    monkeypatch.setattr(platform, "machine", lambda: machine)
+    assert dependency_updates._deno_release_asset() == asset
 
 
 def test_deno_release_rejects_unsupported_arch(monkeypatch):
-    monkeypatch.setattr(utils.sys, "platform", "linux")
-    monkeypatch.setattr(utils.platform, "machine", lambda: "riscv64")
+    monkeypatch.setattr(sys, "platform", "linux")
+    monkeypatch.setattr(platform, "machine", lambda: "riscv64")
     with pytest.raises(RuntimeError, match="Unsupported Deno platform"):
-        utils._deno_release_asset()
+        dependency_updates._deno_release_asset()
 
 
 @pytest.mark.parametrize("system", ["linux", "win32"])
 def test_deno_version_uses_resolved_runtime_and_platform_flags(monkeypatch, system):
-    monkeypatch.setattr(utils.sys, "platform", system)
-    monkeypatch.setattr(
-        utils.paths, "get_deno_path", lambda: "/runtime/deno", raising=False
-    )
-    monkeypatch.setattr(utils.os.path, "exists", lambda path: True)
+    monkeypatch.setattr(sys, "platform", system)
+    monkeypatch.setattr(paths, "get_deno_path", lambda: "/runtime/deno", raising=False)
+    monkeypatch.setattr(os.path, "exists", lambda path: True)
     monkeypatch.setattr(subprocess, "CREATE_NO_WINDOW", 0x08000000, raising=False)
     run = Mock(return_value=SimpleNamespace(returncode=0, stdout="deno 2.9.0\n"))
     monkeypatch.setattr(subprocess, "run", run)
@@ -112,7 +120,7 @@ def test_deno_version_uses_resolved_runtime_and_platform_flags(monkeypatch, syst
     assert run.call_args.kwargs["creationflags"] == (
         0 if system == "linux" else 0x08000000
     )
-    utils._run_deno_cache("config.json", "deno.lock")
+    dependency_updates._run_deno_cache("config.json", "deno.lock")
     assert run.call_args.args[0][0] == "/runtime/deno"
     assert run.call_args.kwargs["creationflags"] == (
         0 if system == "linux" else 0x08000000
@@ -121,10 +129,10 @@ def test_deno_version_uses_resolved_runtime_and_platform_flags(monkeypatch, syst
 
 @pytest.mark.parametrize("frozen", [False, True])
 def test_linux_autostart_enable_disable(tmp_path, monkeypatch, frozen):
-    monkeypatch.setattr(utils.sys, "platform", "linux")
-    monkeypatch.setattr(utils.sys, "frozen", frozen, raising=False)
-    monkeypatch.setattr(utils.sys, "executable", "/opt/Hex Player/python")
-    monkeypatch.setattr(utils.paths, "get_app_path", lambda: "/opt/Hex Player")
+    monkeypatch.setattr(sys, "platform", "linux")
+    monkeypatch.setattr(sys, "frozen", frozen, raising=False)
+    monkeypatch.setattr(sys, "executable", "/opt/Hex Player/python")
+    monkeypatch.setattr(paths, "get_app_path", lambda: "/opt/Hex Player")
     monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
     entry = tmp_path / "autostart" / "hexplayer.desktop"
     utils.set_startup(True)
@@ -139,7 +147,10 @@ def test_linux_autostart_enable_disable(tmp_path, monkeypatch, frozen):
 
 
 def test_desktop_exec_escapes_special_characters():
-    assert utils._desktop_exec_argument('/opt/a $b%"c') == '"/opt/a \\\\$b%%\\\\"c"'
+    assert (
+        desktop_actions._desktop_exec_argument('/opt/a $b%"c')
+        == '"/opt/a \\\\$b%%\\\\"c"'
+    )
 
 
 def test_time_formatting():
@@ -245,15 +256,17 @@ def test_get_watch_history_returns_local_history_without_cookies(monkeypatch):
     deno_calls = []
     cookie_calls = []
     monkeypatch.setattr(
-        utils, "ensure_deno_installed", lambda **kw: deno_calls.append(kw) or True
+        youtube_feeds,
+        "ensure_deno_installed",
+        lambda **kw: deno_calls.append(kw) or True,
     )
     monkeypatch.setattr(
-        utils,
+        youtube_feeds,
         "ensure_cookies_configured",
         lambda **kw: cookie_calls.append(kw) or False,
     )
     monkeypatch.setattr(
-        utils,
+        youtube_feeds,
         "_local_watch_history_response",
         lambda continuation=None, error=None: {
             "videos": [{"title": "Local Video"}],
@@ -277,20 +290,24 @@ def test_get_watch_history_falls_back_to_local_on_cookie_error(monkeypatch):
     deno_calls = []
     cookie_calls = []
     monkeypatch.setattr(
-        utils, "ensure_deno_installed", lambda **kw: deno_calls.append(kw) or True
+        youtube_feeds,
+        "ensure_deno_installed",
+        lambda **kw: deno_calls.append(kw) or True,
     )
     monkeypatch.setattr(
-        utils, "ensure_cookies_configured", lambda **kw: cookie_calls.append(kw) or True
+        youtube_feeds,
+        "ensure_cookies_configured",
+        lambda **kw: cookie_calls.append(kw) or True,
     )
-    monkeypatch.setattr(utils, "config_get", lambda key: "cookies.txt")
-    monkeypatch.setattr(utils.os.path, "exists", lambda path: True)
+    monkeypatch.setattr(youtube_feeds, "config_get", lambda key: "cookies.txt")
+    monkeypatch.setattr(youtube_feeds.os.path, "exists", lambda path: True)
     monkeypatch.setattr(
-        utils.deno_service,
+        youtube_feeds.deno_service,
         "send_command",
         lambda command, params: {"error": "Not logged in"},
     )
     monkeypatch.setattr(
-        utils,
+        youtube_feeds,
         "_local_watch_history_response",
         lambda continuation=None, error=None: {
             "videos": [{"title": "Fallback Video"}],
@@ -315,10 +332,10 @@ def test_update_watch_history_stores_local_history_without_cookies(monkeypatch):
         def add_or_update(cls, data):
             calls.append(data)
 
-    monkeypatch.setattr(utils, "WatchHistory", FakeWatchHistory)
-    monkeypatch.setattr(utils, "config_get", lambda key: "")
+    monkeypatch.setattr(youtube_feeds, "WatchHistory", FakeWatchHistory)
+    monkeypatch.setattr(youtube_feeds, "config_get", lambda key: "")
     monkeypatch.setattr(
-        utils.deno_service,
+        youtube_feeds.deno_service,
         "send_command",
         lambda command, params: (_ for _ in ()).throw(
             AssertionError("Deno should not be called without cookies")
@@ -357,7 +374,7 @@ def test_get_windows_region_mocked(monkeypatch, tmp_path):
     local_os = SimpleNamespace(**vars(os))
     local_os.name = "nt"
     get_geo_name = Mock(side_effect=lambda buf, size: setattr(buf, "value", "DE") or 2)
-    monkeypatch.setattr(utils, "os", local_os)
+    monkeypatch.setattr(youtube_region, "os", local_os)
     monkeypatch.setattr(
         ctypes,
         "windll",
@@ -386,10 +403,10 @@ def test_update_watch_history_uses_deno_service_when_cookies_present(
     cookie_file = tmp_path / "cookies.txt"
     cookie_file.write_text("# Netscape HTTP Cookie File\n")
 
-    monkeypatch.setattr(utils, "WatchHistory", FakeWatchHistory)
-    monkeypatch.setattr(utils, "config_get", lambda key: str(cookie_file))
+    monkeypatch.setattr(youtube_feeds, "WatchHistory", FakeWatchHistory)
+    monkeypatch.setattr(youtube_feeds, "config_get", lambda key: str(cookie_file))
     monkeypatch.setattr(
-        utils.deno_service,
+        youtube_feeds.deno_service,
         "send_command",
         lambda command, params: (
             deno_calls.append((command, params)) or {"success": True}
@@ -440,20 +457,20 @@ def test_info_cache_bounded_lru_and_expiration():
 
 def test_detect_linux_distro_family_fedora_override(monkeypatch):
     monkeypatch.setenv("HEXPLAYER_DISTRO_OVERRIDE", "fedora")
-    assert utils._detect_linux_distro_family() == "fedora"
+    assert app_updates._detect_linux_distro_family() == "fedora"
     monkeypatch.setenv("HEXPLAYER_DISTRO_OVERRIDE", "RHEL")
-    assert utils._detect_linux_distro_family() == "fedora"
+    assert app_updates._detect_linux_distro_family() == "fedora"
     monkeypatch.setenv("HEXPLAYER_DISTRO_OVERRIDE", "rpm")
-    assert utils._detect_linux_distro_family() == "fedora"
+    assert app_updates._detect_linux_distro_family() == "fedora"
 
 
 def test_detect_linux_distro_family_debian_override(monkeypatch):
     monkeypatch.setenv("HEXPLAYER_DISTRO_OVERRIDE", "debian")
-    assert utils._detect_linux_distro_family() == "debian"
+    assert app_updates._detect_linux_distro_family() == "debian"
     monkeypatch.setenv("HEXPLAYER_DISTRO_OVERRIDE", "Ubuntu")
-    assert utils._detect_linux_distro_family() == "debian"
+    assert app_updates._detect_linux_distro_family() == "debian"
     monkeypatch.setenv("HEXPLAYER_DISTRO_OVERRIDE", "deb")
-    assert utils._detect_linux_distro_family() == "debian"
+    assert app_updates._detect_linux_distro_family() == "debian"
 
 
 def test_detect_linux_distro_family_os_release_file(monkeypatch, tmp_path):
@@ -463,14 +480,14 @@ def test_detect_linux_distro_family_os_release_file(monkeypatch, tmp_path):
         'NAME="Fedora Linux"\nID=fedora\nVERSION_ID=43\n', encoding="utf-8"
     )
     monkeypatch.setenv("OS_RELEASE_FILE", str(fedora_os_release))
-    assert utils._detect_linux_distro_family() == "fedora"
+    assert app_updates._detect_linux_distro_family() == "fedora"
 
     ubuntu_os_release = tmp_path / "os-release-ubuntu"
     ubuntu_os_release.write_text(
         'NAME="Ubuntu"\nID=ubuntu\nID_LIKE="debian"\n', encoding="utf-8"
     )
     monkeypatch.setenv("OS_RELEASE_FILE", str(ubuntu_os_release))
-    assert utils._detect_linux_distro_family() == "debian"
+    assert app_updates._detect_linux_distro_family() == "debian"
 
     centos_os_release = tmp_path / "os-release-centos"
     centos_os_release.write_text(
@@ -478,43 +495,50 @@ def test_detect_linux_distro_family_os_release_file(monkeypatch, tmp_path):
         encoding="utf-8",
     )
     monkeypatch.setenv("OS_RELEASE_FILE", str(centos_os_release))
-    assert utils._detect_linux_distro_family() == "fedora"
+    assert app_updates._detect_linux_distro_family() == "fedora"
 
     arch_os_release = tmp_path / "os-release-arch"
     arch_os_release.write_text('NAME="Arch Linux"\nID=arch\n', encoding="utf-8")
     monkeypatch.setenv("OS_RELEASE_FILE", str(arch_os_release))
-    assert utils._detect_linux_distro_family() == "unknown"
+    assert app_updates._detect_linux_distro_family() == "unknown"
 
 
 def test_detect_linux_distro_family_freedesktop(monkeypatch):
     monkeypatch.delenv("HEXPLAYER_DISTRO_OVERRIDE", raising=False)
     monkeypatch.delenv("OS_RELEASE_FILE", raising=False)
     monkeypatch.setattr(
-        utils.platform,
+        app_updates.platform,
         "freedesktop_os_release",
         lambda: {"ID": "fedora", "ID_LIKE": "rhel"},
         raising=False,
     )
-    assert utils._detect_linux_distro_family() == "fedora"
+    assert app_updates._detect_linux_distro_family() == "fedora"
 
     monkeypatch.setattr(
-        utils.platform,
+        app_updates.platform,
         "freedesktop_os_release",
         lambda: {"ID": "debian"},
         raising=False,
     )
-    assert utils._detect_linux_distro_family() == "debian"
+    assert app_updates._detect_linux_distro_family() == "debian"
 
 
 def test_linux_release_asset_url_rpm():
     rpm_url = "https://github.com/makhlwf/accessible_youtube_downloader_pro/releases/download/v4.8.0/HexPlayer-4.8.0-1.x86_64.rpm"
-    assert utils._linux_release_asset_url(rpm_url, "x86_64") == rpm_url
-    assert utils._linux_release_asset_url(rpm_url, "x86_64", distro="fedora") == rpm_url
-    assert utils._linux_release_asset_url(rpm_url, "x86_64", distro="debian") == ""
-    assert utils._linux_release_asset_url(rpm_url, "aarch64") == ""
+    assert app_updates._linux_release_asset_url(rpm_url, "x86_64") == rpm_url
+    assert (
+        app_updates._linux_release_asset_url(rpm_url, "x86_64", distro="fedora")
+        == rpm_url
+    )
+    assert (
+        app_updates._linux_release_asset_url(rpm_url, "x86_64", distro="debian") == ""
+    )
+    assert app_updates._linux_release_asset_url(rpm_url, "aarch64") == ""
 
     rpm_linux_arch = "https://github.com/makhlwf/accessible_youtube_downloader_pro/releases/download/v4.8.0/HexPlayer-4.8.0-linux-x86_64.rpm"
-    assert utils._linux_release_asset_url(rpm_linux_arch, "x86_64") == rpm_linux_arch
+    assert (
+        app_updates._linux_release_asset_url(rpm_linux_arch, "x86_64") == rpm_linux_arch
+    )
 
 
 def test_concurrent_media_metadata_uses_one_extractor(monkeypatch):
@@ -523,7 +547,7 @@ def test_concurrent_media_metadata_uses_one_extractor(monkeypatch):
     release = Event()
     info = {"title": "Example"}
     url = "https://www.youtube.com/watch?v=metadata123"
-    begin = utils._begin_stream_extraction
+    begin = youtube_playback._begin_stream_extraction
 
     def begin_and_signal(key):
         event, owner = begin(key)
@@ -544,14 +568,14 @@ def test_concurrent_media_metadata_uses_one_extractor(monkeypatch):
             pass
 
     get_extractor = Mock(side_effect=lambda *args: Extractor())
-    monkeypatch.setattr(utils, "YoutubeDL", object())
-    monkeypatch.setattr(utils, "get_ydl_instance", get_extractor)
+    monkeypatch.setattr(ytdlp_runtime, "YoutubeDL", object())
+    monkeypatch.setattr(youtube_playback, "get_ydl_instance", get_extractor)
     monkeypatch.setattr(
-        utils, "get_configured_player_clients", lambda **kwargs: ["default"]
+        youtube_playback, "get_configured_player_clients", lambda **kwargs: ["default"]
     )
-    monkeypatch.setattr(utils, "_begin_stream_extraction", begin_and_signal)
+    monkeypatch.setattr(youtube_playback, "_begin_stream_extraction", begin_and_signal)
     monkeypatch.setattr(
-        utils, "_info_cache", utils.InfoCache(maxsize=8, default_ttl=3600)
+        youtube_playback, "_info_cache", utils.InfoCache(maxsize=8, default_ttl=3600)
     )
 
     with ThreadPoolExecutor(max_workers=2) as pool:

@@ -4,19 +4,20 @@ import threading
 
 import wx
 
-import cookies_manager
 import paths
 import utils
-import windows_url_association
-from language_handler import _, supported_languages
-from settings_handler import config_get, config_set
-from sponsorblock_handler import (
+from app_runtime import windows_url_association
+from app_state.settings_handler import config_get, config_set
+from gui.settings_controls import SettingsCheckBox, set_control_accessible_name
+from gui.theme_handler import THEMES, apply_theme, apply_theme_to_all_windows
+from integrations.sponsorblock_handler import (
     DEFAULT_API_URL,
     category_labels,
     format_categories,
     parse_categories,
 )
-from theme_handler import THEMES, apply_theme, apply_theme_to_all_windows
+from language_handler import _, supported_languages
+from youtube_backend import cookies_manager
 
 languages = {
     index: language for language, index in enumerate(supported_languages.values())
@@ -76,102 +77,6 @@ def _get_audio_output_device_choices():
     ):
         devices.append({"id": selected_device, "description": selected_device})
     return devices
-
-
-def _accessible_name(label):
-    return str(label).replace("&", "").strip().rstrip(":：").strip()
-
-
-_WX_ACCESSIBLE_BASE = getattr(wx, "Accessible", None)
-if not isinstance(_WX_ACCESSIBLE_BASE, type):
-    _WX_ACCESSIBLE_BASE = object
-
-
-def _wx_constant(name, fallback):
-    value = getattr(wx, name, fallback)
-    return value if isinstance(value, int) else fallback
-
-
-class ControlAccessible(_WX_ACCESSIBLE_BASE):
-    def __init__(self, control):
-        if _WX_ACCESSIBLE_BASE is object:
-            super().__init__()
-        else:
-            super().__init__(control)
-        self.control = control
-
-    def GetName(self, child_id):
-        label = getattr(self.control, "_accessible_label", "")
-        if not label:
-            get_name = getattr(self.control, "GetName", None)
-            if callable(get_name):
-                label = get_name()
-            elif hasattr(self.control, "Name"):
-                label = getattr(self.control, "Name", "")
-        return _wx_constant("ACC_OK", 0), _accessible_name(label or "")
-
-
-def _set_accessible_name(control, label):
-    name = _accessible_name(label)
-    if name:
-        set_name = getattr(control, "SetName", None)
-        if callable(set_name):
-            set_name(name)
-        control._accessible_label = name
-        set_accessible = getattr(control, "SetAccessible", None)
-        if callable(set_accessible) and _WX_ACCESSIBLE_BASE is not object:
-            try:
-                if not getattr(control, "_accessible", None):
-                    control._accessible = ControlAccessible(control)
-                    set_accessible(control._accessible)
-            except Exception:
-                control._accessible = None
-
-
-class CheckBoxAccessible(_WX_ACCESSIBLE_BASE):
-    def __init__(self, control):
-        if _WX_ACCESSIBLE_BASE is object:
-            super().__init__()
-        else:
-            super().__init__(control)
-        self.control = control
-
-    def GetName(self, child_id):
-        label = getattr(self.control, "_accessible_label", "")
-        get_label = getattr(self.control, "GetLabel", None)
-        if not label and callable(get_label):
-            label = get_label()
-        return _wx_constant("ACC_OK", 0), _accessible_name(label)
-
-    def GetRole(self, child_id):
-        return _wx_constant("ACC_OK", 0), _wx_constant("ROLE_SYSTEM_CHECKBUTTON", 0x2C)
-
-    def GetState(self, child_id):
-        state = _wx_constant("ACC_STATE_SYSTEM_FOCUSABLE", 0x100000)
-        get_value = getattr(self.control, "GetValue", None)
-        if callable(get_value) and get_value():
-            state |= _wx_constant("ACC_STATE_SYSTEM_CHECKED", 0x10)
-        is_enabled = getattr(self.control, "IsEnabled", None)
-        if callable(is_enabled) and not is_enabled():
-            state |= _wx_constant("ACC_STATE_SYSTEM_UNAVAILABLE", 0x1)
-        has_focus = getattr(self.control, "HasFocus", None)
-        if callable(has_focus) and has_focus():
-            state |= _wx_constant("ACC_STATE_SYSTEM_FOCUSED", 0x4)
-        return _wx_constant("ACC_OK", 0), state
-
-
-class SettingsCheckBox(wx.CheckBox):
-    def __init__(self, parent, id, label, **kwargs):
-        super().__init__(parent, id, label, **kwargs)
-        self._accessible_label = _accessible_name(label)
-        self._accessible = None
-        set_accessible = getattr(self, "SetAccessible", None)
-        if callable(set_accessible) and _WX_ACCESSIBLE_BASE is not object:
-            try:
-                self._accessible = CheckBoxAccessible(self)
-                set_accessible(self._accessible)
-            except Exception:
-                self._accessible = None
 
 
 def _add_row(sizer, label, control):
@@ -243,7 +148,7 @@ class SettingsDialog(wx.Dialog):
         language_label = wx.StaticText(page, -1, language_label_text, name="language")
         self.languageBox = wx.Choice(page, -1, name="language")
         self.languageBox.Set(list(supported_languages.keys()))
-        _set_accessible_name(self.languageBox, language_label_text)
+        set_control_accessible_name(self.languageBox, language_label_text)
         try:
             self.languageBox.Selection = languages[config_get("lang")]
         except KeyError:
@@ -258,7 +163,7 @@ class SettingsDialog(wx.Dialog):
             name="theme",
             choices=[self.theme_labels.get(theme, theme) for theme in self.theme_keys],
         )
-        _set_accessible_name(self.themeBox, theme_label_text)
+        set_control_accessible_name(self.themeBox, theme_label_text)
         try:
             self.themeBox.Selection = self.theme_keys.index(config_get("theme"))
         except ValueError:
@@ -307,7 +212,7 @@ class SettingsDialog(wx.Dialog):
         self.welcomeTourBtn = wx.Button(
             page, -1, _("فتح شاشة الترحيب واستكشاف الميزات..."), name="welcome_tour"
         )
-        _set_accessible_name(
+        set_control_accessible_name(
             self.welcomeTourBtn, _("فتح شاشة الترحيب واستكشاف الميزات")
         )
         self.welcomeTourBtn.Bind(wx.EVT_BUTTON, self.on_open_welcome_tour)
@@ -338,7 +243,7 @@ class SettingsDialog(wx.Dialog):
             style=wx.TE_READONLY | wx.TE_MULTILINE | wx.HSCROLL,
         )
         self.pathField.SetMinSize((-1, 56))
-        _set_accessible_name(self.pathField, path_label_text)
+        set_control_accessible_name(self.pathField, path_label_text)
         self.changePathButton = wx.Button(page, -1, _("&تغيير المسار"), name="path")
         path_controls = wx.BoxSizer(wx.HORIZONTAL)
         path_controls.Add(self.pathField, 1, wx.EXPAND | wx.RIGHT, 5)
@@ -359,7 +264,7 @@ class SettingsDialog(wx.Dialog):
                 _("صوت (flac)"),
             ],
         )
-        _set_accessible_name(self.formats, format_label_text)
+        set_control_accessible_name(self.formats, format_label_text)
         default_format = int(config_get("defaultformat"))
         if not (0 <= default_format < 6):
             default_format = 0
@@ -373,7 +278,7 @@ class SettingsDialog(wx.Dialog):
             choices=[_("96 ك.ب/ث"), _("128 ك.ب/ث"), _("192 ك.ب/ث"), _("320 ك.ب/ث")],
             name="conversion",
         )
-        _set_accessible_name(self.audioQuality2, conversion_label_text)
+        set_control_accessible_name(self.audioQuality2, conversion_label_text)
         self.audioQuality2.Selection = int(config_get("conversion"))
         _add_row(grid, conversion_label, self.audioQuality2)
 
@@ -408,7 +313,7 @@ class SettingsDialog(wx.Dialog):
                 _("2160ب"),
             ],
         )
-        _set_accessible_name(self.videoQuality, video_quality_label_text)
+        set_control_accessible_name(self.videoQuality, video_quality_label_text)
         self.videoQuality.Selection = int(config_get("defaultvideoquality"))
         _add_row(grid, self.videoQualityLabel, self.videoQuality)
 
@@ -419,7 +324,7 @@ class SettingsDialog(wx.Dialog):
             -1,
             choices=[_("منخفضة"), _("متوسطة"), _("عالية")],
         )
-        _set_accessible_name(self.audioQuality, audio_quality_label_text)
+        set_control_accessible_name(self.audioQuality, audio_quality_label_text)
         self.audioQuality.Selection = int(config_get("defaultaudioquality"))
         _add_row(grid, self.audioQualityLabel, self.audioQuality)
 
@@ -434,7 +339,7 @@ class SettingsDialog(wx.Dialog):
             choices=[label for _, label in self.preferred_audio_lang_choices],
             name="preferred_audio_language",
         )
-        _set_accessible_name(
+        set_control_accessible_name(
             self.preferredAudioLanguage, preferred_audio_lang_label_text
         )
         self.preferredAudioLanguage.SetSelection(
@@ -456,7 +361,7 @@ class SettingsDialog(wx.Dialog):
             -1,
             choices=[device["description"] for device in self.audioOutputDevices],
         )
-        _set_accessible_name(self.audioOutputDevice, audio_output_label_text)
+        set_control_accessible_name(self.audioOutputDevice, audio_output_label_text)
         self.audioOutputDevice.Selection = self.getAudioOutputDeviceSelection(
             config_get("audiooutputdevice")
         )
@@ -471,7 +376,7 @@ class SettingsDialog(wx.Dialog):
             max=1.0,
             inc=0.01,
         )
-        _set_accessible_name(self.playbackSpeedStep, playback_speed_label_text)
+        set_control_accessible_name(self.playbackSpeedStep, playback_speed_label_text)
         _add_row(grid, self.playbackSpeedStepLabel, self.playbackSpeedStep)
         sizer.Add(grid, 0, wx.EXPAND | wx.ALL, 8)
         self.continueWatching = SettingsCheckBox(
@@ -572,7 +477,9 @@ class SettingsDialog(wx.Dialog):
             max=60.0,
             inc=0.5,
         )
-        _set_accessible_name(self.sponsorBlockMinDuration, min_duration_label_text)
+        set_control_accessible_name(
+            self.sponsorBlockMinDuration, min_duration_label_text
+        )
         _add_row(grid, self.sponsorBlockMinDurationLabel, self.sponsorBlockMinDuration)
 
         api_url_label_text = _("عنوان خادم SponsorBlock: ")
@@ -583,7 +490,7 @@ class SettingsDialog(wx.Dialog):
             value=_normalise_api_url(config_get("sponsorblock_api_url")),
             name="sponsorblock_api_url",
         )
-        _set_accessible_name(self.sponsorBlockApiUrl, api_url_label_text)
+        set_control_accessible_name(self.sponsorBlockApiUrl, api_url_label_text)
         _add_row(grid, self.sponsorBlockApiUrlLabel, self.sponsorBlockApiUrl)
         sizer.Add(grid, 0, wx.EXPAND | wx.ALL, 5)
         page.SetSizer(sizer)
@@ -601,7 +508,7 @@ class SettingsDialog(wx.Dialog):
             name="browser_cookies_source",
             choices=[b["name"] for b in self.installed_browsers],
         )
-        _set_accessible_name(self.browserChoice, browser_label_text)
+        set_control_accessible_name(self.browserChoice, browser_label_text)
         saved_browser_source = config_get("browser_cookies_source")
         selected_browser_idx = 0
         for idx, b in enumerate(self.installed_browsers):
@@ -627,7 +534,7 @@ class SettingsDialog(wx.Dialog):
             style=wx.TE_READONLY | wx.TE_MULTILINE | wx.HSCROLL,
         )
         self.cookiesPathField.SetMinSize((-1, 56))
-        _set_accessible_name(self.cookiesPathField, cookies_label_text)
+        set_control_accessible_name(self.cookiesPathField, cookies_label_text)
         self.changeCookiesButton = wx.Button(page, -1, _("تغيير"), name="cookies")
         self.clearCookiesButton = wx.Button(page, -1, _("حذف"), name="cookies")
         cookies_controls = wx.BoxSizer(wx.HORIZONTAL)
@@ -673,7 +580,7 @@ class SettingsDialog(wx.Dialog):
             name="youtube_music_default_audio_quality",
             choices=[_("منخفضة"), _("متوسطة"), _("عالية")],
         )
-        _set_accessible_name(self.youtubeMusicQuality, quality_label_text)
+        set_control_accessible_name(self.youtubeMusicQuality, quality_label_text)
         try:
             self.youtubeMusicQuality.Selection = int(
                 config_get("youtube_music_default_audio_quality")
@@ -771,7 +678,7 @@ class SettingsDialog(wx.Dialog):
             choices=[label for _, label in self.player_client_choices],
             name="player_client",
         )
-        _set_accessible_name(self.playerClientBox, player_client_label_text)
+        set_control_accessible_name(self.playerClientBox, player_client_label_text)
         self.playerClientBox.Selection = self.getPlayerClientSelection(
             config_get("player_client")
         )
@@ -847,7 +754,7 @@ class SettingsDialog(wx.Dialog):
             name="use_deno_backend",
         )
         self.useDenoBackend.SetValue(bool(config_get("use_deno_backend")))
-        _set_accessible_name(self.discordClientId, discord_client_id_label_text)
+        set_control_accessible_name(self.discordClientId, discord_client_id_label_text)
         _add_row(discord_grid, self.discordClientIdLabel, self.discordClientId)
         for checkbox in (
             self.potProvider,
@@ -1223,7 +1130,7 @@ class SettingsDialog(wx.Dialog):
             config_set("use_deno_backend", new_use_deno)
             if new_use_deno != old_use_deno:
                 try:
-                    from deno_service import deno_service
+                    from youtube_backend.deno_service import deno_service
 
                     deno_service.stop()
                 except Exception:
@@ -1233,7 +1140,7 @@ class SettingsDialog(wx.Dialog):
                     parent.update_deno_tools_visibility()
         new_pot_provider = config_get("pot_provider_enabled")
         if new_pot_provider != old_pot_provider:
-            from pot_provider_service import pot_service
+            from youtube_backend.pot_provider_service import pot_service
 
             if new_pot_provider:
                 pot_service.ensure_started()
@@ -1305,7 +1212,7 @@ class SettingsDialog(wx.Dialog):
             )
             config_set("discord_client_id", str(val).strip())
         try:
-            import discord_presence
+            from integrations import discord_presence
 
             discord_presence.reload_settings()
         except Exception:

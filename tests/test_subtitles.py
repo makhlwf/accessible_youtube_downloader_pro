@@ -2,6 +2,7 @@ import json
 
 import utils
 from media_player import media_gui
+from youtube_backend import playback as youtube_playback
 
 
 def test_get_available_subtitles_prefers_manual_tracks(monkeypatch):
@@ -17,7 +18,7 @@ def test_get_available_subtitles_prefers_manual_tracks(monkeypatch):
             "ar": [{"ext": "json3", "url": "automatic-ar", "name": "Arabic"}],
         },
     }
-    monkeypatch.setattr(utils, "get_media_info", lambda url: info)
+    monkeypatch.setattr(youtube_playback, "get_media_info", lambda url: info)
 
     subtitles = utils.get_available_subtitles("https://youtube.com/watch?v=test")
 
@@ -52,8 +53,10 @@ def test_get_subtitle_cues_parses_json3(monkeypatch):
         def raise_for_status(self):
             return None
 
-    monkeypatch.setattr(utils, "get_media_info", lambda url: info)
-    monkeypatch.setattr(utils.requests, "get", lambda url, timeout: Response())
+    monkeypatch.setattr(youtube_playback, "get_media_info", lambda url: info)
+    monkeypatch.setattr(
+        youtube_playback.requests, "get", lambda url, timeout: Response()
+    )
 
     cues = utils.get_subtitle_cues("https://youtube.com/watch?v=test", "en")
 
@@ -81,8 +84,10 @@ Second <i>line</i>
         def raise_for_status(self):
             return None
 
-    monkeypatch.setattr(utils, "get_media_info", lambda url: info)
-    monkeypatch.setattr(utils.requests, "get", lambda url, timeout: Response())
+    monkeypatch.setattr(youtube_playback, "get_media_info", lambda url: info)
+    monkeypatch.setattr(
+        youtube_playback.requests, "get", lambda url, timeout: Response()
+    )
 
     cues = utils.get_subtitle_cues("https://youtube.com/watch?v=test", "en")
 

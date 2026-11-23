@@ -5,9 +5,9 @@ def test_get_video_like_info_normalizes_count_and_rating():
     from utils import get_video_like_info
 
     with (
-        patch("utils.config_get", return_value="cookies.txt"),
-        patch("utils.get_windows_region", return_value="US"),
-        patch("utils.deno_service") as mock_deno_service,
+        patch("youtube_backend.metadata.config_get", return_value="cookies.txt"),
+        patch("youtube_backend.metadata.get_windows_region", return_value="US"),
+        patch("youtube_backend.metadata.deno_service") as mock_deno_service,
     ):
         mock_deno_service.send_command.return_value = {
             "likes": "1,234 likes",
@@ -33,9 +33,9 @@ def test_get_video_likes_returns_none_on_service_error():
     from utils import get_video_likes
 
     with (
-        patch("utils.config_get", return_value=""),
-        patch("utils.deno_service") as mock_deno_service,
-        patch("utils.YoutubeDL", None),
+        patch("youtube_backend.metadata.config_get", return_value=""),
+        patch("youtube_backend.metadata.deno_service") as mock_deno_service,
+        patch("youtube_backend.ytdlp_runtime.YoutubeDL", None),
     ):
         mock_deno_service.send_command.return_value = {"error": "failed"}
 
@@ -43,7 +43,6 @@ def test_get_video_likes_returns_none_on_service_error():
 
 
 def test_get_video_like_info_falls_back_to_yt_dlp_count():
-    import utils
     from utils import get_video_like_info
 
     class FakeYoutubeDL:
@@ -60,9 +59,9 @@ def test_get_video_like_info_falls_back_to_yt_dlp_count():
             return {"like_count": 99}
 
     with (
-        patch("utils.config_get", return_value=""),
-        patch("utils.deno_service") as mock_deno_service,
-        patch.object(utils, "YoutubeDL", FakeYoutubeDL),
+        patch("youtube_backend.metadata.config_get", return_value=""),
+        patch("youtube_backend.metadata.deno_service") as mock_deno_service,
+        patch("youtube_backend.ytdlp_runtime.YoutubeDL", FakeYoutubeDL),
     ):
         mock_deno_service.send_command.return_value = {"likes": None, "rating": "like"}
 
@@ -80,10 +79,11 @@ def test_like_video_sends_remove_like_action():
     from utils import like_video
 
     with (
-        patch("utils.config_get", return_value="cookies.txt"),
-        patch("utils.get_windows_region", return_value="US"),
-        patch("utils.os.path.exists", return_value=True),
-        patch("utils.deno_service") as mock_deno_service,
+        patch("youtube_backend.metadata.config_get", return_value="cookies.txt"),
+        patch("youtube_backend.metadata.get_windows_region", return_value="US"),
+        patch("youtube_backend.metadata.os.path.exists", return_value=True),
+        patch("youtube_backend.session.config_get", return_value="cookies.txt"),
+        patch("youtube_backend.metadata.deno_service") as mock_deno_service,
     ):
         mock_deno_service.send_command.return_value = {"success": True}
 

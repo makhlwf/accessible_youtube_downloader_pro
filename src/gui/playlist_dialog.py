@@ -5,14 +5,14 @@ import wx
 
 import application
 import utils
+from app_state.settings_handler import config_get
 from gui.activity_dialog import LoadingDialog
 from gui.channel_dialog import ChannelDialog
 from gui.download_progress import DownloadProgress
 from gui.quality_selection import QualitySelectionDialog
+from gui.theme_handler import apply_theme
 from language_handler import _
 from media_player.media_gui import MediaGui
-from settings_handler import config_get
-from theme_handler import apply_theme
 from utils import get_audio_stream, get_video_stream
 from youtube_browser.scraper import Scraper
 from youtube_browser.search_handler import PlaylistResult

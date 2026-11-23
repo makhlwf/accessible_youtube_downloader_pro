@@ -3,14 +3,14 @@ from unittest.mock import patch
 
 import pytest
 
-import database
+from app_state import database
 
 
 @pytest.fixture
 def test_db():
     conn = sqlite3.connect(":memory:")
     conn.row_factory = sqlite3.Row
-    with patch("database.con", conn):
+    with patch("app_state.database.con", conn):
         database.prepare_tables()
         yield conn
     conn.close()
@@ -28,7 +28,7 @@ def test_download_queue_survives_reopening_database(tmp_path):
         connection = sqlite3.connect(database_path)
         connection.row_factory = sqlite3.Row
         try:
-            with patch("database.con", connection):
+            with patch("app_state.database.con", connection):
                 database.prepare_tables()
                 if reopening:
                     assert [item.url for item in database.DownloadQueue.get_all()] == [
@@ -54,7 +54,7 @@ def test_favorite_operations(test_db):
         "channel_url": "https://youtube.com/channel/123",
     }
 
-    with patch("database.con", test_db):
+    with patch("app_state.database.con", test_db):
         fav.add_favorite(data)
         favorites = fav.get_all()
         assert len(favorites) == 1
@@ -76,7 +76,7 @@ def test_continue_operations(test_db):
     url = "https://youtube.com/watch?v=456"
     position = 10.5
 
-    with patch("database.con", test_db):
+    with patch("app_state.database.con", test_db):
         cont.new_continue(url, position)
         all_continues = cont.get_all()
         assert all_continues[url] == position
@@ -95,7 +95,7 @@ def test_watch_history_add_update_and_page(test_db):
     history = database.WatchHistory()
     url = "https://youtube.com/watch?v=789"
 
-    with patch("database.con", test_db):
+    with patch("app_state.database.con", test_db):
         history.add_or_update(
             {
                 "title": "First Title",
@@ -128,7 +128,7 @@ def test_search_history_persistence_and_unicode(tmp_path):
         conn = sqlite3.connect(path)
         conn.row_factory = sqlite3.Row
         try:
-            with patch("database.con", conn):
+            with patch("app_state.database.con", conn):
                 database.prepare_tables()
                 if attempt == 0:
                     database.SearchHistory.add("موسيقى")
@@ -151,7 +151,7 @@ def test_search_history_clear(test_db):
 
 
 def test_search_history_unavailable():
-    with patch("database.con", None):
+    with patch("app_state.database.con", None):
         assert database.SearchHistory.get_recent() is None
         assert database.SearchHistory.add("query") is None
         assert database.SearchHistory.clear() is None

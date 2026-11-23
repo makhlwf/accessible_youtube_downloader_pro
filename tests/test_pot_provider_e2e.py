@@ -3,6 +3,8 @@ import shutil
 
 import pytest
 
+from youtube_backend import ytdlp_runtime
+
 pytestmark = [
     pytest.mark.integration,
     pytest.mark.skipif(
@@ -38,7 +40,7 @@ def _find_test_binaries():
 def test_e2e_pot_provider_lifecycle_and_live_ytdlp(tmp_path, monkeypatch):
     import paths
     import utils
-    from pot_provider_service import PotProviderService
+    from youtube_backend.pot_provider_service import PotProviderService
 
     src_exe, src_plugins = _find_test_binaries()
     if not src_exe or not os.path.isfile(src_exe):
@@ -49,7 +51,7 @@ def test_e2e_pot_provider_lifecycle_and_live_ytdlp(tmp_path, monkeypatch):
         pytest.skip("Native bgutil-pot binary is not executable")
 
     pot_service = PotProviderService()
-    monkeypatch.setattr(utils, "pot_service", pot_service)
+    monkeypatch.setattr(ytdlp_runtime, "pot_service", pot_service)
     monkeypatch.syspath_prepend(str(tmp_path))
     # Isolate test binary and plugins under tmp_path so user AppData is not modified
     test_dir = tmp_path / "pot_provider"
@@ -71,7 +73,7 @@ def test_e2e_pot_provider_lifecycle_and_live_ytdlp(tmp_path, monkeypatch):
 
     # Isolate configuration so user settings.ini cannot disable provider during test
     monkeypatch.setattr(
-        "utils.config_get",
+        "youtube_backend.ytdlp_runtime.config_get",
         lambda k, default=None: (
             True
             if k == "pot_provider_enabled"
@@ -79,7 +81,7 @@ def test_e2e_pot_provider_lifecycle_and_live_ytdlp(tmp_path, monkeypatch):
         ),
     )
     monkeypatch.setattr(
-        "pot_provider_service.config_get",
+        "youtube_backend.pot_provider_service.config_get",
         lambda k, default=None: (
             True
             if k == "pot_provider_enabled"

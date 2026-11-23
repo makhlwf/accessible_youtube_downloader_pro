@@ -24,10 +24,10 @@ def test_get_subscribed_channels_success(tmp_path):
         ]
     }
     with (
-        patch("utils.ensure_deno_installed", return_value=True),
-        patch("utils.ensure_cookies_configured", return_value=True),
-        patch("utils.config_get", return_value=str(cookie_file)),
-        patch("utils.deno_service.send_command", return_value=mock_response),
+        patch("youtube_backend.feeds.ensure_deno_installed", return_value=True),
+        patch("youtube_backend.feeds.ensure_cookies_configured", return_value=True),
+        patch("youtube_backend.feeds.config_get", return_value=str(cookie_file)),
+        patch("youtube_backend.feeds.deno_service.send_command", return_value=mock_response),
     ):
         result = utils.get_subscribed_channels()
         assert "error" not in result
@@ -43,11 +43,11 @@ def test_get_subscribed_channels_service_error(tmp_path):
     cookie_file = tmp_path / "cookies.txt"
     cookie_file.write_text("cookie_data")
     with (
-        patch("utils.ensure_deno_installed", return_value=True),
-        patch("utils.ensure_cookies_configured", return_value=True),
-        patch("utils.config_get", return_value=str(cookie_file)),
+        patch("youtube_backend.feeds.ensure_deno_installed", return_value=True),
+        patch("youtube_backend.feeds.ensure_cookies_configured", return_value=True),
+        patch("youtube_backend.feeds.config_get", return_value=str(cookie_file)),
         patch(
-            "utils.deno_service.send_command",
+            "youtube_backend.feeds.deno_service.send_command",
             return_value={"error": "Not logged in with provided cookies"},
         ),
     ):
@@ -57,7 +57,7 @@ def test_get_subscribed_channels_service_error(tmp_path):
 
 
 def test_get_subscribed_channels_no_cookies():
-    with patch("utils.ensure_cookies_configured", return_value=False):
+    with patch("youtube_backend.feeds.ensure_cookies_configured", return_value=False):
         result = utils.get_subscribed_channels()
         assert result["channels"] == []
         assert "error" not in result
@@ -69,19 +69,17 @@ def test_home_screen_subscriptions_button_visibility(tmp_path):
 
     with (
         patch(
-            "accessible_youtube_downloader_pro.utils.has_cookies_file",
+            "gui.home_screen.utils.has_cookies_file",
             return_value=True,
         ),
-        patch(
-            "accessible_youtube_downloader_pro.browser_extension_manager.sync_browser_extension_files"
-        ),
+        patch("gui.home_screen.browser_extension_manager.sync_browser_extension_files"),
     ):
         home = HomeScreen(start_hidden=True)
         assert home.subscriptionsBtn.IsShown() is True
         home.subscriptionsItem.Enable.assert_called_with(True)
 
         with patch(
-            "accessible_youtube_downloader_pro.utils.has_cookies_file",
+            "gui.home_screen.utils.has_cookies_file",
             return_value=False,
         ):
             home.update_shorts_button_visibility()

@@ -2,10 +2,10 @@ import logging
 
 import wx
 
+from app_state.settings_handler import config_get, config_set
 from language_handler import _
 from media_player.equalizer import EqualizerService
 from media_player.mpv_backend import MpvMedia, MpvMediaPlayer, State
-from settings_handler import config_get, config_set
 from speech_client import speak
 from utils import time_formatting
 

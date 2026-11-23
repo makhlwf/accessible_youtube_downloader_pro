@@ -2,7 +2,7 @@ from unittest.mock import ANY, MagicMock, patch
 
 import pytest
 
-from database import QueuedDownload
+from app_state.database import QueuedDownload
 from gui.channel_dialog import ChannelDialog
 from gui.favorites import Favorites
 from gui.history import HistoryDialog

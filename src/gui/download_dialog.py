@@ -3,12 +3,12 @@ import wx
 
 import paths
 import utils
-from database import DownloadQueue, QueuedDownload
+from app_state.database import DownloadQueue, QueuedDownload
+from app_state.settings_handler import config_get, config_set
 from download_handler.downloader import DownloadCancelled, start_media_download
+from gui.theme_handler import apply_theme
 from language_handler import _
-from settings_handler import config_get, config_set
 from speech_client import speak
-from theme_handler import apply_theme
 
 _download_window = None
 

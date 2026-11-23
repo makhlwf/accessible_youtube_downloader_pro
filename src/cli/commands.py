@@ -11,17 +11,17 @@ import os
 import sys
 
 import utils
-from cli import deps
-from cli.runtime import require_cookies, require_deno, run_async
-from database import Favorite, SearchHistory, WatchHistory
-from language_handler import _
-from settings_handler import (
+from app_state.database import Favorite, SearchHistory, WatchHistory
+from app_state.settings_handler import (
     config_get,
     config_set,
     defaults,
     save_settings,
     string_to_bool,
 )
+from cli import deps
+from cli.runtime import require_cookies, require_deno, run_async
+from language_handler import _
 from youtube_browser.search_handler import (
     ChannelTabResult,
     PlaylistResult,

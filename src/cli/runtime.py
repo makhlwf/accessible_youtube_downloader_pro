@@ -30,7 +30,7 @@ def bootstrap(lang=None):
             except Exception:
                 pass
 
-    import settings_handler
+    from app_state import settings_handler
 
     try:
         settings_handler.config_initialization()
@@ -47,9 +47,9 @@ def _install_translation(lang=None):
     Mirrors ``language_handler.init_translation`` but allows a per-invocation
     language override without writing it back to settings.
     """
+    from app_state.settings_handler import config_get
     from language_handler import normalize_language_code
     from paths import get_bundled_data_path
-    from settings_handler import config_get
 
     if lang:
         lang_code = normalize_language_code(lang)
@@ -128,7 +128,7 @@ def deno_available():
 
 def cookies_available():
     """True when a configured cookies file exists on disk."""
-    from settings_handler import config_get
+    from app_state.settings_handler import config_get
 
     cookies_path = config_get("cookiespath")
     return bool(cookies_path and os.path.exists(cookies_path))

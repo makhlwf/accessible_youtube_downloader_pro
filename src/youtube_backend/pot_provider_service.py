@@ -15,7 +15,7 @@ import zipfile
 import requests
 
 import paths
-from settings_handler import config_get
+from app_state.settings_handler import config_get
 
 logger = logging.getLogger(__name__)
 

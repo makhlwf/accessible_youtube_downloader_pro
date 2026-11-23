@@ -2,6 +2,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
+from youtube_backend import feeds as youtube_feeds
 from youtube_browser.search_handler import (
     ChannelTabResult,
     PlaylistResult,
@@ -277,7 +278,7 @@ def test_channel_tab_result_handles_missing_tab(monkeypatch):
 def test_get_home_feed_validation_missing_deno(monkeypatch):
     import utils
 
-    monkeypatch.setattr(utils, "ensure_deno_installed", lambda **kw: False)
+    monkeypatch.setattr(youtube_feeds, "ensure_deno_installed", lambda **kw: False)
 
     res = utils.get_home_feed()
     assert res["videos"] == []
@@ -287,8 +288,8 @@ def test_get_home_feed_validation_missing_deno(monkeypatch):
 def test_get_home_feed_validation_missing_cookies(monkeypatch):
     import utils
 
-    monkeypatch.setattr(utils, "ensure_deno_installed", lambda **kw: True)
-    monkeypatch.setattr(utils, "ensure_cookies_configured", lambda **kw: False)
+    monkeypatch.setattr(youtube_feeds, "ensure_deno_installed", lambda **kw: True)
+    monkeypatch.setattr(youtube_feeds, "ensure_cookies_configured", lambda **kw: False)
 
     res = utils.get_home_feed()
     assert res["videos"] == []
@@ -298,12 +299,12 @@ def test_get_home_feed_validation_missing_cookies(monkeypatch):
 def test_get_home_feed_success(monkeypatch):
     import utils
 
-    monkeypatch.setattr(utils, "ensure_deno_installed", lambda **kw: True)
-    monkeypatch.setattr(utils, "ensure_cookies_configured", lambda **kw: True)
-    monkeypatch.setattr(utils, "config_get", lambda k: "cookies.txt")
-    monkeypatch.setattr(utils, "get_windows_region", lambda: "US")
+    monkeypatch.setattr(youtube_feeds, "ensure_deno_installed", lambda **kw: True)
+    monkeypatch.setattr(youtube_feeds, "ensure_cookies_configured", lambda **kw: True)
+    monkeypatch.setattr(youtube_feeds, "config_get", lambda k: "cookies.txt")
+    monkeypatch.setattr(youtube_feeds, "get_windows_region", lambda: "US")
     monkeypatch.setattr(
-        utils.deno_service,
+        youtube_feeds.deno_service,
         "send_command",
         lambda cmd, params: {"videos": [{"id": "v1"}], "continuation": "cont1"},
     )
@@ -326,12 +327,16 @@ def test_get_watch_history_falls_back_without_deno(monkeypatch):
     cookie_calls = []
 
     monkeypatch.setattr(
-        utils, "ensure_deno_installed", lambda **kw: deno_calls.append(kw) or False
+        youtube_feeds,
+        "ensure_deno_installed",
+        lambda **kw: deno_calls.append(kw) or False,
     )
     monkeypatch.setattr(
-        utils, "ensure_cookies_configured", lambda **kw: cookie_calls.append(kw) or True
+        youtube_feeds,
+        "ensure_cookies_configured",
+        lambda **kw: cookie_calls.append(kw) or True,
     )
-    monkeypatch.setattr(utils, "WatchHistory", FakeWatchHistory)
+    monkeypatch.setattr(youtube_feeds, "WatchHistory", FakeWatchHistory)
 
     res = utils.get_watch_history()
     assert res["videos"][0]["title"] == "Local Fallback"
@@ -354,14 +359,16 @@ def test_get_watch_history_falls_back_without_cookies(monkeypatch):
     cookie_calls = []
 
     monkeypatch.setattr(
-        utils, "ensure_deno_installed", lambda **kw: deno_calls.append(kw) or True
+        youtube_feeds,
+        "ensure_deno_installed",
+        lambda **kw: deno_calls.append(kw) or True,
     )
     monkeypatch.setattr(
-        utils,
+        youtube_feeds,
         "ensure_cookies_configured",
         lambda **kw: cookie_calls.append(kw) or False,
     )
-    monkeypatch.setattr(utils, "WatchHistory", FakeWatchHistory)
+    monkeypatch.setattr(youtube_feeds, "WatchHistory", FakeWatchHistory)
 
     res = utils.get_watch_history()
     assert res["videos"][0]["title"] == "Local Fallback"
@@ -373,7 +380,6 @@ def test_get_watch_history_falls_back_without_cookies(monkeypatch):
 
 
 def test_local_watch_history_response_handles_invalid_continuation(monkeypatch):
-    import utils
 
     class FakeWatchHistory:
         @classmethod
@@ -381,8 +387,8 @@ def test_local_watch_history_response_handles_invalid_continuation(monkeypatch):
             assert offset == 0
             return []
 
-    monkeypatch.setattr(utils, "WatchHistory", FakeWatchHistory)
-    res = utils._local_watch_history_response(continuation="not_an_int")
+    monkeypatch.setattr(youtube_feeds, "WatchHistory", FakeWatchHistory)
+    res = youtube_feeds._local_watch_history_response(continuation="not_an_int")
     assert res["source"] == "local"
     assert res["videos"] == []
 

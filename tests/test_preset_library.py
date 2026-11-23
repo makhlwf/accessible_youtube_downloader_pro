@@ -102,7 +102,7 @@ def test_load_settings_clamps_out_of_range_bands():
     # A full 15-value string so it is treated as the current-format curve.
     bands = "99.0,-99.0,bogus,2.0," + ",".join(["0.0"] * 11)
     stored = {"eq_preamp": 3.0, "eq_bands": bands}
-    with patch("settings_handler.config_get", side_effect=stored.get):
+    with patch("app_state.settings_handler.config_get", side_effect=stored.get):
         eq = EqualizerService()
         eq.load_settings()
 
@@ -124,7 +124,7 @@ def test_load_settings_migrates_legacy_band_count_from_preset():
         "eq_bands": ",".join(["1.0"] * 10),
         "eq_preset": "Rock",
     }
-    with patch("settings_handler.config_get", side_effect=stored.get):
+    with patch("app_state.settings_handler.config_get", side_effect=stored.get):
         eq = EqualizerService()
         eq.load_settings()
 

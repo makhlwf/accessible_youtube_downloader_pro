@@ -1,10 +1,14 @@
 import os
 from unittest.mock import MagicMock, patch
 
-import sponsorblock_handler
-from paths import settings_path
-from settings_handler import config_get, config_initialization, config_set, defaults
-from sponsorblock_handler import (
+from app_state.settings_handler import (
+    config_get,
+    config_initialization,
+    config_set,
+    defaults,
+)
+from integrations import sponsorblock_handler
+from integrations.sponsorblock_handler import (
     CATEGORIES,
     DEFAULT_API_URL,
     category_label,
@@ -22,6 +26,7 @@ from sponsorblock_handler import (
     parse_categories,
     should_announce_skips,
 )
+from paths import settings_path
 from utils import Stream
 
 
@@ -370,7 +375,7 @@ def test_get_sponsorblock_segments_success():
     ]
 
     with patch(
-        "sponsorblock_handler.get_sponsorblock_client",
+        "integrations.sponsorblock_handler.get_sponsorblock_client",
         return_value=mock_client,
     ):
         segments = get_sponsorblock_segments(
@@ -389,14 +394,14 @@ def test_get_sponsorblock_segments_empty_or_error():
     mock_client.get_skip_segments.return_value = []
 
     with patch(
-        "sponsorblock_handler.get_sponsorblock_client",
+        "integrations.sponsorblock_handler.get_sponsorblock_client",
         return_value=mock_client,
     ):
         assert get_sponsorblock_segments("kJQP7kiw5Fk") == []
 
     mock_client.get_skip_segments.side_effect = Exception("API error")
     with patch(
-        "sponsorblock_handler.get_sponsorblock_client",
+        "integrations.sponsorblock_handler.get_sponsorblock_client",
         return_value=mock_client,
     ):
         assert get_sponsorblock_segments("kJQP7kiw5Fk") == []

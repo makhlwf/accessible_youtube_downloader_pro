@@ -6,9 +6,9 @@ from utils import (
 )
 
 
-@patch("utils.paths.deno_path", "non_existent_deno.exe")
-@patch("utils.paths.get_youtube_service_path", return_value=None)
-@patch("utils.wx.MessageBox")
+@patch("app_runtime.dependencies.paths.deno_path", "non_existent_deno.exe")
+@patch("app_runtime.dependencies.paths.get_youtube_service_path", return_value=None)
+@patch("app_runtime.dependencies.wx.MessageBox")
 def test_ensure_deno_installed_missing(mock_msgbox, mock_service):
     mock_msgbox.return_value = 5  # wx.NO
     result = ensure_deno_installed(feature_name="الإعجاب")
@@ -16,8 +16,8 @@ def test_ensure_deno_installed_missing(mock_msgbox, mock_service):
     assert mock_msgbox.called
 
 
-@patch("utils.config_get")
-@patch("utils.wx.MessageBox")
+@patch("youtube_backend.session.config_get")
+@patch("youtube_backend.session.wx.MessageBox")
 def test_ensure_cookies_configured_missing(mock_msgbox, mock_config_get):
     mock_config_get.return_value = None
     result = ensure_cookies_configured(feature_name="الإعجاب")

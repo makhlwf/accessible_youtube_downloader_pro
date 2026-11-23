@@ -5,6 +5,7 @@ from unittest.mock import Mock
 import pytest
 
 import utils
+from app_runtime import updates as app_updates
 from gui import update_check_dialog, update_dialog
 from gui.update_dialog import UpdateDialog, _download_name_from_url
 
@@ -81,9 +82,9 @@ from gui.update_dialog import UpdateDialog, _download_name_from_url
 def test_select_app_update_platform(
     monkeypatch, system, machine, info, expected_url, expected_download
 ):
-    monkeypatch.setattr(utils.sys, "platform", system)
-    monkeypatch.setattr(utils.platform, "machine", lambda: machine)
-    assert utils._select_app_update(info) == (expected_url, expected_download)
+    monkeypatch.setattr(app_updates.sys, "platform", system)
+    monkeypatch.setattr(app_updates.platform, "machine", lambda: machine)
+    assert app_updates._select_app_update(info) == (expected_url, expected_download)
 
 
 @pytest.mark.parametrize(
@@ -128,15 +129,15 @@ def test_select_app_update_platform(
 def test_select_app_update_linux_entry_forms(
     monkeypatch, info, expected_url, expected_download
 ):
-    monkeypatch.setattr(utils.sys, "platform", "linux")
-    monkeypatch.setattr(utils.platform, "machine", lambda: "x86_64")
-    assert utils._select_app_update(info) == (expected_url, expected_download)
+    monkeypatch.setattr(app_updates.sys, "platform", "linux")
+    monkeypatch.setattr(app_updates.platform, "machine", lambda: "x86_64")
+    assert app_updates._select_app_update(info) == (expected_url, expected_download)
 
 
 @pytest.mark.parametrize("system", ["linux", "win32"])
 def test_check_for_updates_platform_download_and_browser_flow(monkeypatch, system):
-    monkeypatch.setattr(utils.sys, "platform", system)
-    monkeypatch.setattr(utils.platform, "machine", lambda: "AMD64")
+    monkeypatch.setattr(app_updates.sys, "platform", system)
+    monkeypatch.setattr(app_updates.platform, "machine", lambda: "AMD64")
 
     class Response:
         status_code = 200
@@ -157,10 +158,10 @@ def test_check_for_updates_platform_download_and_browser_flow(monkeypatch, syste
     app.GetTopWindow.return_value = top_window
     opened = []
     dialogs = []
-    monkeypatch.setattr(utils.application, "version", "1.0.0")
-    monkeypatch.setattr(utils.requests, "get", Mock(return_value=Response()))
-    monkeypatch.setattr(utils.wx, "CallAfter", lambda fn, *a, **kw: fn(*a, **kw))
-    monkeypatch.setattr(utils.wx, "GetApp", Mock(return_value=app))
+    monkeypatch.setattr(app_updates.application, "version", "1.0.0")
+    monkeypatch.setattr(app_updates.requests, "get", Mock(return_value=Response()))
+    monkeypatch.setattr(app_updates.wx, "CallAfter", lambda fn, *a, **kw: fn(*a, **kw))
+    monkeypatch.setattr(app_updates.wx, "GetApp", Mock(return_value=app))
     fake_update_dialog = Mock()
     monkeypatch.setattr(update_dialog, "UpdateDialog", fake_update_dialog)
     monkeypatch.setattr("webbrowser.open", lambda target: opened.append(target) or None)
@@ -214,12 +215,12 @@ def test_check_for_updates_linux_without_platforms_metadata_uses_releases_fallba
     app.GetTopWindow.return_value = top_window
     opened = []
     dialogs = []
-    monkeypatch.setattr(utils.sys, "platform", "linux")
-    monkeypatch.setattr(utils.platform, "machine", lambda: "x86_64")
-    monkeypatch.setattr(utils.application, "version", "1.0.0")
-    monkeypatch.setattr(utils.requests, "get", Mock(return_value=Response()))
-    monkeypatch.setattr(utils.wx, "CallAfter", lambda fn, *a, **kw: fn(*a, **kw))
-    monkeypatch.setattr(utils.wx, "GetApp", Mock(return_value=app))
+    monkeypatch.setattr(app_updates.sys, "platform", "linux")
+    monkeypatch.setattr(app_updates.platform, "machine", lambda: "x86_64")
+    monkeypatch.setattr(app_updates.application, "version", "1.0.0")
+    monkeypatch.setattr(app_updates.requests, "get", Mock(return_value=Response()))
+    monkeypatch.setattr(app_updates.wx, "CallAfter", lambda fn, *a, **kw: fn(*a, **kw))
+    monkeypatch.setattr(app_updates.wx, "GetApp", Mock(return_value=app))
     fake_update_dialog = Mock()
     monkeypatch.setattr(update_dialog, "UpdateDialog", fake_update_dialog)
     monkeypatch.setattr("webbrowser.open", lambda target: opened.append(target) or None)
@@ -248,7 +249,7 @@ def test_check_for_updates_linux_without_platforms_metadata_uses_releases_fallba
 
 
 def test_check_for_updates_uses_update_dialog_title_keyword(monkeypatch):
-    monkeypatch.setattr(utils.sys, "platform", "win32")
+    monkeypatch.setattr(app_updates.sys, "platform", "win32")
 
     class Response:
         status_code = 200
@@ -282,10 +283,10 @@ def test_check_for_updates_uses_update_dialog_title_keyword(monkeypatch):
         captured["args"] = args
         captured["kwargs"] = kwargs
 
-    monkeypatch.setattr(utils.application, "version", "1.0.0")
-    monkeypatch.setattr(utils.requests, "get", Mock(return_value=Response()))
-    monkeypatch.setattr(utils.wx, "CallAfter", lambda fn, *a, **kw: fn(*a, **kw))
-    monkeypatch.setattr(utils.wx, "GetApp", Mock(return_value=app))
+    monkeypatch.setattr(app_updates.application, "version", "1.0.0")
+    monkeypatch.setattr(app_updates.requests, "get", Mock(return_value=Response()))
+    monkeypatch.setattr(app_updates.wx, "CallAfter", lambda fn, *a, **kw: fn(*a, **kw))
+    monkeypatch.setattr(app_updates.wx, "GetApp", Mock(return_value=app))
     monkeypatch.setattr(update_check_dialog, "UpdateCheckDialog", FakeUpdateCheckDialog)
     monkeypatch.setattr(update_dialog, "UpdateDialog", fake_update_dialog)
 
@@ -490,8 +491,8 @@ def test_inno_setup_run_section_launches_on_silent_install():
 
 
 def test_select_app_update_fedora_rpm(monkeypatch):
-    monkeypatch.setattr(utils.sys, "platform", "linux")
-    monkeypatch.setattr(utils.platform, "machine", lambda: "x86_64")
+    monkeypatch.setattr(app_updates.sys, "platform", "linux")
+    monkeypatch.setattr(app_updates.platform, "machine", lambda: "x86_64")
     monkeypatch.setenv("HEXPLAYER_DISTRO_OVERRIDE", "fedora")
 
     info = {
@@ -504,7 +505,7 @@ def test_select_app_update_fedora_rpm(monkeypatch):
             ]
         },
     }
-    url, can_download = utils._select_app_update(info)
+    url, can_download = app_updates._select_app_update(info)
     assert (
         url
         == "https://github.com/o/r/releases/download/v9.9.9/HexPlayer-9.9.9-1.x86_64.rpm"
@@ -513,8 +514,8 @@ def test_select_app_update_fedora_rpm(monkeypatch):
 
 
 def test_select_app_update_fedora_fallback_tar(monkeypatch):
-    monkeypatch.setattr(utils.sys, "platform", "linux")
-    monkeypatch.setattr(utils.platform, "machine", lambda: "x86_64")
+    monkeypatch.setattr(app_updates.sys, "platform", "linux")
+    monkeypatch.setattr(app_updates.platform, "machine", lambda: "x86_64")
     monkeypatch.setenv("HEXPLAYER_DISTRO_OVERRIDE", "fedora")
 
     info = {
@@ -525,7 +526,7 @@ def test_select_app_update_fedora_fallback_tar(monkeypatch):
             }
         },
     }
-    url, can_download = utils._select_app_update(info)
+    url, can_download = app_updates._select_app_update(info)
     assert (
         url
         == "https://github.com/o/r/releases/download/v9.9.9/HexPlayer-9.9.9-linux-x86_64.tar.gz"
@@ -534,8 +535,8 @@ def test_select_app_update_fedora_fallback_tar(monkeypatch):
 
 
 def test_select_app_update_fedora_rejects_deb(monkeypatch):
-    monkeypatch.setattr(utils.sys, "platform", "linux")
-    monkeypatch.setattr(utils.platform, "machine", lambda: "x86_64")
+    monkeypatch.setattr(app_updates.sys, "platform", "linux")
+    monkeypatch.setattr(app_updates.platform, "machine", lambda: "x86_64")
     monkeypatch.setenv("HEXPLAYER_DISTRO_OVERRIDE", "fedora")
 
     info = {
@@ -546,7 +547,7 @@ def test_select_app_update_fedora_rejects_deb(monkeypatch):
             }
         },
     }
-    url, can_download = utils._select_app_update(info)
+    url, can_download = app_updates._select_app_update(info)
     assert url == utils.RELEASES_PAGE_URL
     assert can_download is False
 

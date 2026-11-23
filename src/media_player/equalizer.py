@@ -102,7 +102,7 @@ class EqualizerService:
         curve we fall back to the saved preset's bands when it names a known one,
         and otherwise leave the bands flat.
         """
-        import settings_handler
+        from app_state import settings_handler
 
         preamp = settings_handler.config_get("eq_preamp")
         if preamp is not None:
@@ -136,7 +136,7 @@ class EqualizerService:
 
     def save_settings(self) -> None:
         """Save current equalizer settings to configuration."""
-        import settings_handler
+        from app_state import settings_handler
 
         settings_handler.config_set("eq_preamp", self.preamp)
         bands_str = ",".join(str(v) for v in self.bands)

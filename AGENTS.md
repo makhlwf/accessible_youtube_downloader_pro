@@ -47,13 +47,13 @@ Every line of code you write must prioritize screen reader responsiveness, keybo
 | **Accessible GUI** | `src/gui/*.py`, `src/accessible_youtube_downloader_pro.py` | `wx-accessible-gui`, `wxpython-architecture` | `AccessibilityUIAgent` |
 | **Desktop A11y & Testing** | `src/gui/custom_controls.py`, `src/speech_client.py` | `desktop-a11y-specialist`, `desktop-screen-reader-testing` | `DesktopA11ySpecialist` |
 | **Media Playback** | `src/media_player/*.py`, `src/libmpv-2.dll` | `mpv-media-engine` | `MediaPlaybackAgent` |
-| **SponsorBlock** | `src/sponsorblock_handler.py` | `sponsorblock-engine` | `SponsorBlockSpecialist` |
+| **SponsorBlock** | `src/integrations/sponsorblock_handler.py` | `sponsorblock-engine` | `SponsorBlockSpecialist` |
 | **Media Downloader** | `src/download_handler/*.py`, `yt-dlp` | `ytdlp-downloader-engine` | `DownloaderAndYtdlpAgent` |
-| **Deno / InnerTube** | `src/service.js`, `src/deno_service.py` | `innertube-rpc-bridge` | `InnerTubeAndDenoAgent` |
-| **PO Token & Anti-Bot** | `src/pot_provider_service.py` | `youtube-pot-security` | `PoTokenSecurityAgent` |
-| **Browser Cookie Auth** | `src/cookies_manager.py` | `youtube-cookies-auth` | `AuthCookiesSpecialist` |
+| **Deno / InnerTube** | `src/service.js`, `src/youtube_backend/deno_service.py` | `innertube-rpc-bridge` | `InnerTubeAndDenoAgent` |
+| **PO Token & Anti-Bot** | `src/youtube_backend/pot_provider_service.py` | `youtube-pot-security` | `PoTokenSecurityAgent` |
+| **Browser Cookie Auth** | `src/youtube_backend/cookies_manager.py` | `youtube-cookies-auth` | `AuthCookiesSpecialist` |
 | **Clipboard Monitor** | `src/gui/auto_detect_dialog.py` | `clipboard-url-monitor` | `AccessibilityUIAgent` |
-| **Database & Settings**| `src/database.py`, `src/settings_handler.py` | `sqlite-state-storage` | `StorageAndStateAgent` |
+| **Database & Settings**| `src/app_state/database.py`, `src/app_state/settings_handler.py` | `sqlite-state-storage` | `StorageAndStateAgent` |
 | **Browser Extension** | `src/browser_extension/*`, `src/native_messaging_host.py` | `chrome-native-messaging`| `IntegrationAndPackagingAgent` |
 | **Packaging & Build** | `scripts/build.py`, `packaging/windows/inno.iss` | `windows-build-packaging`| `IntegrationAndPackagingAgent` |
 | **GitHub Releases** | `scripts/`, `dist/` | `github-release-operations` | `GitHubReleaseManager` |

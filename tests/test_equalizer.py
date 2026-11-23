@@ -80,7 +80,7 @@ def test_presets_updates_preamp():
 
 
 def test_load_settings():
-    with patch("settings_handler.config_get") as mock_get:
+    with patch("app_state.settings_handler.config_get") as mock_get:
 
         def side_effect(key):
             if key == "eq_bands":
@@ -101,7 +101,7 @@ def test_load_settings():
 
 
 def test_load_settings_invalid_preamp():
-    with patch("settings_handler.config_get") as mock_get:
+    with patch("app_state.settings_handler.config_get") as mock_get:
 
         def side_effect(key):
             if key == "eq_preamp":
@@ -124,7 +124,7 @@ def test_load_settings_invalid_preamp():
 
 
 def test_save_settings():
-    with patch("settings_handler.config_set") as mock_set:
+    with patch("app_state.settings_handler.config_set") as mock_set:
         eq = EqualizerService()
         eq.set_preamp(3.0)
         eq.set_band(0, 1.0)

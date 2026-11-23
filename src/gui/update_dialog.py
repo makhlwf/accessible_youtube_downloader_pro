@@ -11,9 +11,9 @@ from wx.lib.newevent import NewEvent
 
 import speech_client
 import utils
+from gui.theme_handler import apply_theme
 from language_handler import _
 from paths import update_path
-from theme_handler import apply_theme
 
 ProgressChangedEvent, EVT_PROGRESS_CHANGED = NewEvent()
 DownloadFinishedEvent, EVT_DOWNLOAD_FINISHED = NewEvent()

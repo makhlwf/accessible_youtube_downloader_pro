@@ -116,7 +116,7 @@ def test_start_radio_delegates_to_playback(panel):
 def test_download_row_calls_start_media_download(panel):
     with (
         patch("download_handler.downloader.start_media_download") as smd,
-        patch("settings_handler.config_get", return_value="C:/dl"),
+        patch("app_state.settings_handler.config_get", return_value="C:/dl"),
     ):
         panel.download_row({"videoId": "abc", "title": "Song"})
     smd.assert_called_once()

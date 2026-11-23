@@ -46,7 +46,7 @@ def get_clipboard_text_safe() -> str | None:
 Do not prompt the user for the same URL twice in a row, and ignore non-YouTube clipboard contents:
 
 ```python
-from youtube_url_utils import is_valid_youtube_url, extract_video_id
+from youtube_backend.youtube_url_utils import is_valid_youtube_url, extract_video_id
 
 current_text = get_clipboard_text_safe()
 if current_text and current_text != self.last_handled_clipboard:
@@ -73,7 +73,7 @@ When `AutoDetectDialog` opens:
 | **Watcher Thread** | Background daemon thread in `accessible_youtube_downloader_pro.py` |
 | **Dialog Implementation** | `src/gui/auto_detect_dialog.py` |
 | **Setting Key** | `config_get("auto_detect_clipboard")` (`True` / `False`) |
-| **URL Validation** | `src/youtube_url_utils.py` |
+| **URL Validation** | `src/youtube_backend/youtube_url_utils.py` |
 
 ## Implementation Procedures
 

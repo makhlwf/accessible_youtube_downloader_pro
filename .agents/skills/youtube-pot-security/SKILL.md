@@ -9,13 +9,13 @@ description: >-
 
 ## Overview
 
-YouTube actively employs automated bot detection and Proof of Origin (PO Token / Botguard) challenges to restrict programmatic access and throttle video stream URLs (resulting in HTTP 403 errors or broken playback). HexPlayer implements a multi-provider PO Token architecture in `src/pot_provider_service.py` supporting Deno, Node.js, and background HTTP generators to maintain uninterrupted playback and downloads.
+YouTube actively employs automated bot detection and Proof of Origin (PO Token / Botguard) challenges to restrict programmatic access and throttle video stream URLs (resulting in HTTP 403 errors or broken playback). HexPlayer implements a multi-provider PO Token architecture in `src/youtube_backend/pot_provider_service.py` supporting Deno, Node.js, and background HTTP generators to maintain uninterrupted playback and downloads.
 
 ## When to Use
 
 - Encountering HTTP 403 Forbidden errors during playback or downloads.
 - YouTube returns `Sign in to confirm you're not a bot` or SABR streaming limits.
-- Configuring or debugging PO token providers in `src/pot_provider_service.py`.
+- Configuring or debugging PO token providers in `src/youtube_backend/pot_provider_service.py`.
 - Working with `yt-dlp` getpot extractor plugins (`yt_dlp_plugins.extractor.getpot_*`).
 - Managing provider registry lifecycles or resolving duplicate provider registration assertions.
 

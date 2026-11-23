@@ -3,8 +3,8 @@ from unittest.mock import patch
 
 
 class TestVideoChapters(unittest.TestCase):
-    @patch("utils.deno_service")
-    @patch("utils.config_get")
+    @patch("youtube_backend.metadata.deno_service")
+    @patch("youtube_backend.metadata.config_get")
     def test_get_video_chapters_success(self, mock_config_get, mock_deno_service):
         from utils import get_video_chapters
 
@@ -30,7 +30,7 @@ class TestVideoChapters(unittest.TestCase):
             {"cookiesPath": "fake/path/to/cookies", "videoId": "dQw4w9WgXcQ"},
         )
 
-    @patch("utils.youtube_regexp")
+    @patch("youtube_backend.metadata.youtube_regexp")
     def test_get_video_chapters_invalid_url(self, mock_regexp):
         from utils import get_video_chapters
 
@@ -39,8 +39,8 @@ class TestVideoChapters(unittest.TestCase):
         chapters = get_video_chapters(url)
         self.assertEqual(chapters, [])
 
-    @patch("utils.deno_service")
-    @patch("utils.config_get")
+    @patch("youtube_backend.metadata.deno_service")
+    @patch("youtube_backend.metadata.config_get")
     def test_get_video_chapters_normalizes_alternate_time_fields(
         self, mock_config_get, mock_deno_service
     ):
@@ -64,14 +64,13 @@ class TestVideoChapters(unittest.TestCase):
             ],
         )
 
-    @patch("utils.deno_service")
-    @patch("utils.config_get")
+    @patch("youtube_backend.metadata.deno_service")
+    @patch("youtube_backend.metadata.config_get")
     def test_get_video_chapters_falls_back_to_yt_dlp(
         self, mock_config_get, mock_deno_service
     ):
         from unittest.mock import patch
 
-        import utils
         from utils import get_video_chapters
 
         calls = {}
@@ -98,7 +97,7 @@ class TestVideoChapters(unittest.TestCase):
         mock_config_get.return_value = ""
         mock_deno_service.send_command.return_value = {"chapters": []}
 
-        with patch.object(utils, "YoutubeDL", FakeYoutubeDL):
+        with patch("youtube_backend.ytdlp_runtime.YoutubeDL", FakeYoutubeDL):
             chapters = get_video_chapters("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
 
         self.assertEqual(chapters, [{"title": "Fallback", "time_ms": 12500}])

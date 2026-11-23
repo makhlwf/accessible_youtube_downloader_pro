@@ -1,7 +1,7 @@
 import os
 
 import paths
-from settings_handler import defaults
+from app_state.settings_handler import defaults
 
 
 def test_pot_provider_paths():

@@ -4,6 +4,8 @@ from unittest.mock import MagicMock, patch
 
 import accessible_youtube_downloader_pro as app_main
 from accessible_youtube_downloader_pro import get_launch_url, is_debug_invocation
+from app_runtime import desktop as desktop_actions
+from app_runtime import logging_setup as app_logging
 
 
 def test_py_yt_console_suppression_installed_by_startup_warmup():
@@ -17,7 +19,7 @@ def test_py_yt_console_suppression_installed_by_startup_warmup():
     app_main.utils.configure_py_yt_subprocess()
 
     if app_main.sys.platform == "win32":
-        assert isinstance(bot_guard.subprocess, app_main.utils._WindowlessSubprocess)
+        assert isinstance(bot_guard.subprocess, desktop_actions._WindowlessSubprocess)
         assert bot_guard.subprocess._module is subprocess
     else:
         assert bot_guard.subprocess is subprocess
@@ -73,13 +75,13 @@ def test_enable_console_output_attaches_to_parent(monkeypatch):
     monkeypatch.setattr(app_main.sys, "platform", "win32")
     with (
         patch.object(
-            app_main,
+            app_logging,
             "ctypes",
             SimpleNamespace(windll=SimpleNamespace(kernel32=mock_kernel32)),
         ),
         patch("builtins.open", MagicMock()),
     ):
-        result = app_main.enable_console_output()
+        result = app_logging.enable_console_output()
         assert result is True
         mock_kernel32.AttachConsole.assert_called_once_with(-1)
         mock_kernel32.AllocConsole.assert_not_called()
@@ -93,13 +95,13 @@ def test_enable_console_output_allocates_when_attach_fails(monkeypatch):
     monkeypatch.setattr(app_main.sys, "platform", "win32")
     with (
         patch.object(
-            app_main,
+            app_logging,
             "ctypes",
             SimpleNamespace(windll=SimpleNamespace(kernel32=mock_kernel32)),
         ),
         patch("builtins.open", MagicMock()),
     ):
-        result = app_main.enable_console_output()
+        result = app_logging.enable_console_output()
         assert result is True
         mock_kernel32.AttachConsole.assert_called_once_with(-1)
         mock_kernel32.AllocConsole.assert_called_once()
@@ -111,14 +113,14 @@ def test_setup_logging_with_cli_debug_flag(monkeypatch):
     debug_messages = []
 
     monkeypatch.setattr(
-        app_main, "enable_console_output", lambda: called_enable_console.append(True)
+        app_logging, "enable_console_output", lambda: called_enable_console.append(True)
     )
-    monkeypatch.setattr("settings_handler.config_get", lambda key: False)
+    monkeypatch.setattr("app_state.settings_handler.config_get", lambda key: False)
     monkeypatch.setattr(
         root_logger, "debug", lambda msg, *args: debug_messages.append(msg)
     )
 
-    app_main.setup_logging(["HexPlayer.exe", "-d"])
+    app_logging.setup_logging(["HexPlayer.exe", "-d"])
     assert root_logger.level == logging.DEBUG
     assert len(called_enable_console) == 1
     assert "Debug logging initialized (terminal output enabled)" in debug_messages
@@ -130,14 +132,14 @@ def test_setup_logging_with_config_debug_only(monkeypatch):
     debug_messages = []
 
     monkeypatch.setattr(
-        app_main, "enable_console_output", lambda: called_enable_console.append(True)
+        app_logging, "enable_console_output", lambda: called_enable_console.append(True)
     )
-    monkeypatch.setattr("settings_handler.config_get", lambda key: True)
+    monkeypatch.setattr("app_state.settings_handler.config_get", lambda key: True)
     monkeypatch.setattr(
         root_logger, "debug", lambda msg, *args: debug_messages.append(msg)
     )
 
-    app_main.setup_logging(["HexPlayer.exe"])
+    app_logging.setup_logging(["HexPlayer.exe"])
     assert root_logger.level == logging.DEBUG
     assert len(called_enable_console) == 0
     assert "Debug logging initialized" in debug_messages
@@ -149,10 +151,10 @@ def test_setup_logging_without_debug(monkeypatch):
     called_enable_console = []
 
     monkeypatch.setattr(
-        app_main, "enable_console_output", lambda: called_enable_console.append(True)
+        app_logging, "enable_console_output", lambda: called_enable_console.append(True)
     )
-    monkeypatch.setattr("settings_handler.config_get", lambda key: False)
+    monkeypatch.setattr("app_state.settings_handler.config_get", lambda key: False)
 
-    app_main.setup_logging(["HexPlayer.exe"])
+    app_logging.setup_logging(["HexPlayer.exe"])
     assert root_logger.level == logging.INFO
     assert len(called_enable_console) == 0

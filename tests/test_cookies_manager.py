@@ -2,7 +2,7 @@ import os
 from http.cookiejar import Cookie
 from unittest.mock import patch
 
-import cookies_manager
+from youtube_backend import cookies_manager, ytdlp_runtime
 
 
 def test_linux_browser_discovery_respects_xdg(tmp_path, monkeypatch):
@@ -108,7 +108,7 @@ def test_extract_and_save_browser_cookies_success(tmp_path):
         rest={},
     )
     with patch(
-        "cookies_manager._extract_cookies_from_browser_raw", return_value=[cookie]
+        "youtube_backend.cookies_manager._extract_cookies_from_browser_raw", return_value=[cookie]
     ):
         res = cookies_manager.extract_and_save_browser_cookies(
             "firefox", target_path=target_file
@@ -125,7 +125,7 @@ def test_extract_and_save_browser_cookies_success(tmp_path):
 
 def test_extract_and_save_browser_cookies_no_cookies_found(tmp_path):
     target_file = str(tmp_path / "browser_cookies.txt")
-    with patch("cookies_manager._extract_cookies_from_browser_raw", return_value=[]):
+    with patch("youtube_backend.cookies_manager._extract_cookies_from_browser_raw", return_value=[]):
         res = cookies_manager.extract_and_save_browser_cookies(
             "firefox", target_path=target_file
         )
@@ -172,8 +172,8 @@ def test_save_raw_browser_cookies_empty(tmp_path):
 
 def test_cookies_player_client_integration(tmp_path, monkeypatch):
     import download_handler.downloader
-    import settings_handler
     import utils
+    from app_state import settings_handler
     from download_handler.downloader import Downloader
 
     cookie_file = tmp_path / "browser_cookies.txt"
@@ -192,7 +192,7 @@ def test_cookies_player_client_integration(tmp_path, monkeypatch):
         lambda k: str(cookie_file) if k == "cookiespath" else "default",
     )
     monkeypatch.setattr(
-        utils,
+        ytdlp_runtime,
         "config_get",
         lambda k: str(cookie_file) if k == "cookiespath" else "default",
     )
@@ -208,7 +208,7 @@ def test_cookies_player_client_integration(tmp_path, monkeypatch):
         def __exit__(self, *args):
             pass
 
-    monkeypatch.setattr(utils, "YoutubeDL", DummyYDL)
+    monkeypatch.setattr(ytdlp_runtime, "YoutubeDL", DummyYDL)
 
     ydl = utils.get_ydl_instance(cookies_path=str(cookie_file))
     assert ydl.opts["extractor_args"]["youtube"]["player_client"] == ["default"]

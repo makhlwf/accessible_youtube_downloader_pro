@@ -2,7 +2,8 @@ from threading import Event
 from types import SimpleNamespace
 from unittest.mock import MagicMock, call
 
-import accessible_youtube_downloader_pro as main
+from app_runtime import ipc as app_ipc
+from gui import home_screen
 
 
 def test_home_feed_checks_dependencies_before_starting_worker(monkeypatch):
@@ -10,20 +11,22 @@ def test_home_feed_checks_dependencies_before_starting_worker(monkeypatch):
     home._home_feed_request = None
     home._shutting_down = Event()
     home.home_feed_continuation = "page-two"
-    monkeypatch.setattr(main.settings_handler, "config_get", lambda key: "cookies.txt")
+    monkeypatch.setattr(
+        home_screen.settings_handler, "config_get", lambda key: "cookies.txt"
+    )
     deno_check = MagicMock(return_value=True)
     cookies_check = MagicMock(return_value=True)
     get_feed = MagicMock(return_value={"videos": [], "continuation": None})
-    monkeypatch.setattr(main.utils, "ensure_deno_installed", deno_check)
-    monkeypatch.setattr(main.utils, "ensure_cookies_configured", cookies_check)
-    monkeypatch.setattr(main.utils, "get_home_feed", get_feed)
+    monkeypatch.setattr(home_screen.utils, "ensure_deno_installed", deno_check)
+    monkeypatch.setattr(home_screen.utils, "ensure_cookies_configured", cookies_check)
+    monkeypatch.setattr(home_screen.utils, "get_home_feed", get_feed)
     worker = MagicMock()
-    monkeypatch.setattr(main.threading, "Thread", worker)
+    monkeypatch.setattr(home_screen.threading, "Thread", worker)
     queue = MagicMock()
-    monkeypatch.setattr(main, "wx", SimpleNamespace(CallAfter=queue))
+    monkeypatch.setattr(home_screen, "wx", SimpleNamespace(CallAfter=queue))
 
-    main.HomeScreen.load_home_feed(home, load_more=True)
-    main.HomeScreen.load_home_feed(home, load_more=True)
+    home_screen.HomeScreen.load_home_feed(home, load_more=True)
+    home_screen.HomeScreen.load_home_feed(home, load_more=True)
 
     deno_check.assert_called_once()
     cookies_check.assert_called_once()
@@ -43,10 +46,10 @@ def test_home_feed_drops_stale_completion_after_account_change(monkeypatch):
     token = object()
     home._home_feed_request = ("old-cookies.txt", token)
     monkeypatch.setattr(
-        main.settings_handler, "config_get", lambda key: "new-cookies.txt"
+        home_screen.settings_handler, "config_get", lambda key: "new-cookies.txt"
     )
 
-    main.HomeScreen._finish_home_feed(home, "old-cookies.txt", token, {}, False)
+    home_screen.HomeScreen._finish_home_feed(home, "old-cookies.txt", token, {}, False)
 
     assert home._home_feed_request is None
     home._update_home_feed.assert_not_called()
@@ -58,8 +61,8 @@ def test_home_feed_placeholder_does_not_dispatch_playback_or_prefetch():
     home.home_feed_list.GetSelection.return_value = 0
     home.home_feed_list.Selection = 0
 
-    main.HomeScreen.on_home_feed_play(home, None)
-    main.HomeScreen.on_home_feed_list_box(home, None)
+    home_screen.HomeScreen.on_home_feed_play(home, None)
+    home_screen.HomeScreen.on_home_feed_list_box(home, None)
 
     home.home_feed_results.get_stream.assert_not_called()
     home.scraper.add_item.assert_not_called()
@@ -74,7 +77,7 @@ def test_failed_mix_playback_leaves_home_visible(monkeypatch):
     play_mix = MagicMock(return_value=None)
     monkeypatch.setattr(media_gui, "play_mix", play_mix)
 
-    main.HomeScreen.on_home_feed_play(home, None)
+    home_screen.HomeScreen.on_home_feed_play(home, None)
 
     play_mix.assert_called_once_with(home, "RDmix", "seed", audio_mode=False)
     home.Hide.assert_not_called()
@@ -99,13 +102,13 @@ def test_ipc_listener_survives_connection_read_error(monkeypatch):
         raise TimeoutError
 
     server.accept.side_effect = accept
-    monkeypatch.setattr(main.socket, "socket", sockets)
+    monkeypatch.setattr(app_ipc.socket, "socket", sockets)
     worker = MagicMock()
-    monkeypatch.setattr(main.threading, "Thread", worker)
+    monkeypatch.setattr(app_ipc.threading, "Thread", worker)
     queue = MagicMock()
-    monkeypatch.setattr(main, "wx", SimpleNamespace(CallAfter=queue))
+    monkeypatch.setattr(home_screen, "wx", SimpleNamespace(CallAfter=queue))
 
-    main.HomeScreen._start_ipc_server(home)
+    home_screen.HomeScreen._start_ipc_server(home)
     worker.call_args.kwargs["target"]()
 
     assert queue.call_args_list == [
@@ -118,11 +121,11 @@ def test_ipc_listener_survives_connection_read_error(monkeypatch):
 def test_ipc_handler_ignores_bad_input_and_callbacks_during_shutdown():
     home = MagicMock()
     home._shutting_down = Event()
-    main.HomeScreen._handle_ipc_message(home, b"[]")
-    main.HomeScreen._handle_ipc_message(home, b'{"action":"open_url","url":[]}')
-    main.HomeScreen._handle_ipc_message(home, b"SHOW")
+    home_screen.HomeScreen._handle_ipc_message(home, b"[]")
+    home_screen.HomeScreen._handle_ipc_message(home, b'{"action":"open_url","url":[]}')
+    home_screen.HomeScreen._handle_ipc_message(home, b"SHOW")
     home._shutting_down.set()
-    main.HomeScreen._handle_ipc_message(home, b'{"action":"show"}')
+    home_screen.HomeScreen._handle_ipc_message(home, b'{"action":"show"}')
 
     home.handle_external_url.assert_not_called()
     home.tray_icon.on_show.assert_called_once_with(None)

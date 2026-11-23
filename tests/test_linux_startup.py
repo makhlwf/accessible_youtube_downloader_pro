@@ -66,7 +66,7 @@ def test_linux_startup_real_ctypes(
 
         import language_handler
         import paths
-        import settings_handler
+        from app_state import settings_handler
         from media_player import mpv_backend
 
         assert language_handler.ctypes is ctypes

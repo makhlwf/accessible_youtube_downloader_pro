@@ -5,16 +5,14 @@ import socket
 import struct
 from unittest.mock import MagicMock, patch
 
-import discord_presence
-from discord_presence import (
-    OP_FRAME,
-    OP_HANDSHAKE,
+from integrations import discord_presence
+from integrations.discord_presence import (
     DiscordPresence,
-    DiscordRPCClient,
     extract_video_id,
     is_valid_button_url,
     truncate_utf8,
 )
+from integrations.discord_rpc import OP_FRAME, OP_HANDSHAKE, DiscordRPCClient
 
 # ============================================================================
 # 1. Helper function tests
@@ -238,7 +236,7 @@ def test_client_send_activity_error_response_is_logged(caplog):
 
 
 def test_presence_disabled_via_settings():
-    with patch("discord_presence.config_get") as mock_config:
+    with patch("integrations.discord_presence.config_get") as mock_config:
         mock_config.side_effect = lambda key, default=None: {
             "discord_presence": False,
             "discord_client_id": "",
@@ -405,7 +403,7 @@ def test_presence_idle_payload():
 
 
 def test_presence_reload_settings():
-    with patch("discord_presence.config_get") as mock_config:
+    with patch("integrations.discord_presence.config_get") as mock_config:
         mock_config.side_effect = lambda key, default=None: {
             "discord_presence": True,
             "discord_client_id": "999999999",
@@ -431,7 +429,7 @@ def test_presence_clear():
 
 
 def test_module_convenience_functions():
-    with patch("discord_presence.get_presence") as mock_get_presence:
+    with patch("integrations.discord_presence.get_presence") as mock_get_presence:
         mock_inst = MagicMock()
         mock_get_presence.return_value = mock_inst
 

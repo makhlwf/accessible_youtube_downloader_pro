@@ -3,11 +3,11 @@ import threading
 
 import wx
 
-from database import SearchHistory
+from app_state.database import SearchHistory
+from app_state.settings_handler import config_get
+from gui.theme_handler import apply_theme
 from language_handler import _
-from settings_handler import config_get
 from speech_client import speak
-from theme_handler import apply_theme
 from youtube_browser.search_handler import fetch_search_suggestions
 
 logger = logging.getLogger(__name__)

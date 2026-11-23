@@ -8,10 +8,12 @@ from media_player.media_gui import MediaGui
 
 
 def test_has_cookies_file_missing(tmp_path):
-    with patch("utils.config_get", return_value=""):
+    with patch("youtube_backend.session.config_get", return_value=""):
         assert utils.has_cookies_file() is False
 
-    with patch("utils.config_get", return_value=str(tmp_path / "non_existent.txt")):
+    with patch(
+        "youtube_backend.session.config_get", return_value=str(tmp_path / "non_existent.txt")
+    ):
         assert utils.has_cookies_file() is False
 
 
@@ -20,7 +22,7 @@ def test_has_cookies_file_valid(tmp_path):
     cookie_file.write_text(
         "# Netscape HTTP Cookie File\n.youtube.com\tTRUE\t/\tFALSE\t0\tSAPISID\t12345\n"
     )
-    with patch("utils.config_get", return_value=str(cookie_file)):
+    with patch("youtube_backend.session.config_get", return_value=str(cookie_file)):
         assert utils.has_cookies_file() is True
 
 
@@ -44,10 +46,10 @@ def test_get_shorts_feed_success(tmp_path):
         ]
     }
     with (
-        patch("utils.ensure_deno_installed", return_value=True),
-        patch("utils.ensure_cookies_configured", return_value=True),
-        patch("utils.config_get", return_value=str(cookie_file)),
-        patch("utils.deno_service.send_command", return_value=mock_response),
+        patch("youtube_backend.feeds.ensure_deno_installed", return_value=True),
+        patch("youtube_backend.feeds.ensure_cookies_configured", return_value=True),
+        patch("youtube_backend.feeds.config_get", return_value=str(cookie_file)),
+        patch("youtube_backend.feeds.deno_service.send_command", return_value=mock_response),
     ):
         shorts = utils.get_shorts_feed()
         assert len(shorts) == 2
@@ -56,7 +58,7 @@ def test_get_shorts_feed_success(tmp_path):
 
 
 def test_get_shorts_feed_no_cookies():
-    with patch("utils.ensure_cookies_configured", return_value=False):
+    with patch("youtube_backend.feeds.ensure_cookies_configured", return_value=False):
         shorts = utils.get_shorts_feed()
         assert shorts == []
 
@@ -67,19 +69,17 @@ def test_home_screen_shorts_button_visibility(tmp_path):
 
     with (
         patch(
-            "accessible_youtube_downloader_pro.utils.has_cookies_file",
+            "gui.home_screen.utils.has_cookies_file",
             return_value=True,
         ),
-        patch(
-            "accessible_youtube_downloader_pro.browser_extension_manager.sync_browser_extension_files"
-        ),
+        patch("gui.home_screen.browser_extension_manager.sync_browser_extension_files"),
     ):
         home = HomeScreen(start_hidden=True)
         assert home.shortsBtn.IsShown() is True
         home.shortsItem.Enable.assert_called_with(True)
 
         with patch(
-            "accessible_youtube_downloader_pro.utils.has_cookies_file",
+            "gui.home_screen.utils.has_cookies_file",
             return_value=False,
         ):
             home.update_shorts_button_visibility()
@@ -89,12 +89,10 @@ def test_home_screen_shorts_button_visibility(tmp_path):
 
 def test_home_screen_update_deno_tools_visibility():
     with (
+        patch("gui.home_screen.browser_extension_manager.sync_browser_extension_files"),
+        patch("gui.home_screen.TaskBarIcon"),
         patch(
-            "accessible_youtube_downloader_pro.browser_extension_manager.sync_browser_extension_files"
-        ),
-        patch("accessible_youtube_downloader_pro.TaskBarIcon"),
-        patch(
-            "accessible_youtube_downloader_pro.settings_handler.config_get",
+            "gui.home_screen.settings_handler.config_get",
             return_value=False,
         ),
     ):
@@ -104,7 +102,7 @@ def test_home_screen_update_deno_tools_visibility():
         home.refreshYoutubeiCache.Enable.assert_called_with(False)
 
         with patch(
-            "accessible_youtube_downloader_pro.settings_handler.config_get",
+            "gui.home_screen.settings_handler.config_get",
             return_value=True,
         ):
             home.update_deno_tools_visibility()

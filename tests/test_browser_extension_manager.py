@@ -1,4 +1,4 @@
-import browser_extension_manager as manager
+from app_runtime import browser_extension_manager as manager
 
 
 def test_sync_browser_extension_files_refreshes_user_copy(tmp_path, monkeypatch):

@@ -4,6 +4,7 @@ import pytest
 
 import utils
 from download_handler.downloader import Downloader
+from youtube_backend import ytdlp_runtime
 from youtube_browser.scraper import Scraper
 from youtube_browser.search_handler import SimpleResult, _yt_dlp_flat_options
 
@@ -37,7 +38,7 @@ def test_get_ydl_instance_includes_verbose_and_logger():
         def __init__(self, opts):
             self.opts = opts
 
-    with patch.object(utils, "YoutubeDL", FakeYDL):
+    with patch("youtube_backend.ytdlp_runtime.YoutubeDL", FakeYDL):
         instance = utils.get_ydl_instance(["android", "web"])
         assert instance.opts.get("verbose") is True
         assert instance.opts.get("quiet") is False
@@ -80,7 +81,7 @@ async def test_scraper_extracts_stream_without_skipping(monkeypatch):
         extracted.append((url, audio_mode))
         return "https://stream.url/audio.m4a"
 
-    monkeypatch.setattr(utils, "YoutubeDL", object())
+    monkeypatch.setattr(ytdlp_runtime, "YoutubeDL", object())
     monkeypatch.setattr(utils, "get_playable_stream", fake_get_playable_stream)
 
     scraper = Scraper(num_workers=1)

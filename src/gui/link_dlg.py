@@ -1,8 +1,8 @@
 import pyperclip
 import wx
 
+from gui.theme_handler import apply_theme
 from language_handler import _
-from theme_handler import apply_theme
 from utils import youtube_regexp
 
 

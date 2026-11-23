@@ -4,16 +4,18 @@ import pytest
 
 import download_handler.downloader as downloader_module
 import paths
-import utils
 from download_handler.downloader import (
-    AUDIO_KBPS_FORMAT_MAP,
     DownloadCancelled,
     Downloader,
-    _fallback_format_for_kbps,
     clean_progress_text,
+)
+from download_handler.formats import (
+    AUDIO_KBPS_FORMAT_MAP,
+    _fallback_format_for_kbps,
     get_audio_download_format,
     get_video_download_format,
 )
+from youtube_backend import ytdlp_runtime
 
 
 def test_base_options_use_resolved_deno_and_ffmpeg(monkeypatch, tmp_path):
@@ -125,7 +127,7 @@ def test_download_prepares_runtime_path_and_output_directory(monkeypatch):
     output_path = os.path.abspath("test-downloads")
     monkeypatch.setattr(paths, "ffmpeg_dir", ffmpeg_dir)
     monkeypatch.setattr(paths, "main_path", main_path)
-    monkeypatch.setattr(utils, "YoutubeDL", FakeYoutubeDL)
+    monkeypatch.setattr(ytdlp_runtime, "YoutubeDL", FakeYoutubeDL)
     monkeypatch.setattr(downloader_module, "config_get", lambda key: "")
     monkeypatch.setattr(
         downloader_module.os,
@@ -179,7 +181,7 @@ def test_cookie_fallback_retries_without_cookiefile(monkeypatch):
             if "cookiefile" in self.opts:
                 raise RuntimeError("cookie database is locked")
 
-    monkeypatch.setattr(utils, "YoutubeDL", FakeYoutubeDL)
+    monkeypatch.setattr(ytdlp_runtime, "YoutubeDL", FakeYoutubeDL)
     monkeypatch.setattr(
         downloader_module,
         "config_get",
@@ -282,7 +284,7 @@ def test_diagnose_extraction_error_generic():
 def test_diagnose_download_error_missing_ytdlp(monkeypatch):
     from download_handler.downloader import diagnose_download_error
 
-    monkeypatch.setattr(utils, "YoutubeDL", None)
+    monkeypatch.setattr(ytdlp_runtime, "YoutubeDL", None)
     msg = diagnose_download_error("missing yt-dlp binary")
     assert "لم يتم العثور على مكتبة yt-dlp" in msg
 

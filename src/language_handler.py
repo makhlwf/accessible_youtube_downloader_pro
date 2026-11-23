@@ -76,8 +76,8 @@ def get_default_language():
 def init_translation(domain):
     import os
 
+    from app_state.settings_handler import config_get
     from paths import get_bundled_data_path
-    from settings_handler import config_get
 
     localedir = os.path.join(get_bundled_data_path(), "languages")
     try:

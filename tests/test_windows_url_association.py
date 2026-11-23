@@ -6,7 +6,7 @@ from unittest.mock import Mock
 
 import pytest
 
-import windows_url_association as association
+from app_runtime import windows_url_association as association
 
 
 @pytest.fixture
