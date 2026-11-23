@@ -410,7 +410,7 @@ def test_invalid_percentages_do_not_break_gui_dispatch(loop, progress, value, ex
 
 
 @pytest.fixture
-def action(loop, monkeypatch, tmp_path):
+def action(loop, monkeypatch, tmp_path, request):
     parent = GuardedWindow(loop)
     dialog = GuardedDialog(loop, parent)
     monitor = GuardedWindow(loop)
@@ -464,6 +464,10 @@ def action(loop, monkeypatch, tmp_path):
         "gui.download_complete_dialog.show_download_complete",
         lambda *a, **kw: notice("complete", *a, **kw),
     )
+
+    def report_queue_result(result):
+        notice("queue", result)
+
     assert loop.ui(
         downloader_module.downloadAction,
         "url",
@@ -472,9 +476,27 @@ def action(loop, monkeypatch, tmp_path):
         "best",
         monitor,
         label,
+        on_finished=report_queue_result if getattr(request, "param", False) else None,
     )
     context.downloader = dialog.cancel_callback.__self__
     return context
+
+
+@pytest.mark.parametrize("action", [True], indirect=True)
+@pytest.mark.parametrize("result", [0, RuntimeError("failed"), DownloadCancelled()])
+def test_queue_receives_outcome_after_progress_closes(loop, action, result):
+    action.result = result
+    action.workers[0]()
+    assert action.notices == []
+    loop.pump()
+    assert action.dialog.destroy_count == 1
+    [(kind, (outcome,), _)] = action.notices
+    assert kind == "queue"
+    if isinstance(result, DownloadCancelled):
+        assert isinstance(outcome, DownloadCancelled)
+    else:
+        assert outcome == result
+    assert loop.trace.index(("destroyed",)) < loop.trace.index(("queue",))
 
 
 def test_completion_flushes_final_progress_before_destroying_dialog(loop, action):

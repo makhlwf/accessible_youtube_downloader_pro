@@ -4,9 +4,10 @@ from threading import Thread
 
 import wx
 
+import paths
 import utils
 from async_utils import submit_async
-from database import Favorite
+from database import DownloadQueue, Favorite, QueuedDownload
 from gui.activity_dialog import LoadingDialog
 from gui.channel_dialog import ChannelDialog
 from gui.download_progress import DownloadProgress
@@ -104,12 +105,16 @@ class YoutubeBrowser(wx.Frame):
         optionsMenu = wx.Menu()
         settingsItem = optionsMenu.Append(-1, _("الإعدادات...\talt+s"))
         self.settingsItemId = settingsItem.GetId()
+        self.downloadQueueId = optionsMenu.Append(
+            -1, _("Download queue\tCtrl+Shift+Q")
+        ).GetId()
 
         hotKeys = wx.AcceleratorTable(
             [
                 (wx.ACCEL_ALT, ord("S"), self.settingsItemId),
                 (wx.ACCEL_CTRL, ord("F"), self.searchButton.GetId()),
                 (wx.ACCEL_CTRL, ord("D"), 1003),  # Direct download
+                (wx.ACCEL_CTRL | wx.ACCEL_SHIFT, ord("Q"), self.downloadQueueId),
                 (wx.ACCEL_CTRL, ord("L"), 1004),  # Copy link
             ]
         )
@@ -143,6 +148,10 @@ class YoutubeBrowser(wx.Frame):
         self.directDownloadId = self.contextMenu.Append(
             -1, _("التنزيل المباشر...\tctrl+d")
         ).GetId()
+        self.addToQueueId = self.contextMenu.Append(
+            -1, _("Add to download queue")
+        ).GetId()
+        self.openQueueId = self.contextMenu.Append(-1, _("Download queue")).GetId()
 
         openChannelMenu = wx.Menu()
         openChannelInAppItem = openChannelMenu.Append(-1, _("فتح داخل التطبيق"))
@@ -158,6 +167,9 @@ class YoutubeBrowser(wx.Frame):
 
     def _bind_events(self):
         self.Bind(wx.EVT_MENU, self.onSettings, id=self.settingsItemId)
+        self.Bind(wx.EVT_MENU, self.onDownloadQueue, id=self.downloadQueueId)
+        self.Bind(wx.EVT_MENU, self.onDownloadQueue, id=self.openQueueId)
+        self.Bind(wx.EVT_MENU, self.onAddToQueue, id=self.addToQueueId)
         self.loadMoreButton.Bind(wx.EVT_BUTTON, self.onLoadMore)
         self.playButton.Bind(wx.EVT_BUTTON, lambda e: self.playAudio())
         self.downloadButton.Bind(wx.EVT_BUTTON, self.onDownload)
@@ -220,7 +232,39 @@ class YoutubeBrowser(wx.Frame):
 
     def onContextMenu(self, event):
         if self.searchResults.GetCount() > 0:
+            self.contextMenu.Enable(self.addToQueueId, self._can_queue_selection())
             self.searchResults.PopupMenu(self.contextMenu)
+
+    def _can_queue_selection(self):
+        index = self.searchResults.Selection
+        return (
+            self.search is not None
+            and index != wx.NOT_FOUND
+            and self.search.get_type(index) == "video"
+            and self.search.get_views(index) is not None
+        )
+
+    def onAddToQueue(self, event):
+        from gui.download_dialog import queue_add_message
+
+        if not self._can_queue_selection():
+            return
+        index = self.searchResults.Selection
+        formats = ("mp4", "mkv", "m4a", "mp3", "wav", "flac")
+        format_index = int(config_get("defaultformat"))
+        item = QueuedDownload(
+            url=self.search.get_url(index),
+            title=self.search.get_title(index),
+            format=formats[format_index] if 0 <= format_index < len(formats) else "mp4",
+            path=config_get("path") or paths.get_default_download_dir(),
+            folder=False,
+        )
+        speak(queue_add_message(DownloadQueue.add(item)), interrupt=True)
+
+    def onDownloadQueue(self, event):
+        from gui.download_dialog import show_download_window
+
+        show_download_window(self, focus_queue=True)
 
     def _download_media(
         self,

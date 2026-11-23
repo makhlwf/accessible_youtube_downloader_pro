@@ -16,6 +16,33 @@ def test_db():
     conn.close()
 
 
+def test_download_queue_survives_reopening_database(tmp_path):
+    database_path = tmp_path / "queue.db"
+    first = database.QueuedDownload(
+        "https://youtu.be/abcdefghijk", "mp4", "downloads", False
+    )
+    second = database.QueuedDownload(
+        "https://youtu.be/lmnopqrstuv", "mp3", "downloads", False
+    )
+    for reopening in (False, True):
+        connection = sqlite3.connect(database_path)
+        connection.row_factory = sqlite3.Row
+        try:
+            with patch("database.con", connection):
+                database.prepare_tables()
+                if reopening:
+                    assert [item.url for item in database.DownloadQueue.get_all()] == [
+                        first.url,
+                        second.url,
+                    ]
+                else:
+                    assert database.DownloadQueue.add(first)
+                    assert database.DownloadQueue.add(second)
+                    assert not database.DownloadQueue.add(first)
+        finally:
+            connection.close()
+
+
 def test_favorite_operations(test_db):
     fav = database.Favorite()
     data = {

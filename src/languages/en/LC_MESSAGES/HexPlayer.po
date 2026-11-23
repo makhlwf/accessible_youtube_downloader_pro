@@ -5365,3 +5365,95 @@ msgstr "Downloading"
 #~ msgid "يجب تحديد ملف الكوكيز من الإعدادات لاستخدام هذه الميزة."
 #~ msgstr "You must set a cookies file in settings to use the Shorts feature."
 
+#: src/gui/download_dialog.py:55
+msgid "&Add to queue"
+msgstr "&Add to queue"
+
+#: src/gui/download_dialog.py:56 src/gui/download_dialog.py:72
+#: src/gui/download_dialog.py:283
+msgid "Download queue"
+msgstr "Download queue"
+
+#: src/gui/download_dialog.py:57
+msgid "&Remove selected"
+msgstr "&Remove selected"
+
+#: src/gui/download_dialog.py:58
+msgid "Download &queue"
+msgstr "Download &queue"
+
+#: src/gui/download_dialog.py:60
+msgid "Queue status"
+msgstr "Queue status"
+
+#: src/gui/download_dialog.py:197
+msgid "This download is already queued."
+msgstr "This download is already queued."
+
+#: src/gui/download_dialog.py:205
+#, python-brace-format
+msgid "Added to queue. Items queued: {count}."
+msgstr "Added to queue. Items queued: {count}."
+
+#: src/gui/download_dialog.py:216
+#, python-brace-format
+msgid "Removed from queue. Items queued: {count}."
+msgstr "Removed from queue. Items queued: {count}."
+
+#: src/gui/download_dialog.py:235
+#, python-brace-format
+msgid "Queue item {index} of {total}"
+msgstr "Queue item {index} of {total}"
+
+#: src/gui/download_dialog.py:232
+msgid "Download queue finished."
+msgstr "Download queue finished."
+
+#: src/gui/download_dialog.py:242
+msgid "Download queue canceled."
+msgstr "Download queue canceled."
+
+#: src/gui/download_dialog.py:258
+msgid "Download queue stopped."
+msgstr "Download queue stopped."
+
+#: src/gui/download_dialog.py:265
+#, python-brace-format
+msgid "{status} Downloaded: {downloaded}. Still queued: {remaining}."
+msgstr "{status} Downloaded: {downloaded}. Still queued: {remaining}."
+
+#: src/gui/download_dialog.py:275
+msgid "Close the download progress window to cancel the queue."
+msgstr "Close the download progress window to cancel the queue."
+
+#: src/accessible_youtube_downloader_pro.py:425
+#: src/youtube_browser/browser.py:109
+msgid "Download queue\tCtrl+Shift+Q"
+msgstr "Download queue\tCtrl+Shift+Q"
+
+#: src/youtube_browser/browser.py:152
+msgid "Add to download queue"
+msgstr "Add to download queue"
+
+#: src/gui/download_dialog.py:76
+msgid "&Clear queue"
+msgstr "&Clear queue"
+
+#: src/gui/download_dialog.py:199
+#, python-brace-format
+msgid "{title} ({format})"
+msgstr "{title} ({format})"
+
+#: src/gui/download_dialog.py:18 src/gui/download_dialog.py:237
+#: src/gui/download_dialog.py:259 src/gui/download_dialog.py:293
+msgid "Unable to save the download queue."
+msgstr "Unable to save the download queue."
+
+#: src/gui/download_dialog.py:251
+msgid "Remove all items from the download queue?"
+msgstr "Remove all items from the download queue?"
+
+#: src/gui/download_dialog.py:263
+msgid "Download queue cleared."
+msgstr "Download queue cleared."
+

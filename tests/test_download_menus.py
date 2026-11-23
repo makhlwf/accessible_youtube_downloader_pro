@@ -2,6 +2,7 @@ from unittest.mock import ANY, MagicMock, patch
 
 import pytest
 
+from database import QueuedDownload
 from gui.channel_dialog import ChannelDialog
 from gui.favorites import Favorites
 from gui.history import HistoryDialog
@@ -36,6 +37,34 @@ def test_browser_download_menu_formats(mock_downloader):
         browser._download_media.assert_called_with(
             "mp4", "http://test", ANY, "video", title="Test Title", quality=None
         )
+
+
+def test_search_result_queues_with_title_and_default_download_settings():
+    browser = MagicMock()
+    browser.searchResults.Selection = 0
+    browser.search.get_type.return_value = "video"
+    browser.search.get_views.return_value = 100
+    browser.search.get_url.return_value = "https://youtu.be/abcdefghijk"
+    browser.search.get_title.return_value = "Search result"
+    browser._can_queue_selection.side_effect = lambda: (
+        YoutubeBrowser._can_queue_selection(browser)
+    )
+    with (
+        patch(
+            "youtube_browser.browser.config_get",
+            side_effect={"defaultformat": "3", "path": "downloads"}.get,
+        ),
+        patch("youtube_browser.browser.DownloadQueue.add", return_value=True) as add,
+        patch("gui.download_dialog.DownloadQueue.get_all", return_value=[object()]),
+    ):
+        YoutubeBrowser.onAddToQueue(browser, None)
+        browser.search.get_type.return_value = "playlist"
+        YoutubeBrowser.onAddToQueue(browser, None)
+    add.assert_called_once_with(
+        QueuedDownload(
+            "https://youtu.be/abcdefghijk", "mp3", "downloads", False, "Search result"
+        )
+    )
 
 
 def test_media_gui_download_menu_formats(mock_downloader):

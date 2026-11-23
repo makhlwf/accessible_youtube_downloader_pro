@@ -422,6 +422,7 @@ class HomeScreen(wx.Frame):
         mainMenu = wx.Menu()
         self.searchItem = mainMenu.Append(-1, _("البحث في يوتيوب\tctrl+f"))
         self.downloadItem = mainMenu.Append(-1, _("التنزيل من خلال رابط\tctrl+d"))
+        self.downloadQueueItem = mainMenu.Append(-1, _("Download queue\tCtrl+Shift+Q"))
         self.playItem = mainMenu.Append(
             -1, _("تشغيل فيديو يوتيوب من خلال الرابط\tctrl+y")
         )
@@ -492,6 +493,11 @@ class HomeScreen(wx.Frame):
             [
                 (wx.ACCEL_CTRL, ord("F"), self.searchItem.GetId()),
                 (wx.ACCEL_CTRL, ord("D"), self.downloadItem.GetId()),
+                (
+                    wx.ACCEL_CTRL | wx.ACCEL_SHIFT,
+                    ord("Q"),
+                    self.downloadQueueItem.GetId(),
+                ),
                 (wx.ACCEL_CTRL, ord("Y"), self.playItem.GetId()),
                 (wx.ACCEL_CTRL | wx.ACCEL_SHIFT, ord("S"), self.shortsItem.GetId()),
                 (
@@ -520,6 +526,7 @@ class HomeScreen(wx.Frame):
         # Menu items
         self.Bind(wx.EVT_MENU, self.onSearch, self.searchItem)
         self.Bind(wx.EVT_MENU, self.onDownload, self.downloadItem)
+        self.Bind(wx.EVT_MENU, self.onDownloadQueue, self.downloadQueueItem)
         self.Bind(wx.EVT_MENU, self.onPlay, self.playItem)
         self.Bind(wx.EVT_MENU, self.on_open_shorts, self.shortsItem)
         self.Bind(wx.EVT_MENU, self.on_open_subscriptions, self.subscriptionsItem)
@@ -990,9 +997,14 @@ class HomeScreen(wx.Frame):
         self.Hide()
 
     def onDownload(self, event):
-        from gui.download_dialog import DownloadDialog
+        from gui.download_dialog import show_download_window
 
-        DownloadDialog(self).Show()
+        show_download_window(self)
+
+    def onDownloadQueue(self, event):
+        from gui.download_dialog import show_download_window
+
+        show_download_window(self, focus_queue=True)
 
     def onSearch(self, event):
         from youtube_browser.browser import YoutubeBrowser

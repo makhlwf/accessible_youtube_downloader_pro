@@ -76,14 +76,13 @@ class AutoDetectDialog(wx.Dialog):
         playButton.Bind(wx.EVT_BUTTON, self.onPlay)
 
     def onDownload(self, event):
-        from .download_dialog import DownloadDialog
+        from .download_dialog import show_download_window
 
         main_window = wx.GetApp().GetTopWindow()
         if not main_window.IsShown():
             main_window.Show()
-        dlg = DownloadDialog(main_window, self.url)
-        dlg.Show()
         main_window.Raise()
+        show_download_window(main_window, self.url)
         self.Destroy()
 
     def onPlay(self, event):

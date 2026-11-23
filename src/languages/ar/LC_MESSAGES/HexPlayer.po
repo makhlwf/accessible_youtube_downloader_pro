@@ -5172,3 +5172,95 @@ msgstr "جاري التنزيل"
 #~ msgid "يجب تحديد ملف الكوكيز من الإعدادات لاستخدام هذه الميزة."
 #~ msgstr ""
 
+#: src/gui/download_dialog.py:55
+msgid "&Add to queue"
+msgstr "إضافة إلى قائمة الانتظار (&A)"
+
+#: src/gui/download_dialog.py:56 src/gui/download_dialog.py:72
+#: src/gui/download_dialog.py:283
+msgid "Download queue"
+msgstr "قائمة انتظار التنزيل"
+
+#: src/gui/download_dialog.py:57
+msgid "&Remove selected"
+msgstr "إزالة العنصر المحدد (&R)"
+
+#: src/gui/download_dialog.py:58
+msgid "Download &queue"
+msgstr "تنزيل قائمة الانتظار (&Q)"
+
+#: src/gui/download_dialog.py:60
+msgid "Queue status"
+msgstr "حالة قائمة الانتظار"
+
+#: src/gui/download_dialog.py:197
+msgid "This download is already queued."
+msgstr "هذا التنزيل موجود بالفعل في قائمة الانتظار."
+
+#: src/gui/download_dialog.py:205
+#, python-brace-format
+msgid "Added to queue. Items queued: {count}."
+msgstr "تمت الإضافة إلى قائمة الانتظار. عدد العناصر: {count}."
+
+#: src/gui/download_dialog.py:216
+#, python-brace-format
+msgid "Removed from queue. Items queued: {count}."
+msgstr "تمت الإزالة من قائمة الانتظار. عدد العناصر: {count}."
+
+#: src/gui/download_dialog.py:235
+#, python-brace-format
+msgid "Queue item {index} of {total}"
+msgstr "تنزيل العنصر {index} من {total}"
+
+#: src/gui/download_dialog.py:232
+msgid "Download queue finished."
+msgstr "انتهت معالجة قائمة انتظار التنزيل."
+
+#: src/gui/download_dialog.py:242
+msgid "Download queue canceled."
+msgstr "تم إلغاء تنزيل قائمة الانتظار."
+
+#: src/gui/download_dialog.py:258
+msgid "Download queue stopped."
+msgstr "توقف تنزيل قائمة الانتظار."
+
+#: src/gui/download_dialog.py:265
+#, python-brace-format
+msgid "{status} Downloaded: {downloaded}. Still queued: {remaining}."
+msgstr "{status} تم تنزيل: {downloaded}. المتبقي في قائمة الانتظار: {remaining}."
+
+#: src/gui/download_dialog.py:275
+msgid "Close the download progress window to cancel the queue."
+msgstr "أغلق نافذة تقدم التنزيل لإلغاء تنزيل قائمة الانتظار."
+
+#: src/accessible_youtube_downloader_pro.py:425
+#: src/youtube_browser/browser.py:109
+msgid "Download queue\tCtrl+Shift+Q"
+msgstr "قائمة انتظار التنزيل\tCtrl+Shift+Q"
+
+#: src/youtube_browser/browser.py:152
+msgid "Add to download queue"
+msgstr "إضافة إلى قائمة انتظار التنزيل"
+
+#: src/gui/download_dialog.py:76
+msgid "&Clear queue"
+msgstr "مسح قائمة الانتظار (&C)"
+
+#: src/gui/download_dialog.py:199
+#, python-brace-format
+msgid "{title} ({format})"
+msgstr "{title} ({format})"
+
+#: src/gui/download_dialog.py:18 src/gui/download_dialog.py:237
+#: src/gui/download_dialog.py:259 src/gui/download_dialog.py:293
+msgid "Unable to save the download queue."
+msgstr "تعذر حفظ قائمة انتظار التنزيل."
+
+#: src/gui/download_dialog.py:251
+msgid "Remove all items from the download queue?"
+msgstr "هل تريد إزالة جميع العناصر من قائمة انتظار التنزيل؟"
+
+#: src/gui/download_dialog.py:263
+msgid "Download queue cleared."
+msgstr "تم مسح قائمة انتظار التنزيل."
+

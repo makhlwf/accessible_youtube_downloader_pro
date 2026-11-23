@@ -3,6 +3,7 @@ import os
 import sqlite3 as sql
 import threading
 import time
+from dataclasses import dataclass
 
 from paths import db_path
 
@@ -99,6 +100,19 @@ def prepare_tables():
         ON watch_history (last_played DESC)
         """
     )
+    con.execute(
+        """
+        CREATE TABLE IF NOT EXISTS download_queue (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            url TEXT NOT NULL,
+            format TEXT NOT NULL,
+            path TEXT NOT NULL,
+            folder INTEGER NOT NULL,
+            title TEXT NOT NULL,
+            UNIQUE (url, format, path, folder)
+        )
+        """
+    )
     con.commit()
 
 
@@ -111,6 +125,52 @@ def disconnect():
             except Exception:
                 pass
             con = None
+
+
+@dataclass(frozen=True)
+class QueuedDownload:
+    url: str
+    format: str
+    path: str
+    folder: bool
+    title: str = ""
+    id: int | None = None
+
+
+class DownloadQueue:
+    @staticmethod
+    @is_valid
+    def get_all():
+        rows = con.execute("SELECT * FROM download_queue ORDER BY id").fetchall()
+        return [QueuedDownload(**dict(row)) for row in rows]
+
+    @staticmethod
+    @is_valid
+    def add(item):
+        with con:
+            cursor = con.execute(
+                """
+                INSERT INTO download_queue (url, format, path, folder, title)
+                VALUES (?, ?, ?, ?, ?)
+                ON CONFLICT (url, format, path, folder) DO NOTHING
+                """,
+                (item.url, item.format, item.path, item.folder, item.title),
+            )
+        return cursor.rowcount == 1
+
+    @staticmethod
+    @is_valid
+    def remove(item_id):
+        with con:
+            con.execute("DELETE FROM download_queue WHERE id = ?", (item_id,))
+        return True
+
+    @staticmethod
+    @is_valid
+    def clear():
+        with con:
+            con.execute("DELETE FROM download_queue")
+        return True
 
 
 class Favorite:

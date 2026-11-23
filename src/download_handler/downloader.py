@@ -599,6 +599,8 @@ def downloadAction(
     kbps=None,
     audio_format=None,
     video_format=None,
+    *,
+    on_finished=None,
 ):
     if not utils.check_yt_dlp(wx.GetApp().GetTopWindow()):
         dlg.Destroy()
@@ -678,6 +680,10 @@ def downloadAction(
             final_result = DownloadCancelled() if downloader._is_cancelled() else result
             if hasattr(dlg, "mark_finished"):
                 dlg.mark_finished()
+            if on_finished is not None:
+                dlg.Destroy()
+                on_finished(final_result)
+                return
             if final_result == 0:
                 parent = (
                     dlg.GetParent() if dlg is not None else wx.GetApp().GetTopWindow()
@@ -707,12 +713,21 @@ def downloadAction(
     thread = Thread(target=download_thread)
     thread.daemon = True
     thread.start()
-    speak(_("جاري التنزيل"), interrupt=True)
+    if on_finished is None:
+        speak(_("جاري التنزيل"), interrupt=True)
     return True
 
 
 def start_media_download(
-    url, format_type, parent, path=None, title=None, quality=None, folder=False
+    url,
+    format_type,
+    parent,
+    path=None,
+    title=None,
+    quality=None,
+    folder=False,
+    *,
+    on_finished=None,
 ):
     from gui.download_progress import DownloadProgress
 
@@ -759,4 +774,5 @@ def start_media_download(
         folder=folder,
         audio_format=audio_format,
         video_format=video_format,
+        on_finished=on_finished,
     )
